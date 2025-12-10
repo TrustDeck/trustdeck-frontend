@@ -1,0 +1,73 @@
+{
+  "headers": {
+    "title": "Group management",
+    "left": "Groups"
+  },
+  "buttons": {
+    "newGroup": "New group",
+    "createGroup": "Create group",
+    "edit": "Edit",
+    "save": "Save changes",
+    "delete": "Delete group",
+    "yesDelete": "Yes, delete",
+    "noDelete": "Keep group"
+  },
+  "default": {
+    "text": "Select an entity or a group to see its settings here."
+  }, 
+  "inputs": {
+    "psnexample": "The pseudonym looks like this:",
+    "psnexampleNew": "The pseudonym will look like this:",
+    "groupname": {
+      "label": "Group name",
+      "error": "Please enter a group name"
+    },
+    "prefix": {
+      "label": "Prefix",
+      "error": "Please enter a prefix"
+    },
+    "psnlength": {
+      "label": "PSN length",
+      "error": "Please enter a PSN length"
+    },
+    "alphabet": {
+      "label": "Alphabet",
+      "help": "Select an alphabet for the pseudonyms."
+    },
+    "startdate": {
+      "label": "Start date"
+    },
+    "enddate": {
+      "label": "End date"
+    },
+    "parentgroup": {
+      "label": "Parent group"
+    },
+    "description": {
+      "label": "Description",
+      "error": "Please enter a description"
+    },
+    "algorithm": {
+      "label": "Algorithm"
+    },
+    "maxnumpsn": {
+      "label": "Max. number of pseudonyms",
+      "error": "Please enter a number",
+      "help": "Enter 0 for an unlimited number of pseudonyms."
+    },
+    "multiplepsn": {
+      "label": "Allow multiple pseudonyms for the same value?"
+    },
+    "paddingchar": {
+      "label": "Padding character"
+    },
+    "checkdigit": {
+      "label": "Check digit"
+    }
+  },
+  "groupCreated": "Your group has been created.",
+  "messages": {
+    "deleteConfirmation": "Are you sure you want to delete this group?",
+    "confirmDelete": "Confirm Delete"
+  }
+}

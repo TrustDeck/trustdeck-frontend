@@ -1,0 +1,156 @@
+{
+  "title": "Suche",
+  "submit": "Suchen",
+  "back": "Zurück",
+  "edit": "Editieren",
+  "cancel": "Abrechen",
+  "save": "Speichern",
+  "select": "Auswählen",
+  "results": "Suchergebnisse",
+  "personView": "Person ansehen",
+  "biosampleView": "Bioprobe ansehen",
+  "pseudonymView": "Pseudonym ansehen",
+  "history": "Verlauf",
+  "noResults": "Keine resultate.",
+  "entity": {
+    "title": "Entität",
+    "entityType": {
+      "title": "Entitäten-Typ:",
+      "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."
+    },
+    "person": {
+      "title": "Person",
+      "phone": {
+        "placeholder": "Telefonnummer",
+        "help": "Geben Sie eine Telefonnummer ein",
+        "error": "Ungültige Telefonnummer"
+      },
+      "secondPhone": {
+        "placeholder": "Zweite Telefonnummer",
+        "help": "Geben Sie eine Telefonnummer ein",
+        "error": "Ungültige Telefonnummer"
+      },
+      "secondEmail": {
+        "placeholder": "Zweite Email Adresse",
+        "help": "Geben Sie eine Email Adresse ein",
+        "error": "Ungültige Email Adresse"
+      },
+      "lastname": {
+        "placeholder": "Nachname",
+        "help": "Geben Sie einen Nachnamen ein",
+        "error": "Ungültiger Nachname"
+      },
+      "firstname": {
+        "placeholder": "Vorname",
+        "help": "Geben Sie einen Vornamen ein",
+        "error": "Ungültiger Vorname"
+      },
+      "idType": {
+        "placeholder": "ID-Typ",
+        "help": "Wählen Sie einen ID-Typ aus",
+        "error": "Ungültiger ID-typ",
+        "caseNumber": "Fallnummer",
+        "patientId": "Patienten ID"
+      },
+      "street": {
+        "placeholder": "Straße",
+        "help": "Geben Sie eine Straße ein",
+        "error": "Ungültige Straße"
+      },
+      "houseNumber": {
+        "placeholder": "Hausnummer",
+        "help": "Geben Sie eine Hausnummer ein",
+        "error": "Ungültige Hausnummer"
+      },
+      "city": {
+        "placeholder": "Stadt",
+        "help": "Geben Sie eine Stadt ein",
+        "error": "Ungültige Stadt"
+      },
+      "zip": {
+        "placeholder": "PLZ",
+        "help": "Geben Sie eine PLZ ein",
+        "error": "Ungültige PLZ"
+      },
+      "birthdate": {
+        "placeholder": "Geburtsdatum",
+        "help": "Geben Sie ein Datum ein",
+        "error": "Ungültiges Datum"
+      },
+      "gender": {
+        "placeholder": "Geschlecht",
+        "help": "Wählen Sie ein Geschlecht aus",
+        "error": "Ungültiges Geschlecht"
+      },
+      "email": {
+        "placeholder": "E-Mail-Adresse",
+        "help": "Geben Sie eine E-Mail-Adresse ein",
+        "error": "Ungültige E-Mail-Adresse"
+      },
+      "country": {
+        "placeholder": "Land",
+        "help": "Geben Sie ein Land ein",
+        "error": "Ungültiges Land"
+      },
+      "relationship": {
+        "placeholder": "Beziehung",
+        "help": "Wählen Sie eine Beziehung zum Patienten aus",
+        "error": "Ungültige Beziehung"
+      },
+      "quick": {
+        "placeholder": "Schnellsuche",
+        "help": "Geben Sie ein Suchwort ein",
+        "error": "Ungültiges Suchwort"
+      }
+    },
+    "biosample": {
+      "title": "Bioprobe",
+      "location": {
+        "placeholder": "Standort",
+        "help": "Geben Sie einen Standort ein",
+        "error": "Ungültiger Standort"
+      },
+      "date": {
+        "placeholder": "Datum",
+        "help": "Geben Sie ein Datum ein",
+        "error": "Ungültiges Datum"
+      },
+      "sampleNumber": {
+        "placeholder": "Bioprobennummer",
+        "help": "Geben Sie eine Bioprobennummer ein",
+        "error": "Ungültige Bioprobennummer"
+      },
+      "contents": {
+        "placeholder": "Inhalt",
+        "help": "Geben Sie einen Inhalt an",
+        "error": "Ungültiger Inhalt"
+      }
+    }
+  },
+  "pseudonym": {
+    "title": "Pseudonym",
+    "placeholder": "Pseudonym",
+    "help": "Geben Sie ein Pseudonym ein",
+    "error": "Ungültiges Pseudonym",
+    "data": "Daten",
+    "value": "Wert", 
+    "id": "ID",
+    "createdOn": "Erstellt am:",
+    "expiresOn": "Läuft ab am:",
+    "parentGroup": "Elterngruppe"
+  },
+  "group": {
+    "title": "Gruppe",
+    "placeholder": "Gruppe",
+    "help": "Geben Sie eine Gruppe ein",
+    "error": "Ungültige Gruppe"
+  },
+  "headers": {
+    "personalData": "Stammdaten",
+    "data": "Daten",
+    "address": "Adresse",
+    "emergencyContact": "Kontaktperson",
+    "links": "Verknüpfungen",
+    "identifiers": "Führende Identifikatoren"
+  }
+}

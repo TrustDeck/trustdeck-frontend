@@ -1,0 +1,158 @@
+{
+  "title": "Search",
+  "submit": "Search",
+  "back": "Back",
+  "edit": "Edit",
+  "cancel": "Cancel",
+  "save": "Save",
+  "select": "Select",
+  "results": "Search results",
+  "entityView": "Entity details",
+  "pseudonymView": "Pseudonym details",
+  "history": "Last searches:",
+  "noResults": "No results.",
+  "entity": {
+    "title": "Entity",
+    "entityType": {
+      "title": "Type of entity:",
+      "help": "Choose what you want to search."
+    },
+    "person": {
+      "title": "Person",
+      "phone": {
+        "placeholder": "Phone",
+        "help": "Enter a phone number",
+        "error": "Invalid phone number"
+      },
+      "secondPhone": {
+        "placeholder": "Second phone",
+        "help": "Enter a phone number",
+        "error": "Invalid phone number"
+      },
+      "secondEmail": {
+        "placeholder": "Second email",
+        "help": "Enter an email address",
+        "error": "Invalid email address"
+      },
+      "lastname": {
+        "placeholder": "Last name",
+        "help": "Enter a last name",
+        "error": "Invalid last name"
+      },
+      "firstname": {
+        "placeholder": "First name",
+        "help": "Enter a first name",
+        "error": "Invalid first name"
+      },
+      "idType": {
+        "placeholder": "ID type",
+        "help": "Select an ID type",
+        "error": "Invalid ID type",
+        "caseNumber": "Case number",
+        "patientId": "Patient ID"
+      },
+      "street": {
+        "placeholder": "Street",
+        "help": "Enter a street",
+        "error": "Invalid street"
+      },
+      "houseNumber": {
+        "placeholder": "House number",
+        "help": "Enter a house number",
+        "error": "Invalid house number"
+      },
+      "address": {
+        "placeholder": "Address"
+      },
+      "city": {
+        "placeholder": "City",
+        "help": "Enter a city",
+        "error": "Invalid city"
+      },
+      "zip": {
+        "placeholder": "ZIP code",
+        "help": "Enter a ZIP code",
+        "error": "Invalid ZIP code"
+      },
+      "birthdate": {
+        "placeholder": "Birthdate",
+        "help": "Enter a date",
+        "error": "Invalid date"
+      },
+      "gender": {
+        "placeholder": "Gender",
+        "help": "Select a gender",
+        "error": "Invalid gender"
+      },
+      "email": {
+        "placeholder": "Email address",
+        "help": "Enter an email address",
+        "error": "Invalid email address"
+      },
+      "country": {
+        "placeholder": "Country",
+        "help": "Enter an country",
+        "error": "Invalid country"
+      },
+      "relationship": {
+        "placeholder": "Relationship",
+        "help": "Select a relationship to patient",
+        "error": "Invalid relationship"
+      },
+      "quick": {
+        "placeholder": "Quick search",
+        "help": "Enter any term",
+        "error": "Invalid search term"
+      }
+    },
+    "biosample": {
+      "title": "Biosample",
+      "location": {
+        "placeholder": "Location",
+        "help": "Enter a location",
+        "error": "Invalid location"
+      },
+      "date": {
+        "placeholder": "Date",
+        "help": "Enter a date",
+        "error": "Invalid date"
+      },
+      "sampleNumber": {
+        "placeholder": "Biosample number",
+        "help": "Enter a biosample number",
+        "error": "Invalid biosample number"
+      },
+      "contents": {
+        "placeholder": "Contents",
+        "help": "Enter contents",
+        "error": "Invalid contents"
+      }
+    }
+  },
+  "pseudonym": {
+    "title": "Pseudonym",
+    "placeholder": "Pseudonym",
+    "help": "Enter a pseudonym",
+    "error": "Invalid pseudonym",
+    "data": "Data",
+    "value": "Value", 
+    "id": "ID",
+    "createdOn": "Created on:",
+    "expiresOn": "Expires on:",
+    "parentGroup": "Parent group"
+  },
+  "group": {
+    "title": "Group",
+    "placeholder": "Group",
+    "help": "Enter a group",
+    "error": "Invalid group"
+  },
+  "headers": {
+    "personalData": "Personal data",
+    "data": "Data",
+    "address": "Address",
+    "emergencyContact": "Emergency contact",
+    "links": "Links",
+    "identifiers": "Identifiers"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "headers": {
+    "title": "Generate pseudonym",
+    "stepone": "Search for the entity that you want to pseudonymize.",
+    "steptwo": "Select the entity that you want to pseudonymize.",
+    "stepthree": "In which group should the pseudonym be saved?"
+  }, 
+  "buttons": {
+    "back": "Back",
+    "generate": "Generate"
+  },
+  "infotext": "If you create a pseudonym for a subgroup, the system will automatically generate a chain of pseudonyms for each parent group.",
+  "selectGroup": "Select groups"
+}

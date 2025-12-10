@@ -1,0 +1,18 @@
+{
+    "menu": {
+        "logout": "Log out",
+        "identityManagement": "Identity Management",
+        "pseudonymManagement": "Pseudonym Management",
+        "groupManagement": "Group Management",
+        "projectSettings": "Project Settings",
+        "search": "Search",
+        "searchResults": "Search results",
+        "entityDetails": "Entity details",
+        "pseudonymDetails": "Pseudonym details",
+        "registration": "Registration",
+        "duplicates": "Duplicates",
+        "resolveDuplicates": "Resolve duplicates",
+        "projects": "Projects",
+        "backToProjects": "Back to projects"
+    }
+}

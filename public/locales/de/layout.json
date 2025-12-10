@@ -1,0 +1,18 @@
+{
+    "menu": {
+        "logout": "Abmelden",
+        "dentityManagement": "Identitätsmanagement",
+        "pseudonymManagement": "Pseudonym-Management",
+        "groupManagement": "Gruppenmanagement",
+        "projectSettings": "Projekteinstellungen",
+        "search": "Suche",
+        "searchResults": "Suchresultate",
+        "entityDetails": "Entitätenansicht",
+        "pseudonymDetails": "Pseudonymansicht",
+        "registration": "Registrierung",
+        "duplicates": "Dubletten",
+        "resolveDuplicates": "Dubletten auflösen",
+        "projects": "Projekte",
+        "backToProjects": "Zurück zu Projekte"
+    }
+}

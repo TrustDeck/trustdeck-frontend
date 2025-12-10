@@ -1,0 +1,21 @@
+{
+  "buttons": {
+    "back": "Back",
+    "next": "Next"
+  },
+  "projectName": "Project name",
+  "projectAbbreviation": "Project abbreviation",
+  "startDate": "Start date",
+  "endDate": "End date",
+  "newestFirst": "Newest first", 
+  "oldestFirst": "Oldest first",
+  "all": "All", 
+  "active": "Active", 
+  "completed": "Completed",
+  "forWhat": "For what do you want to use this project?",
+  "register": "Register entities",
+  "selectEntities": "Select entities",
+  "createProject": "Create project",
+  "pseudonymConfig": "Pseudonym configuration",
+  "createNewProject": "Create a new project"
+}

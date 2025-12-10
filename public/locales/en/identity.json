@@ -1,0 +1,63 @@
+{
+  "headers": {
+    "search": "Search",
+    "personalData": "Personal data",
+    "address": "Address",
+    "emergencyContact": "Emergency contact",
+    "searchPatient": "You can either search for the patient using their ID, or manually enter their information.",
+    "registration": "Registration",
+    "data": "Data",
+    "chooseEntity": "What would you like to register?",
+    "chooseAmount": "How many entities would you like to register?",
+    "oneEntity": "One entity",
+    "multipleEntities": "Multiple entities"
+  },
+  "buttons": {
+    "search": "Search",
+    "register": "Register",
+    "manually": "Enter information manually",
+    "back": "Back",
+    "next": "Next",
+    "notDuplicate": "Not a Duplicate – Continue Registration"
+  },
+  "entity": {
+    "person": {
+      "relationship": {
+        "partner": "Partner",
+        "parent": "Parent",
+        "child": "Child",
+        "sibling": "Sibling",
+        "grandparent": "Grandparent",
+        "auntUncle": "Aunt/Uncle",
+        "nieceNephew": "Niece/Nephew",
+        "cousin": "Cousin",
+        "friend": "Friend"
+      },
+      "addPhone": "Add phone",
+      "addEmail": "Add email",
+      "patientID": "Patient ID"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "nonBinary": "Non-binary"
+    }
+  },
+  "bulk": {
+    "dragAndDrop": "Drag and drop the CSV file here",
+    "selectFile": "Select file"
+  },
+  "duplicate": {
+    "header": "Possible Duplicate Detected",
+    "duplicateFound": "A person with very similar information is already registered. Please check whether this is a duplicate entry. If the person matches one of the individuals listed below, select them. If not, click on 'Not a Duplicate – Continue Registration.'",
+    "compareData": "Please compare the two datasets. If the new person matches the previously registered person, select “Keep Registered Person.” If they are two different individuals, click on 'Not a Duplicate – Continue Registration.'",
+    "newPerson": "New person",
+    "oldPerson": "Previously registered person",
+    "useOld": "Use Previously Registered Person"
+  },
+  "entityAttributes": {
+    "biosample": {
+      "sampleType": "Sample Type"
+    }
+  }
+}

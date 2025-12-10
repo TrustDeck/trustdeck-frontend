@@ -1,0 +1,8 @@
+{
+  "option": {
+    "no-access": "Kein Zugriff",
+    "read": "Nur Lesen",
+    "read+write_ex_delete": "Lesen und Schreiben (Ohne Löschen)",
+    "full": "Vollzugriff"
+  }
+}

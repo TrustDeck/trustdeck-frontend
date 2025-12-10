@@ -1,0 +1,63 @@
+{
+  "headers": {
+    "search": "Suche",
+    "personalData": "Stammdaten",
+    "address": "Adresse",
+    "emergencyContact": "Kontaktperson",
+    "searchPatient": "Suchen Sie die Person über die Patienten-ID oder geben sie die Daten manuell ein.",
+    "registration": "Registratur",
+    "data": "Daten",
+    "chooseEntity": "Was möchten Sie registrieren?",
+    "chooseAmount": "Wie viele Entitäten möchten Sie registrieren?",
+    "oneEntity": "Eine Entität",
+    "multipleEntities": "Mehrere Entitäten"
+  },
+  "buttons": {
+    "search": "Suchen",
+    "register": "Registrieren",
+    "manually": "Daten manuell eingeben",
+    "back": "Zurück",
+    "next": "Weiter",
+    "notDuplicate": "Keine Dublette – Weiter mit Registrierung"
+  },
+  "entity": {
+    "person": {
+      "relationship": {
+        "partner": "Partner",
+        "parent": "Elternteil",
+        "child": "Kind",
+        "sibling": "Geschwister",
+        "grandparent": "Großeltern",
+        "aunt_uncle": "Tante/Onkel",
+        "niece_nephew": "Nichte/Neffe",
+        "cousin": "Cousin/e",
+        "friend": "Freund/in"
+      },
+      "addPhone": "Tel. hinzufügen",
+      "addEmail": "Email hinzufügen",
+      "patientID": "Patienten-ID"
+    },
+    "gender": {
+      "male": "Männlich",
+      "female": "Weiblich",
+      "nonBinary": "Divers"
+    }
+  },
+  "bulk": {
+    "dragAndDrop": "CSV Datei hier hinziehen und ablegen",
+    "selectFile": "Dateien durchsuchen"
+  },
+  "duplicate": {
+    "header": "Mögliche Dublette gefunden",
+    "duplicateFound": "Eine Person mit sehr ähnlichen Angaben ist bereits registriert. Überprüfen Sie bitte, ob es sich um eine Dublette handelt. Sollte die Person mit einer der unten aufgeführten Personen übereinstimmen, wählen Sie diese aus. Falls nicht, klicken Sie auf 'Keine Dublette – Weiter mit Registrierung'.",
+    "compareData": "Vergleichen Sie bitte die beiden Datensätze. Wenn die neue Person mit der bereits registrierten Person übereinstimmt, wählen Sie “Bereits Registrierte Person Behalten.” Handelt es sich um zwei unterschiedliche Personen, klicken Sie auf 'Keine Dublette – Weiter mit Registrierung'.",
+    "newPerson": "Neue Person",
+    "oldPerson": "Bereits registrierte Person",
+    "useOld": "Bereits registrierte Person verwenden"
+  },
+  "entityAttributes": {
+    "biosample": {
+      "sampleType": "Probentyp"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "headers": {
+    "title": "Gruppenverwaltung",
+    "left": "Gruppen"
+  },
+  "buttons": {
+    "newGroup": "Neue Gruppe",
+    "createGroup": "Gruppe erstellen",
+    "edit": "Bearbeiten",
+    "save": "Änderungen speichern",
+    "delete": "Gruppe löschen",
+    "yesDelete": "Ja, löschen",
+    "noDelete": "Gruppe behalten"
+  },
+  "default": {
+    "text": "Wählen Sie eine Entität oder Gruppe aus, um deren Einstellungen hier anzuzeigen."
+  },
+  "inputs": {
+    "psnexample": "Das Pseudonym sieht so aus:",
+    "groupname": {
+      "label": "Gruppenname",
+      "error": "Bitte geben Sie einen Gruppennamen ein"
+    },
+    "prefix": {
+      "label": "Präfix",
+      "error": "Bitte geben Sie ein Präfix ein"
+    },
+    "psnlength": {
+      "label": "Pseudonym-Länge",
+      "error": "Bitte geben Sie eine Pseudonym-Länge ein"
+    },
+    "alphabet": {
+      "label": "Alphabet",
+      "help": "Suchen Sie ein Alphabet für die Pseudonyme aus."
+    },
+    "startdate": {
+      "label": "Startdatum"
+    },
+    "enddate": {
+      "label": "Enddatum"
+    },
+    "parentgroup": {
+      "label": "Übergeordnete Gruppe"
+    },
+    "description": {
+      "label": "Beschreibung",
+      "error": "Bitte geben Sie eine Beschreibung ein"
+    },
+    "algorithm": {
+      "label": "Algorithmus"
+    },
+    "maxnumpsn": {
+      "label": "Max. Anzahl an Pseudonymen",
+      "error": "Bitte geben Sie eine Zahl ein",
+      "help": "Geben Sie 0 ein für eine unbegrentzte Zahl von Pseudonymen."
+    },
+    "multiplepsn": {
+      "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
+    },
+    "paddingchar": {
+      "label": "Auffüllzeichen"
+    },
+    "checkdigit": {
+      "label": "Prüfziffer"
+    }
+  },
+  "groupCreated": "Ihre Gruppe wurde erstellt.",
+  "messages": {
+    "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
+    "confirmDelete": "Löschen bestatigen"
+  }
+}

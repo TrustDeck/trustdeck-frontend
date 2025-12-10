@@ -156,7 +156,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             className="w-full"
             validate={validation.isValidRegistrationEmail}
           />
-           <CustomFloatLabel
+          <CustomFloatLabel
               id="phone"
               value={phone}
               placeholder={t('search:entity.person.phone.placeholder')}

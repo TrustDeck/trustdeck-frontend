@@ -6,7 +6,7 @@ const PersonService = {
     return TrustDeck.instance().fuzzySearch(entity, query)
   },
 
-  personUpdate: async (person: PersonType): Promise <PersonType> => {
+  personUpdate: async (person: any): Promise <PersonType> => {
     return TrustDeck.instance().putPerson(person)
   }
 }

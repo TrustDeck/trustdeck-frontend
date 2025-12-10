@@ -107,19 +107,19 @@ const usePersonStore = create<EntityState>((set) => ({
     set((state) => ({ contactPerson: { ...state.contactPerson, relationship } })),
 
   // main function: map API person object
-  loadEntity: (data: PersonType) => {
-    const firstEmail = data.emails?.[0]?.value ?? ''
-    const firstPhone = data.phones?.[0]?.value ?? ''
-    const address = data.addresses?.[0] ?? {}
-    const id = data.identifiers?.find((i) => i.identifierType === 'SAP-ID')?.identifier ?? ''
-    const MOI = data.identifiers?.find((i) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
-    const firstContact = data.contactPersons?.[0]
+  loadEntity: (data: any) => {
+    const firstEmail = data.email ?? ''
+    const firstPhone = data.phoneNumber ?? ''
+    const address = data.street ?? {}
+    const id = data.identifiers?.find((i: any) => i.identifierType === 'SAP-ID')?.identifier ?? ''
+    const MOI = data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
+    const firstContact = data.contactFirstName
 
     set({
-      lastname: data.lastname ?? '',
-      firstname: data.firstname ?? '',
-      birthdate: data.birthdate?.split('T')[0] ?? '',
-      gender: data.gender ?? '',
+      lastname: data.lastName ?? '',
+      firstname: data.firstName ?? '',
+      birthdate: data.dateOfBirth?.split('T')[0] ?? '',
+      gender: data.administrativeGender ?? '',
       email: firstEmail,
       phone: firstPhone,
       street: address.street ?? '',
@@ -136,7 +136,7 @@ const usePersonStore = create<EntityState>((set) => ({
         lastname: firstContact?.lastname ?? '',
         email: firstContact?.emails?.[0]?.value ?? '',
         phone: firstContact?.phones?.[0]?.value ?? '',
-        relationship: firstContact?.relationShip ?? ''
+        relationship: firstContact?.relationship ?? ''
       }
     })
   },

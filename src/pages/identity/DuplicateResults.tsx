@@ -53,14 +53,14 @@ export default function DuplicateResults() {
         <SearchResult
           result={{
             id: 'new-person',
-            firstname: newEntry?.firstname ?? '',
-            lastname: newEntry?.lastname ?? '',
-            birthdate: newEntry?.birthdate ? new Date(newEntry.birthdate).toISOString().split('T')[0] : '',
-            gender: newEntry?.gender ?? '',
-            phones: newEntry?.phones ?? [],
-            emails: newEntry?.emails ?? [],
-            addresses: newEntry?.addresses ?? [],
-            contactPersons: newEntry?.contactPersons ?? []
+            firstname: newEntry?.firstName ?? '',
+            lastname: newEntry?.lastName ?? '',
+            dateOfBirth: newEntry?.dateOfBirth ? new Date(newEntry.dateOfBirth).toISOString().split('T')[0] : '',
+            gender: newEntry?.administrativeGender ?? '',
+            phones: newEntry?.phoneNumber ?? [],
+            emails: newEntry?.email ?? [],
+            addresses: newEntry?.street ?? [],
+            contactPersons: newEntry?.contactFirstName ?? []
           }}
           duplicate
           newPerson

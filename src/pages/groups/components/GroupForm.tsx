@@ -36,7 +36,7 @@ export default function GroupForm() {
     const sep = '-'
     const parts = s.split(sep)
     if (parts.length < 3) return null
-    let [mm, dd, yy] = parts
+    const [mm, dd, yy] = parts
     const year = Number(yy)
     const month = Number(mm) - 1
     const day = Number(dd)
@@ -53,7 +53,7 @@ export default function GroupForm() {
 
   // whenever the tree changes, update the parentGroupOptions array; the default option is always { label: 'No Parent', value: 'ROOT' }
   useEffect(() => {
-    let base = [{ label: 'No Parent', value: 'ROOT' }]
+    const base = [{ label: 'No Parent', value: 'ROOT' }]
 
     const traverse = (node: any) => {
       if (!node) return

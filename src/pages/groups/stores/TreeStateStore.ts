@@ -321,7 +321,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
       const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0')
       const currentDay = String(currentDate.getDate()).padStart(2, '0')
 
-      let validFrom = `${currentMonth}-${currentDay}-${currentYear}`
+      const validFrom = `${currentMonth}-${currentDay}-${currentYear}`
 
       const date30Year = new Date()
       date30Year.setFullYear(date30Year.getFullYear() + 30)
@@ -329,7 +329,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
       const month30 = String(date30Year.getMonth() + 1).padStart(2, '0')
       const day30 = String(date30Year.getDate()).padStart(2, '0')
 
-      let validTo = `${month30}-${day30}-${year30}`
+      const validTo = `${month30}-${day30}-${year30}`
 
       // generate a key based on current total nodes (as in your example)
       const newNode: CustomTreeNode = {

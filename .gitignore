@@ -29,3 +29,4 @@ local-key.pem
 local-cert.pem
 
 .env
+.env.js

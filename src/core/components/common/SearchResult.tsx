@@ -99,12 +99,11 @@ const SearchResult: React.FC<SearchResultProps> = ({
               )}
               {!newPerson && (
                 <PrimaryButton
-                  label={t('search:select')}
-                  icon={<CheckIcon className="h-5 w-5 mr-1" />}
-                  onClick={() => {
-                    if ('firstName' in result) {
+                label={t('search:select')}
+                icon={<CheckIcon className="h-5 w-5 mr-1" />}
+                onClick={() => {
+                  if ('firstName' in result.data) {
                       usePersonStore.getState().loadEntity(result)
-
                     }
                     if (duplicate) {
                       navigate(`/identity/duplicates/${result.trustdeckID}`)

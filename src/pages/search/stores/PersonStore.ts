@@ -107,26 +107,27 @@ const usePersonStore = create<EntityState>((set) => ({
     set((state) => ({ contactPerson: { ...state.contactPerson, relationship } })),
 
   // main function: map API person object
-  loadEntity: (data: any) => {
-    const firstEmail = data.email ?? ''
-    const firstPhone = data.phoneNumber ?? ''
-    const address = data.street ?? {}
-    const id = data.identifiers?.find((i: any) => i.identifierType === 'SAP-ID')?.identifier ?? ''
-    const MOI = data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
-    const firstContact = data.contactFirstName
+  loadEntity: (result: any) => {
+    console.log(result)
+    const firstEmail = result.data.email ?? ''
+    const firstPhone = result.data.phoneNumber ?? ''
+    const address = result.data.street ?? {}
+    const id = result.data.identifiers?.find((i: any) => i.identifierType === 'SAP-ID')?.identifier ?? ''
+    const MOI = result.data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
+    const firstContact = result.data.contactFirstName
 
     set({
-      lastname: data.lastName ?? '',
-      firstname: data.firstName ?? '',
-      birthdate: data.dateOfBirth?.split('T')[0] ?? '',
-      gender: data.administrativeGender ?? '',
+      lastname: result.data.lastName ?? '',
+      firstname: result.data.firstName ?? '',
+      birthdate: result.data.dateOfBirth?.split('T')[0] ?? '',
+      gender: result.data.administrativeGender ?? '',
       email: firstEmail,
       phone: firstPhone,
       street: address.street ?? '',
       houseNumber: address.houseNumber ?? '',
       city: address.city ?? '',
       country: address.country ?? '',
-      zip: address.zip ?? '',
+      zip: address.postCode ?? '',
       identifiers: {
         id,
         MOI

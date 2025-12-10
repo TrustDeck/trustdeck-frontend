@@ -116,11 +116,11 @@ class TrustDeck {
     return this.request('POST', `/projects/${projectName}/entities/config`, person)
   }
 
-  public async personFuzzySearch(query: string) {
+  public async fuzzySearch(entity: string, query: string) {
     const projectName = this.getSelectedProjectName()
     return this.request<PersonType[]>(
       'GET',
-      `/${projectName}/person/search?query=${query}`
+      `/projects/${projectName}/entities/${entity}/?query=${query}`
     )
   }
 

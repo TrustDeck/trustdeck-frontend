@@ -27,3 +27,5 @@ TODO
 Dockerfile.trustdeck
 local-key.pem
 local-cert.pem
+
+.env

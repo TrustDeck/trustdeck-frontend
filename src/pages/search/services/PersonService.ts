@@ -2,8 +2,8 @@ import TrustDeck from '../../../core/services/TrustDeck'
 import { PersonType } from '../../../core/types/PersonEntity'
 
 const PersonService = {
-  personFuzzySearch: async (query: string): Promise<PersonType[]> => {
-    return TrustDeck.instance().personFuzzySearch(query)
+  fuzzySearch: async (entity: string, query: string) => {
+    return TrustDeck.instance().fuzzySearch(entity, query)
   },
 
   personUpdate: async (person: PersonType): Promise <PersonType> => {

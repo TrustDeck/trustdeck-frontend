@@ -63,26 +63,25 @@ const SearchResult: React.FC<SearchResultProps> = ({
     nextStep()
     stepperRef.current?.nextCallback()
   }
-
   return (
     <Panel>
       <div className="sm:flex sm:justify-between sm:items-center my-3">
         {/* Person result */}
-        {type === 'person' || 'firstname' in result && (
+        {type === 'person' || 'firstName' in result.data && (
           <>
             <div>
               <h3 className="flex">
-                {result.firstname} {result.lastname}
+                {result.data.firstName} {result.data.lastName}
               </h3>
               <div className="flex space-x-8">
                 <p className="flex">
                   <CakeIcon className="h-5 w-5 mr-1" />{' '}
-                  {result.birthdate && result.birthdate.split('T')[0]}
+                  {result.data.dateOfBirth && result.data.dateOfBirth.split('T')[0]}
                 </p>
                 {!newPerson && (
                   <p className="flex">
                     <IdentificationIcon className="h-5 w-5 mr-1" />
-                    {result.identifiers?.[0].identifier}
+                    {result.trustdeckID}
                   </p>
                 )}
               </div>
@@ -93,7 +92,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   label={t('search:edit')}
                   icon={<PencilIcon className="h-5 w-5 mr-1" />}
                   onClick={() => {
-                    navigate(`/search/${result.identifiers?.[0].identifier}`)
+                    navigate(`/search/${result.trustdeckID}`)
                     setEditMode(true)
                   }}
                 />
@@ -103,17 +102,17 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   label={t('search:select')}
                   icon={<CheckIcon className="h-5 w-5 mr-1" />}
                   onClick={() => {
-                    if ('firstname' in result) {
+                    if ('firstName' in result) {
                       usePersonStore.getState().loadEntity(result)
 
                     }
                     if (duplicate) {
-                      navigate(`/identity/duplicates/${result.identifiers?.[0].identifier}`)
+                      navigate(`/identity/duplicates/${result.trustdeckID}`)
                     } else if (pseudonymization) {
-                      setSelectedEntityId(result.identifiers[0])
+                      setSelectedEntityId(result.trustdeckID)
                       handleNext()
                     } else {
-                      navigate(`/search/${result.identifiers?.[0].identifier}`)
+                      navigate(`/search/${result.trustdeckID}`)
                     }
                   }}
                 />

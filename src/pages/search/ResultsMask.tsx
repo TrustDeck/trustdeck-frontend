@@ -11,10 +11,8 @@ const ResultsMask: React.FC = () => {
   const { t } = useTranslation()
   const { results } = useSearchResultsStore()
   const navigate = useNavigate()
-
   return (
-  
-<div className="w-full">
+    <div className="w-full">
       <div className="items-center flex flex-col w-full">
         <div className="w-full lg:w-4/5 flex flex-row items-center relative mb-3 mx-auto">
           <PrimaryOutlinedButton
@@ -30,7 +28,10 @@ const ResultsMask: React.FC = () => {
         <p className="text-center">{t('search:noResults')}</p>
       ) : (
         results.map((result) => (
-          <div key={result.identifiers[0].identifier} className="my-4 flex justify-center">
+          <div
+            key={result.trustdeckID}
+            className="my-4 flex justify-center"
+          >
             <SearchResult result={result} />
           </div>
         ))

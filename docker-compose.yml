@@ -1,0 +1,19 @@
+services:
+  trustdeck-frontend:
+    container_name: trustdeck-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      no_cache: true
+    image: trustdeck-frontend:latest
+    environment:
+      API_BASE_URL: https://t-bih-trustdeck.charite.de/api
+      AUTHORITY_URL: https://t-bih-trustdeck.charite.de/realms/production
+      AUTHORITY_CLIENT: frontend
+      AUTHORITY_REDIRECT_URI: https://t-bih-trustdeck.charite.de/
+      AUTHORITY_SILENT_URI: https://t-bih-trustdeck.charite.de/silent-renew.html
+    ports:
+      - '9000:8080'
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro

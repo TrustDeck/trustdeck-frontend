@@ -17,4 +17,4 @@ compose:
 	docker compose build --no-cache --pull
 	docker compose up -d --force-recreate
 
-.PHONY: gen-cert build compose
+.PHONY: gen-cert build compose gen-cert install

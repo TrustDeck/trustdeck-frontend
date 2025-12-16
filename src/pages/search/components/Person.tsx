@@ -22,7 +22,8 @@ interface PersonProps {
 
 const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
   const { t } = useTranslation()
-
+  console.log('fired')
+console.log(entity)
   const {
     lastname,
     firstname,
@@ -60,9 +61,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
 
   useEffect(() => {
     if (editMode) {
-
-      //convert PersonEntity to PersonType
-      loadEntity(entity as unknown as PersonType) //TODO dirty fix, needs proper mapping
+      loadEntity(entity)
     }
   }, [editMode, entity, loadEntity])
 
@@ -119,7 +118,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             ) : (
               <CustomFloatLabel
                 id="birthdate"
-                value={entity.birthdate.split('T')[0]}
+                value={entity.data.dateOfBirth.split('T')[0]}
                 placeholder={t('search:entity.person.birthdate.placeholder')}
                 readOnly
                 className="flex-1"

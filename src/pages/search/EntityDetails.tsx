@@ -37,15 +37,10 @@ const EntityDetails: React.FC = () => {
   } = usePersonStore()
 
   const entity = useMemo(
-  () =>
-    results.find((entity) =>
-      entity.identifiers?.some(
-        (id: any) => id.identifierType === 'masterObjectIdentifier' && id.identifier === entityId
-      )
-    ),
-  [results, entityId]
-)
-
+    () => results.find((entity) => entity.trustdeckID === entityId),
+    [results, entityId]
+  )
+  
   if (!entity) {
     return <p>No result found for ID: {entityId}</p>
   }
@@ -56,12 +51,8 @@ const EntityDetails: React.FC = () => {
       lastname,
       birthdate: birthdate ? new Date(birthdate).toISOString() : null,
       gender,
-      phones: [
-        ...(phone ? [{ type: 'mobile', value: phone }] : []),
-      ],
-      emails: [
-        ...(email ? [{ type: 'private', value: email }] : []),
-      ],
+      phones: [...(phone ? [{ type: 'mobile', value: phone }] : [])],
+      emails: [...(email ? [{ type: 'private', value: email }] : [])],
       addresses: [
         {
           type: 'home',
@@ -77,6 +68,7 @@ const EntityDetails: React.FC = () => {
     const response = await PersonService.personUpdate(payload)
     console.log(response)
   }
+          console.log(entity)
 
   return (
     <div>
@@ -109,16 +101,16 @@ const EntityDetails: React.FC = () => {
           ) : (
             <>
               <PrimaryOutlinedButton
-              label={
-                <span className="hidden sm:inline">{t('search:cancel')}</span>
-              }
+                label={
+                  <span className="hidden sm:inline">{t('search:cancel')}</span>
+                }
                 onClick={() => setEditMode(false)}
                 icon={<XMarkIcon className="h-5 w-5 mr-1" />}
               />
               <PrimaryButton
-              label={
-                <span className="hidden sm:inline">{t('search:save')}</span>
-              }
+                label={
+                  <span className="hidden sm:inline">{t('search:save')}</span>
+                }
                 onClick={() => {
                   setEditMode(false)
                   handleSave()
@@ -129,10 +121,7 @@ const EntityDetails: React.FC = () => {
           )}
         </div>
       </div>
-
-      {'firstname' in entity && (
-        <Person entity={entity} editMode={editMode} />
-      )}
+      {entity.data.firstName && <Person entity={entity} editMode={editMode} />}
       {entity.type === 'bioprobe' && (
         <BioProbe entity={entity} editMode={editMode} />
       )}

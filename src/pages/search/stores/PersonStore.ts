@@ -49,7 +49,7 @@ type EntityState = EntityData & {
   setContactPhone: (phone: string) => void
   setRelationship: (relationship: string) => void
 
-  loadEntity: (data: PersonType) => void
+  loadEntity: (data: any) => void
   reset: () => void
 }
 
@@ -108,37 +108,30 @@ const usePersonStore = create<EntityState>((set) => ({
 
   // main function: map API person object
   loadEntity: (result: any) => {
-    console.log(result)
-    const firstEmail = result.data.email ?? ''
-    const firstPhone = result.data.phoneNumber ?? ''
-    const address = result.data.street ?? {}
     const id = result.data.identifiers?.find((i: any) => i.identifierType === 'SAP-ID')?.identifier ?? ''
     const MOI = result.data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
-    const firstContact = result.data.contactFirstName
 
     set({
       lastname: result.data.lastName ?? '',
       firstname: result.data.firstName ?? '',
       birthdate: result.data.dateOfBirth?.split('T')[0] ?? '',
       gender: result.data.administrativeGender ?? '',
-      email: firstEmail,
-      phone: firstPhone,
-      street: address.street ?? '',
-      houseNumber: address.houseNumber ?? '',
-      city: address.city ?? '',
-      country: address.country ?? '',
-      zip: address.postCode ?? '',
+      email: result.data.email,
+      phone: result.data.phoneNumber,
+      street: result.data.street ?? '',
+      houseNumber: result.data.houseNumber ?? '',
+      city: result.data.city ?? '',
+      country: result.data.country ?? '',
+      zip: result.data.postalCode ?? '',
       identifiers: {
         id,
         MOI
       },
-      contactPerson: {
-        firstname: firstContact?.firstname ?? '',
-        lastname: firstContact?.lastname ?? '',
-        email: firstContact?.emails?.[0]?.value ?? '',
-        phone: firstContact?.phones?.[0]?.value ?? '',
-        relationship: firstContact?.relationship ?? ''
-      }
+      contactFirstName: result.data.contactFirstName ?? '',
+      contactLastName: result.data.contactLastName ?? '',
+      contactPhone: result.data.contactPhone ?? '',
+      contactEmail: result.data.contactEmail ?? '',
+      contactRelationship: result.data.contactRelationship ?? ''
     })
   },
 

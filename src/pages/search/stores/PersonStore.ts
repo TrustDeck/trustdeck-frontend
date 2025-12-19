@@ -1,110 +1,89 @@
 import { create } from 'zustand'
-import { PersonType } from '../../../core/types/PersonEntity'
-
-type ContactPerson = {
-  firstname: string
-  lastname: string
-  email: string
-  phone: string
-  relationship: string
-}
 
 type EntityData = {
-  lastname: string
-  firstname: string
-  birthdate: string
-  gender: string
+  lastName: string
+  firstName: string
+  dateOfBirth: string
+  administrativeGender: string
   email: string
-  phone: string
+  phoneNumber: string
   street: string
   houseNumber: string
   city: string
   country: string
-  zip: string
-  identifiers: {
-    id: string
-    MOI: string
-  }
-  contactPerson: ContactPerson
+  postalCode: string
+  trustdeckID: string,
+  contactFirstName: string,
+  contactLastName: string,
+  contactPhone: string,
+  contactEmail: string,
+  contactRelationship: string
 }
 
 type EntityState = EntityData & {
-  setLastname: (lastname: string) => void
-  setFirstname: (firstname: string) => void
-  setBirthdate: (birthdate: string) => void
-  setGender: (gender: string) => void
+  setLastName: (lastName: string) => void
+  setFirstName: (firstName: string) => void
+  setDateOfBirth: (dateOfBirth: string) => void
+  setAdministrativeGender: (administrativeGender: string) => void
   setEmail: (email: string) => void
-  setPhone: (phone: string) => void
+  setPhoneNumber: (phoneNumber: string) => void
   setStreet: (street: string) => void
   setHouseNumber: (houseNumber: string) => void
   setCity: (city: string) => void
   setCountry: (country: string) => void
-  setZip: (zip: string) => void
-  setId: (id: string) => void
-  setMOI: (MOI: string) => void
-
-  setContactFirstname: (firstname: string) => void
-  setContactLastname: (lastname: string) => void
+  setPostalCode: (postalCode: string) => void
+  setTrustdeckID: (trustdeckID: string) => void
+  setContactFirstName: (firstName: string) => void
+  setContactLastName: (lastName: string) => void
   setContactEmail: (email: string) => void
   setContactPhone: (phone: string) => void
-  setRelationship: (relationship: string) => void
+  setContactRelationship: (relationship: string) => void
 
   loadEntity: (data: any) => void
   reset: () => void
 }
 
 const defaultState: EntityData = {
-  lastname: '',
-  firstname: '',
-  birthdate: '',
-  gender: '',
+  lastName: '',
+  firstName: '',
+  dateOfBirth: '',
+  administrativeGender: '',
   email: '',
-  phone: '',
+  phoneNumber: '',
   street: '',
   houseNumber: '',
   city: '',
   country: '',
-  zip: '',
-  identifiers: {
-    id: '',
-    MOI: ''
-  },
-  contactPerson: {
-    firstname: '',
-    lastname: '',
-    email: '',
-    phone: '',
-    relationship: ''
-  }
+  postalCode: '',
+  trustdeckID: '',
+  contactFirstName: '',
+  contactLastName: '',
+  contactPhone: '',
+  contactEmail: '',
+  contactRelationship: ''
 }
 
 const usePersonStore = create<EntityState>((set) => ({
   ...defaultState,
 
   // setters
-  setLastname: (lastname) => set({ lastname }),
-  setFirstname: (firstname) => set({ firstname }),
-  setBirthdate: (birthdate) => set({ birthdate }),
-  setGender: (gender) => set({ gender }),
+  setLastName: (lastName) => set({ lastName }),
+  setFirstName: (firstName) => set({ firstName }),
+  setDateOfBirth: (dateOfBirth) => set({ dateOfBirth }),
+  setAdministrativeGender: (administrativeGender) => set({ administrativeGender }),
   setEmail: (email) => set({ email }),
-  setPhone: (phone) => set({ phone }),
+  setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
   setStreet: (street) => set({ street }),
   setHouseNumber: (houseNumber) => set({ houseNumber }),
   setCity: (city) => set({ city }),
   setCountry: (country) => set({ country }),
-  setZip: (zip) => set({ zip }),
-  setId: (id) => set((state) => ({ identifiers: { ...state.identifiers, id } })),
-  setMOI: (MOI) => set((state) => ({ identifiers: { ...state.identifiers, MOI } })),
-  setContactFirstname: (firstname) =>
-    set((state) => ({ contactPerson: { ...state.contactPerson, firstname } })),
-  setContactLastname: (lastname) =>
-    set((state) => ({ contactPerson: { ...state.contactPerson, lastname } })),
-  setContactEmail: (email) =>
-    set((state) => ({ contactPerson: { ...state.contactPerson, email } })),
-  setContactPhone: (phone) =>
-    set((state) => ({ contactPerson: { ...state.contactPerson, phone } })),
-  setRelationship: (relationship) =>
-    set((state) => ({ contactPerson: { ...state.contactPerson, relationship } })),
+  setPostalCode: (postalCode) => set({ postalCode }),
+  setTrustdeckID: (trustdeckID) => set({ trustdeckID }),
+  setContactFirstName: (contactFirstName) => ({ contactFirstName }),
+  setContactLastName: (contactLastName) => ({ contactLastName }),
+  setContactEmail: (contactEmail) => ({ contactEmail }),
+  setContactPhone: (contactPhone) => ({ contactPhone }),
+  setContactRelationship: (contactRelationship) => ({ contactRelationship }),
 
   // main function: map API person object
   loadEntity: (result: any) => {
@@ -112,21 +91,18 @@ const usePersonStore = create<EntityState>((set) => ({
     const MOI = result.data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
 
     set({
-      lastname: result.data.lastName ?? '',
-      firstname: result.data.firstName ?? '',
-      birthdate: result.data.dateOfBirth?.split('T')[0] ?? '',
-      gender: result.data.administrativeGender ?? '',
+      lastName: result.data.lastName ?? '',
+      firstName: result.data.firstName ?? '',
+      dateOfBirth: result.data.dateOfBirth?.split('T')[0] ?? '',
+      administrativeGender: result.data.administrativeGender ?? '',
       email: result.data.email,
-      phone: result.data.phoneNumber,
+      phoneNumber: result.data.phoneNumber,
       street: result.data.street ?? '',
       houseNumber: result.data.houseNumber ?? '',
       city: result.data.city ?? '',
       country: result.data.country ?? '',
-      zip: result.data.postalCode ?? '',
-      identifiers: {
-        id,
-        MOI
-      },
+      postalCode: result.data.postalCode ?? '',
+      trustdeckID: result.trustdeckID ?? '',
       contactFirstName: result.data.contactFirstName ?? '',
       contactLastName: result.data.contactLastName ?? '',
       contactPhone: result.data.contactPhone ?? '',

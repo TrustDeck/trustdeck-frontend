@@ -75,7 +75,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     try {
       let result
       if (selectedType === 'person') {
-        result = await PersonService.fuzzySearch('personNoId', quick)
+        result = await PersonService.fuzzySearch('person', quick)
         if (psn) {
           handleNext()
         }

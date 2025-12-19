@@ -1,12 +1,19 @@
 export const person = {
-    "name": "personNoId",
+    "name": "person",
     "version": "v0.2-alpha",
-    "baseTypeName": "basePersonNoId",
+    "baseTypeName": "basePerson",
     "typeDefinition": {
-        "typeName": "personNoId",
+        "typeName": "person",
         "version": "v0.1-alpha",
         "attributes": [
         {
+            "name": "id",
+            "type": "integer",
+            "required": true,
+            "linkage": true,
+            "minimum": 1
+        },
+            {
             "name": "firstName",
             "type": "string",
             "required": true,
@@ -125,7 +132,7 @@ export const person = {
             "type": "string",
             "required": false,
             "linkage": false,
-            "enum": ["partner", "sibling", "friend", "other"]
+            "enum": ["partner", "parent", "child", "sibling", "grandparent", "friend"]
         }
         ]
     }

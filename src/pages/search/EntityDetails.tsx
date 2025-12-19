@@ -23,52 +23,63 @@ const EntityDetails: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const {
-    lastname,
-    firstname,
-    birthdate,
-    gender,
+    lastName,
+    firstName,
+    dateOfBirth,
+    administrativeGender,
     email,
-    phone,
+    phoneNumber,
     street,
     houseNumber,
     city,
     country,
-    zip
+    postalCode,
+    trustdeckID,
+    contactLastName,
+    contactFirstName,
+    contactEmail,
+    contactPhone,
+    contactRelationship
   } = usePersonStore()
 
   const entity = useMemo(
     () => results.find((entity) => entity.trustdeckID === entityId),
     [results, entityId]
   )
-  
+
   if (!entity) {
     return <p>No result found for ID: {entityId}</p>
   }
 
-  async function handleSave() {
-    const payload = {
-      firstname,
-      lastname,
-      birthdate: birthdate ? new Date(birthdate).toISOString() : null,
-      gender,
-      phones: [...(phone ? [{ type: 'mobile', value: phone }] : [])],
-      emails: [...(email ? [{ type: 'private', value: email }] : [])],
-      addresses: [
-        {
-          type: 'home',
-          street,
-          houseNumber,
-          zip,
-          city,
-          country
-        }
-      ],
-      contactPersons: [{}]
-    }
-    const response = await PersonService.personUpdate(payload)
-    console.log(response)
+async function handleSave() {
+  const rawData = {
+    firstName,
+    lastName,
+    dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
+    administrativeGender,
+    phoneNumber,
+    email,
+    street,
+    houseNumber,
+    city,
+    country,
+    postalCode,
+    contactLastName,
+    contactFirstName,
+    contactEmail,
+    contactPhone,
+    contactRelationship
   }
-          console.log(entity)
+
+  // Remove empty values
+  const data = Object.fromEntries(
+    Object.entries(rawData).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+  )
+
+  const payload = { data }
+  const response = await PersonService.personUpdate(payload, trustdeckID)
+  console.log(response)
+}
 
   return (
     <div>

@@ -109,11 +109,18 @@ class TrustDeck {
 
   public async getType(type: string) {
     const projectName = this.getSelectedProjectName()
-    return this.request('GET', `/projects/${projectName}/entities/config/${type}`)
+    return this.request(
+      'GET',
+      `/projects/${projectName}/entities/config/${type}`
+    )
   }
 
   public async createType(projectName: string) {
-    return this.request('POST', `/projects/${projectName}/entities/config`, person)
+    return this.request(
+      'POST',
+      `/projects/${projectName}/entities/config`,
+      person
+    )
   }
 
   public async fuzzySearch(entity: string, query: string) {
@@ -127,12 +134,20 @@ class TrustDeck {
 
   public async postPerson(person: any) {
     const projectName = this.getSelectedProjectName()
-    return this.request<any>('POST', `/projects/${projectName}/entities/personNoId`, person)
+    return this.request<any>(
+      'POST',
+      `/projects/${projectName}/entities/person`,
+      person
+    )
   }
 
-  public async putPerson(person: PersonType) {
+  public async putPerson(updatedPerson: any, trustdeckID: string) {
     const projectName = this.getSelectedProjectName()
-    return this.request<PersonType>('PUT', `/${projectName}/person`, person)
+    return this.request<any>(
+      'PUT',
+      `/projects/${projectName}/entities/person/${trustdeckID}`,
+      updatedPerson
+    )
   }
 
   public async postBiosample(biosample: BioSampleEntity) {
@@ -148,7 +163,7 @@ class TrustDeck {
     const projectName = this.getSelectedProjectName()
     return this.request<any>(
       'POST',
-      `/projects/${projectName}/entities/personNoId/record-linkage`,
+      `/projects/${projectName}/entities/person/record-linkage`,
       person
     )
   }
@@ -185,17 +200,10 @@ class TrustDeck {
     )
   }
 
-  public async createPseudonym(
-    payload: { identifier: string; identifierType: string },
-    selectedGroup: string
-  ) {
-    console.log(selectedGroup)
-    return this.request(
-      'POST',
-      `/pseudonymization/domains/Project-Alpha/pseudonym`,
-      payload
-    )
+  public async createPseudonym(payload: { identifier: string, idType: string }, selectedGroup: string) {
+    return this.request('POST', `/domains/${selectedGroup}/pseudonyms`, payload)
   }
+
 
   public async searchOperators(q: string) {
     return this.request<Operator[]>(

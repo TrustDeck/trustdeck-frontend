@@ -63,23 +63,23 @@ export default function PersonForm() {
       projectName: selectedProject?.abbreviation,
       entityTypeName: 'person',
       data: {
+        id,
         firstName,
         lastName,
         administrativeGender,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : null,
         phoneNumber,
-        ...(email ? { email } : {}),
+        email,
         street,
         houseNumber,
         postalCode,
         city,
         country,
-        // only if provided
-        ...(contactFirstName ? { contactFirstName } : {}),
-        ...(contactLastName ? { contactLastName } : {}),
-        ...(contactPhone ? { contactPhone } : {}),
-        ...(contactEmail ? { contactEmail } : {}),
-        ...(contactRelationship ? { contactRelationship } : {})
+        contactFirstName,
+        contactLastName,
+        contactPhone,
+        contactEmail,
+        contactRelationship
       }
     }
 
@@ -104,6 +104,7 @@ export default function PersonForm() {
 
   const { t } = useTranslation()
   const {
+    id,
     firstName,
     lastName,
     dateOfBirth,
@@ -122,7 +123,7 @@ export default function PersonForm() {
     contactPhone,
     contactEmail,
     contactRelationship,
-    // patientID,
+    setId,
     setFirstName,
     setLastName,
     setDateOfBirth,
@@ -203,6 +204,16 @@ export default function PersonForm() {
           <p>
             All fields marked with an * are required and must be filled out.
           </p>
+          <div className='sm:space-y-0 space-y-3 mb-5'>
+            <CustomFloatLabel
+              id="id"
+              value={id}
+              onChange={(e) => setId(Number(e.target.value))}
+              placeholder={'ID'}
+              errorMessage={'ID required'}
+              required
+            />
+          </div>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
             <CustomFloatLabel
               id="firstName"

@@ -12,7 +12,7 @@ import validation from '../../../core/utils/validation'
 import { countryOptions } from '../../identity/util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import { PersonEntity } from '../types/PersonEntity'
-import { PersonType } from 'core/types/PersonEntity'
+// import { PersonType } from 'core/types/PersonEntity'
 import { Entity } from '../types/Entity'
 
 interface PersonProps {
@@ -22,53 +22,55 @@ interface PersonProps {
 
 const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
   const { t } = useTranslation()
-  console.log('fired')
-console.log(entity)
+
   const {
-    lastname,
-    firstname,
-    birthdate,
-    gender,
+    lastName,
+    firstName,
+    dateOfBirth,
+    administrativeGender,
     email,
-    phone,
+    phoneNumber,
     street,
     houseNumber,
     city,
     country,
-    zip,
-    contactPerson,
-    identifiers,
-    setLastname,
-    setFirstname,
-    setBirthdate,
-    setGender,
+    postalCode,
+    trustdeckID,
+    contactFirstName,
+    contactLastName,
+    contactPhone,
+    contactEmail,
+    contactRelationship,
+    setLastName,
+    setFirstName,
+    setDateOfBirth,
+    setAdministrativeGender,
     setEmail,
-    setPhone,
+    setPhoneNumber,
     setStreet,
     setHouseNumber,
     setCity,
     setCountry,
-    setZip,
-    setContactFirstname,
-    setContactLastname,
+    setPostalCode,
+    setContactFirstName,
+    setContactLastName,
     setContactEmail,
     setContactPhone,
-    setRelationship,
-    setId,
-    setMOI,
+    setContactRelationship,
     loadEntity
   } = usePersonStore()
 
   useEffect(() => {
     if (editMode) {
+      console.log('editMode')
       loadEntity(entity)
     }
   }, [editMode, entity, loadEntity])
 
   const genderDropdownOptions = [
-    { label: t('identity:entity.gender.male'), value: 'Male' },
-    { label: t('identity:entity.gender.female'), value: 'Female' },
-    { label: t('identity:entity.gender.nonBinary'), value: 'Non-binary' }
+    { label: t('identity:entity.gender.male'), value: 'male' },
+    { label: t('identity:entity.gender.female'), value: 'female' },
+    { label: t('identity:entity.gender.nonBinary'), value: 'other' }
   ]
 
   const countryLabel = countryOptions.find((c) => c.value === country)?.label || country
@@ -86,18 +88,18 @@ console.log(entity)
           <div className="flex space-x-3">
             <CustomFloatLabel
               id="firstname"
-              value={firstname}
+              value={firstName}
               placeholder={t('search:entity.person.firstname.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setFirstname(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value)}
               validate={validation.isValidRegistrationName}
             />
             <CustomFloatLabel
               id="lastname"
-              value={lastname}
+              value={lastName}
               placeholder={t('search:entity.person.lastname.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setLastname(e.target.value)}
+              onChange={(e) => setLastName(e.target.value)}
               validate={validation.isValidRegistrationName}
             />
           </div>
@@ -107,9 +109,9 @@ console.log(entity)
                 <CustomCalendar
                   id="birthdate"
                   placeholder={t('search:entity.person.birthdate.placeholder')}
-                  value={birthdate ? new Date(birthdate) : null}
+                  value={dateOfBirth ? new Date(dateOfBirth) : null}
                   onChange={(e) =>
-                    setBirthdate(
+                    setDateOfBirth(
                       e.value ? e.value.toISOString().split('T')[0] : ''
                     )
                   }
@@ -128,10 +130,10 @@ console.log(entity)
             {editMode ? (
               <div className="flex flex-col flex-1">
                 <CustomDropdown
-                  id="gender"
+                  id="administrativeGender"
                   placeholder={t('search:entity.person.gender.placeholder')}
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
+                  value={administrativeGender}
+                  onChange={(e) => setAdministrativeGender(e.value)}
                   options={genderDropdownOptions}
                   textColor="text-gray-700"
                   className="w-full"
@@ -139,8 +141,8 @@ console.log(entity)
               </div>
             ) : (
               <CustomFloatLabel
-                id="gender"
-                value={gender}
+                id="administrativeGender"
+                value={administrativeGender}
                 placeholder={t('search:entity.person.gender.placeholder')}
                 readOnly
                 className="flex-1"
@@ -157,10 +159,10 @@ console.log(entity)
           />
           <CustomFloatLabel
               id="phone"
-              value={phone}
+              value={phoneNumber}
               placeholder={t('search:entity.person.phone.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               validate={validation.isValidRegistrationPhone}
             />
         </div>
@@ -189,10 +191,10 @@ console.log(entity)
           <div className="flex space-x-3">
             <CustomFloatLabel
               id="zip"
-              value={zip}
+              value={postalCode}
               placeholder={t('search:entity.person.zip.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setZip(e.target.value)}
+              onChange={(e) => setPostalCode(e.target.value)}
               validate={validation.isValidRegistrationZip}
             />
             <CustomFloatLabel
@@ -232,25 +234,25 @@ console.log(entity)
         <div className="space-y-5">
           <div className="flex space-x-3">
             <CustomFloatLabel
-              id="contactFirstname"
-              value={contactPerson.firstname}
+              id="contactFirstName"
+              value={contactFirstName}
               placeholder={t('search:entity.person.firstname.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setContactFirstname(e.target.value)}
+              onChange={(e) => setContactFirstName(e.target.value)}
               validate={validation.isValidRegistrationName}
             />
             <CustomFloatLabel
-              id="contactLastname"
-              value={contactPerson.lastname}
+              id="contactLastName"
+              value={contactLastName}
               placeholder={t('search:entity.person.lastname.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setContactLastname(e.target.value)}
+              onChange={(e) => setContactLastName(e.target.value)}
               validate={validation.isValidRegistrationName}
             />
           </div>
           <CustomFloatLabel
             id="contactEmail"
-            value={contactPerson.email}
+            value={contactEmail}
             placeholder={t('search:entity.person.email.placeholder')}
             readOnly={!editMode}
             onChange={(e) => setContactEmail(e.target.value)}
@@ -258,7 +260,7 @@ console.log(entity)
           />
           <CustomFloatLabel
             id="contactPhone"
-            value={contactPerson.phone}
+            value={contactPhone}
             placeholder={t('search:entity.person.phone.placeholder')}
             readOnly={!editMode}
             onChange={(e) => setContactPhone(e.target.value)}
@@ -267,10 +269,10 @@ console.log(entity)
           {editMode ? (
             <div className="flex flex-col flex-1">
               <CustomDropdown
-                id="relationship"
+                id="contactRelationship"
                 placeholder={t('search:entity.person.relationship.placeholder')}
-                value={contactPerson.relationship}
-                onChange={(e) => setRelationship(e.target.value)}
+                value={contactRelationship}
+                onChange={(e) => setContactRelationship(e.target.value)}
                 options={relationshipOptions}
                 textColor="text-gray-700"
                 className="w-full mb-8"
@@ -279,10 +281,10 @@ console.log(entity)
           ) : (
             <CustomFloatLabel
               id="relationship"
-              value={contactPerson.relationship}
+              value={contactRelationship}
               placeholder={t('search:entity.person.relationship.placeholder')}
               readOnly={!editMode}
-              onChange={(e) => setRelationship(e.target.value)}
+              onChange={(e) => setContactRelationship(e.target.value)}
               className="mb-8"
             />
           )}
@@ -300,19 +302,19 @@ console.log(entity)
         <div className="space-y-5">
           <CustomFloatLabel
             id="id"
-            value={identifiers.id}
-            onChange={(e) => setId(e.target.value)}
+            value={trustdeckID}
+            // onChange={(e) => setId(e.target.value)}
             placeholder="ID"
             readOnly={!editMode}
           />
-          <CustomFloatLabel
+          {/* <CustomFloatLabel
             id="MOI"
             value={identifiers.MOI}
             onChange={(e) => setMOI(e.target.value)}
             placeholder="Master Object Index"
             className="mb-8"
             readOnly={!editMode}
-          />
+          /> */}
         </div>
       </Panel>
     </div>

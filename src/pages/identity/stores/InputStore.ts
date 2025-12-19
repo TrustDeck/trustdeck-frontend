@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 type InputState = {
+  id: number
   firstName: string
   lastName: string
   dateOfBirth: Date | null
@@ -24,6 +25,7 @@ type InputState = {
   contents: string
   sampleNumber: string
   patientID: string
+  setId: (id: number) => void,
   setFirstName: (firstName: string) => void
   setLastName: (lastName: string) => void
   setDateOfBirth: (dateOfBirth: Date | null) => void
@@ -50,6 +52,7 @@ type InputState = {
 }
 
 const useInputStore = create<InputState>((set) => ({
+  id: 0,
   firstName: '',
   lastName: '',
   dateOfBirth: null,
@@ -73,6 +76,7 @@ const useInputStore = create<InputState>((set) => ({
   contents: '',
   sampleNumber: '',
   patientID: '',
+  setId: (id) => set({ id }),
   setFirstName: (firstName) => set({ firstName }),
   setLastName: (lastName) => set({ lastName }),
   setDateOfBirth: (dateOfBirth) => set({ dateOfBirth }),

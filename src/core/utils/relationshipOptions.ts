@@ -9,9 +9,6 @@ export function useRelationshipOptions() {
     { label: t('identity:entity.person.relationship.child'), value: 'child' },
     { label: t('identity:entity.person.relationship.sibling'), value: 'sibling' },
     { label: t('identity:entity.person.relationship.grandparent'), value: 'grandparent' },
-    { label: t('identity:entity.person.relationship.auntUncle'), value: 'aunt_uncle' },
-    { label: t('identity:entity.person.relationship.nieceNephew'), value: 'niece_nephew' },
-    { label: t('identity:entity.person.relationship.cousin'), value: 'cousin' },
     { label: t('identity:entity.person.relationship.friend'), value: 'friend' }
   ];
 }

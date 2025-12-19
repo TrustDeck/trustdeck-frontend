@@ -1,10 +1,17 @@
 export const basePerson = {
-    "name": "basePersonNoId",
+    "name": "basePerson",
     "version": "v1.0-BASE",
     "typeDefinition": {
-        "typeName": "base-person-no-id",
+        "typeName": "base-person",
         "version": "v1.0",
         "attributes": [
+        {
+            "name": "id",
+            "type": "integer",
+            "required": true,
+            "linkage": true,
+            "minimum": 1
+        },
         {
             "name": "firstName",
             "type": "string",

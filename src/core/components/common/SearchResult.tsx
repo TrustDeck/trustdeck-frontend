@@ -108,7 +108,10 @@ const SearchResult: React.FC<SearchResultProps> = ({
                     if (duplicate) {
                       navigate(`/identity/duplicates/${result.trustdeckID}`)
                     } else if (pseudonymization) {
-                      setSelectedEntityId(result.trustdeckID)
+                      setSelectedEntityId({
+                        identifier: result.data.id,
+                        identifierType: 'id'
+                      })
                       handleNext()
                     } else {
                       navigate(`/search/${result.trustdeckID}`)

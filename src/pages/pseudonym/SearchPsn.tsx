@@ -43,16 +43,20 @@ export default function SearchPsn() {
   async function handleClick() {
     const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
     const payload = {
-      id: selectedEntityId.identifier,
-      idType: selectedEntityId.identifierType
+      identifierItem: {
+        "identifier": selectedEntityId.identifier.toString(),
+        "idType": selectedEntityId.identifierType
+      }
     }
     try {
       // run all pseudonym creations in parallel
+      console.log(payload)
       const responses = await Promise.all(
         selectedGroupNames.map((groupName) =>
           PseudonymService.createPseudonym(payload, groupName)
         )
       )
+      console.log(responses)
 
       // Each response should be an array; extract pseudonyms
       const pseudonyms = responses
@@ -93,7 +97,7 @@ export default function SearchPsn() {
             {results.length > 0 ? (
               results.map((result) => (
                 <div
-                  key={result.identifiers[0].identifier}
+                  key={result.trustdeckID}
                   className="my-4 flex justify-center"
                 >
                   <SearchResult pseudonymization result={result} />

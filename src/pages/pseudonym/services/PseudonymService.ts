@@ -1,16 +1,8 @@
 import TrustDeck from "@service/TrustDeck";
 
-const mockGroups = [
-  {label: 'Group-MRT', value: 'Group-MRT'},
-  {label: 'Group-Labor', value: 'Group-Labor'},
-  {label: 'Group-EEG', value: 'Group-EEG'}
-]
-
 export const PseudonymService = {
   getGroups: async () => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockGroups), 200);
-    });
+    return await TrustDeck.instance().getGroups()
   },
 
   createPseudonym: async (payload: any, selectedGroup: string) => {

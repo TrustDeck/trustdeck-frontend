@@ -24,6 +24,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
   const { t } = useTranslation()
 
   const {
+    id,
     lastName,
     firstName,
     dateOfBirth,
@@ -302,7 +303,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
         <div className="space-y-5">
           <CustomFloatLabel
             id="id"
-            value={trustdeckID}
+            value={id}
             // onChange={(e) => setId(e.target.value)}
             placeholder="ID"
             readOnly={!editMode}

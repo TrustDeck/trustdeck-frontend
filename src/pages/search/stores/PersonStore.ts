@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 type EntityData = {
+  id: number
   lastName: string
   firstName: string
   dateOfBirth: string
@@ -21,6 +22,7 @@ type EntityData = {
 }
 
 type EntityState = EntityData & {
+  setId: (id: number) => void
   setLastName: (lastName: string) => void
   setFirstName: (firstName: string) => void
   setDateOfBirth: (dateOfBirth: string) => void
@@ -44,6 +46,7 @@ type EntityState = EntityData & {
 }
 
 const defaultState: EntityData = {
+  id: 0,
   lastName: '',
   firstName: '',
   dateOfBirth: '',
@@ -67,6 +70,7 @@ const usePersonStore = create<EntityState>((set) => ({
   ...defaultState,
 
   // setters
+  setId: (id) => set({ id }),
   setLastName: (lastName) => set({ lastName }),
   setFirstName: (firstName) => set({ firstName }),
   setDateOfBirth: (dateOfBirth) => set({ dateOfBirth }),
@@ -91,6 +95,7 @@ const usePersonStore = create<EntityState>((set) => ({
     const MOI = result.data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
 
     set({
+      id: result.data.id ?? '',
       lastName: result.data.lastName ?? '',
       firstName: result.data.firstName ?? '',
       dateOfBirth: result.data.dateOfBirth?.split('T')[0] ?? '',

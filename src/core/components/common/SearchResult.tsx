@@ -81,7 +81,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                 {!newPerson && (
                   <p className="flex">
                     <IdentificationIcon className="h-5 w-5 mr-1" />
-                    {result.trustdeckID}
+                    {result.data.id}
                   </p>
                 )}
               </div>

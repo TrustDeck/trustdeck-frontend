@@ -10,10 +10,11 @@ Prerequisites:
 
 Steps:
 1. Clone this repository
-2. Adjust environment variables in `docker-compose.yml` (or point to a `.env` file if used).
-3. Start the stack: `make compose` **Note: This uses Docker/Compose to build and run services.**
-4. The app should be available on http://localhost:9000
-5. Configure your proxy (nginx, Traefik, or other) to forward incoming requests to the container port (e.g., localhost:9000).
+2. Run `make install`
+3. Adjust environment variables in `docker-compose.yml` (or point to a `.env` file if used).
+4. Start the stack: `make compose` **Note: This uses Docker/Compose to build and run services.**
+5. The app should be available on http://localhost:9000
+6. Configure your proxy (nginx, Traefik, or other) to forward incoming requests to the container port (e.g., localhost:9000).
 
 ## Quick start (development)
 - Install dependencies: `npm install`

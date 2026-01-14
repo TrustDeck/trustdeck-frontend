@@ -79,17 +79,17 @@ export default function ProjectOverview() {
           <SingleProject key={project.abbreviation} project={project} />
         ))}
       </div>
-      <div className="flex flex-col h-full">
-        <div className="flex justify-center w-full flex-1 items-center text-center">
-          {projects.length === 0 && (
+      {projects.length === 0 && (
+        <div className="flex flex-col h-full">
+          <div className="flex justify-center w-full flex-1 items-center text-center">
             <h3>
               You don't have access to any projects yet. <br /> Create a new
               project by clicking on the button above or ask a colleague to add
               you to a project!
             </h3>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

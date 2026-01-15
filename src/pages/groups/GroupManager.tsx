@@ -280,7 +280,7 @@ export default function GroupManager() {
                 <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
                   <ProgressSpinner style={{ width: '60px', height: '60px' }} />
                 </div>
-                <p>New Group is being created...</p>
+                <p>{t('groups:savingGroup')}</p>
               </>
             ) : (
               <>
@@ -291,13 +291,13 @@ export default function GroupManager() {
 
           {/* PrimeReact Dialog */}
           <Dialog
-            header="How to use this page:"
+            header={t('groups:headers.modalHeader')}
             visible={visible}
             style={{ width: '50vw' }}
             onHide={() => setVisible(false)}
           >
             <p className="m-0">
-             This page shows all of the groups and subgroups in your project. The first group has been created for you. To create a subgroup for it, click the "New group" button and follow the prompts in the inspector on the right side of the screen. 
+              {t('groups:modal')}
             </p>
           </Dialog>
         </div>

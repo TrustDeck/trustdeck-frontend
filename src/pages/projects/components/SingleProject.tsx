@@ -4,6 +4,7 @@ import { ProjectType } from '../types/ProjectType'
 import { formatDate } from '../../../core/utils/date'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import ProjectService from '../services/ProjectService'
+import { useTranslation } from 'react-i18next'
 
 interface SingleProjectProps {
   project: ProjectType
@@ -15,7 +16,7 @@ export default function SingleProject({ project }: SingleProjectProps) {
   const setSelectedProject = useProjectStore((state) => state.setSelectedProject)
   const setEntities = useProjectStore((state) => state.setEntities)
   const setEntityAttributes = useProjectStore((state) => state.setEntityAttributes)
-
+  const { t } = useTranslation()
 
   async function handleClick() {
     setSelectedProject({ abbreviation: project.abbreviation, name: project.name })
@@ -37,8 +38,8 @@ export default function SingleProject({ project }: SingleProjectProps) {
     <Panel onClick={handleClick} className='cursor-pointer hover:bg-gray-100 transition-colors duration-200'>
       <h2 className='my-3'>{project.name}</h2>
       <div className='flex gap-5 my-3' role='button'>
-        {project.statistics?.firstPseudonymCreatedAt && <p>{`First pseudonym: ${formatDate(project.statistics.firstPseudonymCreatedAt)}`}</p>}
-        {project.statistics?.lastPseudonymCreatedAt && <p>{`Last pseudonym: ${formatDate(project.statistics.lastPseudonymCreatedAt)}`}</p>}
+        {project?.startDate && <p>{`${t('projects:startDate')} ${formatDate(project.startDate)}`}</p>}
+        {project?.endDate && <p>{`${t('projects:endDate')} ${formatDate(project.endDate)}`}</p>}
         {project.statistics?.totalSubGroups && <p><strong>{project.statistics.totalSubGroups}</strong> subgroups</p>}
       </div>
     </Panel>

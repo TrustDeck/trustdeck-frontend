@@ -19,18 +19,32 @@ export default function ProjectOverview() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
     const fetchProjects = async () => {
       try {
         const data = await ProjectService.getProjects()
-        setProjects(data)
+        // makes sure no duplicate projects are added
+        const uniqueProjects = Array.from(
+          new Map(data.map((project) => [project.abbreviation, project])).values()
+        )
+        if (isMounted) {
+          setProjects(uniqueProjects)
+        }
       } catch (e) {
         console.error('Failed to load projects', e)
-        setProjects([])
+        if (isMounted) {
+          setProjects([])
+        }
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
     fetchProjects()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredProjects = projects

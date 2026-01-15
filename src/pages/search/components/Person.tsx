@@ -36,7 +36,6 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
     city,
     country,
     postalCode,
-    trustdeckID,
     contactFirstName,
     contactLastName,
     contactPhone,
@@ -67,6 +66,10 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
       loadEntity(entity)
     }
   }, [editMode, entity, loadEntity])
+
+  useEffect(() => {
+    
+  })
 
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },

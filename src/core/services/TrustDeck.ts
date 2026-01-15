@@ -143,6 +143,7 @@ class TrustDeck {
 
   public async putPerson(updatedPerson: any, trustdeckID: string) {
     const projectName = this.getSelectedProjectName()
+    console.log(trustdeckID)
     return this.request<any>(
       'PUT',
       `/projects/${projectName}/entities/person/${trustdeckID}`,
@@ -208,37 +209,24 @@ class TrustDeck {
   public async searchOperators(q: string) {
     return this.request<Operator[]>(
       'GET',
-      '/service/operators/search',
-      undefined,
-      {
-        query: q
-      }
+      `/permissions/users?query=${q}`
     )
   }
 
-  public async updateUserPermissions(
-    domain: string,
-    userId: string,
-    permissions: Permission[]
-  ) {
+  public async updateUserPermissions( userId: string, permissions: Permission[] ) {
+    const projectName = this.getSelectedProjectName()
     return this.request<string>(
       'PUT',
-      `/service/${domain}/permissions`,
-      permissions,
-      {
-        userId: userId
-      }
+      `/permissions/${projectName}?userId=${userId}`,
+      permissions
     )
   }
 
-  public async getUserPermissions(domain: string, userId: string) {
+  public async getUserPermissions(userId: string) {
+    const projectName = this.getSelectedProjectName()
     return this.request<Permission[]>(
       'GET',
-      `/service/${domain}/permissions`,
-      undefined,
-      {
-        userId: userId
-      }
+      `/permissions/${projectName}?userId=${userId}`
     )
   }
 

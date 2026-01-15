@@ -1,7 +1,9 @@
 {
+  "modal": "This page shows all of the groups and subgroups in your project. The first group has been created for you. To create a subgroup for it, click the \"New group\" button and follow the prompts in the inspector on the right side of the screen.",
   "headers": {
     "title": "Group management",
-    "left": "Groups"
+    "left": "Groups",
+    "modalHeader": "How to use this page:"
   },
   "buttons": {
     "newGroup": "New group",
@@ -10,7 +12,8 @@
     "save": "Save changes",
     "delete": "Delete group",
     "yesDelete": "Yes, delete",
-    "noDelete": "Keep group"
+    "noDelete": "Keep group",
+    "okay": "Got it!"
   },
   "default": {
     "text": "Select an entity or a group to see its settings here."
@@ -65,6 +68,7 @@
       "label": "Check digit"
     }
   },
+  "savingGroup": "New group is being created...",
   "groupCreated": "Your group has been created.",
   "messages": {
     "deleteConfirmation": "Are you sure you want to delete this group?",

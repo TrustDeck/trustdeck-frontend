@@ -21,7 +21,7 @@ export type Field = {
 export type PermissionMap = Field[];
 
 export type Operator = {
-  userId: string;
+  userId?: string;
   username: string;
   firstName?: string;
   lastName?: string;

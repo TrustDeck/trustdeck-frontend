@@ -48,10 +48,12 @@ const Settings: React.FC = () => {
 
   const fetchPersons = async (query: string): Promise<PersonSuggestion[]> => {
     const fetchedOperators = await TrustDeck.instance().searchOperators(query)
+    console.log(fetchedOperators)
     return fetchedOperators.map((operator) => {
       let name = operator.username
-      if (operator.firstName && operator.lastName) {
-        name = `${operator.firstName} ${operator.lastName}`
+      if (operator.email && operator.lastName) {
+        // TODO: fix when response has correct first name
+        name = `${operator.email.split(".")[0]} ${operator.lastName}`
       } else if (operator.firstName) {
         name = operator.firstName
       } else if (operator.lastName) {
@@ -82,7 +84,7 @@ const Settings: React.FC = () => {
 
   const handlePersonChange = async (e: AutoCompleteChangeEvent) => {
     if (e.value != null) {
-      if (e.value && e.value.userId) {
+      if (e.value && e.value.username) {
         const personSuggestion = e.value as PersonSuggestion
         setPersonValue(
           [
@@ -95,10 +97,7 @@ const Settings: React.FC = () => {
         )
         setSelectedPersonId(e.value.userId)
         setLoadingState(true, `Loading permissions for ${e.value.name}...`)
-        const permissions = await TrustDeck.instance().getUserPermissions(
-          currentProject,
-          e.value.userId
-        )
+        const permissions = await TrustDeck.instance().getUserPermissions(e.value.username)
         setUserPermissions(permissions)
         const flatTree =
           await TrustDeck.instance().getFlatRootDomainTree(currentProject)
@@ -143,11 +142,7 @@ const Settings: React.FC = () => {
         )
 
       await TrustDeck.instance()
-        .updateUserPermissions(
-          currentProject,
-          selectedPersonId,
-          permissionRequestList
-        )
+        .updateUserPermissions(selectedPersonId, permissionRequestList)
         .then(() => {
           console.log('Permissions updated successfully')
           //TODO make a success toast maybe?

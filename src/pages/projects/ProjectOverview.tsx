@@ -6,9 +6,11 @@ import CustomDropdown from '@component/form/CustomDropdown'
 import { useTranslation } from 'react-i18next'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import { useNavigate } from 'react-router-dom'
+import { ProgressSpinner } from 'primereact/progressspinner'
 
 export default function ProjectOverview() {
   const [projects, setProjects] = useState<ProjectType[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [projectStatus, setProjectStatus] = useState<
     'all' | 'active' | 'completed'
   >('all')
@@ -17,16 +19,32 @@ export default function ProjectOverview() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
     const fetchProjects = async () => {
       try {
         const data = await ProjectService.getProjects()
-        setProjects(data)
+        // makes sure no duplicate projects are added
+        const uniqueProjects = Array.from(
+          new Map(data.map((project) => [project.abbreviation, project])).values()
+        )
+        if (isMounted) {
+          setProjects(uniqueProjects)
+        }
       } catch (e) {
         console.error('Failed to load projects', e)
-        setProjects([])
+        if (isMounted) {
+          setProjects([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
     fetchProjects()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredProjects = projects
@@ -74,11 +92,30 @@ export default function ProjectOverview() {
           onClick={() => navigate('/projects/new')}
         />
       </div>
-      <div className="flex w-full flex-col gap-6 items-center">
-        {filteredProjects.map((project) => (
-          <SingleProject key={project.abbreviation} project={project} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="w-full flex justify-center py-10">
+          <ProgressSpinner />
+        </div>
+      ) : (
+        <>
+          <div className="flex w-full flex-col gap-6 items-center">
+            {filteredProjects.map((project) => (
+              <SingleProject key={project.abbreviation} project={project} />
+            ))}
+          </div>
+          {projects.length === 0 && (
+            <div className="flex flex-col h-full">
+              <div className="flex justify-center w-full flex-1 items-center text-center">
+                <h3>
+                  You don't have access to any projects yet. <br /> Create a new
+                  project by clicking on the button above or ask a colleague to add
+                  you to a project!
+                </h3>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

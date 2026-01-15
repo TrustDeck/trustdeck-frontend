@@ -95,7 +95,7 @@ export default function PersonForm() {
       } else {
         const createdPerson = await PersonService.create(payload)
         console.log('Person created:', createdPerson)
-        navigate(`/person/${createdPerson.trustdeckID}`)
+        navigate(`/search/${createdPerson.trustdeckID}`)
       }
     } catch (error) {
       console.error('Failed to register person:', error)
@@ -148,7 +148,7 @@ export default function PersonForm() {
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
     { label: t('identity:entity.gender.female'), value: 'female' },
-    { label: t('identity:entity.gender.nonBinary'), value: 'Non-binary' }
+    { label: t('identity:entity.gender.nonBinary'), value: 'other' }
   ]
 
   // Dropdown options for selecting relationship

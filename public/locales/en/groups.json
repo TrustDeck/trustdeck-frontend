@@ -12,7 +12,8 @@
     "save": "Save changes",
     "delete": "Delete group",
     "yesDelete": "Yes, delete",
-    "noDelete": "Keep group"
+    "noDelete": "Keep group",
+    "okay": "Got it!"
   },
   "default": {
     "text": "Select an entity or a group to see its settings here."

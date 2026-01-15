@@ -12,7 +12,8 @@
     "save": "Änderungen speichern",
     "delete": "Gruppe löschen",
     "yesDelete": "Ja, löschen",
-    "noDelete": "Gruppe behalten"
+    "noDelete": "Gruppe behalten",
+    "okay": "Verstanden!"
   },
   "default": {
     "text": "Wählen Sie eine Entität oder Gruppe aus, um deren Einstellungen hier anzuzeigen."

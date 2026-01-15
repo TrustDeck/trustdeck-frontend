@@ -16,6 +16,7 @@ import ConfirmDialog from '../../core/components/common/ConfirmDialog.tsx'
 import useToastStore from '../../core/stores/ToastStore.ts'
 import { findNodeByKey } from './utils/findNodeByKey.ts'
 import { ProgressSpinner } from 'primereact/progressspinner'
+import PrimaryButton from '../../core/components/form/buttons/PrimaryButton.tsx'
 
 export default function GroupManager() {
 
@@ -295,6 +296,7 @@ export default function GroupManager() {
             visible={visible}
             style={{ width: '50vw' }}
             onHide={() => setVisible(false)}
+            footer={<PrimaryButton label={t('groups:buttons.okay')} onClick={() => setVisible(false)} />}
           >
             <p className="m-0">
               {t('groups:modal')}

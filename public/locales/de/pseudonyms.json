@@ -1,12 +1,13 @@
 {
   "headers": {
-    "title": "Pseudonym generieren",
+    "title": "Pseudonym generieren", 
     "stepone": "Suchen Sie die Entität, die pseudonymisiert werden soll.",
     "steptwo": "Wählen Sie die Entität aus, die pseudonymisiert werden soll.",
     "stepthree": "In welcher Gruppe soll das Pseudonym gespeichert werden?"
   }, 
   "buttons": {
     "back": "Zurück",
+    "forward": "Weiter",
     "generate": "Generieren"
   },
   "infotext": "Wenn Sie ein Pseudonym für eine Untergruppe erstellen, generiert das System automatisch eine Kette von Pseudonymen für jede Elterngruppe.",

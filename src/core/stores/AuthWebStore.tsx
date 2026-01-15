@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { shared } from 'use-broadcast-ts'
 import useUserStore from './UserStore'
+import TrustDeck from '@service/TrustDeck'
 
 interface AuthState {
   data: Record<string, string>
@@ -57,7 +58,11 @@ export class AuthWebStorage implements Storage {
     try {
       const token = this._data[key]
       const parsedToken = JSON.parse(token)
-      useUserStore.getState().setFromAccessToken(parsedToken?.access_token)
+      const accessToken = parsedToken?.access_token
+      if (accessToken) {
+        useUserStore.getState().setFromAccessToken(accessToken)
+        TrustDeck.instance().setToken(accessToken)
+      }
       return token || null
     } catch (error) {
       console.log(error)
@@ -70,7 +75,11 @@ export class AuthWebStorage implements Storage {
       useAuthStore.getState().setItem(key, value)
       this._data[key] = value
       const token = JSON.parse(value)
-      useUserStore.getState().setFromAccessToken(token?.access_token)
+      const accessToken = token?.access_token
+      if (accessToken) {
+        useUserStore.getState().setFromAccessToken(accessToken)
+        TrustDeck.instance().setToken(accessToken)
+      }
     } catch (error) {
       console.log(error)
       useUserStore.getState().clear()

@@ -1,5 +1,5 @@
 {
-  "modal": "",
+  "modal": "Diese Seite zeigt alle Gruppen und Untergruppen in Ihrem Projekt an. Die erste Gruppe wurde bereits für Sie erstellt. Um eine Untergruppe dafür anzulegen, klicken Sie auf den Knopf „Neue Gruppe“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
   "headers": {
     "title": "Gruppenverwaltung",
     "left": "Gruppen",

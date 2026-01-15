@@ -19,7 +19,6 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton.tsx'
 
 export default function GroupManager() {
-
   const {
     tree,
     setTree,
@@ -214,7 +213,7 @@ export default function GroupManager() {
             })
           })
       }
-    } 
+    }
   }
 
   //TODO localize texts everywhere
@@ -296,11 +295,16 @@ export default function GroupManager() {
             visible={visible}
             style={{ width: '50vw' }}
             onHide={() => setVisible(false)}
-            footer={<PrimaryButton label={t('groups:buttons.okay')} onClick={() => setVisible(false)} />}
+            footer={
+              <div className="flex justify-end">
+                <PrimaryButton
+                  label={t('groups:buttons.okay')}
+                  onClick={() => setVisible(false)}
+                />
+              </div>
+            }
           >
-            <p className="m-0">
-              {t('groups:modal')}
-            </p>
+            <p className="m-0">{t('groups:modal')}</p>
           </Dialog>
         </div>
       </div>

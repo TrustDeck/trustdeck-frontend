@@ -1,5 +1,5 @@
 {
-  "modal": "Diese Seite zeigt alle Gruppen und Untergruppen in Ihrem Projekt an. Die erste Gruppe wurde bereits für Sie erstellt. Um eine Untergruppe dafür anzulegen, klicken Sie auf den Knopf „Neue Gruppe“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
+  "modal": "This page shows all of the groups and subgroups in your project. The first group has been created for you. To create a subgroup for it, click the \"New group\" button and follow the prompts in the inspector on the right side of the screen.",
   "headers": {
     "title": "Group management",
     "left": "Groups",

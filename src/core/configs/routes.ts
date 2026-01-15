@@ -21,6 +21,7 @@ import DuplicateResults from '../../pages/identity/DuplicateResults'
 import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
+import Builder from '../../pages/builder/Builder'
 
 export type RouteConfig = {
   path: string
@@ -56,6 +57,15 @@ export const routes: RouteConfig[] = [
     Icon: MagnifyingGlassIcon,
     isProtected: true,
     isSidebar: false
+  },
+  {
+    path: '/entity/manager',
+    titleKey: 'layout:menu.entityManager',
+    component: Builder,
+    Icon: IdentificationIcon,
+    isProtected: true,
+    isSidebar: true,
+    sideboardOrder: 1
   },
   {
     path: '/identity',

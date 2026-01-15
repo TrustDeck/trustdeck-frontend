@@ -1,8 +1,8 @@
 {
   "headers": {
     "title": "Pseudonym generieren",
-    "stepone": "Suchen Sie die Entität, die Pseudonymisiert werden soll.",
-    "steptwo": "Wählen Sie die Entität aus, die Pseudonymisiert werden soll.",
+    "stepone": "Suchen Sie die Entität, die pseudonymisiert werden soll.",
+    "steptwo": "Wählen Sie die Entität aus, die pseudonymisiert werden soll.",
     "stepthree": "In welcher Gruppe soll das Pseudonym gespeichert werden?"
   }, 
   "buttons": {

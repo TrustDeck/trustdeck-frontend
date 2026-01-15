@@ -30,11 +30,12 @@ export default function SingleProject({ project }: SingleProjectProps) {
     // if redirected to /projects because no project was selected, the user is redirected back to where they were before
     const from = (location.state)?.from?.pathname || '/search'
     navigate(from)
+    console.log(project)
   }
 
   return (
-    <Panel onClick={handleClick}>
-      <h2 className='my-3'>{project.abbreviation}</h2>
+    <Panel onClick={handleClick} className='cursor-pointer hover:bg-gray-100 transition-colors duration-200'>
+      <h2 className='my-3'>{project.name}</h2>
       <div className='flex gap-5 my-3' role='button'>
         {project.statistics?.firstPseudonymCreatedAt && <p>{`First pseudonym: ${formatDate(project.statistics.firstPseudonymCreatedAt)}`}</p>}
         {project.statistics?.lastPseudonymCreatedAt && <p>{`Last pseudonym: ${formatDate(project.statistics.lastPseudonymCreatedAt)}`}</p>}

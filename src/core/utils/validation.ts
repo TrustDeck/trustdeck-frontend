@@ -30,7 +30,7 @@ const validation = {
   },
 
   isValidPseudonym: (pseudonym: string) => {
-    return /^\d{5,}$/.test(pseudonym.trim()) || pseudonym.length === 0;
+    return /^[A-Za-z0-9_-]+$/.test(pseudonym.trim()) || pseudonym.length === 0;
   },
 
   isValidRegistrationName: (name: string) => {

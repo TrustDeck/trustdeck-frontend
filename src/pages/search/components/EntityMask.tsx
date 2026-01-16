@@ -51,10 +51,10 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     setFirstname,
     phone,
     setPhone,
-    idType,
-    setIdType,
-    identifier,
-    setIdentifier,
+    // idType,
+    // setIdType,
+    // identifier,
+    // setIdentifier,
     street,
     setStreet,
     houseNumber,
@@ -106,10 +106,10 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   }))
 
   // Dropdown options for ID type selection
-  const idDropdownOptions = [
-    { label: t('search:entity.person.idType.caseNumber'), value: 'caseNumber' },
-    { label: t('search:entity.person.idType.patientId'), value: 'patientId' }
-  ]
+  // const idDropdownOptions = [
+  //   { label: t('search:entity.person.idType.caseNumber'), value: 'caseNumber' },
+  //   { label: t('search:entity.person.idType.patientId'), value: 'patientId' }
+  // ]
 
   return (
     <div>

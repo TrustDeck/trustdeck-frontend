@@ -67,7 +67,7 @@ export default function ProjectOverview() {
         <div className="flex flex-nowrap gap-4 min-w-[320px]">
           <CustomDropdown
             id="projectStatus"
-            placeholder="Project status"
+            placeholder={t('projects:projectStatus')}
             value={projectStatus}
             onChange={(e) => setProjectStatus(e.value)}
             options={[
@@ -78,12 +78,12 @@ export default function ProjectOverview() {
           />
           <CustomDropdown
             id="dateOrder"
-            placeholder="Sort order"
+            placeholder={t('projects:sortOrder')}
             value={dateOrder}
             onChange={(e) => setDateOrder(e.value)}
             options={[
               { label: t('projects:newestFirst'), value: 'newest' },
-              { label: t('search:oldestFirst'), value: 'oldest' }
+              { label: t('projects:oldestFirst'), value: 'oldest' }
             ]}
           />
         </div>
@@ -107,9 +107,7 @@ export default function ProjectOverview() {
             <div className="flex flex-col h-full">
               <div className="flex justify-center w-full flex-1 items-center text-center">
                 <h3>
-                  You don't have access to any projects yet. <br /> Create a new
-                  project by clicking on the button above or ask a colleague to add
-                  you to a project!
+                  {t('projects:noProjects')}
                 </h3>
               </div>
             </div>

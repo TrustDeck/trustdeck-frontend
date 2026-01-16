@@ -168,7 +168,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
               />
             </div>
 
-            <Divider />
+            {/* <Divider />
 
             <div className="form-grid">
               <CustomDropdown
@@ -184,7 +184,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Identifier"
               />
-            </div>
+            </div> */}
 
             <Divider />
 

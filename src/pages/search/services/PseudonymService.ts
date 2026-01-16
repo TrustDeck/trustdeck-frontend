@@ -1,11 +1,9 @@
-class PseudonymService {
-  static async searchPseudonym(): Promise<any> {
-    // Simulate an API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockPseudonym)
-      }, 1000)
-    })
+import { Pseudonym } from "../../../core/types/Pseudonym"
+import TrustDeck from "../../../core/services/TrustDeck"
+
+const PseudonymService = {
+  searchPseudonym: async (pseudonym: string): Promise<Pseudonym> => {
+    return TrustDeck.instance().searchPseudonym(pseudonym)
   }
 }
 

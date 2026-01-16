@@ -6,6 +6,7 @@ import { PersonType } from '../types/PersonEntity.ts'
 import { BioSampleEntity } from 'core/types/BioSampleEntity.ts'
 import { basePerson } from './basePerson.ts'
 import { person } from './person.ts'
+import { Pseudonym } from '../../core/types/Pseudonym.ts'
 
 class TrustDeck {
   private static thisInstance: TrustDeck
@@ -205,6 +206,10 @@ class TrustDeck {
     return this.request('POST', `/domains/${selectedGroup}/pseudonyms`, payload)
   }
 
+  public async searchPseudonym(query: string): Promise<Pseudonym> {
+    const projectName = this.getSelectedProjectName()
+    return this.request('GET', `/domains/${projectName}/pseudonyms?psn=${query}`)
+  }
 
   public async searchOperators(q: string) {
     return this.request<Operator[]>(

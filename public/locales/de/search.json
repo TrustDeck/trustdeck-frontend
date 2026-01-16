@@ -135,6 +135,7 @@
     "data": "Daten",
     "value": "Wert", 
     "id": "ID",
+    "idType": "ID Type",
     "createdOn": "Erstellt am:",
     "expiresOn": "Läuft ab am:",
     "parentGroup": "Elterngruppe"

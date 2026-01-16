@@ -36,8 +36,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
     setLoading(true)
 
     try {
-      const result = await PseudonymService.searchPseudonym()
-
+      const result = await PseudonymService.searchPseudonym(pseudonym)
       if (result) {
         setPseudonymValue(result)
         navigate(`/search/pseudonym/${pseudonym}`)

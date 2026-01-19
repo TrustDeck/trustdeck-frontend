@@ -54,10 +54,5 @@
     "newPerson": "Neue Person",
     "oldPerson": "Bereits registrierte Person",
     "useOld": "Bereits registrierte Person verwenden"
-  },
-  "entityAttributes": {
-    "biosample": {
-      "sampleType": "Probentyp"
-    }
   }
 }

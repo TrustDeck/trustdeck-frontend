@@ -54,10 +54,5 @@
     "newPerson": "New person",
     "oldPerson": "Previously registered person",
     "useOld": "Use Previously Registered Person"
-  },
-  "entityAttributes": {
-    "biosample": {
-      "sampleType": "Sample Type"
-    }
   }
 }

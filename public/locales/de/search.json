@@ -6,12 +6,13 @@
   "cancel": "Abrechen",
   "save": "Speichern",
   "select": "Auswählen",
+  "research": "Nochmal suchen",
   "results": "Suchergebnisse",
   "personView": "Person ansehen",
   "biosampleView": "Bioprobe ansehen",
   "pseudonymView": "Pseudonym ansehen",
   "history": "Verlauf",
-  "noResults": "Keine resultate.",
+  "noResults": "Keine suchresultate.",
   "entity": {
     "title": "Entität",
     "entityType": {

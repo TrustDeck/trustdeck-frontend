@@ -8,6 +8,8 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import validation from '../../../core/utils/validation'
+import { Dialog } from 'primereact/dialog'
+import SecondaryButton from '@component/form/buttons/SecondaryButton'
 
 /**
  * The `PseudonymMask` component allows users to search for a pseudonym.
@@ -26,6 +28,7 @@ interface PseudonymMaskProps {
 const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
   const { t } = useTranslation() // Use multiple namespaces
   const [loading, setLoading] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const navigate = useNavigate()
 
   const { pseudonym, setPseudonym } = useSearchStore()
@@ -34,6 +37,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setShowModal(false)
 
     try {
       const result = await PseudonymService.searchPseudonym(pseudonym)
@@ -41,10 +45,11 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
         setPseudonymValue(result)
         navigate(`/search/pseudonym/${pseudonym}`)
       } else {
-        console.error('Unexpected API response:', result)
+        setShowModal(true)
       }
     } catch (error) {
       console.error('Error during form submission:', error)
+      setShowModal(true)
     } finally {
       setLoading(false)
     }
@@ -72,6 +77,25 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
             icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
           />
         </div>
+        <Dialog
+          visible={showModal}
+          onHide={() => setShowModal(false)}
+          header={t('search:results')}
+          closable
+          dismissableMask
+          style={{ width: '600px', maxWidth: '90vw' }}
+          className="mx-auto"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-base">{t('search:noResults')}</p>
+            <div className="flex justify-end">
+              <SecondaryButton
+                label={t('search:research')}
+                onClick={() => setShowModal(false)}
+              />
+            </div>
+          </div>
+        </Dialog>
       </form>
     </div>
   )

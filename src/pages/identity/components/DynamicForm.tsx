@@ -1,9 +1,13 @@
-import { useState } from "react"
-import useProjectStore from "../../../core/stores/ProjectStore"
-import { parseAttributes } from "./FormParser"
-import Panel from "@component/common/Panel"
+import { useState } from 'react'
+import useProjectStore from '../../../core/stores/ProjectStore'
+import { parseAttributes } from './FormParser'
 
-export default function DynamicForm({ entityName }: { entityName: string }) {
+type Props = {
+  entityName: string
+  variant?: 'registration' | 'search'
+}
+
+export default function DynamicForm({ entityName, variant = 'registration' }: Props) {
   const entity = useProjectStore((state) =>
     state.entityAttributes.find((e) => e.name === entityName)
   )
@@ -21,21 +25,25 @@ export default function DynamicForm({ entityName }: { entityName: string }) {
     }))
   }
 
+  const title = entityName.charAt(0).toUpperCase() + entityName.slice(1)
+  const showRequired = variant === 'registration'
+
   return (
-    <Panel>
-      <div className="p-4 space-y-4">
-      <h2 className="text-xl font-semibold mb-4">{entityName.charAt(0).toUpperCase() + entityName.slice(1)} registration</h2>
-       <p>All fields marked with an * are required and must be filled out.</p>
+    <div className={variant === 'registration' ? 'p-4 space-y-4' : 'space-y-4'}>
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      {variant === 'registration' && (
+        <p>All fields marked with an * are required and must be filled out.</p>
+      )}
       {parseAttributes({
         attributes: entity.typeDefinition.attributes,
         values: formValues,
-        onChange: handleChange
+        onChange: handleChange,
+        showRequired
       })}
 
       {/* <pre className="bg-gray-100 p-3 rounded">
         {JSON.stringify(formValues, null, 2)}
       </pre> */}
-      </div>
-    </Panel>
+    </div>
   )
 }

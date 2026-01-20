@@ -235,7 +235,9 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
             </div>
           </div>
         )}
-        {selectedType !== 'person' && <DynamicForm entityName={selectedType} />}
+        {selectedType !== 'person' && (
+          <DynamicForm entityName={selectedType} variant="search" />
+        )}
         {/* {selectedType === 'bioprobe' && (
           <div className="bioprobe-fields">
             <div className="form-grid">w

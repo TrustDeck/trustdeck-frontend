@@ -9,10 +9,17 @@ interface ParserProps {
   attributes: Attribute[]
   values: Record<string, any>
   onChange: (key: string, value: any) => void
+  showRequired?: boolean
   path?: string
 }
 
-export const parseAttributes = ({ attributes, values, onChange, path = "" }: ParserProps) => {
+export const parseAttributes = ({
+  attributes,
+  values,
+  onChange,
+  showRequired = true,
+  path = ""
+}: ParserProps) => {
   return attributes.map((attr) => {
     const key = path ? `${path}.${attr.name}` : attr.name
     const value = values[attr.name]
@@ -42,7 +49,7 @@ export const parseAttributes = ({ attributes, values, onChange, path = "" }: Par
           value={value ?? ""}
           onChange={(e) => onChange(attr.name, e.target.value)}
           placeholder={attr.name}
-          required={attr.required}
+          required={showRequired ? attr.required : false}
         />
       )
     }
@@ -57,7 +64,7 @@ export const parseAttributes = ({ attributes, values, onChange, path = "" }: Par
           onChange={(e) => onChange(attr.name, e.value)}
           placeholder={attr.name}
           className="w-full"
-          required
+          required={showRequired ? true : false}
         />
       )
     }

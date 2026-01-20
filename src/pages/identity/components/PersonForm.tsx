@@ -475,23 +475,22 @@ export default function PersonForm() {
             />
           </div>
           <div className="flex py-4">
-            <PrimaryButton
+          <PrimaryOutlinedButton
               label={
                 <span className="flex items-center gap-2">
                   {t('identity:buttons.back')}
                   <ArrowUpIcon className="h-5 w-5" />
                 </span>
               }
-              disabled={!isStepValid(currentStep)}
               onClick={() => handlePrev()}
             />
           </div>
         </StepperPanel>
       </Stepper>
       <div className="flex justify-end my-4">
-        <SecondaryButton
+        <PrimaryButton
           label={t('identity:buttons.register')}
-          disabled={currentStep === 4 ? false : true}
+          disabled={currentStep === 3 ? false : true}
           onClick={handleRegister}
         />
       </div>

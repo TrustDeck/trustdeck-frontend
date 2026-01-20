@@ -80,7 +80,7 @@ class TrustDeck {
     const projectName = this.getSelectedProjectName()
     return this.request<Domain[]>(
       'GET',
-      `/pseudonymization/domain?name=${projectName}`
+      `/domains?name=${projectName}`
     )
   }
 

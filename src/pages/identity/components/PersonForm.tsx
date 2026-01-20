@@ -199,7 +199,7 @@ export default function PersonForm() {
 
   return (
     <Panel>
-      <Stepper ref={stepperRef} orientation="vertical">
+      <Stepper ref={stepperRef} orientation="vertical" linear>
         {/* <StepperPanel header={t('identity:headers.search')}>
           {currentStep === 1 && registration && (
             <>

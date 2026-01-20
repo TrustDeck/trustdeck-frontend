@@ -16,6 +16,8 @@ import { PseudonymService } from './services/PseudonymService'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
 import { useNavigate } from 'react-router-dom'
+import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
+import { ArrowUpIcon } from '@heroicons/react/24/outline'
 // import { Toast } from 'primereact/toast'
 
 export default function SearchPsn() {
@@ -86,7 +88,7 @@ export default function SearchPsn() {
     <div className="w-full flex flex-col items-center">
       <h1>{t('pseudonyms:headers.title')}</h1>
       <Panel>
-        <Stepper ref={stepperRef} orientation="vertical">
+        <Stepper ref={stepperRef} orientation="vertical" linear>
           {/* Step 1 - Search */}
           <StepperPanel header={t('pseudonyms:headers.stepone')}>
             <SearchMask psn />
@@ -94,18 +96,23 @@ export default function SearchPsn() {
 
           {/* Step 2 - Results */}
           <StepperPanel header={t('pseudonyms:headers.steptwo')}>
-            {results.length > 0 ? (
-              results.map((result) => (
+              {results.map((result) => (
                 <div
                   key={result.trustdeckID}
                   className="my-4 flex justify-center"
                 >
                   <SearchResult pseudonymization result={result} />
                 </div>
-              ))
-            ) : (
-              <p>{t('pseudonyms:noResults')}</p>
-            )}
+              ))}
+              <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
+              onClick={() => previousStep()}
+            />
           </StepperPanel>
 
           {/* Step 3 - Group selection */}
@@ -117,11 +124,16 @@ export default function SearchPsn() {
               options={groups || []}
               onChange={handleGroupChange}
             />
-            <div className="flex justify-between">
-              <PrimaryButton
-                label={t('pseudonyms:buttons.back')}
-                onClick={() => previousStep()}
-              />
+            <div className="flex justify-between mt-6">
+            <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
+              onClick={() => previousStep()}
+            />
               <SecondaryButton
                 label={t('pseudonyms:buttons.generate')}
                 onClick={() => handleClick()}

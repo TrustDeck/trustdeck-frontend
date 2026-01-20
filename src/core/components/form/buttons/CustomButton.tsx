@@ -8,7 +8,9 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
   colorClass,
   type = 'button',
   className = '',
-  loading = false
+  loading = false,
+  disabled = false,
+  tooltip
 }) => {
   return (
     <div className="flex">
@@ -19,6 +21,8 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
         label={label}
         outlined={true}
         loading={loading}
+        disabled={disabled}
+        tooltip={tooltip}
       />
     </div>
   )

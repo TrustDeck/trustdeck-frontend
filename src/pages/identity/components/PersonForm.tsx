@@ -9,7 +9,6 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
 import { ArrowDownIcon } from '@heroicons/react/24/outline'
-import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import PersonService from '../services/PersonService'
 import useDuplicatesStore from '../stores/DuplicatesStore'
@@ -21,7 +20,6 @@ import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
-import { Tooltip } from 'primereact/tooltip';
 
 /**
  * The `PersonForm` component renders a multi-step form for creating or registering a person entity.

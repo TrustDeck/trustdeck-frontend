@@ -80,7 +80,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       let result
       if (selectedType === 'person') {
         result = await PersonService.fuzzySearch('person', quick)
-        if (psn) {
+        if (psn && result.length > 0) {
           handleNext()
         }
       } else if (selectedType === 'bioprobe') {

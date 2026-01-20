@@ -70,7 +70,7 @@ const validation = {
   },
 
   isValidRegistrationGroupName: (groupName: string) => {
-    return /^[A-Za-z0-9ÄÖÜäöüß\s\-.]{5,}$/.test(groupName.trim());
+    return /^[A-Za-z0-9ÄÖÜäöüß\s\-.]{4,}$/.test(groupName.trim());
   },
 
   isValidRegistrationPrefix: (prefix: string) => {

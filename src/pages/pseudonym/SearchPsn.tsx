@@ -110,7 +110,6 @@ export default function SearchPsn() {
 
           {/* Step 3 - Group selection */}
           <StepperPanel header={t('pseudonyms:headers.stepthree')}>
-            <p className="mb-3">{t('pseudonyms:infotext')}</p>
             <CustomTreeSelect
               id="group"
               placeholder={t('pseudonyms:selectGroup')}

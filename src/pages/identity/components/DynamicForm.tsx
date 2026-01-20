@@ -30,7 +30,7 @@ export default function DynamicForm({ entityName, variant = 'registration' }: Pr
 
   return (
     <div className={variant === 'registration' ? 'p-4 space-y-4' : 'space-y-4'}>
-      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      {variant === 'registration' && <h2 className="text-xl font-semibold mb-4">{title}</h2>}
       {variant === 'registration' && (
         <p>All fields marked with an * are required and must be filled out.</p>
       )}

@@ -1,0 +1,174 @@
+import { create } from 'zustand'
+
+export type AttributeType =
+  | 'string'
+  | 'integer'
+  | 'date'
+  | 'number'
+  | 'boolean'
+  | 'datetime'
+
+export type Layout = 'row' | 'col'
+
+export type Attribute = {
+  key: string
+  name?: string
+  type?: AttributeType
+  required?: boolean
+  linkage?: boolean
+  repaetable?: boolean
+  group?: boolean
+  minimum?: number
+  maximum?: number
+  pattern?: string
+  minLength?: number
+  maxLength?: number
+  layout?: Layout
+  attributes?: Attribute[] //key name might be changed
+}
+
+type EntityTypeStore = {
+  selectedKey: string
+  setSelectedKey: (key: string) => void
+  getSelectedAttribute: () => Attribute | undefined
+  entityType: string
+  setEntityType: (entityType: string) => void
+  attributes: Attribute[]
+  appendAttribute: (attribute: Attribute) => void
+  moveAttribute: (fromIndex: number, toIndex: number) => void
+  appendSubAttributes: (key: string, attribute: Attribute) => void
+  overrideAttribute: (key: string, attribute: Attribute) => void
+  updatePartialAttribute: (
+    key: string,
+    attributeKey: string,
+    value: any
+  ) => void
+  resetAttribute: (key: string) => void
+}
+
+export const useEntityTypeStore = create<EntityTypeStore>((set, get) => ({
+  resetAttribute: (key: string) =>
+    set((state) => {
+     //iterate recuseive and get the attribute by key
+     //then remove all keys except key, group, layout
+      function resetRecursive(list: Attribute[]): Attribute[] {
+        return list.map((attr) => {
+          if (attr.key === key) {
+            const base: Partial<Attribute> = { key: attr.key }
+            if (attr.group !== undefined) base.group = attr.group
+            if (attr.layout !== undefined) base.layout = attr.layout
+
+            return base as Attribute
+          }
+
+          if (attr.attributes && attr.attributes.length) {
+            return { ...attr, attributes: resetRecursive(attr.attributes) }
+          }
+
+          return attr
+        })
+      }
+
+      return {
+        attributes: resetRecursive(state.attributes)
+      }
+    }),
+  updatePartialAttribute: (key: string, attributeKey: string, value: any) =>
+    set((state) => {
+      function updateRecursive(list: Attribute[]): Attribute[] {
+        return list.map((attr) => {
+          if (attr.key === key) {
+            return { ...attr, [attributeKey]: value }
+          }
+
+          if (attr.attributes && attr.attributes.length) {
+            return { ...attr, attributes: updateRecursive(attr.attributes) }
+          }
+
+          return attr
+        })
+      }
+
+      return {
+        attributes: updateRecursive(state.attributes)
+      }
+    }),
+  getSelectedAttribute: () => {
+    const key = get().selectedKey
+    if (!key) return undefined
+
+    function find(list: Attribute[] | undefined): Attribute | undefined {
+      if (!list || !list.length) return undefined
+      for (const attr of list) {
+        if (attr.key === key) return attr
+        const found = find(attr.attributes)
+        if (found) return found
+      }
+      return undefined
+    }
+
+    return find(get().attributes)
+  },
+  selectedKey: '',
+  setSelectedKey: (key: string) =>
+    set(() => ({
+      selectedKey: key
+    })),
+  entityType: 'Person',
+  setEntityType: (entityType: string) =>
+    set(() => ({
+      entityType
+    })),
+  attributes: [],
+  appendAttribute: (attribute: Attribute) =>
+    set((state) => ({
+      attributes: [...state.attributes, attribute]
+    })),
+  moveAttribute: (fromIndex: number, toIndex: number) =>
+    set((state) => {
+      const attrs = [...state.attributes]
+      if (fromIndex < 0 || fromIndex >= attrs.length)
+        return { attributes: attrs }
+      const [moved] = attrs.splice(fromIndex, 1)
+      const dest = Math.max(0, Math.min(toIndex, attrs.length))
+      attrs.splice(dest, 0, moved)
+      return { attributes: attrs }
+    }),
+  appendSubAttributes: (key: string, attribute: Attribute) =>
+    set((state) => {
+      const updatedAttributes = state.attributes.map((attr) =>
+        attr.key === key
+          ? { ...attr, attributes: [...(attr.attributes ?? []), attribute] }
+          : attr
+      )
+
+      return {
+        attributes: updatedAttributes
+      }
+    }),
+  overrideAttribute: (key: string, attribute: Attribute) =>
+    set((state) => {
+      function overrideRecursive(list: Attribute[]): Attribute[] {
+        return list.map((attr) => {
+          if (attr.key === key) {
+            const base: Partial<Attribute> = { key: attr.key }
+            if (attr.group !== undefined) base.group = attr.group
+            if (attr.layout !== undefined) base.layout = attr.layout
+
+            // Return only preserved base values merged with incoming attribute
+            return { ...(base as Attribute), ...attribute, key: attr.key }
+          }
+
+          if (attr.attributes && attr.attributes.length) {
+            return { ...attr, attributes: overrideRecursive(attr.attributes) }
+          }
+
+          return attr
+        })
+      }
+
+      return {
+        attributes: overrideRecursive(state.attributes)
+      }
+    })
+}))

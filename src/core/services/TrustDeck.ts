@@ -144,6 +144,7 @@ class TrustDeck {
   public async putPerson(updatedPerson: any, trustdeckID: string) {
     const projectName = this.getSelectedProjectName()
     console.log(trustdeckID)
+    console.log(updatedPerson)
     return this.request<any>(
       'PUT',
       `/projects/${projectName}/entities/person/${trustdeckID}`,

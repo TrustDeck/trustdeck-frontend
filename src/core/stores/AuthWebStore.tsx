@@ -57,13 +57,16 @@ export class AuthWebStorage implements Storage {
   public getItem(key: string): string | null {
     try {
       const token = this._data[key]
-      const parsedToken = JSON.parse(token)
-      const accessToken = parsedToken?.access_token
-      if (accessToken) {
-        useUserStore.getState().setFromAccessToken(accessToken)
-        TrustDeck.instance().setToken(accessToken)
+      if (token != undefined) {
+        const parsedToken = JSON.parse(token)
+        const accessToken = parsedToken?.access_token
+        if (accessToken) {
+          useUserStore.getState().setFromAccessToken(accessToken)
+          TrustDeck.instance().setToken(accessToken)
+        }
+        return token || null
       }
-      return token || null
+      return null
     } catch (error) {
       console.log(error)
       return null

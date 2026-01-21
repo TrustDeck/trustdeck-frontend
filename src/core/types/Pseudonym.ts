@@ -1,9 +1,12 @@
 export interface Pseudonym {
-  id: string
-  pseudonym: string
-  group: string
-  parent?: string
-  children?: []
-  createdOn: string
-  expiresOn: string
+  domainName: string
+  identifierItem: {
+    idType: string
+    identifier: string
+  }
+  psn: string
+  validFrom: string
+  validFromInherited: boolean
+  validTo: string
+  validToInherited: boolean
 }

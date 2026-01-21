@@ -70,26 +70,34 @@ const PseudonymDetails: React.FC = () => {
               <div className="gap-3 space-y-5">
                 <CustomFloatLabel
                   id="pseudonym"
-                  value={pseudonymValue.pseudonym}
+                  value={pseudonymValue.psn}
                   placeholder={t('search:pseudonym.value')}
                   readOnly
                 />
-                <CustomFloatLabel
-                  id="Id"
-                  value={pseudonymValue.id}
-                  placeholder={t('search:pseudonym.id')}
-                  readOnly
-                />
+                <div className='flex space-x-3'>
+                  <CustomFloatLabel
+                    id="idType"
+                    value={pseudonymValue.identifierItem.idType}
+                    placeholder={t('search:pseudonym.idType')}
+                    readOnly
+                  />
+                  <CustomFloatLabel
+                    id="id"
+                    value={pseudonymValue.identifierItem.identifier}
+                    placeholder={t('search:pseudonym.id')}
+                    readOnly
+                  />
+                </div>
                 <div className="flex space-x-3">
                   <CustomFloatLabel
                     id="createdOn"
-                    value={pseudonymValue.createdOn.split('T')[0]}
+                    value={pseudonymValue.validFrom.split('T')[0]}
                     placeholder={t('search:pseudonym.createdOn')}
                     readOnly
                   />
                   <CustomFloatLabel
                     id="expiresOn"
-                    value={pseudonymValue.expiresOn.split('T')[0]}
+                    value={pseudonymValue.validTo.split('T')[0]}
                     placeholder={t('search:pseudonym.expiresOn')}
                     readOnly
                   />

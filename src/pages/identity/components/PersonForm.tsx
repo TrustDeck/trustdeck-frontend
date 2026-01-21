@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Panel from '../../../core/components/common/Panel'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import useInputStore from '../stores/InputStore'
@@ -9,7 +9,6 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
 import { ArrowDownIcon } from '@heroicons/react/24/outline'
-import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import PersonService from '../services/PersonService'
 import useDuplicatesStore from '../stores/DuplicatesStore'
@@ -47,6 +46,10 @@ export default function PersonForm() {
   const { setNewEntry, setDuplicates } = useDuplicatesStore()
   const navigate = useNavigate()
   const { selectedProject } = useProjectStore()
+
+  useEffect(() => {
+    reset()
+  }, []) 
 
   function handleNext() {
     setCurrentStep((prevStep) => prevStep + 1)
@@ -141,7 +144,8 @@ export default function PersonForm() {
     setContactLastName,
     setContactPhone,
     setContactEmail,
-    setContactRelationship
+    setContactRelationship,
+    reset
   } = useInputStore()
 
   // Dropdown options for selecting gender
@@ -158,9 +162,44 @@ export default function PersonForm() {
   //   console.log('search for patient in KIS happens here')
   // }
 
+  function isStepValid(step: number): boolean {
+    switch (step) {
+      case 1:
+        return (
+          !!id &&
+          validation.isValidRegistrationName(firstName) &&
+          validation.isValidRegistrationName(lastName) &&
+          !!dateOfBirth &&
+          !!administrativeGender &&
+          (!phoneNumber || validation.isValidPhone(phoneNumber)) &&
+          (!email || validation.isValidEmail(email)) &&
+          (!secondPhoneOption || validation.isValidPhone(secondPhoneNumber)) &&
+          (!secondEmailOption || validation.isValidEmail(secondEmail))
+        )
+      case 2:
+        return (
+          validation.isValidRegistrationStreet(street) &&
+          validation.isValidRegistrationHouseNumber(houseNumber) &&
+          validation.isValidRegistrationZip(postalCode) &&
+          validation.isValidRegistrationCity(city) &&
+          !!country
+        )
+      case 3:
+        return (
+          (!contactFirstName || validation.isValidName(contactFirstName)) &&
+          (!contactLastName || validation.isValidName(contactLastName)) &&
+          (!contactPhone || validation.isValidPhone(contactPhone)) &&
+          (!contactEmail || validation.isValidEmail(contactEmail))
+        )
+      default:
+        return false
+    }
+  }
+
+
   return (
     <Panel>
-      <Stepper ref={stepperRef} orientation="vertical">
+      <Stepper ref={stepperRef} orientation="vertical" linear>
         {/* <StepperPanel header={t('identity:headers.search')}>
           {currentStep === 1 && registration && (
             <>
@@ -201,7 +240,7 @@ export default function PersonForm() {
           )}
         </StepperPanel> */}
         <StepperPanel header={t('identity:headers.personalData')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className='sm:space-y-0 space-y-3 mb-5'>
@@ -301,11 +340,6 @@ export default function PersonForm() {
             )}
           </div>
           <div className="flex py-4 space-x-4">
-            <PrimaryOutlinedButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
-              onClick={() => handlePrev()}
-            />
             <PrimaryButton
               label={
                 <span className="flex items-center gap-2">
@@ -313,12 +347,16 @@ export default function PersonForm() {
                   <ArrowDownIcon className="h-5 w-5" />
                 </span>
               }
+              disabled={!isStepValid(currentStep)}
+              // TODO: make tooltip work
+              tooltip={!isStepValid(currentStep) ? "test" : undefined}
               onClick={() => handleNext()}
+              
             />
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.address')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -369,8 +407,12 @@ export default function PersonForm() {
           </div>
           <div className="flex py-4 space-x-4">
             <PrimaryOutlinedButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
               onClick={() => handlePrev()}
             />
             <PrimaryButton
@@ -380,12 +422,13 @@ export default function PersonForm() {
                   <ArrowDownIcon className="h-5 w-5" />
                 </span>
               }
+              disabled={!isStepValid(currentStep)}
               onClick={() => handleNext()}
             />
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.emergencyContact')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -430,18 +473,22 @@ export default function PersonForm() {
             />
           </div>
           <div className="flex py-4">
-            <PrimaryButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
+          <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
               onClick={() => handlePrev()}
             />
           </div>
         </StepperPanel>
       </Stepper>
       <div className="flex justify-end my-4">
-        <SecondaryButton
+        <PrimaryButton
           label={t('identity:buttons.register')}
-          disabled={currentStep === 4 ? false : true}
+          disabled={currentStep === 3 ? false : true}
           onClick={handleRegister}
         />
       </div>

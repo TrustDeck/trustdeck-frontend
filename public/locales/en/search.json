@@ -6,11 +6,12 @@
   "cancel": "Cancel",
   "save": "Save",
   "select": "Select",
+  "research": "Search again",
   "results": "Search results",
   "entityView": "Entity details",
   "pseudonymView": "Pseudonym details",
   "history": "Last searches:",
-  "noResults": "No results.",
+  "noResults": "No search results.",
   "entity": {
     "title": "Entity",
     "entityType": {
@@ -137,6 +138,7 @@
     "data": "Data",
     "value": "Value", 
     "id": "ID",
+    "idType": "ID Typ",
     "createdOn": "Created on:",
     "expiresOn": "Expires on:",
     "parentGroup": "Parent group"

@@ -8,6 +8,7 @@ export interface AbstractButtonProps {
   className?: string
   disabled?: boolean
   iconPos?: string
+  tooltip?: string
 }
 
 export type ButtonProps = Omit<AbstractButtonProps, 'colorClass'>;

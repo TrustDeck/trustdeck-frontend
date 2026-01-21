@@ -28,19 +28,19 @@ export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
   // Function to transform the pseudonym object into a tree
   const transformPseudonymToTree = (pseudonym: Pseudonym): TreeNode[] => {
     const currentNode: TreeNode = {
-      key: pseudonym.id,
-      data: { group: pseudonym.group, pseudonym: pseudonym.pseudonym },
+      key: pseudonym.identifierItem.identifier,
+      data: { group: pseudonym.domainName, pseudonym: pseudonym.psn },
       children: pseudonym.children
         ? pseudonym.children.map((child) => transformPseudonymToTree(child)).flat()
         : [],
     }
 
     // If the pseudonym has a parent, make the parent the root and nest the pseudonym under it
-    if (pseudonym.parent) {
+    if (pseudonym.domainName) {
       return [
         {
-          key: `parent-${pseudonym.parent}`,
-          data: { group: pseudonym.parent, pseudonym: "" },
+          key: `parent-${pseudonym.domainName}`,
+          data: { group: pseudonym.domainName, pseudonym: "" },
           children: [currentNode], // Nest current pseudonym under parent
         },
       ]

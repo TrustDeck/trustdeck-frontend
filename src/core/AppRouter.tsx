@@ -13,26 +13,40 @@ import { routes } from './configs/routes'
 import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
 import useUserStore from './stores/UserStore.tsx' // Import the UserStore
 import useProjectStore from './stores/ProjectStore.tsx'
-
+import TrustDeck from '@service/TrustDeck'
 import logger from './Logger.ts'
 import { useSyncApiToken } from './services/setupApi.ts'
 import RequireProject from './components/routing/RequireProject'
 
 // Higher-Order Component to handle protected routes dynamically
 interface ProtectedRouteProps {
+  checkAuth: boolean
   component: FC
   isProtected: boolean
 }
 
 const ProtectedRoute: FC<ProtectedRouteProps> = ({
+  checkAuth,
   component: Component,
   isProtected
 }) => {
+  const auth = useAuth()
   //TODO while this is logged it means the service self reloads somewehere but i dont know where
   //TODO this causes the page to reload multiple times
   logger.info('hitting protected route')
 
   logger.info(isProtected ? 'Route is protected' : 'Route is public')
+
+  logger.info(checkAuth ? 'is authenticated' : 'is not authenticated')
+
+  if (isProtected && !checkAuth) {
+    auth.removeUser()
+    TrustDeck.instance().clearToken()
+    auth.clearStaleState()
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('selected-project')
+    }
+  }
 
   const WrappedComponent = isProtected
     ? withAuthenticationRequired(Component, {
@@ -141,6 +155,7 @@ const ProjectListener: React.FC = () => {
 
 const AppRouter: FC = () => {
   useSyncApiToken()
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated)
 
   return (
     <>
@@ -156,6 +171,7 @@ const AppRouter: FC = () => {
               element={
                 <RequireProject>
                   <ProtectedRoute
+                    checkAuth={isAuthenticated}
                     component={component}
                     isProtected={isProtected}
                   />

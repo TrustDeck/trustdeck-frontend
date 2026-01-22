@@ -23,6 +23,7 @@ const EntityDetails: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const {
+    id,
     lastName,
     firstName,
     dateOfBirth,
@@ -53,6 +54,7 @@ const EntityDetails: React.FC = () => {
 
 async function handleSave() {
   const rawData = {
+    id,
     firstName,
     lastName,
     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,

@@ -14,6 +14,16 @@ const LoggedOut: React.FC = () => {
   const isTabActive = useLayoutStore((state) => state.isTabActive) // Use isTabActive from LayoutStore
   const hasRun = useRef(false)
 
+  async function logout_helper() {
+    await auth.removeUser()
+    TrustDeck.instance().clearToken()
+    await auth.clearStaleState()
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('selected-project')
+    }
+    setIsLoading(false)
+  }
+
   useEffect(() => {
     const logout = async () => {
       if (!hasRun.current) {
@@ -28,31 +38,14 @@ const LoggedOut: React.FC = () => {
             .signoutSilent()
             .then(async () => {
               console.log('signoutSilent')
-
-              await auth.removeUser()
-              TrustDeck.instance().clearToken()
-              await auth.clearStaleState()
-              if (typeof window !== 'undefined') {
-                window.localStorage.removeItem('selected-project')
-              }
-              setIsLoading(false)
+              await logout_helper()
             })
-            .catch((error) => {
+            .catch(async (error) => {
               console.log('Error during signoutSilent process', error)
-              TrustDeck.instance().clearToken()
-              if (typeof window !== 'undefined') {
-                window.localStorage.removeItem('selected-project')
-              }
-              setIsLoading(false)
+              await logout_helper()
             })
         } else {
-          await auth.removeUser()
-          TrustDeck.instance().clearToken()
-          await auth.clearStaleState()
-          if (typeof window !== 'undefined') {
-            window.localStorage.removeItem('selected-project')
-          }
-          setIsLoading(false)
+          await logout_helper()
         }
       }
     }

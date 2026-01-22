@@ -64,7 +64,9 @@ const mapDomain = (payload: any): any => {
 
   return {
     name: payload.label,
-    superDomainName: payload.parentgroup == 'ROOT' ? '' : payload.parentgroup,
+    ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
+    ? { superDomainName: payload.parentgroup }
+    : {}),
     prefix: payload.prefix,
     description: payload.description,
     multiplePsnAllowed: payload.multiplepsn,

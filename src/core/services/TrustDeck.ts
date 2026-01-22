@@ -174,6 +174,7 @@ class TrustDeck {
     return this.request<any>('POST', '/domains', payload)
   }
   public async createGroupComplete(payload: any) {
+    console.log(payload)
     return this.request<any>('POST', '/domains/complete', payload)
   }
 

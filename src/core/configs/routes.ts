@@ -22,6 +22,7 @@ import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
 import Builder from '../../pages/builder/Builder'
+import Drag from '../../pages/builder/Drag'
 
 export type RouteConfig = {
   path: string
@@ -65,6 +66,15 @@ export const routes: RouteConfig[] = [
     Icon: IdentificationIcon,
     isProtected: true,
     isSidebar: true,
+    sideboardOrder: 1
+  },
+    {
+    path: '/entity/test',
+    titleKey: 'layout:menu.entityManager',
+    component: Drag,
+    Icon: IdentificationIcon,
+    isProtected: true,
+    isSidebar: false,
     sideboardOrder: 1
   },
   {

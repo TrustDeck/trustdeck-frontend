@@ -126,14 +126,6 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/search/:entityId',
-    titleKey: 'layout:menu.entityDetails',
-    component: EntityDetails,
-    Icon: MagnifyingGlassIcon,
-    isProtected: true,
-    isSidebar: false
-  },
-  {
     path: '/search/pseudonym/:pseudonymId',
     titleKey: 'layout:menu.pseudonymDetails',
     component: PseudonymDetails,
@@ -145,6 +137,14 @@ export const routes: RouteConfig[] = [
     path: '/search/:entityId/:pseudonymId',
     titleKey: 'layout:menu.entityDetails',
     component: PseudonymDetails,
+    Icon: MagnifyingGlassIcon,
+    isProtected: true,
+    isSidebar: false
+  },
+  {
+    path: '/search/:entityId',
+    titleKey: 'layout:menu.entityDetails',
+    component: EntityDetails,
     Icon: MagnifyingGlassIcon,
     isProtected: true,
     isSidebar: false

@@ -20,6 +20,7 @@ import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
+import { Tooltip } from 'primereact/tooltip'
 
 /**
  * The `PersonForm` component renders a multi-step form for creating or registering a person entity.
@@ -46,10 +47,6 @@ export default function PersonForm() {
   const { setNewEntry, setDuplicates } = useDuplicatesStore()
   const navigate = useNavigate()
   const { selectedProject } = useProjectStore()
-
-  useEffect(() => {
-    reset()
-  }, []) 
 
   function handleNext() {
     setCurrentStep((prevStep) => prevStep + 1)
@@ -147,6 +144,11 @@ export default function PersonForm() {
     setContactRelationship,
     reset
   } = useInputStore()
+
+  useEffect(() => {
+    reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Dropdown options for selecting gender
   const genderDropdownOptions = [
@@ -340,19 +342,23 @@ export default function PersonForm() {
             )}
           </div>
           <div className="flex py-4 space-x-4">
-            <PrimaryButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
-                </span>
-              }
-              disabled={!isStepValid(currentStep)}
-              // TODO: make tooltip work
-              tooltip={!isStepValid(currentStep) ? "test" : undefined}
-              onClick={() => handleNext()}
-              
+            <Tooltip
+              target=".next-button-step1"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
             />
+            <span className="next-button-step1">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.address')}>
@@ -415,16 +421,23 @@ export default function PersonForm() {
               }
               onClick={() => handlePrev()}
             />
-            <PrimaryButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
-                </span>
-              }
-              disabled={!isStepValid(currentStep)}
-              onClick={() => handleNext()}
+            <Tooltip
+              target=".next-button-step2"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
             />
+            <span className="next-button-step2">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.emergencyContact')}>

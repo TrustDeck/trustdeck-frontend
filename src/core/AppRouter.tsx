@@ -127,7 +127,9 @@ const BreadcrumbUpdater: React.FC = () => {
     const pathnames = location.pathname.split('/').filter((x) => x)
     const breadcrumbList = pathnames.map((_, index) => {
       const path = `/${pathnames.slice(0, index + 1).join('/')}`
-      const route = routes.find((r) => matchPath(r.path, path))
+      const route = routes.find((r) =>
+        matchPath({ path: r.path, end: true }, path)
+      )
       return { label: route ? route.titleKey : path, url: path }
     })
 

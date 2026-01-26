@@ -18,7 +18,8 @@
     "manually": "Enter information manually",
     "back": "Back",
     "next": "Next",
-    "notDuplicate": "Not a Duplicate – Continue Registration"
+    "notDuplicate": "Not a Duplicate – Continue Registration",
+    "completeFields": "Please complete all required fields before proceeding"
   },
   "entity": {
     "person": {

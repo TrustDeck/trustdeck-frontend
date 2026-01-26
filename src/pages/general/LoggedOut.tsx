@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { useAuth } from 'react-oidc-context'
 import useUserStore from '../../core/stores/UserStore'
-import { useAuthStore } from '../../core/stores/AuthWebStore'
+import { useAuthStore, AuthWebStorage } from '../../core/stores/AuthWebStore'
 import useLayoutStore from '../../core/stores/LayoutStore' // Import useLayoutStore
 import TrustDeck from '@service/TrustDeck'
 
@@ -15,12 +15,35 @@ const LoggedOut: React.FC = () => {
   const hasRun = useRef(false)
 
   async function logout_helper() {
-    await auth.removeUser()
+    // Clear TrustDeck token
     TrustDeck.instance().clearToken()
+    
+    // Clear user store state
+    useUserStore.getState().clear()
+    
+    // Clear auth store state (this clears localStorage 'auth-storage')
+    useAuthStore.getState().clear()
+    
+    // Remove user from OIDC library
+    await auth.removeUser()
+    
+    // Ensure AuthWebStorage is cleared (in case removeUser didn't trigger it)
+    // Get all keys from localStorage that start with 'oidc.' and remove them
+    if (typeof window !== 'undefined') {
+      const oidcKeys = Object.keys(window.localStorage).filter((key) =>
+        key.startsWith('oidc.')
+      )
+      oidcKeys.forEach((key) => window.localStorage.removeItem(key))
+    }
+    
+    // Clear stale OIDC state
     await auth.clearStaleState()
+    
+    // Clear selected project
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('selected-project')
     }
+    
     setIsLoading(false)
   }
 

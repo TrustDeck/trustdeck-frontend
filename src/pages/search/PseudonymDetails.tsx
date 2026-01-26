@@ -49,7 +49,7 @@ const PseudonymDetails: React.FC = () => {
       <div className="relative w-full 2xl:w-4/5 2xl:mx-auto mb-3 flex items-center">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
-          onClick={() => navigate(entityId ? `/search/${entityId}` : '/')}
+          onClick={() => navigate(entityId ? `/search/${entityId}` : '/search')}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0"
         />

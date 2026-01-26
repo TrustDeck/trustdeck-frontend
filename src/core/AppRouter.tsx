@@ -124,7 +124,23 @@ const BreadcrumbUpdater: React.FC = () => {
   const setBreadcrumbItems = useLayoutStore((state) => state.setBreadcrumbItems)
 
   useEffect(() => {
-    const pathnames = location.pathname.split('/').filter((x) => x)
+    const pathname = location.pathname
+    
+    // Special handling for direct pseudonym search: /search/pseudonym/:pseudonymId
+    // Should only show: Search > Pseudonym Details (not entities > pseudonyms)
+    if (pathname.match(/^\/search\/pseudonym\/[^/]+$/)) {
+      const searchRoute = routes.find((r) => r.path === '/search')
+      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
+      const breadcrumbList = [
+        { label: searchRoute?.titleKey || '/search', url: '/search' },
+        { label: pseudonymRoute?.titleKey || pathname, url: pathname }
+      ]
+      setBreadcrumbItems(breadcrumbList)
+      return
+    }
+
+    // Default behavior for all other paths
+    const pathnames = pathname.split('/').filter((x) => x)
     const breadcrumbList = pathnames.map((_, index) => {
       const path = `/${pathnames.slice(0, index + 1).join('/')}`
       const route = routes.find((r) =>

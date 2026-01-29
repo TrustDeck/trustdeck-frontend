@@ -285,7 +285,7 @@ export default function GroupForm() {
         />
         <CustomFloatLabel
           id="maxnumpsn"
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn}
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn.toLocaleString()}
           onChange={(e) => {
             const filtered = e.target.value.replace(/\D/g, '')
             updateNodeAttribute(
@@ -297,7 +297,6 @@ export default function GroupForm() {
           placeholder={t('groups:inputs.maxnumpsn.label')}
           errorMessage={t('groups:inputs.maxnumpsn.error')}
           validate={validation.isValidRegistrationMaxNumPsn}
-          helpText={t('groups:inputs.maxnumpsn.help')}
         />
         <CustomFloatLabel
           id="paddingCharacter"

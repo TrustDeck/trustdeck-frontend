@@ -50,7 +50,9 @@ export default function NewProjectSimplified() {
       const createdProject = await ProjectService.postProject(payload)
 
       //TODO change this later to create groups in groumanager until they work in entitites
-      await ProjectService.createGroup(defaultGroup)
+      console.log(createdProject)
+      const group = await ProjectService.createGroup(defaultGroup)
+      console.log(group)
       toastRef.current?.show({
         severity: 'success',
         summary: t('projects:success'),

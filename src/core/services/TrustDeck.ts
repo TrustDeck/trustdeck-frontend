@@ -105,7 +105,9 @@ class TrustDeck {
   }
 
   public async createBaseType() {
-    return this.request('POST', `/entities/base-types`, basePerson)
+    console.log('fired create base type')
+    const res = await this.request('POST', `/entities/base-types`, basePerson)
+    console.log(res)
   }
 
   public async getType(type: string) {
@@ -117,11 +119,13 @@ class TrustDeck {
   }
 
   public async createType(projectName: string) {
-    return this.request(
+    console.log('create type fired')
+    const res = await this.request(
       'POST',
       `/projects/${projectName}/entities/config`,
       person
     )
+    console.log(res)
   }
 
   public async fuzzySearch(entity: string, query: string) {

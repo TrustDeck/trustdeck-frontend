@@ -12,6 +12,9 @@
   "pseudonymView": "Pseudonym details",
   "history": "Last searches:",
   "noResults": "No search results.",
+  "searchFor": "Search for",
+  "anEntity": "an entity",
+  "aPseudonym": "a pseudonym",
   "entity": {
     "title": "Entity",
     "entityType": {

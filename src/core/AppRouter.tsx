@@ -107,13 +107,25 @@ const AuthStateListener: React.FC = () => {
     return () => unsubscribe()
   }, [isAuthenticated, isTabActive, location, navigate])
 
+  // Listen for token expiration warnings - automaticSilentRenew should handle refresh before this
+  useEffect(() => {
+    const handleTokenExpiring = () => {
+      // Token is about to expire - automaticSilentRenew should refresh it
+      // This event helps ensure we're aware of refresh attempts
+      console.log('Access token expiring. Silent renew should trigger')
+    }
+
+    const unsubscribeExpiring = auth.events.addAccessTokenExpiring(handleTokenExpiring)
+    return () => unsubscribeExpiring()
+  }, [auth.events])
+
   //this mavigates every tab as soon as the token is expired for any reason and then performs the logout in each tab. while the "real" logout itself only happens in the active tab
   useEffect(() => {
-    // the `return` is important - addAccessTokenExpiring() returns a cleanup function
+    // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
       navigate('/logged-out') // Use navigate instead of hard setting the location
     })
-  }, [auth.events])
+  }, [auth.events, navigate])
 
   return null
 }

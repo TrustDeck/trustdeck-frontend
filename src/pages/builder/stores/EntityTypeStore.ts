@@ -44,9 +44,47 @@ type EntityTypeStore = {
     value: any
   ) => void
   resetAttribute: (key: string) => void
+  moveSubAttribute: (listId: string, fromIndex: number, toIndex: number) => void
 }
 
 export const useEntityTypeStore = create<EntityTypeStore>((set, get) => ({
+  moveSubAttribute: (listId: string, dragIndex: number, hoverIndex: number) =>
+   set((state) => {
+      // If listId is empty string, operate on top-level attributes array
+      if (listId === '') {
+        const attrs = [...state.attributes]
+        if (dragIndex < 0 || dragIndex >= attrs.length) return { attributes: attrs }
+        const [removed] = attrs.splice(dragIndex, 1)
+        const dest = Math.max(0, Math.min(hoverIndex, attrs.length))
+        attrs.splice(dest, 0, removed)
+        return { attributes: attrs }
+      }
+
+      // Otherwise find the attribute with matching key and group === true
+      function updateRecursive(list: Attribute[]): Attribute[] {
+        return list.map((attr) => {
+          if (attr.key === listId && attr.group && attr.attributes) {
+            const sub = [...attr.attributes]
+            if (dragIndex < 0 || dragIndex >= sub.length) return { ...attr, attributes: sub }
+            const [removed] = sub.splice(dragIndex, 1)
+            const dest = Math.max(0, Math.min(hoverIndex, sub.length))
+            sub.splice(dest, 0, removed)
+            return { ...attr, attributes: sub }
+          }
+
+          if (attr.attributes && attr.attributes.length) {
+            return { ...attr, attributes: updateRecursive(attr.attributes) }
+          }
+
+          return attr
+        })
+      }
+
+      return {
+        attributes: updateRecursive(state.attributes)
+      }
+
+    }),
   resetAttribute: (key: string) =>
     set((state) => {
      //iterate recuseive and get the attribute by key

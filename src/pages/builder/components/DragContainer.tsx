@@ -1,16 +1,10 @@
+import { ChevronUpDownIcon, EllipsisVerticalIcon} from '@heroicons/react/24/outline'
 import type { Identifier, XYCoord } from 'dnd-core'
 import type { FC, ReactNode } from 'react'
 import { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 
 
-const style = {
-  border: '1px dashed gray',
-  padding: '0.5rem 1rem',
-  marginBottom: '.5rem',
-  backgroundColor: 'white',
-  cursor: 'move',
-}
 
 export interface CardProps {
   node: ReactNode
@@ -24,10 +18,16 @@ interface DragItem {
   listId: string
 }
 
-export const DragContainer: FC<CardProps> = ({ node, index, listId, moveCard }) => {
+export const DragContainer: FC<CardProps> = ({
+  node,
+  index,
+  listId,
+  moveCard
+}) => {
   const ref = useRef<HTMLDivElement>(null)
+  const handleRef = useRef<HTMLDivElement>(null)
 
-  const acceptType = `card-${listId}` 
+  const acceptType = `card-${listId}`
 
   const [{ handlerId }, drop] = useDrop<
     DragItem,
@@ -37,7 +37,7 @@ export const DragContainer: FC<CardProps> = ({ node, index, listId, moveCard }) 
     accept: acceptType,
     collect(monitor) {
       return {
-        handlerId: monitor.getHandlerId(),
+        handlerId: monitor.getHandlerId()
       }
     },
     hover(item: DragItem, monitor) {
@@ -80,21 +80,29 @@ export const DragContainer: FC<CardProps> = ({ node, index, listId, moveCard }) 
 
       // Mutate monitor item for performance (update index)
       item.index = hoverIndex
-    },
+    }
   })
 
-  const [{ isDragging }, drag] = useDrag({
+  const [{ isDragging }, drag, preview] = useDrag({
     type: acceptType,
-    item: () => ({ index }),
+    item: () => ({ index, listId }),
     collect: (monitor: any) => ({
-      isDragging: monitor.isDragging(),
-    }),
+      isDragging: monitor.isDragging()
+    })
   })
 
   const opacity = isDragging ? 0 : 1
-  drag(drop(ref))
+  // drop on the container, drag only from the handle
+  drop(ref)
+  drag(handleRef)
+  // use the full container as the drag preview so the whole item is visible
+  preview(ref)
+  
   return (
-    <div ref={ref} style={{ ...style, opacity }} data-handler-id={handlerId}>
+    <div ref={ref} style={{ opacity }} data-handler-id={handlerId} className='flex flex-row w-full'>
+      <div ref={handleRef} aria-label="drag-handle" title="Drag" className="cursor-grab p-2">
+        <ChevronUpDownIcon className="h-5 w-5" />
+      </div>
       {node}
     </div>
   )

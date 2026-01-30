@@ -8,13 +8,15 @@ import {
   ChevronDoubleLeftIcon
 } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 
 // internal imports
 import { routes } from '../../configs/routes'
 import useLayoutStore from '../../stores/LayoutStore'
 import Divider from './Divider'
 import PrimaryButton from '../form/buttons/PrimaryButton'
-
+import useProjectStore from '../../stores/ProjectStore'
+import ProjectService from '../../../pages/projects/services/ProjectService'
 
 interface SidebarProps {
   projectName: string
@@ -23,7 +25,46 @@ interface SidebarProps {
 export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar } = useLayoutStore()
   const { t } = useTranslation()
+  const projectImage = useProjectStore((state) => state.projectImage)
+  const setProjectImage = useProjectStore((state) => state.setProjectImage)
+  const hasTriedRefetch = useRef(false)
+
   const navigate = useNavigate()
+
+  // When the selected project changes, clear old image and fetch the new project's image.
+  useEffect(() => {
+    if (!projectName) return
+    setProjectImage(undefined)
+    let cancelled = false
+    ProjectService.getProjectImage()
+      .then((image) => {
+        if (!cancelled && image) setProjectImage(image)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [projectName, setProjectImage])
+
+  // Refetch when the stored image is a blob URL (invalid after refresh).
+  useEffect(() => {
+    if (!projectName) return
+    const stored = projectImage
+    const isBrokenBlob = typeof stored === 'string' && stored.startsWith('blob:')
+
+    if (isBrokenBlob && !hasTriedRefetch.current) {
+      hasTriedRefetch.current = true
+      setProjectImage(undefined)
+      ProjectService.getProjectImage()
+        .then((image) => {
+          if (image) setProjectImage(image)
+        })
+        .catch(() => {})
+        .finally(() => {
+          hasTriedRefetch.current = false
+        })
+    }
+  }, [projectName, projectImage, setProjectImage])
 
   // create classes for NavLinks
   function getNavLinkClasses({ isActive }: { isActive: boolean }) {
@@ -61,6 +102,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
                 <NavLink
                   to={path.replace('*', '/')}
                   className={getNavLinkClasses}
+                  onClick={() => isSidebarOpen && toggleSidebar()}
                 >
                   <Icon className="w-6 h-6" aria-label={t(titleKey)} />
                 </NavLink>
@@ -94,8 +136,11 @@ export default function Sidebar({ projectName }: SidebarProps) {
             aria-label="Close Sidebar"
           />
         </div>
+        <div className='flex'>
+          {projectImage && <img src={projectImage} alt="" className='w-32 h-32 object-contain shrink-0' />}
+          <h1 className="text-[42px] mt-8 pl-4 text-left">{projectName}</h1>
+        </div>
 
-        <h1 className="text-[42px] mt-8 pl-4 text-left">{projectName}</h1>
         <Divider/>
         <ul className="space-y-10">
           {routes
@@ -109,6 +154,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
                 <NavLink
                   to={path.replace('*', '/')}
                   className={getNavLinkClasses}
+                  onClick={() => isSidebarOpen && toggleSidebar()}
                 >
                   <Icon className="w-6 h-6 mr-2" />
                   {t(titleKey)}
@@ -119,7 +165,10 @@ export default function Sidebar({ projectName }: SidebarProps) {
         <div className="absolute bottom-10 left-0 right-0 flex justify-center">
           <PrimaryButton
             label={t('layout:menu.backToProjects')}
-            onClick={() => navigate('/projects')}
+            onClick={() => {
+              if (isSidebarOpen) toggleSidebar()
+              navigate('/projects')
+            }}
           />
         </div>
       </div>

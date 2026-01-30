@@ -30,10 +30,12 @@ type ProjectState = {
   justCreated: boolean
   entities: string[]
   entityAttributes: EntityDefinition[]
+  projectImage?: string
   setSelectedProject: (p: SelectedProject) => void
   setJustCreated: (flag: boolean) => void
   setEntities: (entities: string[]) => void
   setEntityAttributes: (entityAttributes: EntityDefinition[]) => void
+  setProjectImage: (image: string | undefined) => void
   clearSelectedProject: () => void
 }
 
@@ -44,11 +46,14 @@ const useProjectStore = create<ProjectState>()(
       justCreated: false,
       entities: [],
       entityAttributes: [],
+      projectImage: undefined,
       setSelectedProject: (p) => set({ selectedProject: p }),
       setJustCreated: (flag) => set({ justCreated: flag }),
       setEntities: (entities) => set({ entities }),
       setEntityAttributes: (entityAttributes) => set({ entityAttributes }),
-      clearSelectedProject: () => set({ selectedProject: null, justCreated: false }),
+      setProjectImage:(image) => set({ projectImage: image}),
+      clearSelectedProject: () =>
+        set({ selectedProject: null, justCreated: false, projectImage: undefined }),
     }),
     { name: 'selected-project' }
   )

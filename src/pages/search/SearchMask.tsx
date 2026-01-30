@@ -1,17 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Panel from '../../core/components/common/Panel'
 import EntityMask from './components/EntityMask'
 import PseudonymMask from './components/PseudonymMask'
+import useSearchStore from './stores/SearchStore'
 
 type SearchMode = 'entity' | 'pseudonym'
 
 export default function SearchMask({ psn = false }) {
   const { t } = useTranslation()
   const [mode, setMode] = useState<SearchMode>('entity')
+  const clearSearchInputs = useSearchStore((s) => s.clearSearchInputs)
+
+  useEffect(() => {
+    clearSearchInputs()
+  }, [clearSearchInputs])
 
   const handleModeClick = (selected: SearchMode) => {
     setMode(selected)
+    clearSearchInputs()
   }
 
   const titleContent = psn ? (

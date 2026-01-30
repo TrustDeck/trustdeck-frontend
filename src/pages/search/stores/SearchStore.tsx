@@ -31,6 +31,7 @@ type SearchState = {
   setDate: (date: string) => void
   setSampleNumber: (sampleNumber: string) => void
   setQuick: (quick: string) => void
+  clearSearchInputs: () => void
 }
 
 const useSearchStore = create<SearchState>((set) => ({
@@ -63,7 +64,12 @@ const useSearchStore = create<SearchState>((set) => ({
   setLocation: (location) => set({ location }),
   setDate: (date) => set({ date }),
   setSampleNumber: (sampleNumber) => set({ sampleNumber }),
-  setQuick: (quick) => set({ quick })
+  setQuick: (quick) => set({ quick }),
+  clearSearchInputs: () =>
+    set({
+      quick: '',
+      pseudonym: ''
+    })
 }))
 
 export default useSearchStore

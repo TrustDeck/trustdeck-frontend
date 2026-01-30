@@ -16,6 +16,8 @@ import { PseudonymService } from './services/PseudonymService'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
 import { useNavigate } from 'react-router-dom'
+import usePseudonymStore from '../search/stores/PseudonymSearchResults'
+import SearchPseudonymService from '../search/services/PseudonymService'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
 // import { Toast } from 'primereact/toast'
@@ -27,6 +29,7 @@ export default function SearchPsn() {
   const { selectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { setPseudonymValue } = usePseudonymStore()
 
   const localStepperRef = useRef<any | null>(null)
 
@@ -68,8 +71,14 @@ export default function SearchPsn() {
 
       console.log('Created pseudonyms:', pseudonyms)
 
-      // Example: navigate to the first created pseudonym
-      if (pseudonyms.length > 0) {
+      // Fetch full pseudonym details in the domain where it was created, set store, then navigate
+      if (pseudonyms.length > 0 && selectedGroupNames.length > 0) {
+        const firstPsn = pseudonyms[0]
+        const firstGroup = selectedGroupNames[0]
+        const pseudonymData = await SearchPseudonymService.searchPseudonym(firstPsn, firstGroup)
+        if (pseudonymData) setPseudonymValue(pseudonymData)
+        navigate(`/search/pseudonym/${firstPsn}`)
+      } else if (pseudonyms.length > 0) {
         navigate(`/search/pseudonym/${pseudonyms[0]}`)
       }
 
@@ -123,6 +132,7 @@ export default function SearchPsn() {
               value={selectedGroup || null}
               options={groups || []}
               onChange={handleGroupChange}
+              selectionMode="single"
             />
             <div className="flex justify-between mt-6">
             <PrimaryOutlinedButton

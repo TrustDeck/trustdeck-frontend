@@ -22,6 +22,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog'
 import { useNavigate } from 'react-router-dom'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
+import { FileUpload } from 'primereact/fileupload'
 
 type PersonSuggestion = Operator & { name: string }
 
@@ -31,7 +32,9 @@ const Settings: React.FC = () => {
 
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [personValue, setPersonValue] = useState<string>('')
-  const [personSuggestions, setPersonSuggestions] = useState<PersonSuggestion[]>([])
+  const [personSuggestions, setPersonSuggestions] = useState<
+    PersonSuggestion[]
+  >([])
   const [loading, setLoading] = useState<boolean>(false)
   const [loadingMessage, setLoadingMessage] = useState<string>('')
   const [domainTree, setDomainTree] = useState<Domain[]>([])
@@ -41,6 +44,7 @@ const Settings: React.FC = () => {
   >({})
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [confirmVisible, setConfirmVisible] = useState(false)
+
   const navigate = useNavigate()
 
   const fetchPersons = async (query: string): Promise<PersonSuggestion[]> => {
@@ -48,7 +52,7 @@ const Settings: React.FC = () => {
     return fetchedOperators.map((operator) => {
       let name = operator.username
       if (operator.email && operator.lastName) {
-        name = `${operator.email.split(".")[0]} ${operator.lastName}`
+        name = `${operator.email.split('.')[0]} ${operator.lastName}`
       } else if (operator.firstName) {
         name = operator.firstName
       } else if (operator.lastName) {
@@ -80,14 +84,19 @@ const Settings: React.FC = () => {
           [
             personSuggestion.name,
             personSuggestion.email ? `(${personSuggestion.email})` : '',
-            personSuggestion.federation ? `(${personSuggestion.federation})` : ''
+            personSuggestion.federation
+              ? `(${personSuggestion.federation})`
+              : ''
           ].join(' ')
         )
         setSelectedPersonId(e.value.userId)
         setLoadingState(true, `Loading permissions for ${e.value.name}...`)
-        const permissions = await TrustDeck.instance().getUserPermissions(e.value.username)
+        const permissions = await TrustDeck.instance().getUserPermissions(
+          e.value.username
+        )
         setUserPermissions(permissions)
-        const flatTree = await TrustDeck.instance().getFlatRootDomainTree(currentProject)
+        const flatTree =
+          await TrustDeck.instance().getFlatRootDomainTree(currentProject)
         setDomainTree(flatTree)
         setLoadingState(false, '')
       } else {
@@ -97,7 +106,10 @@ const Settings: React.FC = () => {
     }
   }
 
-  const handleDomainPermissionsChange = (area: string, permissions: Record<string, string>) => {
+  const handleDomainPermissionsChange = (
+    area: string,
+    permissions: Record<string, string>
+  ) => {
     setAllDomainPermissions((prev) => ({
       ...prev,
       [area]: permissions
@@ -118,10 +130,11 @@ const Settings: React.FC = () => {
   const handleSave = async () => {
     if (selectedPersonId) {
       setLoadingState(true, 'Updating permissions...')
-      const permissionRequestList = PermissionsService.instance().createPermissionRequestList(
-        selectedPersonId,
-        allDomainPermissions
-      )
+      const permissionRequestList =
+        PermissionsService.instance().createPermissionRequestList(
+          selectedPersonId,
+          allDomainPermissions
+        )
 
       await TrustDeck.instance()
         .updateUserPermissions(selectedPersonId, permissionRequestList)
@@ -140,8 +153,12 @@ const Settings: React.FC = () => {
   const personItemTemplate = (item: PersonSuggestion) => (
     <div>
       <span className="font-semibold">{item.name}</span>
-      {item.email && <span className="ml-2 text-xs text-gray-500">{item.email}</span>}
-      {item.federation && <span className="ml-2 text-xs text-gray-400">({item.federation})</span>}
+      {item.email && (
+        <span className="ml-2 text-xs text-gray-500">{item.email}</span>
+      )}
+      {item.federation && (
+        <span className="ml-2 text-xs text-gray-400">({item.federation})</span>
+      )}
     </div>
   )
 
@@ -151,7 +168,10 @@ const Settings: React.FC = () => {
       <div className="flex-1 flex flex-col items-center w-full px-4 pt-4">
         <h1 className="text-center">{t('settings:header')}</h1>
 
-        <Panel title={t('settings:panelTitle')} className="w-full max-w-4xl mt-4">
+        <Panel
+          title={t('settings:panelTitle')}
+          className="w-full max-w-4xl mt-4"
+        >
           <div className="relative flex flex-row items-center w-full gap-2">
             <AutoComplete
               value={personValue}
@@ -228,6 +248,27 @@ const Settings: React.FC = () => {
               )}
             </>
           )}
+        </Panel>
+        <Panel title={t('settings:photo')} className="mt-6">
+          <FileUpload
+            mode="basic"
+            name="image"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            maxFileSize={5 * 1024 * 1024}
+            customUpload
+            uploadHandler={async (e) => {
+              const file = e.files[0]
+              try {
+                await TrustDeck.instance().createImage(file)
+                window.location.reload()
+              } catch (err) {
+                console.error('Upload failed', err)
+              }
+            }}
+            auto
+            multiple={false}
+            className="file-upload-button"
+          />
         </Panel>
       </div>
 

@@ -11,6 +11,7 @@ import { ArrowUpIcon } from '@heroicons/react/24/outline'
 import { ArrowDownIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import PersonService from '../services/PersonService'
+import SearchPersonService from '../../search/services/PersonService'
 import useDuplicatesStore from '../stores/DuplicatesStore'
 import { useNavigate } from 'react-router-dom'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -20,6 +21,7 @@ import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
+import useSearchResultsStore from '../../search/stores/SearchResultsStore'
 import { Tooltip } from 'primereact/tooltip'
 
 /**
@@ -47,6 +49,7 @@ export default function PersonForm() {
   const { setNewEntry, setDuplicates } = useDuplicatesStore()
   const navigate = useNavigate()
   const { selectedProject } = useProjectStore()
+  const { setResults } = useSearchResultsStore()
 
   function handleNext() {
     setCurrentStep((prevStep) => prevStep + 1)
@@ -75,18 +78,18 @@ export default function PersonForm() {
         postalCode,
         city,
         country,
-        contactFirstName,
-        contactLastName,
-        contactPhone,
-        contactEmail,
-        contactRelationship
+
+        ...(contactFirstName && { contactFirstName }),
+        ...(contactLastName && { contactLastName }),
+        ...(contactPhone && { contactPhone }),
+        ...(contactEmail && { contactEmail }),
+        ...(contactRelationship && { contactRelationship }),
       }
     }
 
     try {
       console.log(payload)
       const recordLinkage = await PersonRecordLinkage.recordLinkage(payload)
-      console.log(recordLinkage)
 
       if (recordLinkage.length > 0) {
         setNewEntry({ ...recordLinkage, matchingEntities: undefined })
@@ -94,7 +97,8 @@ export default function PersonForm() {
         navigate('/identity/duplicates')
       } else {
         const createdPerson = await PersonService.create(payload)
-        console.log('Person created:', createdPerson)
+        const personData = await SearchPersonService.getPerson(createdPerson.trustdeckID)
+        setResults([personData])
         navigate(`/search/${createdPerson.trustdeckID}`)
       }
     } catch (error) {
@@ -248,7 +252,7 @@ export default function PersonForm() {
           <div className='sm:space-y-0 space-y-3 mb-5'>
             <CustomFloatLabel
               id="id"
-              value={id}
+              value={id === 0 ? '' : id}
               onChange={(e) => setId(Number(e.target.value))}
               placeholder={'ID'}
               errorMessage={'ID required'}

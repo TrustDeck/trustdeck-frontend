@@ -60,16 +60,12 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
     loadEntity
   } = usePersonStore()
 
+  // Keep PersonStore in sync with the current entity so view/edit always show the right person
   useEffect(() => {
-    if (editMode) {
-      console.log('editMode')
+    if (entity) {
       loadEntity(entity)
     }
-  }, [editMode, entity, loadEntity])
-
-  useEffect(() => {
-    
-  })
+  }, [entity, loadEntity])
 
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
@@ -79,6 +75,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
 
   const countryLabel = countryOptions.find((c) => c.value === country)?.label || country
   const relationshipOptions = useRelationshipOptions()
+
+  const genderLabel = genderDropdownOptions.find((o) => o.value === administrativeGender)?.label ?? administrativeGender
+  const relationshipLabel = relationshipOptions.find((o) => o.value === contactRelationship)?.label ?? contactRelationship
 
   return (
     <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
@@ -146,7 +145,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             ) : (
               <CustomFloatLabel
                 id="administrativeGender"
-                value={administrativeGender}
+                value={genderLabel}
                 placeholder={t('search:entity.person.gender.placeholder')}
                 readOnly
                 className="flex-1"
@@ -285,7 +284,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           ) : (
             <CustomFloatLabel
               id="relationship"
-              value={contactRelationship}
+              value={relationshipLabel}
               placeholder={t('search:entity.person.relationship.placeholder')}
               readOnly={!editMode}
               onChange={(e) => setContactRelationship(e.target.value)}

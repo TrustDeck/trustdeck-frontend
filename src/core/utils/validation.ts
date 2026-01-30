@@ -83,7 +83,7 @@ const validation = {
 
   isValidRegistrationMaxNumPsn: (maxNumPsn: string) => {
     try {
-      const value = BigInt(maxNumPsn.trim());
+      const value = BigInt(maxNumPsn.replace(/,/g, '').trim());
       return value >= 0n && value <= MAX_64BIT_INT;
     } catch {
       return false;

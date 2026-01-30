@@ -64,6 +64,10 @@
   padding: 0px;;
 }
 
+.file-upload-button .p-button {
+  @apply bg-color-blue text-white hover:bg-color-blue/80 border-2 border-color-blue px-6 py-3 text-base font-bold rounded-lg w-auto;
+}
+
 /* PrimeReact AutoComplete full width */
 .p-autocomplete,
 .p-autocomplete-input,

@@ -20,5 +20,7 @@
   "createNewProject": "Create a new project",
   "sortOrder": "Sort order",
   "projectStatus": "Project status",
+  "projectCreated": "Project created successfully",
+  "creationFailed": "Project creation failed",
   "noProjects": "You don't have access to any projects yet. \n Create a new project by clicking on the button above or ask a colleague to add you to a project!"
 }

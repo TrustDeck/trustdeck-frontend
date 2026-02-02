@@ -86,6 +86,11 @@ export default function Sidebar({ projectName }: SidebarProps) {
     }
   }, [projectName, projectImage, setProjectImage])
 
+  // Only close sidebar on nav click when below xl (so big screens keep it open).
+  const closeSidebarOnNavigate = () => {
+    if (window.innerWidth < XL_BREAKPOINT && isSidebarOpen) toggleSidebar()
+  }
+
   // create classes for NavLinks
   function getNavLinkClasses({ isActive }: { isActive: boolean }) {
     return `flex items-center px-4 py-2 rounded-lg transition-all duration-300 
@@ -122,7 +127,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
                 <NavLink
                   to={path.replace('*', '/')}
                   className={getNavLinkClasses}
-                  onClick={() => isSidebarOpen && toggleSidebar()}
+                  onClick={closeSidebarOnNavigate}
                 >
                   <Icon className="w-6 h-6" aria-label={t(titleKey)} />
                 </NavLink>
@@ -172,7 +177,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
                 <NavLink
                   to={path.replace('*', '/')}
                   className={getNavLinkClasses}
-                  onClick={() => isSidebarOpen && toggleSidebar()}
+                  onClick={closeSidebarOnNavigate}
                 >
                   <Icon className="w-6 h-6 mr-2" />
                   {t(titleKey)}
@@ -184,7 +189,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
           <PrimaryButton
             label={t('layout:menu.backToProjects')}
             onClick={() => {
-              if (isSidebarOpen) toggleSidebar()
+              closeSidebarOnNavigate()
               navigate('/projects')
             }}
           />

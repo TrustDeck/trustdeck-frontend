@@ -41,7 +41,8 @@
     "gender": {
       "male": "Männlich",
       "female": "Weiblich",
-      "nonBinary": "Divers"
+      "nonBinary": "Divers",
+      "unknown": "Unbekannt"
     }
   },
   "bulk": {

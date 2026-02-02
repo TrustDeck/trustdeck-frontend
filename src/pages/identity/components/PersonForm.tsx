@@ -158,7 +158,8 @@ export default function PersonForm() {
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
     { label: t('identity:entity.gender.female'), value: 'female' },
-    { label: t('identity:entity.gender.nonBinary'), value: 'other' }
+    { label: t('identity:entity.gender.nonBinary'), value: 'other' },
+    { label: t('identity:entity.gender.unknown'), value: 'unknown' }
   ]
 
   // Dropdown options for selecting relationship

@@ -12,14 +12,17 @@ import { Toast } from 'primereact/toast'
 const Layout: React.FC = () => {
   const setToast = useToastStore((state) => state.setToast)
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const setTabActive = useLayoutStore((state) => state.setTabActive) // Use setTabActive from LayoutStore
-  const {selectedProject} = useProjectStore()
+  const setTabActive = useLayoutStore((state) => state.setTabActive)
+  const isSidebarOpen = useLayoutStore((state) => state.isSidebarOpen)
+  const { selectedProject } = useProjectStore()
   const location = useLocation()
   const hideSidebar =
     location.pathname === '/projects' || location.pathname === '/projects/new'
   const contentOffsetClass = hideSidebar
     ? 'ml-0'
-    : 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-large'
+    : isSidebarOpen
+      ? 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-large'
+      : 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-collapse'
   const breadcrumbOffsetClass = hideSidebar
     ? 'ml-0'
     : 'ml-sidebar-collapse sm:ml-0'

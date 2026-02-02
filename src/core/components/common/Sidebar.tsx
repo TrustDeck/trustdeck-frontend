@@ -22,14 +22,34 @@ interface SidebarProps {
   projectName: string
 }
 
+const XL_BREAKPOINT = 1280
+
 export default function Sidebar({ projectName }: SidebarProps) {
-  const { isSidebarOpen, toggleSidebar } = useLayoutStore()
+  const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
   const { t } = useTranslation()
   const projectImage = useProjectStore((state) => state.projectImage)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
   const hasTriedRefetch = useRef(false)
 
   const navigate = useNavigate()
+
+  // On xl screens, default sidebar to open.
+  useEffect(() => {
+    if (window.innerWidth >= XL_BREAKPOINT) {
+      setSidebarOpen(true)
+    }
+  }, [setSidebarOpen])
+
+  // When resizing below xl, close the sidebar automatically.
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < XL_BREAKPOINT) {
+        setSidebarOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [setSidebarOpen])
 
   // When the selected project changes, clear old image and fetch the new project's image.
   useEffect(() => {
@@ -84,11 +104,11 @@ export default function Sidebar({ projectName }: SidebarProps) {
         />
       </div>
 
-      <div className="hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] xl:hidden">
+      <div className={`hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] ${isSidebarOpen ? 'xl:hidden' : ''}`}>
         <ChevronDoubleRightIcon
           onClick={toggleSidebar}
           className="h-6 w-6 absolute top-4 cursor-pointer"
-          aria-label="Close Sidebar"
+          aria-label="Open Sidebar"
         />
         <ul className="space-y-12">
           {routes
@@ -114,9 +134,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
       <div
         className={`fixed inset-0 bg-sidebar text-black w-sidebar-large h-screen p-4 
         transform transition-transform duration-300 ease-in-out 
-        ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } xl:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)]
         z-50
           `}
@@ -129,7 +147,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
           />
         </div>
 
-        <div className="hidden sm:block xl:hidden">
+        <div className="hidden sm:block">
           <ChevronDoubleLeftIcon
             onClick={toggleSidebar}
             className="h-7 w-7 absolute top-3 right-3 text-black cursor-pointer"

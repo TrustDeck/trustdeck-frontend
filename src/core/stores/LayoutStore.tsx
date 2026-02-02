@@ -8,6 +8,7 @@ interface BreadcrumbItem {
 interface LayoutStore {
   isSidebarOpen: boolean
   toggleSidebar: () => void
+  setSidebarOpen: (open: boolean) => void
   breadcrumbItems: BreadcrumbItem[]
   setBreadcrumbItems: (items: BreadcrumbItem[]) => void
   isTabActive: boolean
@@ -20,6 +21,7 @@ const useLayoutStore = create<LayoutStore>((set) => ({
   isSidebarOpen: false,
   toggleSidebar: () =>
     set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  setSidebarOpen: (open) => set({ isSidebarOpen: open }),
   breadcrumbItems: [],
   setBreadcrumbItems: (items) => set({ breadcrumbItems: items }),
   isTabActive: true,

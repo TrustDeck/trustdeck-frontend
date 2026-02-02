@@ -2,7 +2,7 @@
     "menu": {
         "logout": "Abmelden",
         "dentityManagement": "Identitätsmanagement",
-        "pseudonymManagement": "Pseudonym-Management",
+        "pseudonymManagement": "Pseudonym Management",
         "groupManagement": "Gruppenmanagement",
         "projectSettings": "Projekteinstellungen",
         "search": "Suche",

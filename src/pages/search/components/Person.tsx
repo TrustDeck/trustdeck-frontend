@@ -9,6 +9,7 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import validation from '../../../core/utils/validation'
+import { dateToLocalYYYYMMDD, localYYYYMMDDToDate } from '../../../core/utils/date'
 import { countryOptions } from '../../identity/util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import { PersonEntity } from '../types/PersonEntity'
@@ -112,11 +113,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
                 <CustomCalendar
                   id="birthdate"
                   placeholder={t('search:entity.person.birthdate.placeholder')}
-                  value={dateOfBirth ? new Date(dateOfBirth) : null}
+                  value={dateOfBirth ? localYYYYMMDDToDate(dateOfBirth) : null}
                   onChange={(e) =>
-                    setDateOfBirth(
-                      e.value ? e.value.toISOString().split('T')[0] : ''
-                    )
+                    setDateOfBirth(e.value ? dateToLocalYYYYMMDD(e.value) : '')
                   }
                 />
               </div>
@@ -289,6 +288,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
               readOnly={!editMode}
               onChange={(e) => setContactRelationship(e.target.value)}
               className="mb-8"
+              centerPlaceholderWhenEmpty
             />
           )}
         </div>

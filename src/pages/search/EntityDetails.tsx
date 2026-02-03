@@ -18,7 +18,7 @@ import usePersonStore from './stores/PersonStore'
 import useToastStore from '../../core/stores/ToastStore'
 
 const EntityDetails: React.FC = () => {
-  const { results } = useSearchResultsStore()
+  const { results, setResults } = useSearchResultsStore()
   const { editMode, setEditMode } = useLayoutStore()
   const { entityId } = useParams()
   const { t } = useTranslation()
@@ -46,7 +46,7 @@ const EntityDetails: React.FC = () => {
   } = usePersonStore()
 
   const entity = useMemo(
-    () => results.find((entity) => entity.trustdeckID === entityId),
+    () => results.find((e) => e.trustdeckID === entityId),
     [results, entityId]
   )
 
@@ -59,7 +59,7 @@ const EntityDetails: React.FC = () => {
       id,
       firstName,
       lastName,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
+      dateOfBirth: dateOfBirth ? `${dateOfBirth}T00:00:00.000Z` : undefined,
       administrativeGender,
       phoneNumber,
       email,
@@ -82,6 +82,12 @@ const EntityDetails: React.FC = () => {
     const payload = { data }
     try {
       await PersonService.personUpdate(payload, trustdeckID)
+      const updated = await PersonService.getPerson(trustdeckID)
+      setResults(
+        results.map((e) =>
+          e.trustdeckID === trustdeckID ? updated : e
+        )
+      )
       showToast({
         severity: 'success',
         summary: t('search:save'),

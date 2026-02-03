@@ -20,11 +20,6 @@
   "aPseudonym": "a pseudonym",
   "entity": {
     "title": "Entity",
-    "sections": {
-      "searchMode": "Search mode",
-      "quickSearch": "Quick search",
-      "advancedSearch": "Advanced search"
-    },
     "entityType": {
       "title": "Type of entity:",
       "help": "Choose what you want to search."

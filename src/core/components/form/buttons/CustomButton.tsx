@@ -9,6 +9,7 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
   type = 'button',
   className = '',
   loading = false,
+  icon,
   disabled = false,
   tooltip
 }) => {
@@ -21,6 +22,7 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
         label={label}
         outlined={true}
         loading={loading}
+        icon={icon}
         disabled={disabled}
         tooltip={tooltip}
       />

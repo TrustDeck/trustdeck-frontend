@@ -21,6 +21,11 @@
   "aPseudonym": "ein Pseudonym",
   "entity": {
     "title": "Entität",
+    "sections": {
+      "searchMode": "Suchmodus",
+      "quickSearch": "Schnellsuche",
+      "advancedSearch": "Erweiterte Suche"
+    },
     "entityType": {
       "title": "Entitäten-Typ:",
       "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."

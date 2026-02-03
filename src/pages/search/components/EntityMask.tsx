@@ -140,14 +140,14 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
         </div>
 
         <Divider />
-
-        <CustomFloatLabel
-          id="quick"
-          value={quick}
-          onChange={(e) => setQuick(e.target.value)}
-          placeholder={t('search:entity.person.quick.placeholder')}
-        />
-
+        <div className="relative my-4">
+          <CustomFloatLabel
+            id="quick"
+            value={quick}
+            onChange={(e) => setQuick(e.target.value)}
+            placeholder={t('search:entity.person.quick.placeholder')}
+          />
+        </div>
         <Divider />
 
         {selectedType === 'person' && (

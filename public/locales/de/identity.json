@@ -18,7 +18,8 @@
     "manually": "Daten manuell eingeben",
     "back": "Zurück",
     "next": "Weiter",
-    "notDuplicate": "Keine Dublette – Weiter mit Registrierung"
+    "notDuplicate": "Keine Dublette – Weiter mit Registrierung",
+    "completeFields": "Bitte füllen Sie alle Pflichtfelder aus, bevor Sie fortfahren"
   },
   "entity": {
     "person": {
@@ -40,7 +41,8 @@
     "gender": {
       "male": "Männlich",
       "female": "Weiblich",
-      "nonBinary": "Divers"
+      "nonBinary": "Divers",
+      "unknown": "Unbekannt"
     }
   },
   "bulk": {

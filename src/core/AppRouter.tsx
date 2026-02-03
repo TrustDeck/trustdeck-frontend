@@ -107,13 +107,25 @@ const AuthStateListener: React.FC = () => {
     return () => unsubscribe()
   }, [isAuthenticated, isTabActive, location, navigate])
 
+  // Listen for token expiration warnings - automaticSilentRenew should handle refresh before this
+  useEffect(() => {
+    const handleTokenExpiring = () => {
+      // Token is about to expire - automaticSilentRenew should refresh it
+      // This event helps ensure we're aware of refresh attempts
+      console.log('Access token expiring. Silent renew should trigger')
+    }
+
+    const unsubscribeExpiring = auth.events.addAccessTokenExpiring(handleTokenExpiring)
+    return () => unsubscribeExpiring()
+  }, [auth.events])
+
   //this mavigates every tab as soon as the token is expired for any reason and then performs the logout in each tab. while the "real" logout itself only happens in the active tab
   useEffect(() => {
-    // the `return` is important - addAccessTokenExpiring() returns a cleanup function
+    // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
       navigate('/logged-out') // Use navigate instead of hard setting the location
     })
-  }, [auth.events])
+  }, [auth.events, navigate])
 
   return null
 }
@@ -124,10 +136,28 @@ const BreadcrumbUpdater: React.FC = () => {
   const setBreadcrumbItems = useLayoutStore((state) => state.setBreadcrumbItems)
 
   useEffect(() => {
-    const pathnames = location.pathname.split('/').filter((x) => x)
+    const pathname = location.pathname
+    
+    // Special handling for direct pseudonym search: /search/pseudonym/:pseudonymId
+    // Should only show: Search > Pseudonym Details (not entities > pseudonyms)
+    if (pathname.match(/^\/search\/pseudonym\/[^/]+$/)) {
+      const searchRoute = routes.find((r) => r.path === '/search')
+      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
+      const breadcrumbList = [
+        { label: searchRoute?.titleKey || '/search', url: '/search' },
+        { label: pseudonymRoute?.titleKey || pathname, url: pathname }
+      ]
+      setBreadcrumbItems(breadcrumbList)
+      return
+    }
+
+    // Default behavior for all other paths
+    const pathnames = pathname.split('/').filter((x) => x)
     const breadcrumbList = pathnames.map((_, index) => {
       const path = `/${pathnames.slice(0, index + 1).join('/')}`
-      const route = routes.find((r) => matchPath(r.path, path))
+      const route = routes.find((r) =>
+        matchPath({ path: r.path, end: true }, path)
+      )
       return { label: route ? route.titleKey : path, url: path }
     })
 

@@ -3,7 +3,7 @@ import Sidebar from './Sidebar'
 import UserMenu from './UserMenu'
 import Breadcrumbs from './Breadcrumbs'
 import useUserStore from '../../stores/UserStore'
-import useLayoutStore from '../../stores/LayoutStore' // Import useLayoutStore
+import useLayoutStore from '../../stores/LayoutStore'
 import { useEffect } from 'react'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -12,14 +12,22 @@ import { Toast } from 'primereact/toast'
 const Layout: React.FC = () => {
   const setToast = useToastStore((state) => state.setToast)
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const setTabActive = useLayoutStore((state) => state.setTabActive) // Use setTabActive from LayoutStore
-  const {selectedProject} = useProjectStore()
+  const setTabActive = useLayoutStore((state) => state.setTabActive)
+  const isSidebarOpen = useLayoutStore((state) => state.isSidebarOpen)
+  const { selectedProject } = useProjectStore()
   const location = useLocation()
+
+  const isLoggedOutPage = location.pathname === '/logged-out'
   const hideSidebar =
-    location.pathname === '/projects' || location.pathname === '/projects/new'
+    isLoggedOutPage ||
+    location.pathname === '/projects' ||
+    location.pathname === '/projects/new'
+
   const contentOffsetClass = hideSidebar
     ? 'ml-0'
-    : 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-large'
+    : isSidebarOpen
+      ? 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-large'
+      : 'ml-0 sm:ml-sidebar-collapse xl:ml-sidebar-collapse'
   const breadcrumbOffsetClass = hideSidebar
     ? 'ml-0'
     : 'ml-sidebar-collapse sm:ml-0'
@@ -28,15 +36,12 @@ const Layout: React.FC = () => {
     const updateTabStatus = () => {
       const isActiveTab =
         document.visibilityState === 'visible' && document.hasFocus()
-      setTabActive(isActiveTab) // Update the tab status in LayoutStore
+      setTabActive(isActiveTab)
     }
 
-    // Listen for events
     document.addEventListener('visibilitychange', updateTabStatus)
     window.addEventListener('focus', updateTabStatus)
     window.addEventListener('blur', updateTabStatus)
-
-    // Set initial state
     updateTabStatus()
 
     return () => {
@@ -48,15 +53,21 @@ const Layout: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-surface">
-      {!hideSidebar && <Sidebar projectName={selectedProject?.abbreviation ?? ""} />}
+      {!hideSidebar && (
+        <Sidebar projectName={selectedProject?.abbreviation ?? ''} />
+      )}
       <div className={`transition-all duration-300 ${contentOffsetClass}`}>
-        <div className="flex flex-row w-full p-4 items-center">
-          <div className={`${breadcrumbOffsetClass}  mr-4 sm:mr-0 w-3/4`}>
-            <Breadcrumbs />
+        {!isLoggedOutPage && (
+          <div className="flex flex-row w-full p-4 items-center">
+            <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
+              <Breadcrumbs />
+            </div>
+            <div className="w-1/4">
+              {isAuthenticated && <UserMenu />}
+            </div>
           </div>
-          <div className="w-1/4">{isAuthenticated && <UserMenu />}</div>
-        </div>
-        <Toast ref={setToast} />  
+        )}
+        <Toast ref={setToast} />
         <div className="flex w-full p-4">
           <Outlet />
         </div>

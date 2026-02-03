@@ -18,15 +18,16 @@ const PseudonymDetails: React.FC = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { pseudonymValue, setPseudonymValue } = usePseudonymStore()
-  const { entityId } = useParams()
+  const { entityId, pseudonymId } = useParams()
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!pseudonymValue) {
-      setLoading(true) // Start loading
+    const needsFetch = pseudonymId && (!pseudonymValue || pseudonymValue.psn !== pseudonymId)
+    if (needsFetch) {
+      setLoading(true)
       async function searchPsn() {
         try {
-          const result = await PseudonymService.searchPseudonym()
+          const result = await PseudonymService.searchPseudonym(pseudonymId!)
 
           if (result) {
             setPseudonymValue(result)
@@ -42,14 +43,14 @@ const PseudonymDetails: React.FC = () => {
 
       searchPsn()
     }
-  }, [pseudonymValue, setPseudonymValue])
+  }, [pseudonymValue, pseudonymId, setPseudonymValue])
 
   return (
     <div>
       <div className="relative w-full 2xl:w-4/5 2xl:mx-auto mb-3 flex items-center">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
-          onClick={() => navigate(entityId ? `/search/${entityId}` : '/')}
+          onClick={() => navigate(entityId ? `/search/${entityId}` : '/search')}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0"
         />

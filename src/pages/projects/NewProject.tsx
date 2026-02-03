@@ -33,7 +33,8 @@ export default function NewProject() {
 
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { setSelectedProject, setJustCreated } = useProjectStore()
+  const { setSelectedProject, setJustCreated, setEntities, setEntityAttributes } =
+    useProjectStore()
 
   const {
     projectName,
@@ -84,15 +85,20 @@ export default function NewProject() {
     try {
       const createdProject = await ProjectService.postProject(payload)
       setSelectedProject({ abbreviation: createdProject.abbreviation, name: createdProject.name })
-      // TODO: change back to project.entityTypes => currently hardcoded to 'person' and 'biosample'
       setSelectedEntities(['person', 'biosample'])
+      setJustCreated(true)
+      setEntities(selectedEntities.length ? selectedEntities : ['person', 'biosample'])
+      try {
+        setEntityAttributes(ProjectService.getEntityAttributes())
+      } catch (e) {
+        console.error(e)
+      }
       toastRef.current?.show({
         severity: 'success',
         summary: 'Success',
         detail: 'Project created successfully',
         life: 2000
       })
-      setJustCreated(true)
       setTimeout(() => {
         navigate('/group-management')
       }, 3000)

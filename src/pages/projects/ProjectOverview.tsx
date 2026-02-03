@@ -98,7 +98,7 @@ export default function ProjectOverview() {
         </div>
       ) : (
         <>
-          <div className="flex w-full flex-col gap-6 items-center">
+          <div className="flex w-full flex-col gap-6 items-center mb-12">
             {filteredProjects.map((project) => (
               <SingleProject key={project.abbreviation} project={project} />
             ))}

@@ -11,6 +11,7 @@ import { ArrowUpIcon } from '@heroicons/react/24/outline'
 import { ArrowDownIcon } from '@heroicons/react/24/outline'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import PersonService from '../services/PersonService'
+import SearchPersonService from '../../search/services/PersonService'
 import useDuplicatesStore from '../stores/DuplicatesStore'
 import { useNavigate } from 'react-router-dom'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -20,6 +21,8 @@ import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
+import useSearchResultsStore from '../../search/stores/SearchResultsStore'
+import { Tooltip } from 'primereact/tooltip'
 
 /**
  * The `PersonForm` component renders a multi-step form for creating or registering a person entity.
@@ -46,10 +49,7 @@ export default function PersonForm() {
   const { setNewEntry, setDuplicates } = useDuplicatesStore()
   const navigate = useNavigate()
   const { selectedProject } = useProjectStore()
-
-  useEffect(() => {
-    reset()
-  }, []) 
+  const { setResults } = useSearchResultsStore()
 
   function handleNext() {
     setCurrentStep((prevStep) => prevStep + 1)
@@ -78,18 +78,18 @@ export default function PersonForm() {
         postalCode,
         city,
         country,
-        contactFirstName,
-        contactLastName,
-        contactPhone,
-        contactEmail,
-        contactRelationship
+
+        ...(contactFirstName && { contactFirstName }),
+        ...(contactLastName && { contactLastName }),
+        ...(contactPhone && { contactPhone }),
+        ...(contactEmail && { contactEmail }),
+        ...(contactRelationship && { contactRelationship }),
       }
     }
 
     try {
       console.log(payload)
       const recordLinkage = await PersonRecordLinkage.recordLinkage(payload)
-      console.log(recordLinkage)
 
       if (recordLinkage.length > 0) {
         setNewEntry({ ...recordLinkage, matchingEntities: undefined })
@@ -97,7 +97,8 @@ export default function PersonForm() {
         navigate('/identity/duplicates')
       } else {
         const createdPerson = await PersonService.create(payload)
-        console.log('Person created:', createdPerson)
+        const personData = await SearchPersonService.getPerson(createdPerson.trustdeckID)
+        setResults([personData])
         navigate(`/search/${createdPerson.trustdeckID}`)
       }
     } catch (error) {
@@ -148,11 +149,17 @@ export default function PersonForm() {
     reset
   } = useInputStore()
 
+  useEffect(() => {
+    reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Dropdown options for selecting gender
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
     { label: t('identity:entity.gender.female'), value: 'female' },
-    { label: t('identity:entity.gender.nonBinary'), value: 'other' }
+    { label: t('identity:entity.gender.nonBinary'), value: 'other' },
+    { label: t('identity:entity.gender.unknown'), value: 'unknown' }
   ]
 
   // Dropdown options for selecting relationship
@@ -246,7 +253,7 @@ export default function PersonForm() {
           <div className='sm:space-y-0 space-y-3 mb-5'>
             <CustomFloatLabel
               id="id"
-              value={id}
+              value={id === 0 ? '' : id}
               onChange={(e) => setId(Number(e.target.value))}
               placeholder={'ID'}
               errorMessage={'ID required'}
@@ -340,19 +347,23 @@ export default function PersonForm() {
             )}
           </div>
           <div className="flex py-4 space-x-4">
-            <PrimaryButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
-                </span>
-              }
-              disabled={!isStepValid(currentStep)}
-              // TODO: make tooltip work
-              tooltip={!isStepValid(currentStep) ? "test" : undefined}
-              onClick={() => handleNext()}
-              
+            <Tooltip
+              target=".next-button-step1"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
             />
+            <span className="next-button-step1">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.address')}>
@@ -415,16 +426,23 @@ export default function PersonForm() {
               }
               onClick={() => handlePrev()}
             />
-            <PrimaryButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
-                </span>
-              }
-              disabled={!isStepValid(currentStep)}
-              onClick={() => handleNext()}
+            <Tooltip
+              target=".next-button-step2"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
             />
+            <span className="next-button-step2">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.emergencyContact')}>

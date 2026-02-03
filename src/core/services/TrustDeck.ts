@@ -105,7 +105,9 @@ class TrustDeck {
   }
 
   public async createBaseType() {
-    return this.request('POST', `/entities/base-types`, basePerson)
+    console.log('fired create base type')
+    const res = await this.request('POST', `/entities/base-types`, basePerson)
+    console.log(res)
   }
 
   public async getType(type: string) {
@@ -117,11 +119,13 @@ class TrustDeck {
   }
 
   public async createType(projectName: string) {
-    return this.request(
+    console.log('create type fired')
+    const res = await this.request(
       'POST',
       `/projects/${projectName}/entities/config`,
       person
     )
+    console.log(res)
   }
 
   public async fuzzySearch(entity: string, query: string) {
@@ -138,6 +142,14 @@ class TrustDeck {
       'POST',
       `/projects/${projectName}/entities/person`,
       person
+    )
+  }
+
+  public async getPerson(trustdeckID: string) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'GET',
+      `/projects/${projectName}/entities/person/${trustdeckID}`
     )
   }
 
@@ -207,9 +219,63 @@ class TrustDeck {
     return this.request('POST', `/domains/${selectedGroup}/pseudonyms`, payload)
   }
 
-  public async searchPseudonym(query: string): Promise<Pseudonym> {
-    const projectName = this.getSelectedProjectName()
-    return this.request('GET', `/domains/${projectName}/pseudonyms?psn=${query}`)
+
+  public async searchPseudonym(query: string, domain?: string): Promise<Pseudonym> {
+    const domainName = domain ?? this.getSelectedProjectName()
+    return this.request('GET', `/domains/${domainName}/pseudonyms?psn=${query}`)
+  }
+
+  public async createImage(file: File) {
+    const projectName = this.getSelectedProjectName();
+  
+    // Check if image already exists
+    let method: 'POST' | 'PUT' = 'POST';
+    try {
+      const existing = await this.getImage(); // will throw if none exists
+      if (existing) {
+        method = 'PUT';
+      }
+    } catch (err) {
+      console.error(err)
+      method = 'POST';
+    }
+  
+    const formData = new FormData();
+    formData.append('image', file);
+  
+    const res = await fetch(`${this.baseUrl}/projects/${projectName}/image`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+  
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Upload failed: ${res.status} ${errorText}`);
+    }
+  
+    return res.json();
+  }
+
+
+  public async getImage(): Promise<Blob> {
+    const projectName = this.getSelectedProjectName();
+  
+    const res = await fetch(`${this.baseUrl}/projects/${projectName}/image`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+  
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch image: ${res.status} ${errorText}`);
+    }
+  
+    return res.blob();
   }
 
   public async searchOperators(q: string) {

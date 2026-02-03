@@ -50,13 +50,17 @@ export class AuthWebStorage implements Storage {
   public clear(): void {
     useAuthStore.getState().clear()
     useUserStore.getState().clear()
+    TrustDeck.instance().clearToken()
+    // Update _data to reflect cleared state
     this._data = {}
     //authChannel.postMessage({ type: 'LOGOUT' })
   }
 
   public getItem(key: string): string | null {
     try {
-      const token = this._data[key]
+      // Always read from the store, not cached _data, to ensure we get the latest state
+      const currentData = useAuthStore.getState().data
+      const token = currentData[key]
       if (token != undefined) {
         const parsedToken = JSON.parse(token)
         const accessToken = parsedToken?.access_token
@@ -64,8 +68,12 @@ export class AuthWebStorage implements Storage {
           useUserStore.getState().setFromAccessToken(accessToken)
           TrustDeck.instance().setToken(accessToken)
         }
+        // Update cached _data to keep it in sync
+        this._data = currentData
         return token || null
       }
+      // Update cached _data even when no token found
+      this._data = currentData
       return null
     } catch (error) {
       console.log(error)

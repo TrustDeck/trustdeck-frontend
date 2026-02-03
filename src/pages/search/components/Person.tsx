@@ -9,6 +9,7 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import validation from '../../../core/utils/validation'
+import { dateToLocalYYYYMMDD, localYYYYMMDDToDate } from '../../../core/utils/date'
 import { countryOptions } from '../../identity/util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import { PersonEntity } from '../types/PersonEntity'
@@ -60,16 +61,12 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
     loadEntity
   } = usePersonStore()
 
+  // Keep PersonStore in sync with the current entity so view/edit always show the right person
   useEffect(() => {
-    if (editMode) {
-      console.log('editMode')
+    if (entity) {
       loadEntity(entity)
     }
-  }, [editMode, entity, loadEntity])
-
-  useEffect(() => {
-    
-  })
+  }, [entity, loadEntity])
 
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
@@ -79,6 +76,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
 
   const countryLabel = countryOptions.find((c) => c.value === country)?.label || country
   const relationshipOptions = useRelationshipOptions()
+
+  const genderLabel = genderDropdownOptions.find((o) => o.value === administrativeGender)?.label ?? administrativeGender
+  const relationshipLabel = relationshipOptions.find((o) => o.value === contactRelationship)?.label ?? contactRelationship
 
   return (
     <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
@@ -113,11 +113,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
                 <CustomCalendar
                   id="birthdate"
                   placeholder={t('search:entity.person.birthdate.placeholder')}
-                  value={dateOfBirth ? new Date(dateOfBirth) : null}
+                  value={dateOfBirth ? localYYYYMMDDToDate(dateOfBirth) : null}
                   onChange={(e) =>
-                    setDateOfBirth(
-                      e.value ? e.value.toISOString().split('T')[0] : ''
-                    )
+                    setDateOfBirth(e.value ? dateToLocalYYYYMMDD(e.value) : '')
                   }
                 />
               </div>
@@ -146,7 +144,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             ) : (
               <CustomFloatLabel
                 id="administrativeGender"
-                value={administrativeGender}
+                value={genderLabel}
                 placeholder={t('search:entity.person.gender.placeholder')}
                 readOnly
                 className="flex-1"
@@ -285,11 +283,12 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           ) : (
             <CustomFloatLabel
               id="relationship"
-              value={contactRelationship}
+              value={relationshipLabel}
               placeholder={t('search:entity.person.relationship.placeholder')}
               readOnly={!editMode}
               onChange={(e) => setContactRelationship(e.target.value)}
               className="mb-8"
+              centerPlaceholderWhenEmpty
             />
           )}
         </div>

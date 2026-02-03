@@ -15,6 +15,7 @@ type CustomCalendarProps = {
   className?: string
   readOnly?: boolean
   required?: boolean
+  dateFormat?: string
 }
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -27,7 +28,8 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   validate,
   className = '',
   readOnly,
-  required
+  required,
+  dateFormat = 'yy-mm-dd'
 }) => {
   const [visible, setVisible] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -68,7 +70,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         }`}
         panelClassName="z-[9999]" // Ensure the calendar popup is above modals
         inputClassName="w-full pb-1 h-full border-none font-font-text text-xl focus:ring-0 p-0 m-0 bg-transparent"
-        dateFormat='yy-mm-dd'
+        dateFormat={dateFormat}
       />
 
       <label

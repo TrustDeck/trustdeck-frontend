@@ -9,7 +9,7 @@ import { algorithmOptions } from '../utils/algorithmOptions.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey } from '../utils/findNodeByKey.ts'
 import validation from '../../../core/utils/validation.ts'
-import { Calendar } from 'primereact/calendar'
+import CustomCalendar from '@component/form/CustomCalendar'
 import useToastStore from '../../../core/stores/ToastStore.ts'
 
 export default function GroupForm() {
@@ -169,18 +169,9 @@ export default function GroupForm() {
             options={psnLengthOptions}
           />
         </div>
-        <CustomDropdown
-          id="alphabet"
-          placeholder={t('groups:inputs.alphabet.label')}
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet}
-          onChange={(e) =>
-            updateNodeAttribute(selectedNodeKey, 'alphabet', e.value)
-          }
-          options={alphabetOptions}
-          helpText={t('groups:inputs.alphabet.help')}
-        />
         <div className="form-grid">
-          <Calendar
+          <CustomCalendar
+            id="startdate"
             dateFormat="mm-dd-yy"
             value={parseDate(
               findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFrom
@@ -194,23 +185,22 @@ export default function GroupForm() {
             }
             placeholder={t('groups:inputs.startdate.label')}
             className="w-full"
-            inputClassName="rounded-lg font-normal border-color-light-gray text-xl text-gray-500"
           />
-          <Calendar
+          <CustomCalendar
+            id="enddate"
             dateFormat="mm-dd-yy"
             value={parseDate(
               findNodeByKey(tree, selectedNodeKey)?.data.temporal.validTo
             )}
-            onChange={(e) => {
+            onChange={(e) =>
               updateNodeAttribute(
                 selectedNodeKey,
                 'validTo',
                 formatDate(e.value ?? null)
               )
-            }}
+            }
             placeholder={t('groups:inputs.enddate.label')}
             className="w-full"
-            inputClassName="rounded-lg font-normal border-color-light-gray text-xl text-gray-500"
           />
         </div>
         <CustomDropdown
@@ -283,9 +273,19 @@ export default function GroupForm() {
           }
           options={algorithmOptions}
         />
+        <CustomDropdown
+          id="alphabet"
+          placeholder={t('groups:inputs.alphabet.label')}
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet}
+          onChange={(e) =>
+            updateNodeAttribute(selectedNodeKey, 'alphabet', e.value)
+          }
+          options={alphabetOptions}
+          helpText={t('groups:inputs.alphabet.help')}
+        />
         <CustomFloatLabel
           id="maxnumpsn"
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn}
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn.toLocaleString()}
           onChange={(e) => {
             const filtered = e.target.value.replace(/\D/g, '')
             updateNodeAttribute(
@@ -297,7 +297,6 @@ export default function GroupForm() {
           placeholder={t('groups:inputs.maxnumpsn.label')}
           errorMessage={t('groups:inputs.maxnumpsn.error')}
           validate={validation.isValidRegistrationMaxNumPsn}
-          helpText={t('groups:inputs.maxnumpsn.help')}
         />
         <CustomFloatLabel
           id="paddingCharacter"

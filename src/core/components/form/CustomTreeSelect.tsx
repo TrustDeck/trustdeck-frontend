@@ -17,6 +17,8 @@ interface CustomTreeSelectProps {
   helpText?: string
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
+  /** 'single' = one node only, no parent/child cascade; 'checkbox' = multiple with cascade */
+  selectionMode?: 'single' | 'multiple' | 'checkbox'
 }
 
 const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
@@ -29,6 +31,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   className = '',
   helpText,
   required,
+  selectionMode = 'checkbox',
   ...props
 }) => {
   const [visible, setVisible] = useState(false)
@@ -36,9 +39,13 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   const { t } = useTranslation()
 
   // Show floating label if focused or has any selection
-  const showFloating =
-    isFocused ||
-    (Array.isArray(value) ? value.length > 0 : value && typeof value === 'object' && Object.keys(value).length > 0)
+  const hasValue =
+    Array.isArray(value)
+      ? value.length > 0
+      : typeof value === 'string'
+        ? value.length > 0
+        : value && typeof value === 'object' && Object.keys(value).length > 0
+  const showFloating = isFocused || hasValue
 
   return (
     <div className={`flex items-start gap-2 w-full ${className}`}>
@@ -50,7 +57,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
           options={options}
           onChange={onChange}
           placeholder=""
-          selectionMode="checkbox"
+          selectionMode={selectionMode}
           className="w-full rounded-lg border font-font-text border-color-light-gray text-xl"
           panelStyle={{ maxHeight: '300px', overflowY: 'auto' }}
           display="chip"

@@ -41,7 +41,7 @@
 }
 
 .basic-panel {
-  @apply px-6 py-2 bg-white shadow-md rounded-lg border-0 items-center w-full lg:w-4/5;
+  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full lg:w-4/5;
 }
 
 @layer components {

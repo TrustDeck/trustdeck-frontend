@@ -2,17 +2,24 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { useAuth } from 'react-oidc-context'
 import useUserStore from '../../core/stores/UserStore'
-import { useAuthStore, AuthWebStorage } from '../../core/stores/AuthWebStore'
-import useLayoutStore from '../../core/stores/LayoutStore' // Import useLayoutStore
+import { useAuthStore } from '../../core/stores/AuthWebStore'
+import useLayoutStore from '../../core/stores/LayoutStore'
 import TrustDeck from '@service/TrustDeck'
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
+import Panel from '../../core/components/common/Panel'
+import PrimaryButton from '@component/form/buttons/PrimaryButton'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const LoggedOut: React.FC = () => {
   const auth = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
   const authData = useAuthStore((state) => state.data)
-  const isTabActive = useLayoutStore((state) => state.isTabActive) // Use isTabActive from LayoutStore
+  const isTabActive = useLayoutStore((state) => state.isTabActive) 
   const hasRun = useRef(false)
+  const navigate = useNavigate() 
+  const { t } = useTranslation()
 
   async function logout_helper() {
     // Clear TrustDeck token
@@ -79,18 +86,31 @@ const LoggedOut: React.FC = () => {
   }, [auth, isAuthenticated, authData, isTabActive])
 
   return (
-    <div>
-      {isLoading ? (
-        <div>
-          <ProgressSpinner />
-          <p>Logging you out, please wait...</p>
-        </div>
-      ) : (
-        <div>
-          <h1>You have been logged out</h1>
-          <p>Thank you for using our service.</p>
-        </div>
-      )}
+    <div className="min-h-screen w-full flex flex-col items-center justify-start pt-[15vh] px-4">
+      {/* <div className="w-full max-w-4xl rounded-2xl bg-white shadow-lg border border-gray-100 p-8 text-center"> */}
+        <Panel centered={true}>
+        {isLoading ? (
+          <div className="flex flex-col items-center gap-6">
+            <ProgressSpinner strokeWidth="4" className="[&_.p-progress-spinner-circle]:stroke-color-blue" />
+            <div className="space-y-1">
+              <p className="text-gray-700 text-lg font-medium">{t('layout:logOut.loggingOut')}</p>
+              <p className="text-gray-500 text-sm">{t('layout:logOut.pleaseWait')}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+              <ArrowRightStartOnRectangleIcon className="w-7 h-7 text-gray-500" />
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">{t('layout:logOut.loggedOut')}</h1>
+            <p className="text-gray-500">{t('layout:logOut.thankYou')}</p>
+            <div className="mt-6">
+              <PrimaryButton label={t('layout:logOut.button')} onClick={() => navigate('/auth/login')} />
+            </div>
+          </div>
+        )}
+        </Panel>
+      {/* </div> */}
     </div>
   )
 }

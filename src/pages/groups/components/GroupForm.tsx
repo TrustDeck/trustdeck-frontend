@@ -382,7 +382,12 @@ export default function GroupForm() {
         />
         <CustomFloatLabel
           id="maxnumpsn"
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn.toLocaleString()}
+          value={(() => {
+            const raw = findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn
+            if (raw == null || raw === '') return ''
+            const num = typeof raw === 'number' ? raw : Number(String(raw).replace(/\D/g, ''))
+            return Number.isNaN(num) ? String(raw) : num.toLocaleString()
+          })()}
           onChange={(e) => {
             const filtered = e.target.value.replace(/\D/g, '')
             updateNodeAttribute(

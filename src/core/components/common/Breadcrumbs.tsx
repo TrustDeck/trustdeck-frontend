@@ -24,7 +24,7 @@ const Breadcrumbs: React.FC = () => {
     template: itemTemplate
   }))
 
-  const home: MenuItem = { label: t('home'), url: '/' }
+  const home: MenuItem = { label: t('home'), url: '/search' }
 
   return (
     <BreadCrumb

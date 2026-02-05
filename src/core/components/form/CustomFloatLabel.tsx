@@ -77,12 +77,11 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         {required && <span className="ml-1">*</span>}
       </label>
 
-      {/* Optional help icon */}
       {helpText && (
         <>
           <QuestionMarkCircleIcon
             id={`${id}-help`}
-            className="h-5 w-5 absolute top-2 right-2 text-gray-500 cursor-pointer"
+            className="h-5 w-5 absolute -right-8 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer z-10"
             onClick={() => setVisible(true)}
           />
           <Dialog

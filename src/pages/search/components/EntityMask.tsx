@@ -127,14 +127,12 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       <form onSubmit={handleSubmit} className="flex flex-col">
         <div className="flex items-center gap-2 mt-4">
           <p className="text-base">{t('search:entity.entityType.title')}</p>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <CustomDropdown
               id="selectedType"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               options={entityDropdownOptions}
-              className="col-span-1 form-grid"
-              helpText={t('search:entity.entityType.help')}
             />
           </div>
         </div>

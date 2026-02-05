@@ -42,9 +42,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const showFloating = value !== ''
 
   return (
-    <div className={`flex items-start gap-2 w-full ${className}`}>
-      {/* Dropdown + floating label wrapper */}
-      <div className="relative flex-1">
+    <div className={`relative w-full ${className}`}>
+      <div className="relative w-full">
         <Dropdown
           id={id}
           value={value}
@@ -72,12 +71,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         </label>
       </div>
 
-      {/* Help icon positioned outside */}
       {helpText && (
         <>
           <QuestionMarkCircleIcon
             id={`${id}-help`}
-            className="h-5 w-5 mt-3 text-gray-500 cursor-pointer shrink-0"
+            className="absolute -right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer z-10"
             onClick={() => setVisible(true)}
           />
           <Dialog

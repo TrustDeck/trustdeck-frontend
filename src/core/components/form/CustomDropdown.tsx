@@ -20,6 +20,7 @@ type CustomDropdownProps = {
   helpText?: string
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
+  disabled?: boolean
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -32,6 +33,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   helpText,
   textColor = 'text-gray-500',
   required,
+  disabled,
   ...props
 }) => {
   const [visible, setVisible] = useState(false)
@@ -49,6 +51,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           options={options}
           onChange={onChange}
           placeholder=""
+          disabled={disabled}
           className="w-full rounded-lg border font-font-text font-normal border-color-light-gray text-xl h-[44px] flex items-center [&_.p-dropdown-label]:flex [&_.p-dropdown-label]:items-center [&_.p-dropdown-label]:h-full [&_.p-dropdown-label]:py-0 [&_.p-dropdown-label]:font-font-text [&_.p-dropdown-label]:font-normal"
           pt={{
             input: { className: `px-3 h-[44px] flex items-center font-font-text font-normal ${textColor} text-xl` },

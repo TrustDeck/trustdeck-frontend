@@ -14,6 +14,11 @@ export interface GroupStoredAttributes {
   paddingchar?: string
   checkdigit?: boolean
   description?: string
+  validFromInherited?: boolean
+  validToInherited?: boolean
+  algorithmInherited?: boolean
+  pseudonymLengthInherited?: boolean
+  paddingCharacterInherited?: boolean
 }
 
 export interface GroupStoredData {

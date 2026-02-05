@@ -65,7 +65,8 @@
     },
     "checkdigit": {
       "label": "Prüfziffer"
-    }
+    },
+    "inheritFromParent": "Von Elterngruppe übernehmen"
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",

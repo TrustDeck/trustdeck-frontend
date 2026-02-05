@@ -7,18 +7,32 @@ import { RockerToggle } from '../../../core/components/common/RockerToggle'
 import { AlphabetKey, alphabetOptions, characters } from '../utils/alphabetOptions.ts'
 import { algorithmOptions } from '../utils/algorithmOptions.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
-import { findNodeByKey } from '../utils/findNodeByKey.ts'
+import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
+import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation.ts'
 import CustomCalendar from '@component/form/CustomCalendar'
 import useToastStore from '../../../core/stores/ToastStore.ts'
+import { Checkbox } from 'primereact/checkbox'
 
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState<string>('')
+  const [parentGroupData, setParentGroupData] = useState<GroupStoredAttributes | null>(null)
   const showToast = useToastStore((state) => state.show)
 
   const { tree, selectedNodeKey, updateNodeAttribute, moveNode } =
     useTreeStateStore()
   const { t } = useTranslation()
+
+  // Keep parentGroupData in sync with selected parent (from tree)
+  const currentParentGroup = findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup
+  useEffect(() => {
+    if (!currentParentGroup || currentParentGroup === 'ROOT') {
+      setParentGroupData(null)
+      return
+    }
+    const parentNode = findNodeByLabel(tree, currentParentGroup)
+    setParentGroupData(parentNode?.data?.stored ?? null)
+  }, [tree, currentParentGroup])
 
   // helpers to format and parse mm-dd-yy
   const formatDate = (date: Date | null): string | null => {
@@ -146,6 +160,51 @@ export default function GroupForm() {
           errorMessage={t('groups:inputs.groupname.error')}
           validate={validation.isValidRegistrationGroupName}
         />
+        <CustomDropdown
+          id="parentgroup"
+          placeholder={t('groups:inputs.parentgroup.label')}
+          value={
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup ??
+            'ROOT'
+          }
+          onChange={(e) => {
+            const parentName = e.value === 'ROOT' ? '' : e.value
+            const isChild = (
+              nodeKey: string,
+              potentialChildKey: string
+            ): boolean => {
+              const node = findNodeByKey(tree, nodeKey)
+              if (!node || !node.children) return false
+              for (const child of node.children) {
+                if (String(child.key) === String(potentialChildKey)) return true
+                if (isChild(String(child.key), potentialChildKey)) return true
+              }
+              return false
+            }
+            const isSame =
+              findNodeByKey(tree, selectedNodeKey)?.data.temporal.label ===
+              parentName
+            if (isChild(selectedNodeKey, parentName) || isSame) {
+              showToast({
+                severity: 'error',
+                summary: 'Fehler beim Ändern der Elterngruppe.',
+                detail:
+                  'Die Elterngruppe darf nicht die Gruppe selbst oder eine eigene Untergruppe sein.',
+                life: 4000
+              })
+              return
+            }
+            updateNodeAttribute(selectedNodeKey, 'parentgroup', parentName || 'ROOT')
+            moveNode(selectedNodeKey, parentName)
+            if (parentName) {
+              const parentNode = findNodeByLabel(tree, parentName)
+              setParentGroupData(parentNode?.data?.stored ?? null)
+            } else {
+              setParentGroupData(null)
+            }
+          }}
+          options={parentGroupOptions}
+        />
         <div className="form-grid">
           <CustomFloatLabel
             id="prefix"
@@ -167,8 +226,32 @@ export default function GroupForm() {
               updateNodeAttribute(selectedNodeKey, 'psnlength', e.value)
             }}
             options={psnLengthOptions}
+            disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.pseudonymLengthInherited)}
           />
         </div>
+        {parentGroupData && (
+        <div className="form-grid -mt-4 form-grid--inherit">
+          <div />
+          <div className="flex align-items-center gap-1.5 text-xs">
+            <span className="scale-90 origin-left">
+              <Checkbox
+                inputId="pseudonymLengthInherited"
+                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.pseudonymLengthInherited)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false
+                  if (checked && parentGroupData?.psnlength != null) {
+                    updateNodeAttribute(selectedNodeKey, 'psnlength', parentGroupData.psnlength)
+                  }
+                  updateNodeAttribute(selectedNodeKey, 'pseudonymLengthInherited', checked)
+                }}
+              />
+            </span>
+            <label htmlFor="pseudonymLengthInherited" className="cursor-pointer">
+              {t('groups:inputs.inheritFromParent')}
+            </label>
+          </div>
+        </div>
+        )}
         <div className="form-grid">
           <CustomCalendar
             id="startdate"
@@ -185,6 +268,7 @@ export default function GroupForm() {
             }
             placeholder={t('groups:inputs.startdate.label')}
             className="w-full"
+            readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFromInherited)}
           />
           <CustomCalendar
             id="enddate"
@@ -201,57 +285,49 @@ export default function GroupForm() {
             }
             placeholder={t('groups:inputs.enddate.label')}
             className="w-full"
+            readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validToInherited)}
           />
         </div>
-        <CustomDropdown
-          id="parentgroup"
-          placeholder={t('groups:inputs.parentgroup.label')}
-          value={
-            findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup
-          }
-          onChange={(e) => {
-            let parentName = e.value
-            if (e.value === 'ROOT') {
-              parentName = ''
-            }
-            //before moving and updating the parentgroup attribute look if the new parentgroup is not a child of the selected node to avoid circular references if so console.error and return
-            const isChild = (
-              nodeKey: string,
-              potentialChildKey: string
-            ): boolean => {
-              const node = findNodeByKey(tree, nodeKey)
-              if (!node || !node.children) return false
-              for (const child of node.children) {
-                if (String(child.key) === String(potentialChildKey)) {
-                  return true
-                }
-                if (isChild(String(child.key), potentialChildKey)) {
-                  return true
-                }
-              }
-              return false
-            }
-
-            //also check if the selectedNodeKey is not equal to the parentName to avoid setting itself as parent
-            const isSame =
-              findNodeByKey(tree, selectedNodeKey)?.data.temporal.label ==
-              parentName
-            if ((isChild(selectedNodeKey, parentName), isSame)) {
-              showToast({
-                severity: 'error',
-                summary: 'Fehler beim Ändern der Elterngruppe.',
-                detail:
-                  'Die Elterngruppe darf nicht die Gruppe selbst oder eine eigene Untergruppe sein.',
-                life: 4000
-              })
-              return
-            } else {
-              updateNodeAttribute(selectedNodeKey, 'parentgroup', parentName)
-              moveNode(selectedNodeKey, parentName)
-            }
-          }}
-          options={parentGroupOptions}
-        />
+        {parentGroupData && (
+        <div className="form-grid -mt-4 form-grid--inherit">
+          <div className="flex align-items-center gap-1.5 text-xs">
+            <span className="scale-90 origin-left">
+              <Checkbox
+                inputId="validFromInherited"
+                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFromInherited)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false
+                  if (checked && parentGroupData?.validFrom != null) {
+                    updateNodeAttribute(selectedNodeKey, 'validFrom', parentGroupData.validFrom)
+                  }
+                  updateNodeAttribute(selectedNodeKey, 'validFromInherited', checked)
+                }}
+              />
+            </span>
+            <label htmlFor="validFromInherited" className="cursor-pointer">
+              {t('groups:inputs.inheritFromParent')}
+            </label>
+          </div>
+          <div className="flex align-items-center gap-1.5 text-xs">
+            <span className="scale-90 origin-left">
+              <Checkbox
+                inputId="validToInherited"
+                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validToInherited)}
+                onChange={(e) => {
+                  const checked = e.checked ?? false
+                  if (checked && parentGroupData?.validTo != null) {
+                    updateNodeAttribute(selectedNodeKey, 'validTo', parentGroupData.validTo)
+                  }
+                  updateNodeAttribute(selectedNodeKey, 'validToInherited', checked)
+                }}
+              />
+            </span>
+            <label htmlFor="validToInherited" className="cursor-pointer">
+              {t('groups:inputs.inheritFromParent')}
+            </label>
+          </div>
+        </div>
+        )}
         <CustomFloatLabel
           id="description"
           placeholder={t('groups:inputs.description.label')}
@@ -272,7 +348,28 @@ export default function GroupForm() {
             updateNodeAttribute(selectedNodeKey, 'algorithm', e.value)
           }
           options={algorithmOptions}
+          disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
         />
+        {parentGroupData && (
+        <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
+          <span className="scale-90 origin-left">
+            <Checkbox
+              inputId="algorithmInherited"
+              checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
+              onChange={(e) => {
+                const checked = e.checked ?? false
+                if (checked && parentGroupData?.algorithm != null) {
+                  updateNodeAttribute(selectedNodeKey, 'algorithm', parentGroupData.algorithm)
+                }
+                updateNodeAttribute(selectedNodeKey, 'algorithmInherited', checked)
+              }}
+            />
+          </span>
+          <label htmlFor="algorithmInherited" className="cursor-pointer">
+            {t('groups:inputs.inheritFromParent')}
+          </label>
+        </div>
+        )}
         <CustomDropdown
           id="alphabet"
           placeholder={t('groups:inputs.alphabet.label')}
@@ -306,14 +403,32 @@ export default function GroupForm() {
             ''
           ).slice(0, 1)}
           onChange={(e) => {
-            //enforce max 1 character
-            //paddingchar is used if the psn length is longer than the generated psn by the algorithm
-            //e.g. sha256 has 256 chars if the psnlength is 300 then the paddingchar is used to fill the rest
             const val = (e.target.value ?? '').slice(0, 1)
             updateNodeAttribute(selectedNodeKey, 'paddingchar', val)
           }}
           helpText="Leave empty for no padding character."
+          readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
         />
+        {parentGroupData && (
+        <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
+          <span className="scale-90 origin-left">
+            <Checkbox
+              inputId="paddingCharacterInherited"
+              checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
+              onChange={(e) => {
+                const checked = e.checked ?? false
+                if (checked && parentGroupData?.paddingchar != null) {
+                  updateNodeAttribute(selectedNodeKey, 'paddingchar', parentGroupData.paddingchar)
+                }
+                updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', checked)
+              }}
+            />
+          </span>
+          <label htmlFor="paddingCharacterInherited" className="cursor-pointer">
+            {t('groups:inputs.inheritFromParent')}
+          </label>
+        </div>
+        )}
         <RockerToggle
           label={t('groups:inputs.multiplepsn.label')}
           value={

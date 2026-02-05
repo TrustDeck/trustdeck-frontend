@@ -77,7 +77,12 @@ const mapDomain = (payload: any): any => {
     validFrom: toLocalDateTime(payload.validFrom),
     validTo: toLocalDateTime(payload.validTo),
     algorithm: payload.algorithm,
-    alphabet: characters[payload.alphabet] || ''
+    alphabet: characters[payload.alphabet] || '',
+    ...(payload.validFromInherited && { validFromInherited: true }),
+    ...(payload.validToInherited && { validToInherited: true }),
+    ...(payload.algorithmInherited && { algorithmInherited: true }),
+    ...(payload.pseudonymLengthInherited && { pseudonymLengthInherited: true }),
+    ...(payload.paddingCharacterInherited && { paddingCharacterInherited: true })
   }
 }
 

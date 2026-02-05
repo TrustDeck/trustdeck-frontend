@@ -355,7 +355,12 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             multiplepsn: false,
             paddingchar: '',
             checkdigit: true,
-            description: ''
+            description: '',
+            validFromInherited: false,
+            validToInherited: false,
+            algorithmInherited: false,
+            pseudonymLengthInherited: false,
+            paddingCharacterInherited: false
           }
         },
         children: []

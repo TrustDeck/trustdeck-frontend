@@ -62,7 +62,8 @@
       "label": "Allow multiple pseudonyms for the same value?"
     },
     "paddingchar": {
-      "label": "Padding character"
+      "label": "Padding character",
+      "help": "Enter a padding character"
     },
     "checkdigit": {
       "label": "Check digit"

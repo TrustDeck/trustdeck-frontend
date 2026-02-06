@@ -61,7 +61,8 @@
       "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
     },
     "paddingchar": {
-      "label": "Auffüllzeichen"
+      "label": "Auffüllzeichen",
+      "help": "Geben Sie ein Auffüllzeichen ein"
     },
     "checkdigit": {
       "label": "Prüfziffer"

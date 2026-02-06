@@ -6,6 +6,7 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
 import { AlphabetKey, alphabetOptions, characters } from '../utils/alphabetOptions.ts'
 import { algorithmOptions } from '../utils/algorithmOptions.ts'
+import { getAlgorithmOutputLength, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
@@ -91,6 +92,9 @@ export default function GroupForm() {
   }, [tree, selectedNodeKey])
 
   useEffect(() => {
+    const node = findNodeByKey(tree, selectedNodeKey)
+    const temporal = node?.data?.temporal
+    if (!temporal) return
 
     function randomLetter(size: number | null, alphabet: AlphabetKey) {
       if (size === null || size <= 0) return ''
@@ -110,30 +114,35 @@ export default function GroupForm() {
       'LETTERS_ONLY_ALPHABET',
       'LETTERS_AND_NUMBERS_ALPHABET',
       'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET',
-    ].includes(findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet)
-      ? (findNodeByKey(tree, selectedNodeKey)?.data.temporal
-          .alphabet as AlphabetKey)
-      : 'HEXADECIMAL_ALPHABET'  
-    const string = randomLetter(
-      Number(findNodeByKey(tree, selectedNodeKey)?.data.temporal.psnlength),
-      validAlphabet
-    )
+    ].includes(temporal.alphabet)
+      ? (temporal.alphabet as AlphabetKey)
+      : 'HEXADECIMAL_ALPHABET'
 
-    const paddingChar = findNodeByKey(tree, selectedNodeKey)?.data.temporal
-      .paddingchar
+    const psnlength = Number(temporal.psnlength) || 0
+    const prefix = temporal.prefix ?? ''
+    const paddingChar = temporal.paddingchar ?? ''
+    const checkDigit = temporal.checkdigit
 
-    const checkDigit = findNodeByKey(tree, selectedNodeKey)?.data.temporal
-      .checkdigit
+    const fixedLength = getAlgorithmOutputLength(temporal.algorithm)
+    let paddingStr = ''
+    let bodyLength = psnlength
 
-    setExamplePsn(
-      `${findNodeByKey(tree, selectedNodeKey)?.data.temporal.prefix}${paddingChar}${paddingChar}${string}${checkDigit ? '1' : ''}`
-    )
+    if (fixedLength === null) {
+      // Randomness-based: output is always psnlength, no padding
+      paddingStr = ''
+      bodyLength = psnlength
+    } else if (fixedLength < psnlength) {
+      // Hash shorter than desired: pad to psnlength
+      paddingStr = paddingChar.repeat(psnlength - fixedLength)
+      bodyLength = fixedLength
+    }
+    // else: hash length >= psnlength, no padding
+
+    const body = randomLetter(bodyLength, validAlphabet)
+    setExamplePsn(`${prefix}${paddingStr}${body}${checkDigit ? '1' : ''}`)
   }, [
-    findNodeByKey(tree, selectedNodeKey)?.data.temporal.prefix,
-    findNodeByKey(tree, selectedNodeKey)?.data.temporal.psnlength,
-    findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet,
-    findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingchar,
-    findNodeByKey(tree, selectedNodeKey)?.data.temporal.checkdigit
+    tree,
+    selectedNodeKey,
   ])
 
   return (
@@ -400,39 +409,42 @@ export default function GroupForm() {
           errorMessage={t('groups:inputs.maxnumpsn.error')}
           validate={validation.isValidRegistrationMaxNumPsn}
         />
-        <CustomFloatLabel
-          id="paddingCharacter"
-          placeholder={t('groups:inputs.paddingchar.label')}
-          value={(
-            findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingchar ??
-            ''
-          ).slice(0, 1)}
-          onChange={(e) => {
-            const val = (e.target.value ?? '').slice(0, 1)
-            updateNodeAttribute(selectedNodeKey, 'paddingchar', val)
-          }}
-          helpText="Leave empty for no padding character."
-          readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
-        />
-        {parentGroupData && (
-        <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
-          <span className="scale-90 origin-left">
-            <Checkbox
-              inputId="paddingCharacterInherited"
-              checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
+        {!isRandomnessAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
+          <>
+            <CustomFloatLabel
+              id="paddingCharacter"
+              placeholder={t('groups:inputs.paddingchar.label')}
+              value={(
+                findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingchar ??
+                ''
+              ).slice(0, 1)}
               onChange={(e) => {
-                const checked = e.checked ?? false
-                if (checked && parentGroupData?.paddingchar != null) {
-                  updateNodeAttribute(selectedNodeKey, 'paddingchar', parentGroupData.paddingchar)
-                }
-                updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', checked)
+                const val = (e.target.value ?? '').slice(0, 1)
+                updateNodeAttribute(selectedNodeKey, 'paddingchar', val)
               }}
+              readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
             />
-          </span>
-          <label htmlFor="paddingCharacterInherited" className="cursor-pointer">
-            {t('groups:inputs.inheritFromParent')}
-          </label>
-        </div>
+            {parentGroupData && (
+            <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
+              <span className="scale-90 origin-left">
+                <Checkbox
+                  inputId="paddingCharacterInherited"
+                  checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
+                  onChange={(e) => {
+                    const checked = e.checked ?? false
+                    if (checked && parentGroupData?.paddingchar != null) {
+                      updateNodeAttribute(selectedNodeKey, 'paddingchar', parentGroupData.paddingchar)
+                    }
+                    updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', checked)
+                  }}
+                />
+              </span>
+              <label htmlFor="paddingCharacterInherited" className="cursor-pointer">
+                {t('groups:inputs.inheritFromParent')}
+              </label>
+            </div>
+            )}
+          </>
         )}
         <RockerToggle
           label={t('groups:inputs.multiplepsn.label')}

@@ -28,3 +28,10 @@ export function getAlgorithmOutputLength(algorithm: string | undefined): number 
 export function isRandomnessAlgorithm(algorithm: string | undefined): boolean {
   return getAlgorithmOutputLength(algorithm) === null
 }
+
+/**
+ * Whether the algorithm is hash-based (fixed-length hex output; requires hex alphabet).
+ */
+export function isHashAlgorithm(algorithm: string | undefined): boolean {
+  return getAlgorithmOutputLength(algorithm) !== null
+}

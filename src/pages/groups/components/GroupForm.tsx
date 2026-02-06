@@ -6,7 +6,7 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
 import { AlphabetKey, alphabetOptions, characters } from '../utils/alphabetOptions.ts'
 import { algorithmOptions } from '../utils/algorithmOptions.ts'
-import { getAlgorithmOutputLength, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
+import { getAlgorithmOutputLength, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
@@ -34,6 +34,16 @@ export default function GroupForm() {
     const parentNode = findNodeByLabel(tree, currentParentGroup)
     setParentGroupData(parentNode?.data?.stored ?? null)
   }, [tree, currentParentGroup])
+
+  // Hash algorithms require hex alphabet; normalize when algorithm is hash but alphabet is not
+  const node = findNodeByKey(tree, selectedNodeKey)
+  const temporal = node?.data?.temporal
+  useEffect(() => {
+    if (!selectedNodeKey || !temporal) return
+    if (isHashAlgorithm(temporal.algorithm) && temporal.alphabet !== 'HEXADECIMAL_ALPHABET') {
+      updateNodeAttribute(selectedNodeKey, 'alphabet', 'HEXADECIMAL_ALPHABET')
+    }
+  }, [selectedNodeKey, temporal, updateNodeAttribute])
 
   // helpers to format and parse mm-dd-yy
   const formatDate = (date: Date | null): string | null => {
@@ -353,9 +363,13 @@ export default function GroupForm() {
           id="algo"
           placeholder={t('groups:inputs.algorithm.label')}
           value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm}
-          onChange={(e) =>
-            updateNodeAttribute(selectedNodeKey, 'algorithm', e.value)
-          }
+          onChange={(e) => {
+            const newAlgorithm = e.value
+            updateNodeAttribute(selectedNodeKey, 'algorithm', newAlgorithm)
+            if (isHashAlgorithm(newAlgorithm)) {
+              updateNodeAttribute(selectedNodeKey, 'alphabet', 'HEXADECIMAL_ALPHABET')
+            }
+          }}
           options={algorithmOptions}
           disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
         />
@@ -382,12 +396,17 @@ export default function GroupForm() {
         <CustomDropdown
           id="alphabet"
           placeholder={t('groups:inputs.alphabet.label')}
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet}
+          value={
+            isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)
+              ? 'HEXADECIMAL_ALPHABET'
+              : findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet
+          }
           onChange={(e) =>
             updateNodeAttribute(selectedNodeKey, 'alphabet', e.value)
           }
           options={alphabetOptions}
           helpText={t('groups:inputs.alphabet.help')}
+          disabled={isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)}
         />
         <CustomFloatLabel
           id="maxnumpsn"

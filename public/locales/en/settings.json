@@ -1,5 +1,1 @@
-{
-  "header": "Project settings",
-  "panelTitle": "Permissions settings",
-  "photo": "Project image"
-}
+{"header":"Project settings","panelTitle":"Permissions settings","photo":"Project image","projectInfo":"Project information","projectName":"Name","projectAbbreviation":"Abbreviation","projectStartDate":"Start date","projectEndDate":"End date"}

@@ -60,7 +60,8 @@ const Layout: React.FC = () => {
         {!isLoggedOutPage && (
           <div className="flex flex-row w-full p-4 items-center">
             <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
-              <Breadcrumbs />
+            {/* removes breadcrumbs on the project overview page */}
+              {location.pathname !== '/projects' && <Breadcrumbs />}
             </div>
             <div className="w-1/4">
               {isAuthenticated && <UserMenu />}

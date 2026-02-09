@@ -109,7 +109,7 @@ export default function RegistrationGroupOption() {
     }
   }
   return (
-    <div className="w-full space-y-4 relative">
+    <div className="w-full space-y-4 relative pr-4">
       {isCreating ? (
         <>
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">

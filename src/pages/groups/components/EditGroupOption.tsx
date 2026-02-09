@@ -113,7 +113,7 @@ export default function EditGroupOption() {
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 pr-4">
       {isCreating || isDeleting ? (
         <>
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">

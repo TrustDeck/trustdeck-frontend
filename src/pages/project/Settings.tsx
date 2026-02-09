@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Panel from '@component/common/Panel'
 import { useTranslation } from 'react-i18next'
 
@@ -10,14 +10,16 @@ import {
 import TrustDeck from '@service/TrustDeck'
 import { Operator, Permission } from '../../core/types/Permission'
 
-import useProjectStore from '../../core/stores/ProjectStore.tsx'
+import useProjectStore from '../../core/stores/ProjectStore'
 import FieldForm from './components/FieldForm.tsx'
 import { Domain } from '../../core/types/Domain.ts'
 import { PermissionsService } from '../../core/configs/permission.ts'
-
+import { formatDate } from '../../core/utils/date'
+import { ProjectType } from '../projects/types/ProjectType'
+import ProjectService from '../projects/services/ProjectService'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import SecondaryButton from '@component/form/buttons/SecondaryButton.tsx'
-import ProjectService from './services/ProjectService.ts'
+import LocalProjectService from './services/ProjectService.ts'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { useNavigate } from 'react-router-dom'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
@@ -28,7 +30,25 @@ type PersonSuggestion = Operator & { name: string }
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const currentProject = useProjectStore((state) => state.projectName)
+  const selectedProject = useProjectStore((state) => state.selectedProject)
+  const [projectDetails, setProjectDetails] = useState<ProjectType | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    const load = async () => {
+      if (!selectedProject?.abbreviation) return
+      try {
+        const projects = await ProjectService.getProjects()
+        const match = projects.find((p) => p.abbreviation === selectedProject.abbreviation)
+        if (isMounted && match) setProjectDetails(match)
+      } catch (e) {
+        console.error('Failed to load project details', e)
+        if (isMounted) setProjectDetails(null)
+      }
+    }
+    load()
+    return () => { isMounted = false }
+  }, [selectedProject?.abbreviation])
 
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [personValue, setPersonValue] = useState<string>('')
@@ -96,7 +116,7 @@ const Settings: React.FC = () => {
         )
         setUserPermissions(permissions)
         const flatTree =
-          await TrustDeck.instance().getFlatRootDomainTree(currentProject)
+          await TrustDeck.instance().getFlatRootDomainTree(selectedProject?.abbreviation ?? '')
         setDomainTree(flatTree)
         setLoadingState(false, '')
       } else {
@@ -119,7 +139,7 @@ const Settings: React.FC = () => {
   const handleDelete = async () => {
     try {
       setLoadingDelete(true)
-      await ProjectService.deleteProject()
+      await LocalProjectService.deleteProject()
       navigate('/projects')
       setLoadingDelete(false)
     } catch (error) {
@@ -167,6 +187,38 @@ const Settings: React.FC = () => {
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center w-full px-4 pt-4">
         <h1 className="text-center">{t('settings:header')}</h1>
+
+        <Panel
+          title={t('settings:projectInfo')}
+          className="w-full max-w-4xl mt-4"
+        >
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-font-text">
+            <div>
+              <dt className="text-sm text-gray-500">{t('settings:projectName')}</dt>
+              <dd className="font-medium">
+                {projectDetails?.name ?? selectedProject?.name ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-500">{t('settings:projectAbbreviation')}</dt>
+              <dd className="font-medium">
+                {projectDetails?.abbreviation ?? selectedProject?.abbreviation ?? '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-500">{t('settings:projectStartDate')}</dt>
+              <dd className="font-medium">
+                {projectDetails?.startDate ? formatDate(projectDetails.startDate) : '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-gray-500">{t('settings:projectEndDate')}</dt>
+              <dd className="font-medium">
+                {projectDetails?.endDate ? formatDate(projectDetails.endDate) : '—'}
+              </dd>
+            </div>
+          </dl>
+        </Panel>
 
         <Panel
           title={t('settings:panelTitle')}
@@ -267,7 +319,7 @@ const Settings: React.FC = () => {
             }}
             auto
             multiple={false}
-            className="file-upload-button"
+            className="file-upload-button mt-4"
           />
         </Panel>
       </div>

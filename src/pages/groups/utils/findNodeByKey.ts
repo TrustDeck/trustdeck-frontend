@@ -18,3 +18,20 @@ export function findNodeByKey(
   }
   return undefined
 }
+
+export function findNodeByLabel(
+  nodes: any[] | undefined,
+  label?: string | null
+): CustomTreeNode | undefined {
+  if (!nodes || label == null || label === '') return undefined
+  const stack = [...nodes]
+  while (stack.length) {
+    const node = stack.shift()
+    if (!node) continue
+    if (node.label === label) return node as CustomTreeNode
+    if (node.children && Array.isArray(node.children)) {
+      stack.push(...node.children)
+    }
+  }
+  return undefined
+}

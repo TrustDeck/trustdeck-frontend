@@ -37,6 +37,10 @@
       "label": "Alphabet",
       "help": "Select an alphabet for the pseudonyms."
     },
+    "customAlphabetChars": {
+      "label": "Custom alphabet characters",
+      "placeholder": "Enter all characters (e.g. ABC123)"
+    },
     "startdate": {
       "label": "Start date"
     },
@@ -62,11 +66,13 @@
       "label": "Allow multiple pseudonyms for the same value?"
     },
     "paddingchar": {
-      "label": "Padding character"
+      "label": "Padding character",
+      "help": "Enter a padding character"
     },
     "checkdigit": {
       "label": "Check digit"
-    }
+    },
+    "inheritFromParent": "Inherit from parent"
   },
   "savingGroup": "New group is being created...",
   "groupCreated": "Your group has been created.",

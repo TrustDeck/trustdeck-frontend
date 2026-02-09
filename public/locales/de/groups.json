@@ -36,6 +36,10 @@
       "label": "Alphabet",
       "help": "Suchen Sie ein Alphabet für die Pseudonyme aus."
     },
+    "customAlphabetChars": {
+      "label": "Benutzerdefinierte Alphabetzeichen",
+      "placeholder": "Alle Zeichen eingeben (z. B. ABC123)"
+    },
     "startdate": {
       "label": "Startdatum"
     },
@@ -61,11 +65,13 @@
       "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
     },
     "paddingchar": {
-      "label": "Auffüllzeichen"
+      "label": "Auffüllzeichen",
+      "help": "Geben Sie ein Auffüllzeichen ein"
     },
     "checkdigit": {
       "label": "Prüfziffer"
-    }
+    },
+    "inheritFromParent": "Von Elterngruppe übernehmen"
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",

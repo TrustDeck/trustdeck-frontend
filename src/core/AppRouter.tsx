@@ -151,6 +151,12 @@ const BreadcrumbUpdater: React.FC = () => {
       return
     }
 
+    // Project overview: only show Home
+    if (pathname === '/projects') {
+      setBreadcrumbItems([])
+      return
+    }
+
     // Default behavior for all other paths
     const pathnames = pathname.split('/').filter((x) => x)
     const breadcrumbList = pathnames.map((_, index) => {

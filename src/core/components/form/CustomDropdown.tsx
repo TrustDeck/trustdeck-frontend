@@ -20,6 +20,7 @@ type CustomDropdownProps = {
   helpText?: string
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
+  disabled?: boolean
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -32,6 +33,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   helpText,
   textColor = 'text-gray-500',
   required,
+  disabled,
   ...props
 }) => {
   const [visible, setVisible] = useState(false)
@@ -40,15 +42,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const showFloating = value !== ''
 
   return (
-    <div className={`flex items-start gap-2 w-full ${className}`}>
-      {/* Dropdown + floating label wrapper */}
-      <div className="relative flex-1">
+    <div className={`relative w-full ${className}`}>
+      <div className="relative w-full">
         <Dropdown
           id={id}
           value={value}
           options={options}
           onChange={onChange}
           placeholder=""
+          disabled={disabled}
           className="w-full rounded-lg border font-font-text font-normal border-color-light-gray text-xl h-[44px] flex items-center [&_.p-dropdown-label]:flex [&_.p-dropdown-label]:items-center [&_.p-dropdown-label]:h-full [&_.p-dropdown-label]:py-0 [&_.p-dropdown-label]:font-font-text [&_.p-dropdown-label]:font-normal"
           pt={{
             input: { className: `px-3 h-[44px] flex items-center font-font-text font-normal ${textColor} text-xl` },
@@ -69,12 +71,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         </label>
       </div>
 
-      {/* Help icon positioned outside */}
       {helpText && (
         <>
           <QuestionMarkCircleIcon
             id={`${id}-help`}
-            className="h-5 w-5 mt-3 text-gray-500 cursor-pointer shrink-0"
+            className="absolute -right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer z-10"
             onClick={() => setVisible(true)}
           />
           <Dialog

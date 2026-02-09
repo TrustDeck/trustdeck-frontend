@@ -65,6 +65,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         readOnlyInput={readOnly}
+        disabled={readOnly}
         className={`w-full h-[44px] rounded-lg text-xl font-normal px-3 pt-3 pb-2 ${className} ${
           !isValid ? 'border border-red-500' : 'border border-color-light-gray'
         }`}

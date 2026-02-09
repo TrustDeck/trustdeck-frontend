@@ -18,15 +18,16 @@ const PseudonymDetails: React.FC = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { pseudonymValue, setPseudonymValue } = usePseudonymStore()
-  const { entityId } = useParams()
+  const { entityId, pseudonymId } = useParams()
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!pseudonymValue) {
-      setLoading(true) // Start loading
+    const needsFetch = pseudonymId && (!pseudonymValue || pseudonymValue.psn !== pseudonymId)
+    if (needsFetch) {
+      setLoading(true)
       async function searchPsn() {
         try {
-          const result = await PseudonymService.searchPseudonym()
+          const result = await PseudonymService.searchPseudonym(pseudonymId!)
 
           if (result) {
             setPseudonymValue(result)
@@ -42,14 +43,14 @@ const PseudonymDetails: React.FC = () => {
 
       searchPsn()
     }
-  }, [pseudonymValue, setPseudonymValue])
+  }, [pseudonymValue, pseudonymId, setPseudonymValue])
 
   return (
     <div>
       <div className="relative w-full 2xl:w-4/5 2xl:mx-auto mb-3 flex items-center">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
-          onClick={() => navigate(entityId ? `/search/${entityId}` : '/')}
+          onClick={() => navigate(entityId ? `/search/${entityId}` : '/search')}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0"
         />
@@ -70,26 +71,34 @@ const PseudonymDetails: React.FC = () => {
               <div className="gap-3 space-y-5">
                 <CustomFloatLabel
                   id="pseudonym"
-                  value={pseudonymValue.pseudonym}
+                  value={pseudonymValue.psn}
                   placeholder={t('search:pseudonym.value')}
                   readOnly
                 />
-                <CustomFloatLabel
-                  id="Id"
-                  value={pseudonymValue.id}
-                  placeholder={t('search:pseudonym.id')}
-                  readOnly
-                />
+                <div className='flex space-x-3'>
+                  <CustomFloatLabel
+                    id="idType"
+                    value={pseudonymValue.identifierItem.idType}
+                    placeholder={t('search:pseudonym.idType')}
+                    readOnly
+                  />
+                  <CustomFloatLabel
+                    id="id"
+                    value={pseudonymValue.identifierItem.identifier}
+                    placeholder={t('search:pseudonym.id')}
+                    readOnly
+                  />
+                </div>
                 <div className="flex space-x-3">
                   <CustomFloatLabel
                     id="createdOn"
-                    value={pseudonymValue.createdOn.split('T')[0]}
+                    value={pseudonymValue.validFrom.split('T')[0]}
                     placeholder={t('search:pseudonym.createdOn')}
                     readOnly
                   />
                   <CustomFloatLabel
                     id="expiresOn"
-                    value={pseudonymValue.expiresOn.split('T')[0]}
+                    value={pseudonymValue.validTo.split('T')[0]}
                     placeholder={t('search:pseudonym.expiresOn')}
                     readOnly
                   />

@@ -9,7 +9,7 @@ interface ParserProps {
   attributes: Attribute[]
   values: Record<string, any>
   onChange: (key: string, value: any) => void
-  translateLabel: (key: string) => string
+  showRequired?: boolean
   path?: string
 }
 
@@ -17,24 +17,23 @@ export const parseAttributes = ({
   attributes,
   values,
   onChange,
-  translateLabel,
+  showRequired = true,
   path = ""
 }: ParserProps) => {
   return attributes.map((attr) => {
     const key = path ? `${path}.${attr.name}` : attr.name
     const value = values[attr.name]
-    const label = translateLabel(attr.name)
 
     // ENUM
     if (attr.type === "enum" && attr.enum) {
       return (
         <div key={key} className="mb-3">
-          <label className="block mb-1">{label}</label>
+          <label className="block mb-1">{attr.name}</label>
           <Dropdown
             value={value}
             options={attr.enum}
             onChange={(e) => onChange(attr.name, e.value)}
-            placeholder={`Select ${label}`}
+            placeholder={`Select ${attr.name}`}
             className="w-full"
           />
         </div>
@@ -49,8 +48,8 @@ export const parseAttributes = ({
           id={key}
           value={value ?? ""}
           onChange={(e) => onChange(attr.name, e.target.value)}
-          placeholder={label}
-          required={attr.required}
+          placeholder={attr.name}
+          required={showRequired ? attr.required : false}
         />
       )
     }
@@ -63,9 +62,9 @@ export const parseAttributes = ({
           id={key}
           value={value}
           onChange={(e) => onChange(attr.name, e.value)}
-          placeholder={label}
+          placeholder={attr.name}
           className="w-full"
-          required
+          required={showRequired ? true : false}
         />
       )
     }

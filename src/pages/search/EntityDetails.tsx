@@ -15,14 +15,17 @@ import Person from './components/Person'
 import BioProbe from './components/BioProbe'
 import PersonService from './services/PersonService'
 import usePersonStore from './stores/PersonStore'
+import useToastStore from '../../core/stores/ToastStore'
 
 const EntityDetails: React.FC = () => {
-  const { results } = useSearchResultsStore()
+  const { results, setResults } = useSearchResultsStore()
   const { editMode, setEditMode } = useLayoutStore()
   const { entityId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const showToast = useToastStore((state) => state.show)
   const {
+    id,
     lastName,
     firstName,
     dateOfBirth,
@@ -43,7 +46,7 @@ const EntityDetails: React.FC = () => {
   } = usePersonStore()
 
   const entity = useMemo(
-    () => results.find((entity) => entity.trustdeckID === entityId),
+    () => results.find((e) => e.trustdeckID === entityId),
     [results, entityId]
   )
 
@@ -51,35 +54,56 @@ const EntityDetails: React.FC = () => {
     return <p>No result found for ID: {entityId}</p>
   }
 
-async function handleSave() {
-  const rawData = {
-    firstName,
-    lastName,
-    dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : undefined,
-    administrativeGender,
-    phoneNumber,
-    email,
-    street,
-    houseNumber,
-    city,
-    country,
-    postalCode,
-    contactLastName,
-    contactFirstName,
-    contactEmail,
-    contactPhone,
-    contactRelationship
+  async function handleSave() {
+    const rawData = {
+      id,
+      firstName,
+      lastName,
+      dateOfBirth: dateOfBirth ? `${dateOfBirth}T00:00:00.000Z` : undefined,
+      administrativeGender,
+      phoneNumber,
+      email,
+      street,
+      houseNumber,
+      city,
+      country,
+      postalCode,
+      contactLastName,
+      contactFirstName,
+      contactEmail,
+      contactPhone,
+      contactRelationship
+    }
+
+    const data = Object.fromEntries(
+      Object.entries(rawData).filter(([_, value]) => value !== undefined && value !== null && value !== '')
+    )
+
+    const payload = { data }
+    try {
+      await PersonService.personUpdate(payload, trustdeckID)
+      const updated = await PersonService.getPerson(trustdeckID)
+      setResults(
+        results.map((e) =>
+          e.trustdeckID === trustdeckID ? updated : e
+        )
+      )
+      showToast({
+        severity: 'success',
+        summary: t('search:save'),
+        detail: t('search:editSuccess'),
+        life: 3000
+      })
+    } catch (error) {
+      console.error(error)
+      showToast({
+        severity: 'error',
+        summary: t('search:save'),
+        detail: t('search:editFailed'),
+        life: 4000
+      })
+    }
   }
-
-  // Remove empty values
-  const data = Object.fromEntries(
-    Object.entries(rawData).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-  )
-
-  const payload = { data }
-  const response = await PersonService.personUpdate(payload, trustdeckID)
-  console.log(response)
-}
 
   return (
     <div>

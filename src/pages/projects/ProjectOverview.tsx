@@ -6,9 +6,11 @@ import CustomDropdown from '@component/form/CustomDropdown'
 import { useTranslation } from 'react-i18next'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import { useNavigate } from 'react-router-dom'
+import { ProgressSpinner } from 'primereact/progressspinner'
 
 export default function ProjectOverview() {
   const [projects, setProjects] = useState<ProjectType[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [projectStatus, setProjectStatus] = useState<
     'all' | 'active' | 'completed'
   >('all')
@@ -17,16 +19,32 @@ export default function ProjectOverview() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    let isMounted = true
     const fetchProjects = async () => {
       try {
         const data = await ProjectService.getProjects()
-        setProjects(data)
+        // makes sure no duplicate projects are added
+        const uniqueProjects = Array.from(
+          new Map(data.map((project) => [project.abbreviation, project])).values()
+        )
+        if (isMounted) {
+          setProjects(uniqueProjects)
+        }
       } catch (e) {
         console.error('Failed to load projects', e)
-        setProjects([])
+        if (isMounted) {
+          setProjects([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
     fetchProjects()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredProjects = projects
@@ -49,7 +67,7 @@ export default function ProjectOverview() {
         <div className="flex flex-nowrap gap-4 min-w-[320px]">
           <CustomDropdown
             id="projectStatus"
-            placeholder="Project status"
+            placeholder={t('projects:projectStatus')}
             value={projectStatus}
             onChange={(e) => setProjectStatus(e.value)}
             options={[
@@ -60,12 +78,12 @@ export default function ProjectOverview() {
           />
           <CustomDropdown
             id="dateOrder"
-            placeholder="Sort order"
+            placeholder={t('projects:sortOrder')}
             value={dateOrder}
             onChange={(e) => setDateOrder(e.value)}
             options={[
               { label: t('projects:newestFirst'), value: 'newest' },
-              { label: t('search:oldestFirst'), value: 'oldest' }
+              { label: t('projects:oldestFirst'), value: 'oldest' }
             ]}
           />
         </div>
@@ -74,11 +92,28 @@ export default function ProjectOverview() {
           onClick={() => navigate('/projects/new')}
         />
       </div>
-      <div className="flex w-full flex-col gap-6 items-center">
-        {filteredProjects.map((project) => (
-          <SingleProject key={project.abbreviation} project={project} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="w-full flex justify-center py-10">
+          <ProgressSpinner />
+        </div>
+      ) : (
+        <>
+          <div className="flex w-full flex-col gap-6 items-center mb-12">
+            {filteredProjects.map((project) => (
+              <SingleProject key={project.abbreviation} project={project} />
+            ))}
+          </div>
+          {projects.length === 0 && (
+            <div className="flex flex-col h-full">
+              <div className="flex justify-center w-full flex-1 items-center text-center">
+                <h3>
+                  {t('projects:noProjects')}
+                </h3>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

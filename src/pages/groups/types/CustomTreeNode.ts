@@ -7,6 +7,7 @@ export interface GroupStoredAttributes {
   prefix?: string
   psnlength?: string
   alphabet?: string
+  customAlphabetCharacters?: string
   algorithm?: string
   maxnumpsn?: string
   parentgroup?: string
@@ -14,6 +15,11 @@ export interface GroupStoredAttributes {
   paddingchar?: string
   checkdigit?: boolean
   description?: string
+  validFromInherited?: boolean
+  validToInherited?: boolean
+  algorithmInherited?: boolean
+  pseudonymLengthInherited?: boolean
+  paddingCharacterInherited?: boolean
 }
 
 export interface GroupStoredData {

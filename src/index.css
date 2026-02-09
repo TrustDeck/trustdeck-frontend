@@ -41,7 +41,7 @@
 }
 
 .basic-panel {
-  @apply px-6 py-2 bg-white shadow-md rounded-lg border-0 items-center w-full lg:w-4/5;
+  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full lg:w-4/5;
 }
 
 @layer components {
@@ -62,6 +62,22 @@
 
 .p-tabview-panels{
   padding: 0px;;
+}
+
+.file-upload-button .p-button {
+  @apply bg-color-blue text-white hover:bg-color-blue/80 border-2 border-color-blue px-6 py-3 text-base font-bold rounded-lg w-auto;
+}
+
+.inherit-control {
+  @apply flex items-center gap-2 text-xs text-gray-600 mt-1;
+}
+
+.inherit-control .p-checkbox {
+  @apply scale-90 origin-left;
+}
+
+.form-grid--inherit {
+  @apply mt-1;
 }
 
 /* PrimeReact AutoComplete full width */

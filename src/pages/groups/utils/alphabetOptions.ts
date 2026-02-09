@@ -11,12 +11,15 @@ export const characters: Record<string, string> = {
 }
 
 
+export const CUSTOM_ALPHABET_VALUE = 'CUSTOM_ALPHABET'
+
 export const alphabetOptions: AlphabetOptionType[] = [
   { label: 'Hexadecimal (A-F, 0-9)', value: 'HEXADECIMAL_ALPHABET' },
   { label: 'Numbers only (0-9)', value: 'NUMBERS_ONLY_ALPHABET' },
   { label: 'Letters only (A-Z)', value: 'LETTERS_ONLY_ALPHABET' },
   { label: 'Letters and numbers (A-Z, 0-9)', value: 'LETTERS_AND_NUMBERS_ALPHABET' },
-  { label: 'Letters and numbers without B/I/O/S (A-Z without B,I,O,S, 0-9)', value: 'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET' }
+  { label: 'Letters and numbers without B/I/O/S (A-Z without B,I,O,S, 0-9)', value: 'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET' },
+  { label: 'Custom', value: CUSTOM_ALPHABET_VALUE }
 ]
 
 export type AlphabetKey =
@@ -25,11 +28,13 @@ export type AlphabetKey =
   | 'LETTERS_ONLY_ALPHABET'
   | 'LETTERS_AND_NUMBERS_ALPHABET'
   | 'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET'
+  | 'CUSTOM_ALPHABET'
 
-//implement a function that returns the key for the given value  for example ABCDEFGHIJKLMNOPQRSTUVWXYZ should return onlyUpper
+// Returns the preset key for the given character string, or null if no preset matches (e.g. custom alphabet).
 export function getAlphabetKeyByCharacters(value: string): AlphabetKey | null {
+  if (!value) return null
   for (const key in characters) {
-    if (characters[key as AlphabetKey] === value) {
+    if (key !== CUSTOM_ALPHABET_VALUE && characters[key as AlphabetKey] === value) {
       return key as AlphabetKey
     }
   }

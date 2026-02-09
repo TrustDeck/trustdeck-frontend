@@ -2,6 +2,7 @@ import { CustomTreeNode, GroupStoredAttributes } from '../types/CustomTreeNode'
 import TrustDeck from '@service/TrustDeck'
 import {
   characters,
+  CUSTOM_ALPHABET_VALUE,
   getAlphabetKeyByCharacters
 } from '../utils/alphabetOptions.ts'
 
@@ -24,7 +25,8 @@ const normalizeDomain = (
     validTo: formatDate(g.validTo) ?? undefined,
     prefix: g.prefix ?? '',
     psnlength: String(g.pseudonymLength ?? ''),
-    alphabet: getAlphabetKeyByCharacters(g.alphabet) ?? 'onlyNum',
+    alphabet: getAlphabetKeyByCharacters(g.alphabet) ?? CUSTOM_ALPHABET_VALUE,
+    ...(getAlphabetKeyByCharacters(g.alphabet) === null && g.alphabet != null && { customAlphabetCharacters: g.alphabet }),
     algorithm: g.algorithm ?? '',
     maxnumpsn: String(g.randomAlgorithmDesiredSize ?? ''),
     multiplepsn: Boolean(g.multiplePsnAllowed ?? false),
@@ -64,7 +66,9 @@ const mapDomain = (payload: any): any => {
 
   return {
     name: payload.label,
-    superDomainName: payload.parentgroup == 'ROOT' ? '' : payload.parentgroup,
+    ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
+    ? { superDomainName: payload.parentgroup }
+    : {}),
     prefix: payload.prefix,
     description: payload.description,
     multiplePsnAllowed: payload.multiplepsn,
@@ -75,7 +79,12 @@ const mapDomain = (payload: any): any => {
     validFrom: toLocalDateTime(payload.validFrom),
     validTo: toLocalDateTime(payload.validTo),
     algorithm: payload.algorithm,
-    alphabet: characters[payload.alphabet] || ''
+    alphabet: payload.alphabet === CUSTOM_ALPHABET_VALUE ? (payload.customAlphabetCharacters ?? '') : (characters[payload.alphabet] || ''),
+    ...(payload.validFromInherited && { validFromInherited: true }),
+    ...(payload.validToInherited && { validToInherited: true }),
+    ...(payload.algorithmInherited && { algorithmInherited: true }),
+    ...(payload.pseudonymLengthInherited && { pseudonymLengthInherited: true }),
+    ...(payload.paddingCharacterInherited && { paddingCharacterInherited: true })
   }
 }
 

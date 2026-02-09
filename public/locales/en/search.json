@@ -5,12 +5,19 @@
   "edit": "Edit",
   "cancel": "Cancel",
   "save": "Save",
+  "editSuccess": "Person updated successfully.",
+  "editFailed": "Failed to update person.",
   "select": "Select",
+  "research": "Search again",
   "results": "Search results",
   "entityView": "Entity details",
   "pseudonymView": "Pseudonym details",
   "history": "Last searches:",
-  "noResults": "No results.",
+  "noResults": "No search results.",
+  "loadingEntity": "Loading…",
+  "searchFor": "Search for:",
+  "anEntity": "an entity",
+  "aPseudonym": "a pseudonym",
   "entity": {
     "title": "Entity",
     "entityType": {
@@ -137,6 +144,7 @@
     "data": "Data",
     "value": "Value", 
     "id": "ID",
+    "idType": "ID Typ",
     "createdOn": "Created on:",
     "expiresOn": "Expires on:",
     "parentGroup": "Parent group"

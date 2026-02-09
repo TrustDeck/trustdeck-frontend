@@ -16,9 +16,9 @@ import ConfirmDialog from '../../core/components/common/ConfirmDialog.tsx'
 import useToastStore from '../../core/stores/ToastStore.ts'
 import { findNodeByKey } from './utils/findNodeByKey.ts'
 import { ProgressSpinner } from 'primereact/progressspinner'
+import PrimaryButton from '../../core/components/form/buttons/PrimaryButton.tsx'
 
 export default function GroupManager() {
-
   const {
     tree,
     setTree,
@@ -213,7 +213,7 @@ export default function GroupManager() {
             })
           })
       }
-    } 
+    }
   }
 
   //TODO localize texts everywhere
@@ -280,7 +280,7 @@ export default function GroupManager() {
                 <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
                   <ProgressSpinner style={{ width: '60px', height: '60px' }} />
                 </div>
-                <p>New Group is being created...</p>
+                <p>{t('groups:savingGroup')}</p>
               </>
             ) : (
               <>
@@ -291,20 +291,20 @@ export default function GroupManager() {
 
           {/* PrimeReact Dialog */}
           <Dialog
-            header="How to use this page:"
+            header={t('groups:headers.modalHeader')}
             visible={visible}
             style={{ width: '50vw' }}
             onHide={() => setVisible(false)}
+            footer={
+              <div className="flex justify-end">
+                <PrimaryButton
+                  label={t('groups:buttons.okay')}
+                  onClick={() => setVisible(false)}
+                />
+              </div>
+            }
           >
-            <p className="m-0">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-              reprehenderit in voluptate velit esse cillum dolore eu fugiat
-              nulla pariatur. Excepteur sint occaecat cupidatat non proident,
-              sunt in culpa qui officia deserunt mollit anim id est laborum.
-            </p>
+            <p className="m-0">{t('groups:modal')}</p>
           </Dialog>
         </div>
       </div>

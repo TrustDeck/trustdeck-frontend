@@ -7,12 +7,19 @@
         "projectSettings": "Project Settings",
         "search": "Search",
         "searchResults": "Search results",
-        "entityDetails": "Entity details",
-        "pseudonymDetails": "Pseudonym details",
+        "entityDetails": "Entities",
+        "pseudonymDetails": "Pseudonyms",
         "registration": "Registration",
         "duplicates": "Duplicates",
         "resolveDuplicates": "Resolve duplicates",
         "projects": "Projects",
         "backToProjects": "Back to projects"
+    },
+    "logOut": {
+        "loggingOut": "Logging you out",
+        "pleaseWait": "Please wait...",
+        "loggedOut": "You have been logged out",
+        "thankYou": "Thank you for using our service.",
+        "button": "Go to login"
     }
 }

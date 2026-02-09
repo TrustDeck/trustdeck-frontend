@@ -20,6 +20,22 @@ const ProjectService = {
     return TrustDeck.instance().createGroup(defaultGroup)
   },
 
+  getProjectImage: async (): Promise<string | undefined> => {
+    try {
+      const blob = await TrustDeck.instance().getImage()
+      // Use base64 data URL so the image persists in localStorage and survives refresh
+      return await new Promise<string | undefined>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result as string)
+        reader.onerror = () => resolve(undefined)
+        reader.readAsDataURL(blob)
+      })
+    } catch (err) {
+      console.warn('Failed to get project image', err)
+      return undefined
+    }
+  },
+
   getEntityAttributes: () => {
     return mockProjectEntities
   }

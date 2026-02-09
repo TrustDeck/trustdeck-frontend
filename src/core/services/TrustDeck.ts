@@ -6,6 +6,7 @@ import { PersonType } from '../types/PersonEntity.ts'
 import { BioSampleEntity } from 'core/types/BioSampleEntity.ts'
 import { basePerson } from './basePerson.ts'
 import { person } from './person.ts'
+import { Pseudonym } from '../../core/types/Pseudonym.ts'
 
 class TrustDeck {
   private static thisInstance: TrustDeck
@@ -79,7 +80,7 @@ class TrustDeck {
     const projectName = this.getSelectedProjectName()
     return this.request<Domain[]>(
       'GET',
-      `/pseudonymization/domain?name=${projectName}`
+      `/domains?name=${projectName}`
     )
   }
 
@@ -104,7 +105,9 @@ class TrustDeck {
   }
 
   public async createBaseType() {
-    return this.request('POST', `/entities/base-types`, basePerson)
+    console.log('fired create base type')
+    const res = await this.request('POST', `/entities/base-types`, basePerson)
+    console.log(res)
   }
 
   public async getType(type: string) {
@@ -116,16 +119,17 @@ class TrustDeck {
   }
 
   public async createType(projectName: string) {
-    return this.request(
+    console.log('create type fired')
+    const res = await this.request(
       'POST',
       `/projects/${projectName}/entities/config`,
       person
     )
+    console.log(res)
   }
 
   public async fuzzySearch(entity: string, query: string) {
     const projectName = this.getSelectedProjectName()
-    console.log(query)
     return this.request<PersonType[]>(
       'GET',
       `/projects/${projectName}/entities/${entity}?query=${query}`
@@ -141,8 +145,18 @@ class TrustDeck {
     )
   }
 
+  public async getPerson(trustdeckID: string) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'GET',
+      `/projects/${projectName}/entities/person/${trustdeckID}`
+    )
+  }
+
   public async putPerson(updatedPerson: any, trustdeckID: string) {
     const projectName = this.getSelectedProjectName()
+    console.log(trustdeckID)
+    console.log(updatedPerson)
     return this.request<any>(
       'PUT',
       `/projects/${projectName}/entities/person/${trustdeckID}`,
@@ -172,6 +186,7 @@ class TrustDeck {
     return this.request<any>('POST', '/domains', payload)
   }
   public async createGroupComplete(payload: any) {
+    console.log(payload)
     return this.request<any>('POST', '/domains/complete', payload)
   }
 
@@ -205,40 +220,85 @@ class TrustDeck {
   }
 
 
+  public async searchPseudonym(query: string, domain?: string): Promise<Pseudonym> {
+    const domainName = domain ?? this.getSelectedProjectName()
+    return this.request('GET', `/domains/${domainName}/pseudonyms?psn=${query}`)
+  }
+
+  public async createImage(file: File) {
+    const projectName = this.getSelectedProjectName();
+  
+    // Check if image already exists
+    let method: 'POST' | 'PUT' = 'POST';
+    try {
+      const existing = await this.getImage(); // will throw if none exists
+      if (existing) {
+        method = 'PUT';
+      }
+    } catch (err) {
+      console.error(err)
+      method = 'POST';
+    }
+  
+    const formData = new FormData();
+    formData.append('image', file);
+  
+    const res = await fetch(`${this.baseUrl}/projects/${projectName}/image`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+  
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Upload failed: ${res.status} ${errorText}`);
+    }
+  
+    return res.json();
+  }
+
+
+  public async getImage(): Promise<Blob> {
+    const projectName = this.getSelectedProjectName();
+  
+    const res = await fetch(`${this.baseUrl}/projects/${projectName}/image`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
+  
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to fetch image: ${res.status} ${errorText}`);
+    }
+  
+    return res.blob();
+  }
+
   public async searchOperators(q: string) {
     return this.request<Operator[]>(
       'GET',
-      '/service/operators/search',
-      undefined,
-      {
-        query: q
-      }
+      `/permissions/users?query=${q}`
     )
   }
 
-  public async updateUserPermissions(
-    domain: string,
-    userId: string,
-    permissions: Permission[]
-  ) {
+  public async updateUserPermissions( userId: string, permissions: Permission[] ) {
+    const projectName = this.getSelectedProjectName()
     return this.request<string>(
       'PUT',
-      `/service/${domain}/permissions`,
-      permissions,
-      {
-        userId: userId
-      }
+      `/permissions/${projectName}?userId=${userId}`,
+      permissions
     )
   }
 
-  public async getUserPermissions(domain: string, userId: string) {
+  public async getUserPermissions(userId: string) {
+    const projectName = this.getSelectedProjectName()
     return this.request<Permission[]>(
       'GET',
-      `/service/${domain}/permissions`,
-      undefined,
-      {
-        userId: userId
-      }
+      `/permissions/${projectName}?userId=${userId}`
     )
   }
 

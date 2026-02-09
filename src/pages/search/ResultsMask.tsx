@@ -17,7 +17,7 @@ const ResultsMask: React.FC = () => {
         <div className="w-full lg:w-4/5 flex flex-row items-center relative mb-3 mx-auto">
           <PrimaryOutlinedButton
             label={<span className="hidden sm:inline">{t('search:back')}</span>}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/search')}
             icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
             className="shrink-0 absolute left-0 top-0"
           />

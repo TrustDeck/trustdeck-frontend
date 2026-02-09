@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 
 interface PanelProps {
-  title?: string
+  title?: ReactNode 
   centered?: boolean
   children?: ReactNode
   className?: string

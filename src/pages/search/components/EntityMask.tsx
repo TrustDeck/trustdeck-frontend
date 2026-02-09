@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 import Divider from '../../../core/components/common/Divider'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { Dialog } from 'primereact/dialog'
+import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import BioProbeService from '../services/BioProbeService'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -32,6 +34,7 @@ interface EntityMaskProps {
 const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   const { t } = useTranslation() // Use multiple namespaces
   const [loading, setLoading] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const { entities } = useProjectStore()
   const [selectedType, setSelectedType] = useState<string>(entities[0])
   const navigate = useNavigate()
@@ -51,10 +54,10 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     setFirstname,
     phone,
     setPhone,
-    idType,
-    setIdType,
-    identifier,
-    setIdentifier,
+    // idType,
+    // setIdType,
+    // identifier,
+    // setIdentifier,
     street,
     setStreet,
     houseNumber,
@@ -72,28 +75,36 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setShowModal(false)
     try {
       let result
       if (selectedType === 'person') {
         result = await PersonService.fuzzySearch('person', quick)
-        if (psn) {
+        if (psn && result.length > 0) {
           handleNext()
         }
       } else if (selectedType === 'bioprobe') {
         result = await BioProbeService.searchBioProbe()
       }
       if (Array.isArray(result)) {
-        setResults(result)
-        console.log(useSearchResultsStore.getState().results)
-        // if searching for an entity to create a pseudonym, the component will not navigate to /search/results
-        if (!psn) navigate('/search/results')
+        if (result.length === 0) {
+          setResults([])
+          setShowModal(true)
+          return
+        } else {
+          setResults(result)
+          // if searching for an entity to create a pseudonym, the component will not navigate to /search/results
+          if (!psn) navigate('/search/results')
+        }
       } else {
         console.error('Unexpected API response:', result)
         setResults([])
+        setShowModal(true)
       }
     } catch (error) {
       console.error('Error during form submission:', error)
       setResults([])
+      setShowModal(true)
     } finally {
       setLoading(false)
     }
@@ -106,37 +117,35 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   }))
 
   // Dropdown options for ID type selection
-  const idDropdownOptions = [
-    { label: t('search:entity.person.idType.caseNumber'), value: 'caseNumber' },
-    { label: t('search:entity.person.idType.patientId'), value: 'patientId' }
-  ]
+  // const idDropdownOptions = [
+  //   { label: t('search:entity.person.idType.caseNumber'), value: 'caseNumber' },
+  //   { label: t('search:entity.person.idType.patientId'), value: 'patientId' }
+  // ]
 
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col">
         <div className="flex items-center gap-2 mt-4">
           <p className="text-base">{t('search:entity.entityType.title')}</p>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <CustomDropdown
               id="selectedType"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               options={entityDropdownOptions}
-              className="col-span-1 form-grid"
-              helpText={t('search:entity.entityType.help')}
             />
           </div>
         </div>
 
         <Divider />
-
-        <CustomFloatLabel
-          id="quick"
-          value={quick}
-          onChange={(e) => setQuick(e.target.value)}
-          placeholder={t('search:entity.person.quick.placeholder')}
-        />
-
+        <div className="relative my-4">
+          <CustomFloatLabel
+            id="quick"
+            value={quick}
+            onChange={(e) => setQuick(e.target.value)}
+            placeholder={t('search:entity.person.quick.placeholder')}
+          />
+        </div>
         <Divider />
 
         {selectedType === 'person' && (
@@ -168,7 +177,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
               />
             </div>
 
-            <Divider />
+            {/* <Divider />
 
             <div className="form-grid">
               <CustomDropdown
@@ -184,7 +193,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Identifier"
               />
-            </div>
+            </div> */}
 
             <Divider />
 
@@ -224,7 +233,9 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
             </div>
           </div>
         )}
-        {selectedType !== 'person' && <DynamicForm entityName={selectedType} />}
+        {selectedType !== 'person' && (
+          <DynamicForm entityName={selectedType} variant="search" />
+        )}
         {/* {selectedType === 'bioprobe' && (
           <div className="bioprobe-fields">
             <div className="form-grid">w
@@ -266,6 +277,25 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
             icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
           />
         </div>
+        <Dialog
+          visible={showModal}
+          onHide={() => setShowModal(false)}
+          header={t('search:results')}
+          closable
+          dismissableMask
+          style={{ width: '600px', maxWidth: '90vw' }}
+          className="mx-auto"
+        >
+          <div className="flex flex-col gap-4">
+            <p className="text-base">{t('search:noResults')}</p>
+            <div className="flex justify-end">
+              <SecondaryButton
+                label={t('search:research')}
+                onClick={() => setShowModal(false)}
+              />
+            </div>
+          </div>
+        </Dialog>
       </form>
     </div>
   )

@@ -18,7 +18,8 @@
     "manually": "Enter information manually",
     "back": "Back",
     "next": "Next",
-    "notDuplicate": "Not a Duplicate – Continue Registration"
+    "notDuplicate": "Not a Duplicate – Continue Registration",
+    "completeFields": "Please complete all required fields before proceeding"
   },
   "entity": {
     "person": {
@@ -40,7 +41,8 @@
     "gender": {
       "male": "Male",
       "female": "Female",
-      "nonBinary": "Non-binary"
+      "nonBinary": "Non-binary",
+      "unknown": "Unknown"
     }
   },
   "bulk": {
@@ -54,10 +56,5 @@
     "newPerson": "New person",
     "oldPerson": "Previously registered person",
     "useOld": "Use Previously Registered Person"
-  },
-  "entityAttributes": {
-    "biosample": {
-      "sampleType": "Sample Type"
-    }
   }
 }

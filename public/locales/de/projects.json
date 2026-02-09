@@ -5,8 +5,8 @@
   },
   "projectName": "Projektname",
   "projectAbbreviation": "Projekt kürzel",
-  "startDate": "Startdatum",
-  "endDate": "Enddatum",
+  "startDate": "Startdatum:",
+  "endDate": "Enddatum:",
   "newestFirst": "Neuste zuerst", 
   "oldestFirst": "Älteste zuerst",
   "all": "Alle", 
@@ -17,5 +17,10 @@
   "selectEntities": "Entitäten auswählen",
   "createProject": "Projekt erstellen",
   "pseudonymConfig": "Pseudonym konfiguration",
-  "createNewProject": "Ein neues Projekt erstellen:"
+  "createNewProject": "Ein neues Projekt erstellen:",
+  "sortOrder": "Sortierung",
+  "projectStatus": "Projektstatus",
+  "projectCreated": "Projekt erfolgreich erstellt",
+  "creationFailed": "Projekterstellung fehlgeschlagen",
+  "noProjects": "Sie haben noch keine Projekte erstellt.\n Erstellen Sie ein neues Projekt, indem Sie auf den oben stehenden Knopf klicken oder bitten Sie einen Kollegen, Sie zu einem Projekt hinzuzufügen!"
 }

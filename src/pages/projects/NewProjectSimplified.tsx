@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Panel from '@component/common/Panel'
 import CustomFloatLabel from '../../core/components/form/CustomFloatLabel'
@@ -14,7 +14,8 @@ import {encodeUriName} from "../../core/utils/encodeURIComponent";
 export default function NewProjectSimplified() {
   const toastRef = useRef<Toast>(null)
   const navigate = useNavigate()
-  const { setSelectedProject, setJustCreated } = useProjectStore()
+  const { setSelectedProject, setJustCreated, setEntities, setEntityAttributes } =
+    useProjectStore()
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
 
@@ -26,8 +27,13 @@ export default function NewProjectSimplified() {
     setProjectName,
     setProjectAbbreviation,
     setStartDate,
-    setEndDate
+    setEndDate,
+    clearProjectInputs
   } = useProjectInputStore()
+
+  useEffect(() => {
+    clearProjectInputs()
+  }, [clearProjectInputs])
 
   async function postProject() {
     setLoading(true)
@@ -50,7 +56,9 @@ export default function NewProjectSimplified() {
       const createdProject = await ProjectService.postProject(payload)
 
       //TODO change this later to create groups in groumanager until they work in entitites
-      await ProjectService.createGroup(defaultGroup)
+      console.log(createdProject)
+      const group = await ProjectService.createGroup(defaultGroup)
+      console.log(group)
       toastRef.current?.show({
         severity: 'success',
         summary: t('projects:success'),
@@ -62,6 +70,13 @@ export default function NewProjectSimplified() {
         name: createdProject.name
       })
       setJustCreated(true)
+      // Populate entities and entity attributes so they're available immediately 
+      setEntities(['person', 'biosample'])
+      try {
+        setEntityAttributes(ProjectService.getEntityAttributes())
+      } catch (e) {
+        console.error(e)
+      }
       setTimeout(() => {
         navigate('/group-management')
       }, 2000)
@@ -82,7 +97,7 @@ export default function NewProjectSimplified() {
     <div className="flex justify-center items-center w-full min-h-screen">
       <Panel title={t('projects:createNewProject')} centered>
         <Toast ref={toastRef} />
-        <div className="sm:form-grid sm:space-y-0 space-y-3">
+        <div className="sm:form-grid sm:space-y-0 space-y-3 mt-4">
           <CustomFloatLabel
             id="projectName"
             value={projectName}

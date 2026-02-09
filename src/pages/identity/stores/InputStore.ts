@@ -49,9 +49,10 @@ type InputState = {
   setContents: (contents: string) => void
   setSampleNumber: (sampleNumber: string) => void
   setPatientID: (patientID: string) => void
+  reset: () => void
 }
 
-const useInputStore = create<InputState>((set) => ({
+const initialState = {
   id: 0,
   firstName: '',
   lastName: '',
@@ -75,7 +76,11 @@ const useInputStore = create<InputState>((set) => ({
   date: null,
   contents: '',
   sampleNumber: '',
-  patientID: '',
+  patientID: ''
+}
+
+const useInputStore = create<InputState>((set) => ({
+  ...initialState,
   setId: (id) => set({ id }),
   setFirstName: (firstName) => set({ firstName }),
   setLastName: (lastName) => set({ lastName }),
@@ -99,7 +104,8 @@ const useInputStore = create<InputState>((set) => ({
   setDate: (date) => set({ date }),
   setContents: (contents) => set({ contents }),
   setSampleNumber: (sampleNumber) => set({ sampleNumber }),
-  setPatientID: (patientID) => set({ patientID })
+  setPatientID: (patientID) => set({ patientID }),
+  reset: () => set({...initialState})
 }))
 
 export default useInputStore

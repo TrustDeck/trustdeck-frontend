@@ -2,17 +2,24 @@
     "menu": {
         "logout": "Abmelden",
         "dentityManagement": "Identitätsmanagement",
-        "pseudonymManagement": "Pseudonym-Management",
+        "pseudonymManagement": "Pseudonym Management",
         "groupManagement": "Gruppenmanagement",
         "projectSettings": "Projekteinstellungen",
         "search": "Suche",
         "searchResults": "Suchresultate",
-        "entityDetails": "Entitätenansicht",
-        "pseudonymDetails": "Pseudonymansicht",
+        "entityDetails": "Entitäten",
+        "pseudonymDetails": "Pseudonyme",
         "registration": "Registrierung",
         "duplicates": "Dubletten",
         "resolveDuplicates": "Dubletten auflösen",
         "projects": "Projekte",
         "backToProjects": "Zurück zu Projekte"
+    },
+    "logOut": {
+        "loggingOut": "Sie werden abgemeldet",
+        "pleaseWait": "Bitte warten Sie einen Moment...",
+        "loggedOut": "Sie wurden abgemeldet",
+        "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
+        "button": "Zurück zur Login-Seite"
     }
 }

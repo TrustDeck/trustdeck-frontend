@@ -9,6 +9,7 @@ type ProjectInputState = {
   setProjectAbbreviation: (projectAbbreviation: string) => void
   setStartDate: (startDate: Date | null) => void
   setEndDate: (endDate: Date | null) => void
+  clearProjectInputs: () => void
 }
 
 const useProjectInputStore = create<ProjectInputState>((set) => ({
@@ -20,6 +21,13 @@ const useProjectInputStore = create<ProjectInputState>((set) => ({
   setProjectAbbreviation: (projectAbbreviation) => set({ projectAbbreviation }),
   setStartDate: (startDate) => set({ startDate }),
   setEndDate: (endDate) => set({ endDate }),
+  clearProjectInputs: () =>
+    set({
+      projectName: '',
+      projectAbbreviation: '',
+      startDate: null,
+      endDate: null
+    })
 }))
 
 export default useProjectInputStore

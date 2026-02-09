@@ -5,7 +5,7 @@
     "address": "Adresse",
     "emergencyContact": "Kontaktperson",
     "searchPatient": "Suchen Sie die Person über die Patienten-ID oder geben sie die Daten manuell ein.",
-    "registration": "Registratur",
+    "registration": "Registrierung",
     "data": "Daten",
     "chooseEntity": "Was möchten Sie registrieren?",
     "chooseAmount": "Wie viele Entitäten möchten Sie registrieren?",
@@ -18,7 +18,8 @@
     "manually": "Daten manuell eingeben",
     "back": "Zurück",
     "next": "Weiter",
-    "notDuplicate": "Keine Dublette – Weiter mit Registrierung"
+    "notDuplicate": "Keine Dublette – Weiter mit Registrierung",
+    "completeFields": "Bitte füllen Sie alle Pflichtfelder aus, bevor Sie fortfahren"
   },
   "entity": {
     "person": {
@@ -40,7 +41,8 @@
     "gender": {
       "male": "Männlich",
       "female": "Weiblich",
-      "nonBinary": "Divers"
+      "nonBinary": "Divers",
+      "unknown": "Unbekannt"
     }
   },
   "bulk": {
@@ -54,10 +56,5 @@
     "newPerson": "Neue Person",
     "oldPerson": "Bereits registrierte Person",
     "useOld": "Bereits registrierte Person verwenden"
-  },
-  "entityAttributes": {
-    "biosample": {
-      "sampleType": "Probentyp"
-    }
   }
 }

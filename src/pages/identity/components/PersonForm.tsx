@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Panel from '../../../core/components/common/Panel'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import useInputStore from '../stores/InputStore'
@@ -9,9 +9,9 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
 import { ArrowDownIcon } from '@heroicons/react/24/outline'
-import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import PersonService from '../services/PersonService'
+import SearchPersonService from '../../search/services/PersonService'
 import useDuplicatesStore from '../stores/DuplicatesStore'
 import { useNavigate } from 'react-router-dom'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -21,6 +21,8 @@ import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
+import useSearchResultsStore from '../../search/stores/SearchResultsStore'
+import { Tooltip } from 'primereact/tooltip'
 
 /**
  * The `PersonForm` component renders a multi-step form for creating or registering a person entity.
@@ -47,6 +49,7 @@ export default function PersonForm() {
   const { setNewEntry, setDuplicates } = useDuplicatesStore()
   const navigate = useNavigate()
   const { selectedProject } = useProjectStore()
+  const { setResults } = useSearchResultsStore()
 
   function handleNext() {
     setCurrentStep((prevStep) => prevStep + 1)
@@ -75,18 +78,18 @@ export default function PersonForm() {
         postalCode,
         city,
         country,
-        contactFirstName,
-        contactLastName,
-        contactPhone,
-        contactEmail,
-        contactRelationship
+
+        ...(contactFirstName && { contactFirstName }),
+        ...(contactLastName && { contactLastName }),
+        ...(contactPhone && { contactPhone }),
+        ...(contactEmail && { contactEmail }),
+        ...(contactRelationship && { contactRelationship }),
       }
     }
 
     try {
       console.log(payload)
       const recordLinkage = await PersonRecordLinkage.recordLinkage(payload)
-      console.log(recordLinkage)
 
       if (recordLinkage.length > 0) {
         setNewEntry({ ...recordLinkage, matchingEntities: undefined })
@@ -94,8 +97,9 @@ export default function PersonForm() {
         navigate('/identity/duplicates')
       } else {
         const createdPerson = await PersonService.create(payload)
-        console.log('Person created:', createdPerson)
-        navigate(`/person/${createdPerson.trustdeckID}`)
+        const personData = await SearchPersonService.getPerson(createdPerson.trustdeckID)
+        setResults([personData])
+        navigate(`/search/${createdPerson.trustdeckID}`)
       }
     } catch (error) {
       console.error('Failed to register person:', error)
@@ -141,14 +145,21 @@ export default function PersonForm() {
     setContactLastName,
     setContactPhone,
     setContactEmail,
-    setContactRelationship
+    setContactRelationship,
+    reset
   } = useInputStore()
+
+  useEffect(() => {
+    reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Dropdown options for selecting gender
   const genderDropdownOptions = [
     { label: t('identity:entity.gender.male'), value: 'male' },
     { label: t('identity:entity.gender.female'), value: 'female' },
-    { label: t('identity:entity.gender.nonBinary'), value: 'Non-binary' }
+    { label: t('identity:entity.gender.nonBinary'), value: 'other' },
+    { label: t('identity:entity.gender.unknown'), value: 'unknown' }
   ]
 
   // Dropdown options for selecting relationship
@@ -158,9 +169,44 @@ export default function PersonForm() {
   //   console.log('search for patient in KIS happens here')
   // }
 
+  function isStepValid(step: number): boolean {
+    switch (step) {
+      case 1:
+        return (
+          !!id &&
+          validation.isValidRegistrationName(firstName) &&
+          validation.isValidRegistrationName(lastName) &&
+          !!dateOfBirth &&
+          !!administrativeGender &&
+          (!phoneNumber || validation.isValidPhone(phoneNumber)) &&
+          (!email || validation.isValidEmail(email)) &&
+          (!secondPhoneOption || validation.isValidPhone(secondPhoneNumber)) &&
+          (!secondEmailOption || validation.isValidEmail(secondEmail))
+        )
+      case 2:
+        return (
+          validation.isValidRegistrationStreet(street) &&
+          validation.isValidRegistrationHouseNumber(houseNumber) &&
+          validation.isValidRegistrationZip(postalCode) &&
+          validation.isValidRegistrationCity(city) &&
+          !!country
+        )
+      case 3:
+        return (
+          (!contactFirstName || validation.isValidName(contactFirstName)) &&
+          (!contactLastName || validation.isValidName(contactLastName)) &&
+          (!contactPhone || validation.isValidPhone(contactPhone)) &&
+          (!contactEmail || validation.isValidEmail(contactEmail))
+        )
+      default:
+        return false
+    }
+  }
+
+
   return (
     <Panel>
-      <Stepper ref={stepperRef} orientation="vertical">
+      <Stepper ref={stepperRef} orientation="vertical" linear>
         {/* <StepperPanel header={t('identity:headers.search')}>
           {currentStep === 1 && registration && (
             <>
@@ -201,13 +247,13 @@ export default function PersonForm() {
           )}
         </StepperPanel> */}
         <StepperPanel header={t('identity:headers.personalData')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className='sm:space-y-0 space-y-3 mb-5'>
             <CustomFloatLabel
               id="id"
-              value={id}
+              value={id === 0 ? '' : id}
               onChange={(e) => setId(Number(e.target.value))}
               placeholder={'ID'}
               errorMessage={'ID required'}
@@ -301,24 +347,27 @@ export default function PersonForm() {
             )}
           </div>
           <div className="flex py-4 space-x-4">
-            <PrimaryOutlinedButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
-              onClick={() => handlePrev()}
+            <Tooltip
+              target=".next-button-step1"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
             />
-            <PrimaryButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
-                </span>
-              }
-              onClick={() => handleNext()}
-            />
+            <span className="next-button-step1">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.address')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -369,23 +418,35 @@ export default function PersonForm() {
           </div>
           <div className="flex py-4 space-x-4">
             <PrimaryOutlinedButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
-              onClick={() => handlePrev()}
-            />
-            <PrimaryButton
               label={
                 <span className="flex items-center gap-2">
-                  {t('identity:buttons.next')}
-                  <ArrowDownIcon className="h-5 w-5" />
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
                 </span>
               }
-              onClick={() => handleNext()}
+              onClick={() => handlePrev()}
             />
+            <Tooltip
+              target=".next-button-step2"
+              content={t('identity:buttons.completeFields')}
+              disabled={isStepValid(currentStep)}
+            />
+            <span className="next-button-step2">
+              <PrimaryButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.next')}
+                    <ArrowDownIcon className="h-5 w-5" />
+                  </span>
+                }
+                disabled={!isStepValid(currentStep)}
+                onClick={() => handleNext()}
+              />
+            </span>
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.emergencyContact')}>
-          <p>
+          <p className='mb-2'>
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -430,18 +491,22 @@ export default function PersonForm() {
             />
           </div>
           <div className="flex py-4">
-            <PrimaryButton
-              label={t('identity:buttons.back')}
-              icon={<ArrowUpIcon className="h-5 w-5 mr-1" />}
+          <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
               onClick={() => handlePrev()}
             />
           </div>
         </StepperPanel>
       </Stepper>
       <div className="flex justify-end my-4">
-        <SecondaryButton
+        <PrimaryButton
           label={t('identity:buttons.register')}
-          disabled={currentStep === 4 ? false : true}
+          disabled={currentStep === 3 ? false : true}
           onClick={handleRegister}
         />
       </div>

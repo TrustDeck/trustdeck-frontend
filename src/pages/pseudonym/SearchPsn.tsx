@@ -16,6 +16,10 @@ import { PseudonymService } from './services/PseudonymService'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
 import { useNavigate } from 'react-router-dom'
+import usePseudonymStore from '../search/stores/PseudonymSearchResults'
+import SearchPseudonymService from '../search/services/PseudonymService'
+import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
+import { ArrowUpIcon } from '@heroicons/react/24/outline'
 // import { Toast } from 'primereact/toast'
 
 export default function SearchPsn() {
@@ -25,6 +29,7 @@ export default function SearchPsn() {
   const { selectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { setPseudonymValue } = usePseudonymStore()
 
   const localStepperRef = useRef<any | null>(null)
 
@@ -66,8 +71,14 @@ export default function SearchPsn() {
 
       console.log('Created pseudonyms:', pseudonyms)
 
-      // Example: navigate to the first created pseudonym
-      if (pseudonyms.length > 0) {
+      // Fetch full pseudonym details in the domain where it was created, set store, then navigate
+      if (pseudonyms.length > 0 && selectedGroupNames.length > 0) {
+        const firstPsn = pseudonyms[0]
+        const firstGroup = selectedGroupNames[0]
+        const pseudonymData = await SearchPseudonymService.searchPseudonym(firstPsn, firstGroup)
+        if (pseudonymData) setPseudonymValue(pseudonymData)
+        navigate(`/search/pseudonym/${firstPsn}`)
+      } else if (pseudonyms.length > 0) {
         navigate(`/search/pseudonym/${pseudonyms[0]}`)
       }
 
@@ -86,7 +97,7 @@ export default function SearchPsn() {
     <div className="w-full flex flex-col items-center">
       <h1>{t('pseudonyms:headers.title')}</h1>
       <Panel>
-        <Stepper ref={stepperRef} orientation="vertical">
+        <Stepper ref={stepperRef} orientation="vertical" linear>
           {/* Step 1 - Search */}
           <StepperPanel header={t('pseudonyms:headers.stepone')}>
             <SearchMask psn />
@@ -94,35 +105,45 @@ export default function SearchPsn() {
 
           {/* Step 2 - Results */}
           <StepperPanel header={t('pseudonyms:headers.steptwo')}>
-            {results.length > 0 ? (
-              results.map((result) => (
+              {results.map((result) => (
                 <div
                   key={result.trustdeckID}
                   className="my-4 flex justify-center"
                 >
                   <SearchResult pseudonymization result={result} />
                 </div>
-              ))
-            ) : (
-              <p>{t('pseudonyms:noResults')}</p>
-            )}
+              ))}
+              <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
+              onClick={() => previousStep()}
+            />
           </StepperPanel>
 
           {/* Step 3 - Group selection */}
           <StepperPanel header={t('pseudonyms:headers.stepthree')}>
-            <p className="mb-3">{t('pseudonyms:infotext')}</p>
             <CustomTreeSelect
               id="group"
               placeholder={t('pseudonyms:selectGroup')}
               value={selectedGroup || null}
               options={groups || []}
               onChange={handleGroupChange}
+              selectionMode="single"
             />
-            <div className="flex justify-between">
-              <PrimaryButton
-                label={t('pseudonyms:buttons.back')}
-                onClick={() => previousStep()}
-              />
+            <div className="flex justify-between mt-6">
+            <PrimaryOutlinedButton
+              label={
+                <span className="flex items-center gap-2">
+                  {t('identity:buttons.back')}
+                  <ArrowUpIcon className="h-5 w-5" />
+                </span>
+              }
+              onClick={() => previousStep()}
+            />
               <SecondaryButton
                 label={t('pseudonyms:buttons.generate')}
                 onClick={() => handleClick()}

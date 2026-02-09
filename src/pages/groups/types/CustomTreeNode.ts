@@ -7,6 +7,7 @@ export interface GroupStoredAttributes {
   prefix?: string
   psnlength?: string
   alphabet?: string
+  customAlphabetCharacters?: string
   algorithm?: string
   maxnumpsn?: string
   parentgroup?: string

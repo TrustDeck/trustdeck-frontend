@@ -350,6 +350,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             prefix: prefix,
             psnlength: psnlength,
             alphabet: 'onlyUpper',
+            customAlphabetCharacters: '',
             algorithm: 'SHA3',
             maxnumpsn: (1000000).toLocaleString(i18n.language),
             multiplepsn: false,

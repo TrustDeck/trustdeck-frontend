@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
-import { AlphabetKey, alphabetOptions, characters } from '../utils/alphabetOptions.ts'
+import { AlphabetKey, alphabetOptions, characters, CUSTOM_ALPHABET_VALUE } from '../utils/alphabetOptions.ts'
 import { algorithmOptions } from '../utils/algorithmOptions.ts'
 import { getAlgorithmOutputLength, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
@@ -106,27 +106,20 @@ export default function GroupForm() {
     const temporal = node?.data?.temporal
     if (!temporal) return
 
-    function randomLetter(size: number | null, alphabet: AlphabetKey) {
-      if (size === null || size <= 0) return ''
+    function randomLetter(size: number | null, charSet: string) {
+      if (size === null || size <= 0 || !charSet) return ''
 
       let result = ''
-      const charSet = characters[alphabet]
-
       for (let i = 0; i < size; i++) {
         result += charSet.charAt(Math.floor(Math.random() * charSet.length))
       }
       return result
     }
 
-    const validAlphabet = [
-      'HEXADECIMAL_ALPHABET',
-      'NUMBERS_ONLY_ALPHABET',
-      'LETTERS_ONLY_ALPHABET',
-      'LETTERS_AND_NUMBERS_ALPHABET',
-      'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET',
-    ].includes(temporal.alphabet)
-      ? (temporal.alphabet as AlphabetKey)
-      : 'HEXADECIMAL_ALPHABET'
+    const charSet =
+      temporal.alphabet === CUSTOM_ALPHABET_VALUE
+        ? (temporal.customAlphabetCharacters ?? '')
+        : (characters[temporal.alphabet as AlphabetKey] ?? characters.HEXADECIMAL_ALPHABET)
 
     const psnlength = Number(temporal.psnlength) || 0
     const prefix = temporal.prefix ?? ''
@@ -148,7 +141,7 @@ export default function GroupForm() {
     }
     // else: hash length >= psnlength, no padding
 
-    const body = randomLetter(bodyLength, validAlphabet)
+    const body = randomLetter(bodyLength, charSet)
     setExamplePsn(`${prefix}${paddingStr}${body}${checkDigit ? '1' : ''}`)
   }, [
     tree,
@@ -408,6 +401,16 @@ export default function GroupForm() {
           helpText={t('groups:inputs.alphabet.help')}
           disabled={isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)}
         />
+        {findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet === CUSTOM_ALPHABET_VALUE && (
+          <CustomFloatLabel
+            id="customAlphabetCharacters"
+            placeholder={t('groups:inputs.customAlphabetChars.label')}
+            value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.customAlphabetCharacters ?? ''}
+            onChange={(e) =>
+              updateNodeAttribute(selectedNodeKey, 'customAlphabetCharacters', e.target.value)
+            }
+          />
+        )}
         <CustomFloatLabel
           id="maxnumpsn"
           value={(() => {

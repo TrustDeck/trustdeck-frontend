@@ -36,6 +36,10 @@
       "label": "Alphabet",
       "help": "Suchen Sie ein Alphabet für die Pseudonyme aus."
     },
+    "customAlphabetChars": {
+      "label": "Benutzerdefinierte Alphabetzeichen",
+      "placeholder": "Alle Zeichen eingeben (z. B. ABC123)"
+    },
     "startdate": {
       "label": "Startdatum"
     },

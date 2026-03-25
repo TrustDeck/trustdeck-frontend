@@ -87,10 +87,16 @@ export default function ProjectOverview() {
             ]}
           />
         </div>
-        <PrimaryButton
-          label={'New project'}
-          onClick={() => navigate('/projects/new')}
-        />
+        <div className="flex gap-2">
+          <PrimaryButton
+            label={'Global permissions'}
+            onClick={() => navigate('/projects/global-permissions')}
+          />
+          <PrimaryButton
+            label={'New project'}
+            onClick={() => navigate('/projects/new')}
+          />
+        </div>
       </div>
       {isLoading ? (
         <div className="w-full flex justify-center py-10">

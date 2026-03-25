@@ -22,7 +22,6 @@ import type {
   DefinedPermission,
   DomainPermissionUpdate,
   EffectivePermission,
-  GlobalPermissionUpdate,
   PersonSuggestion,
   ProjectPermissionUpdate
 } from './types'
@@ -125,7 +124,8 @@ const Settings: React.FC = () => {
       filterEffectivePermissions(
         selectedPerson?.effectivePermissions,
         selectedProject?.abbreviation,
-        projectDomainNames
+        projectDomainNames,
+        false
       ),
     [selectedPerson?.effectivePermissions, selectedProject?.abbreviation, projectDomainNames]
   )
@@ -136,7 +136,8 @@ const Settings: React.FC = () => {
         definedPermissions,
         selectedProject?.abbreviation,
         projectDomainNames,
-        filteredEffectivePermissions
+        filteredEffectivePermissions,
+        false
       ),
     [
       definedPermissions,
@@ -176,7 +177,8 @@ const Settings: React.FC = () => {
       const base = filterEffectivePermissions(
         personSuggestion.effectivePermissions,
         selectedProject?.abbreviation,
-        projectDomainNames
+        projectDomainNames,
+        false
       )
       const initialState: Record<string, boolean> = {}
       allPermissionRows.forEach((p) => {
@@ -222,10 +224,6 @@ const Settings: React.FC = () => {
           p.resourceName === selectedProject.abbreviation &&
           Boolean(permissionState[permissionKey(p)])
       )
-      const globalPermissions = allPermissionRows.filter(
-        (p) => p.resourceType === 'GLOBAL' && Boolean(permissionState[permissionKey(p)])
-      )
-
       const payload: DomainPermissionUpdate[] = domainPermissions.map((p) => ({
         subjectId: selectedPersonId,
         resourceType: 'DOMAIN',
@@ -242,17 +240,9 @@ const Settings: React.FC = () => {
         decision: 'ALLOW'
       }))
 
-      const globalPayload: GlobalPermissionUpdate[] = globalPermissions.map((p) => ({
-        subjectId: selectedPersonId,
-        resourceType: 'GLOBAL',
-        action: p.action,
-        decision: 'ALLOW'
-      }))
-
       await Promise.all([
         TrustDeck.instance().updateDomainPermissions(selectedPersonId, payload),
-        TrustDeck.instance().updateProjectPermissions(selectedPersonId, projectPayload),
-        TrustDeck.instance().updateGlobalPermissions(selectedPersonId, globalPayload)
+        TrustDeck.instance().updateProjectPermissions(selectedPersonId, projectPayload)
       ])
 
       setSelectedPersonId(null)
@@ -342,7 +332,7 @@ const Settings: React.FC = () => {
                   <div className="mt-4">
                     <h3 className="text-lg font-semibold mb-2">Effective permissions</h3>
                     <p className="text-sm text-gray-500 mb-4">
-                      Toggle global, project and domain permissions for the selected user.
+                      Toggle project and domain permissions for the selected user.
                     </p>
                     <EffectivePermissionsList
                       allPermissionRows={allPermissionRows}

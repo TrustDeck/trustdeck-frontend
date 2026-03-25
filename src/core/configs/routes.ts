@@ -21,6 +21,7 @@ import DuplicateResults from '../../pages/identity/DuplicateResults'
 import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
+import GlobalPermissions from '../../pages/projects/GlobalPermissions'
 import Builder from '../../pages/builder/Builder'
 
 export type RouteConfig = {
@@ -54,6 +55,14 @@ export const routes: RouteConfig[] = [
     path: '/projects/new',
     titleKey: 'layout:menu.projects',
     component: NewProjectSimplified,
+    Icon: MagnifyingGlassIcon,
+    isProtected: true,
+    isSidebar: false
+  },
+  {
+    path: '/projects/global-permissions',
+    titleKey: 'layout:menu.projects',
+    component: GlobalPermissions,
     Icon: MagnifyingGlassIcon,
     isProtected: true,
     isSidebar: false

@@ -21,7 +21,8 @@ const Layout: React.FC = () => {
   const hideSidebar =
     isLoggedOutPage ||
     location.pathname === '/projects' ||
-    location.pathname === '/projects/new'
+    location.pathname === '/projects/new' ||
+    location.pathname === '/projects/global-permissions'
 
   const contentOffsetClass = hideSidebar
     ? 'ml-0'
@@ -61,7 +62,8 @@ const Layout: React.FC = () => {
           <div className="flex flex-row w-full p-4 items-center">
             <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
             {/* removes breadcrumbs on the project overview page */}
-              {location.pathname !== '/projects' && <Breadcrumbs />}
+              {location.pathname !== '/projects' &&
+                location.pathname !== '/projects/global-permissions' && <Breadcrumbs />}
             </div>
             <div className="w-1/4">
               {isAuthenticated && <UserMenu />}

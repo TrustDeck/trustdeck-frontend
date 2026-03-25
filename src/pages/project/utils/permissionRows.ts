@@ -7,10 +7,11 @@ export function permissionKey(p: EffectivePermission): string {
 export function filterEffectivePermissions(
   effective: EffectivePermission[] | undefined,
   projectAbbreviation: string | undefined,
-  projectDomainNames: Set<string>
+  projectDomainNames: Set<string>,
+  includeGlobal = true
 ): EffectivePermission[] {
   return (effective ?? []).filter((permission) => {
-    if (permission.resourceType === 'GLOBAL') return true
+    if (permission.resourceType === 'GLOBAL') return includeGlobal
     if (permission.resourceType === 'PROJECT') {
       return permission.resourceName === projectAbbreviation
     }
@@ -25,7 +26,8 @@ export function buildAllPermissionRows(
   definedPermissions: DefinedPermission[],
   selectedProjectAbbreviation: string | undefined,
   projectDomainNames: Iterable<string>,
-  filteredEffectivePermissions: EffectivePermission[]
+  filteredEffectivePermissions: EffectivePermission[],
+  includeGlobal = true
 ): EffectivePermission[] {
   const rows: EffectivePermission[] = []
   const globalActions = definedPermissions
@@ -38,9 +40,11 @@ export function buildAllPermissionRows(
     .filter((p) => p.resourceType === 'DOMAIN')
     .map((p) => p.action)
 
-  globalActions.forEach((action) => {
-    rows.push({ resourceType: 'GLOBAL', action })
-  })
+  if (includeGlobal) {
+    globalActions.forEach((action) => {
+      rows.push({ resourceType: 'GLOBAL', action })
+    })
+  }
 
   if (selectedProjectAbbreviation) {
     projectActions.forEach((action) => {

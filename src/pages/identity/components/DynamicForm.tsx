@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useProjectStore from '../../../core/stores/ProjectStore'
+import Panel from '@component/common/Panel'
 import { parseAttributes } from './FormParser'
 
 type Props = {
@@ -29,21 +30,18 @@ export default function DynamicForm({ entityName, variant = 'registration' }: Pr
   const showRequired = variant === 'registration'
 
   return (
-    <div className={variant === 'registration' ? 'p-4 space-y-4' : 'space-y-4'}>
-      {variant === 'registration' && <h2 className="text-xl font-semibold mb-4">{title}</h2>}
-      {variant === 'registration' && (
-        <p>All fields marked with an * are required and must be filled out.</p>
-      )}
-      {parseAttributes({
-        attributes: entity.typeDefinition.attributes,
-        values: formValues,
-        onChange: handleChange,
-        showRequired
-      })}
-
-      {/* <pre className="bg-gray-100 p-3 rounded">
-        {JSON.stringify(formValues, null, 2)}
-      </pre> */}
-    </div>
+    <Panel title={variant === 'registration' ? title : undefined} className="w-full">
+      <div className={variant === 'registration' ? 'p-4 space-y-4' : 'space-y-4'}>
+        {variant === 'registration' && (
+          <p className="mb-4">All fields marked with an * are required and must be filled out.</p>
+        )}
+        {parseAttributes({
+          attributes: entity.typeDefinition.attributes,
+          values: formValues,
+          onChange: handleChange,
+          showRequired
+        })}
+      </div>
+    </Panel>
   )
 }

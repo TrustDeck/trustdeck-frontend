@@ -9,7 +9,7 @@ export const mockProjectEntities = [
         { name: 'firstName', type: 'string', required: true, linkage: true, minLength: 1, maxLength: 100, value: 'John' },
         { name: 'lastName', type: 'string', required: true, linkage: true, minLength: 1, maxLength: 100, value: 'Doe' },
         { name: 'birthName', type: 'string', required: true, linkage: false, maxLength: 100, value: 'Doe' },
-        { name: 'administrativeGender', type: 'enum', required: true, linkage: true, values: ['male', 'female', 'other', 'unknown'], value: 'male' },
+        { name: 'administrativeGender', type: 'enum', required: true, linkage: true, enum: ['male', 'female', 'other', 'unknown'], value: 'male' },
         { name: 'dateOfBirth', type: 'date', required: true, linkage: true, value: '1990-01-01' },
         {
           name: 'address',
@@ -26,22 +26,68 @@ export const mockProjectEntities = [
     }
   },
   {
-    name: 'biosample',
-    version: 'v0.1-alpha',
+    name: "biosample",
+    version: "v0.2-alpha",
     typeDefinition: {
-      typeName: 'biosample',
-      version: 'v0.1-alpha',
+      typeName: "biosample",
+      version: "v0.2-alpha",
       attributes: [
-        { name: 'location', type: 'string', required: true, linkage: false, maxLength: 200, value: 'Lab 1' },
-        { name: 'sampleType', type: 'string', required: true, linkage: false, maxLength: 100, value: 'Blood' },
-        { name: 'collectionDate', type: 'date', required: true, linkage: false, value: '2025-11-26' },
-        { 
-          name: 'preservationMethod', 
-          type: 'enum', 
-          required: true, 
-          linkage: false, 
-          values: ['Frozen', 'Refrigerated', 'RoomTemperature'], 
-          value: 'Frozen' 
+        {
+          group: true,
+          name: "sampleInformation",
+          attributes: [
+            {
+              layout: "row",
+              name: "Row 1 title",
+              attributes: [
+                {
+                  name: "location",
+                  type: "string",
+                  required: true,
+                  linkage: false,
+                  minLength: 1,
+                  maxLength: 200,
+                },
+                {
+                  name: "sampleType",
+                  type: "string",
+                  required: true,
+                  linkage: false,
+                  minLength: 1,
+                  maxLength: 100
+                }
+              ]
+            },
+            {
+              layout: "row",
+              name: "Row 2 title",
+              attributes: [
+                {
+                  name: "collectionDate",
+                  type: "date",
+                  required: true,
+                  linkage: false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          name: "storage",
+          attributes: [
+            {
+              name: "preservationMethod",
+              type: "enum",
+              required: true,
+              linkage: false,
+              enum: [
+                { label: "Frozen (-80°C)", value: "FROZEN" },
+                { label: "Refrigerated (4°C)", value: "REFRIGERATED" },
+                { label: "Room Temperature", value: "ROOM_TEMP" },
+                { label: "Formalin Fixed", value: "FORMALIN" }
+              ]
+            }
+          ]
         }
       ]
     }

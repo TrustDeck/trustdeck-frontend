@@ -16,9 +16,10 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import { DragContainer } from './components/DragContainer'
 
 const Builder: React.FC = () => {
-  const { t } = useTranslation()
-  const [showLayoutDialog, setShowLayoutDialog] = useState(false) // state for dialog
-  const [showAttributesDialog, setShowAttributesDialog] = useState(false) // state for dialog
+  useTranslation()
+  const [showLayoutDialog, setShowLayoutDialog] = useState(false)
+  const [showAttributesDialog, setShowAttributesDialog] = useState(false)
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
 
   const {
     selectedKey,
@@ -29,7 +30,9 @@ const Builder: React.FC = () => {
     appendSubAttributes,
     overrideAttribute,
     getSelectedAttribute,
-    moveSubAttribute
+    moveSubAttribute,
+    deleteAttribute,
+    updatePartialAttribute
   } = useEntityTypeStore()
 
   const selected = getSelectedAttribute()
@@ -59,12 +62,18 @@ const Builder: React.FC = () => {
   }
 
   async function handleAddGroup(addGroup: boolean) {
+    const newKey = crypto.randomUUID()
+
     appendAttribute({
-      key: crypto.randomUUID(),
+      key: newKey,
       group: addGroup,
-      layout: 'col',
-      ...(addGroup ? { name: 'ChangeMe' } : {})
+      layout: 'col'
     })
+
+    if (addGroup) {
+      setSelectedKey(newKey)
+      setEditingGroupId(newKey)
+    }
   }
 
   function getLayoutDialog() {
@@ -178,10 +187,42 @@ const Builder: React.FC = () => {
           </div>
     */
 
+    const isEditingName =
+      editingGroupId === attribute.key || (!attribute.name && attribute.group)
+
     return (
       <div className="flex flex-col w-full">
         <div className="flex flex-col w-full">
-          <h3>{attribute.name ?? 'Group'}</h3>
+          {isEditingName ? (
+            <div className="mb-3 flex gap-2 items-center">
+              <input
+                autoFocus
+                className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
+                placeholder="Section name"
+                value={attribute.name ?? ''}
+                onChange={(e) =>
+                  updatePartialAttribute(attribute.key, 'name', e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    setEditingGroupId(null)
+                  }
+                }}
+              />
+              <PrimaryButton
+                label="Save"
+                onClick={() => setEditingGroupId(null)}
+                className="px-3 py-1 text-sm"
+              />
+            </div>
+          ) : (
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="font-semibold text-gray-800">
+                {attribute.name ?? 'Group'}
+              </h3>
+            </div>
+          )}
           {attribute.attributes?.map((subAttr: Attribute, subIndex: number) =>
             renderCard(
               {
@@ -232,13 +273,9 @@ const Builder: React.FC = () => {
 
   const moveCard = useCallback(
     (listId: string, dragIndex: number, hoverIndex: number) => {
-      //implement this in store?
-      console.log(
-        `Move card in list ${listId} from ${dragIndex} to ${hoverIndex}`
-      )
       moveSubAttribute(listId, dragIndex, hoverIndex)
     },
-    []
+    [moveSubAttribute]
   )
 
   const renderCard = useCallback(
@@ -303,19 +340,20 @@ const Builder: React.FC = () => {
                             key: index + '-drag',
                             node: (
                               <>
-                                <div className="flex flex-row flex-grow flex-1">
-                                  <div className="border p-4 flex flex-grow flex-1 bg-gray-50">
+                                <div className="flex flex-row flex-grow flex-1 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+                                  <div className="p-4 flex flex-grow flex-1">
                                     {subAttributeBlock(attribute)}
                                   </div>
-                                  <div className="flex flex-col">
+                                  <div className="flex flex-col border-l border-gray-200 bg-white">
                                     <IconButton
-                                      onClick={() => console.log('Edit Group')}
+                                      onClick={() => {
+                                        setSelectedKey(attribute.key)
+                                        setEditingGroupId(attribute.key)
+                                      }}
                                       icon={<PencilIcon className="h-5 w-5" />}
                                     />
                                     <IconButton
-                                      onClick={() =>
-                                        console.log('Delete Group')
-                                      }
+                                      onClick={() => deleteAttribute(attribute.key)}
                                       icon={<TrashIcon className="h-5 w-5" />}
                                     />
                                   </div>
@@ -331,9 +369,15 @@ const Builder: React.FC = () => {
                             key: index + '-drag',
                             node: (
                               <>
-                                <div className="flex flex-row flex-grow flex-1">
-                                  <div className="border p-4 flex flex-grow flex-1 bg-gray-50">
+                                <div className="flex flex-row flex-grow flex-1 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
+                                  <div className="p-4 flex flex-grow flex-1">
                                     {getLayoutField('w-full', attribute)}
+                                  </div>
+                                  <div className="flex flex-col border-l border-gray-200 bg-white">
+                                    <IconButton
+                                      onClick={() => deleteAttribute(attribute.key)}
+                                      icon={<TrashIcon className="h-5 w-5" />}
+                                    />
                                   </div>
                                 </div>
                               </>

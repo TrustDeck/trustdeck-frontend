@@ -7,6 +7,7 @@ export type AttributeType =
   | 'number'
   | 'boolean'
   | 'datetime'
+  | 'enum'
 
 export type Layout = 'row' | 'col'
 
@@ -16,13 +17,14 @@ export type Attribute = {
   type?: AttributeType
   required?: boolean
   linkage?: boolean
-  repaetable?: boolean
+  repeatable?: boolean
   group?: boolean
   minimum?: number
   maximum?: number
   pattern?: string
   minLength?: number
   maxLength?: number
+  values?: string[]
   layout?: Layout
   attributes?: Attribute[] //key name might be changed
 }
@@ -36,6 +38,7 @@ type EntityTypeStore = {
   attributes: Attribute[]
   appendAttribute: (attribute: Attribute) => void
   moveAttribute: (fromIndex: number, toIndex: number) => void
+  deleteAttribute: (key: string) => void
   appendSubAttributes: (key: string, attribute: Attribute) => void
   overrideAttribute: (key: string, attribute: Attribute) => void
   updatePartialAttribute: (
@@ -171,6 +174,22 @@ export const useEntityTypeStore = create<EntityTypeStore>((set, get) => ({
       const dest = Math.max(0, Math.min(toIndex, attrs.length))
       attrs.splice(dest, 0, moved)
       return { attributes: attrs }
+    }),
+  deleteAttribute: (key: string) =>
+    set((state) => {
+      const removeRecursive = (list: Attribute[]): Attribute[] =>
+        list
+          .filter((attr) => attr.key !== key)
+          .map((attr) =>
+            attr.attributes && attr.attributes.length
+              ? { ...attr, attributes: removeRecursive(attr.attributes) }
+              : attr
+          )
+
+      const nextAttributes = removeRecursive(state.attributes)
+      const nextSelectedKey = state.selectedKey === key ? '' : state.selectedKey
+
+      return { attributes: nextAttributes, selectedKey: nextSelectedKey }
     }),
   appendSubAttributes: (key: string, attribute: Attribute) =>
     set((state) => {

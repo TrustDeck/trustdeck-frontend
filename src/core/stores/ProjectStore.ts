@@ -5,14 +5,16 @@ import { persist } from 'zustand/middleware'
 export type Attribute = {
   name: string
   type?: string
-  required: boolean
+  required?: boolean
   linkage?: boolean
   minimum?: number
   minLength?: number
   maxLength?: number
   enum?: string[]
+  group?: boolean
+  layout?: 'row' | 'group'
   repeatable?: boolean
-  children?: Attribute[]      
+  attributes?: Attribute[]      
   value?: any                   
 }
 

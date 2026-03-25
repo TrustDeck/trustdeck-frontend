@@ -62,7 +62,6 @@ class TrustDeck {
       },
       body: body ? JSON.stringify(body) : undefined
     })
-
     //TODO return always the response not directly as json
     if (!res.ok) {
       const errorText = await res.text()
@@ -285,11 +284,70 @@ class TrustDeck {
     )
   }
 
+  public async getDefinedPermissions() {
+    return this.request<{ resourceType: string; action: string }[]>(
+      'GET',
+      '/permissions'
+    )
+  }
+
   public async updateUserPermissions( userId: string, permissions: Permission[] ) {
     const projectName = this.getSelectedProjectName()
     return this.request<string>(
       'PUT',
       `/permissions/${projectName}?userId=${userId}`,
+      permissions
+    )
+  }
+
+  public async updateDomainPermissions(
+    userId: string,
+    permissions: {
+      subjectId: string
+      resourceType: 'DOMAIN'
+      domainName: string
+      action: string
+      decision: 'ALLOW' | 'DENY'
+    }[]
+  ) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'PUT',
+      `/permissions/domains/${projectName}?userId=${userId}`,
+      permissions
+    )
+  }
+
+  public async updateProjectPermissions(
+    userId: string,
+    permissions: {
+      subjectId: string
+      resourceType: 'PROJECT'
+      projectAbbreviation: string
+      action: string
+      decision: 'ALLOW' | 'DENY'
+    }[]
+  ) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'PUT',
+      `/permissions/projects/${projectName}?userId=${userId}`,
+      permissions
+    )
+  }
+
+  public async updateGlobalPermissions(
+    userId: string,
+    permissions: {
+      subjectId: string
+      resourceType: 'GLOBAL'
+      action: string
+      decision: 'ALLOW' | 'DENY'
+    }[]
+  ) {
+    return this.request<any>(
+      'PUT',
+      `/permissions/global?userId=${userId}`,
       permissions
     )
   }

@@ -49,7 +49,7 @@ export default function CustomCard({
           <h2 className="text-black break-words mt-8 max-w-[300px]">{title}</h2>
         }
       >
-        <div className="sm:w-full sm:h-40 text-black w-16 h-16">
+        <div className="sm:w-full sm:h-40 item text-black w-16 h-16 max-w-[100px]">
           {icon}
         </div>
       </Card>

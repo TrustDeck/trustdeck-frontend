@@ -124,7 +124,6 @@ export default function GroupForm() {
     const psnlength = Number(temporal.psnlength) || 0
     const prefix = temporal.prefix ?? ''
     const paddingChar = temporal.paddingchar ?? ''
-    const checkDigit = temporal.checkdigit
 
     const fixedLength = getAlgorithmOutputLength(temporal.algorithm)
     let paddingStr = ''
@@ -142,7 +141,7 @@ export default function GroupForm() {
     // else: hash length >= psnlength, no padding
 
     const body = randomLetter(bodyLength, charSet)
-    setExamplePsn(`${prefix}${paddingStr}${body}${checkDigit ? '1' : ''}`)
+    setExamplePsn(`${prefix}${paddingStr}${body}`)
   }, [
     tree,
     selectedNodeKey,

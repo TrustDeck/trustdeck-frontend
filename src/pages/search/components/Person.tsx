@@ -288,7 +288,6 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
               readOnly={!editMode}
               onChange={(e) => setContactRelationship(e.target.value)}
               className="mb-8"
-              centerPlaceholderWhenEmpty
             />
           )}
         </div>

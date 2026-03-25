@@ -1,9 +1,8 @@
-import CustomFloatLabel from "@component/form/CustomFloatLabel"
-import CustomCalendar from "@component/form/CustomCalendar"
-import { Dropdown } from "primereact/dropdown"
-// import IntelligentGroup from "./IntelligentGroup"
-// import IntelligentGroupList from "./IntelligentGroupList"
-import { Attribute } from "../../../core/stores/ProjectStore"
+import CustomFloatLabel from '@component/form/CustomFloatLabel'
+import CustomCalendar from '@component/form/CustomCalendar'
+import CustomDropdown from '@component/form/CustomDropdown'
+import { Attribute } from '../../../core/stores/ProjectStore'
+import { getValue } from '../util/value'
 
 interface ParserProps {
   attributes: Attribute[]
@@ -18,21 +17,101 @@ export const parseAttributes = ({
   values,
   onChange,
   showRequired = true,
-  path = ""
+  path = ''
 }: ParserProps) => {
-  return attributes.map((attr) => {
-    const key = path ? `${path}.${attr.name}` : attr.name
-    const value = values[attr.name]
+  const handleChange = (fullPath: string, newValue: any) => {
+    onChange(fullPath, newValue)
+  }
 
-    // ENUM
-    if (attr.type === "enum" && attr.enum) {
+  return attributes.map((attr) => {
+    const fullPath = path ? `${path}.${attr.name}` : attr.name
+    const value = getValue(values, fullPath)
+
+    /* =========================
+      REPEATABLE GROUP
+    ========================== */
+    if (attr.repeatable && attr.attributes) {
+      const items = value ?? []
+
       return (
-        <div key={key} className="mb-3">
+        <div key={fullPath} className="mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="font-semibold">{attr.name}</h3>
+            <button
+              type="button"
+              className="text-sm text-primary"
+              onClick={() => handleChange(fullPath, [...items, {}])}
+            >
+              + Add
+            </button>
+          </div>
+
+          {items.map((_: any, index: number) => {
+            const itemPath = `${fullPath}.${index}`
+
+            return (
+              <div key={itemPath} className="border p-3 rounded mb-3">
+                {parseAttributes({
+                  attributes: attr.attributes!,
+                  values,
+                  onChange,
+                  showRequired,
+                  path: itemPath
+                })}
+
+                <button
+                  type="button"
+                  className="text-red-500 text-sm mt-2"
+                  onClick={() => {
+                    const updated = [...items]
+                    updated.splice(index, 1)
+                    handleChange(fullPath, updated)
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )
+    }
+
+    /* =========================
+      GROUP (non-repeatable)
+    ========================== */
+    if (attr.attributes) {
+      const containerClass =
+        attr.layout === 'row' ? 'grid grid-cols-2 gap-4' : 'space-y-4'
+
+      return (
+        <div key={fullPath} className="mb-4">
+          {attr.group && <h3 className="font-semibold mb-2">{attr.name}</h3>}
+
+          <div className={containerClass}>
+            {parseAttributes({
+              attributes: attr.attributes,
+              values,
+              onChange,
+              showRequired,
+              path: fullPath
+            })}
+          </div>
+        </div>
+      )
+    }
+
+    /* =========================
+      ENUM
+    ========================== */
+    if (attr.type === 'enum' && attr.enum) {
+      return (
+        <div key={fullPath} className="mb-3">
           <label className="block mb-1">{attr.name}</label>
-          <Dropdown
+          <CustomDropdown
             value={value}
             options={attr.enum}
-            onChange={(e) => onChange(attr.name, e.value)}
+            onChange={(e) => handleChange(fullPath, e.value)}
             placeholder={`Select ${attr.name}`}
             className="w-full"
           />
@@ -40,79 +119,38 @@ export const parseAttributes = ({
       )
     }
 
-    // STRING / INTEGER
-    if (attr.type === "string" || attr.type === "integer") {
+    /* =========================
+      STRING / INTEGER
+    ========================== */
+    if (attr.type === 'string' || attr.type === 'integer') {
       return (
         <CustomFloatLabel
-          key={key}
-          id={key}
-          value={value ?? ""}
-          onChange={(e) => onChange(attr.name, e.target.value)}
+          key={fullPath}
+          id={fullPath}
+          value={value ?? ''}
+          onChange={(e) => handleChange(fullPath, e.target.value)}
           placeholder={attr.name}
           required={showRequired ? attr.required : false}
         />
       )
     }
 
-    // DATE
-    if (attr.type === "date") {
+    /* =========================
+      DATE
+    ========================== */
+    if (attr.type === 'date') {
       return (
         <CustomCalendar
-          key={key}
-          id={key}
+          key={fullPath}
+          id={fullPath}
           value={value}
-          onChange={(e) => onChange(attr.name, e.value)}
+          onChange={(e) => handleChange(fullPath, e.value)}
           placeholder={attr.name}
           className="w-full"
-          required={showRequired ? true : false}
+          required={showRequired ? attr.required : false}
         />
       )
     }
-
-    // // GROUP
-    // if (attr.children) {
-    //   // repeatable group
-    //   if (attr.repeatable) {
-    //     return (
-    //       <IntelligentGroupList
-    //         key={key}
-    //         label={attr.name}
-    //         values={value ?? []}
-    //         renderItem={(item: any, index: number) =>
-    //           parseAttributes({
-    //             attributes: attr.children!,
-    //             values: item,
-    //             path: `${key}[${index}]`,
-    //             onChange: (childKey, childValue) => {
-    //               const updated = [...(value ?? [])]
-    //               updated[index] = { ...updated[index], [childKey]: childValue }
-    //               onChange(attr.name, updated)
-    //             }
-    //           })
-    //         }
-    //         onAdd={() => onChange(attr.name, [...(value ?? []), {}])}
-    //         onRemove={(i) => {
-    //           const updated = [...(value ?? [])]
-    //           updated.splice(i, 1)
-    //           onChange(attr.name, updated)
-    //         }}
-    //       />
-    //     )
-    //   }
-
-    //   // single group
-    //   return (
-    //     <IntelligentGroup key={key} label={attr.name}>
-    //       {parseAttributes({
-    //         attributes: attr.children,
-    //         values: value ?? {},
-    //         path: key,
-    //         onChange: (childKey, childValue) =>
-    //           onChange(attr.name, { ...(value ?? {}), [childKey]: childValue })
-    //       })}
-    //     </IntelligentGroup>
-    //   )
-    // }
 
     return null
   })

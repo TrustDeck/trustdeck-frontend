@@ -17,7 +17,7 @@ const onSigninCallback = (): void => {
   oidcKeys.forEach((key) => localStorage.removeItem(key))
 
   //TODO see if this causes any errors in later use if not, keep it
-  window.history.replaceState({}, document.title, window.location.pathname);
+  window.history.replaceState({}, document.title, window.location.pathname)
 }
 
 createRoot(document.getElementById('root')!).render(
@@ -25,7 +25,7 @@ createRoot(document.getElementById('root')!).render(
     <PrimeReactProvider>
       <AuthProvider {...oidcConfig} onSigninCallback={onSigninCallback}>
         <BrowserRouter>
-          <AppRouter />
+            <AppRouter />
         </BrowserRouter>
       </AuthProvider>
     </PrimeReactProvider>

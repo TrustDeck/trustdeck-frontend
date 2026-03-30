@@ -165,7 +165,8 @@ export default function GroupForm() {
           id="name"
           value={findNodeByKey(tree, selectedNodeKey)?.label ?? ''}
           onChange={(e) => {
-            updateNodeAttribute(selectedNodeKey, 'label', e.target.value)
+            const withoutNumbers = e.target.value.replace(/\d/g, '')
+            updateNodeAttribute(selectedNodeKey, 'label', withoutNumbers)
           }}
           placeholder={t('groups:inputs.groupname.label')}
           errorMessage={t('groups:inputs.groupname.error')}

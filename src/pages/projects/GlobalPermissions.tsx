@@ -74,6 +74,35 @@ export default function GlobalPermissions() {
     }))
   }
 
+  const refreshSelectedPersonGlobals = async (
+    userId: string,
+    usernameFallback: string
+  ): Promise<void> => {
+    const latestMatches = await fetchPersons(usernameFallback)
+    const refreshed = latestMatches.find((u) => u.userId === userId)
+    if (!refreshed) return
+
+    setSelectedPerson(refreshed)
+
+    const selectedGlobal = (refreshed.effectivePermissions ?? []).filter(
+      (p) => p.resourceType === 'GLOBAL'
+    )
+    const globalActions = definedPermissions
+      .filter((p) => p.resourceType === 'GLOBAL')
+      .map((p) => p.action)
+    const rows: EffectivePermission[] = [
+      ...globalActions.map((action) => ({ resourceType: 'GLOBAL', action })),
+      ...selectedGlobal
+    ]
+    const uniqueRows = Array.from(new Map(rows.map((p) => [permissionKey(p), p])).values())
+    const selectedKeys = new Set(selectedGlobal.map((p) => permissionKey(p)))
+    const nextState: Record<string, boolean> = {}
+    uniqueRows.forEach((p) => {
+      nextState[permissionKey(p)] = selectedKeys.has(permissionKey(p))
+    })
+    setPermissionState(nextState)
+  }
+
   const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
     setSelectedPersonId(null)
     await ensureDefinedPermissions()
@@ -126,6 +155,7 @@ export default function GlobalPermissions() {
     if (!selectedPersonId || !selectedPerson) return
     try {
       setLoading(true)
+      await ensureDefinedPermissions()
       const globalPermissions = globalPermissionRows.filter(
         (p) => p.resourceType === 'GLOBAL' && Boolean(permissionState[permissionKey(p)])
       )
@@ -136,6 +166,10 @@ export default function GlobalPermissions() {
         decision: 'ALLOW'
       }))
       await TrustDeck.instance().updateGlobalPermissions(selectedPersonId, payload)
+      await refreshSelectedPersonGlobals(
+        selectedPersonId,
+        selectedPerson.username ?? selectedPerson.name
+      )
       showToast({
         severity: 'success',
         summary: 'Success',

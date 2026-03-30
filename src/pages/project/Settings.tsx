@@ -245,6 +245,8 @@ const Settings: React.FC = () => {
         TrustDeck.instance().updateProjectPermissions(selectedPersonId, projectPayload)
       ])
 
+      setPersonValue('')
+      setPersonSuggestions([])
       setSelectedPersonId(null)
       setSelectedPerson(null)
       setPermissionState({})

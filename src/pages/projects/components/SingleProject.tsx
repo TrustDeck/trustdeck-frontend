@@ -31,8 +31,7 @@ export default function SingleProject({ project }: SingleProjectProps) {
 
     try {
       const image = await ProjectService.getProjectImage()
-      setProjectImage(image) // store URL or undefined
-      console.log(image)
+      setProjectImage(image)
     } catch (error) {
       console.warn('Failed to load project image', error)
       setProjectImage(undefined)

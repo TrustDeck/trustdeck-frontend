@@ -49,8 +49,10 @@ export default function CustomCard({
           <h2 className="text-black break-words mt-8 max-w-[300px]">{title}</h2>
         }
       >
-        <div className="sm:w-full sm:h-40 item text-black w-16 h-16 max-w-[100px]">
-          {icon}
+        <div className="w-full h-40 flex items-center justify-center">
+          <div className="w-32 h-32 max-w-[100px] max-h-[100px] flex items-center justify-center text-black overflow-hidden">
+            {icon}
+          </div>
         </div>
       </Card>
     </div>

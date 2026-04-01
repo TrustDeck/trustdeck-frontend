@@ -1,0 +1,43 @@
+{
+  "attributes": {
+    "firstname": "First name",
+    "lastname": "Last name",
+    "birthdate": "Date of birth",
+    "gender": "Gender",
+    "street": "Street",
+    "housenumber": "House number",
+    "city": "City",
+    "zip": "ZIP code",
+    "country": "Country"
+  },
+  "entityName": "Entity name",
+  "entityNameQuestion": "What do you want this entity to be called?",
+  "acceptName": "Use this name",
+  "confirmName": "Confirm",
+  "changeName": "Change name",
+  "customField": "Custom field",
+  "row": "Row",
+  "addBlock": "Add block",
+  "addGroup": "Add group",
+  "save": "Save",
+  "englishLabel": "English label",
+  "germanLabel": "German label",
+  "fieldType": "Field type",
+  "dropdownOptions": "Dropdown options",
+  "optionLabel": "Option",
+  "yes": "Yes",
+  "no": "No",
+  "resetField": "Reset field to defaults",
+  "selectFieldHint": "Select a field in the builder to edit its details here.",
+  "configureField": "Configure field properties.",
+  "chooseField": "Choose a field",
+  "selectField": "Select a field",
+  "enterGroupName": "Enter group name:",
+  "field": {
+    "required": "Required",
+    "linkage": "Linkage",
+    "repeatable": "Repeatable",
+    "minLength": "Minimum length",
+    "maxLength": "Maximum length"
+  }
+}

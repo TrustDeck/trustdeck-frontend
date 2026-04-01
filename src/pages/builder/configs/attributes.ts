@@ -4,6 +4,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'firstname',
+    labelEn: 'First name',
+    labelDe: 'Vorname',
     type: 'string',
     required: true,
     linkage: false,
@@ -14,6 +16,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'lastname',
+    labelEn: 'Last name',
+    labelDe: 'Nachname',
     type: 'string',
     required: true,
     linkage: false,
@@ -24,6 +28,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'birthdate',
+    labelEn: 'Date of birth',
+    labelDe: 'Geburtsdatum',
     type: 'date',
     required: true,
     linkage: false,
@@ -32,6 +38,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'gender',
+    labelEn: 'Gender',
+    labelDe: 'Geschlecht',
     type: 'enum',
     required: false,
     linkage: false,
@@ -41,6 +49,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'street',
+    labelEn: 'Street',
+    labelDe: 'Straße',
     type: 'string',
     required: false,
     linkage: false,
@@ -51,6 +61,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'housenumber',
+    labelEn: 'House number',
+    labelDe: 'Hausnummer',
     type: 'string',
     required: false,
     linkage: false,
@@ -61,6 +73,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'city',
+    labelEn: 'City',
+    labelDe: 'Stadt',
     type: 'string',
     required: false,
     linkage: false,
@@ -71,6 +85,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'zip',
+    labelEn: 'ZIP code',
+    labelDe: 'PLZ',
     type: 'string',
     required: false,
     linkage: false,
@@ -81,6 +97,8 @@ export const defaultAttributes: Attribute[] = [
   {
     key: '',
     name: 'country',
+    labelEn: 'Country',
+    labelDe: 'Land',
     type: 'string',
     required: false,
     linkage: false,

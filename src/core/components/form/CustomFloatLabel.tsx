@@ -15,6 +15,7 @@ type CustomFloatLabelProps = {
   validate?: (value: string) => boolean
   className?: string
   readOnly?: boolean
+  disabled?: boolean
   required?: boolean
 }
 
@@ -28,6 +29,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   validate,
   className = '',
   readOnly,
+  disabled,
   required
 }) => {
   const [visible, setVisible] = useState(false)
@@ -60,9 +62,10 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         readOnly={readOnly}
+        disabled={disabled}
         className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${className} ${
           !isValid ? 'border border-red-500' : 'border border-color-light-gray'
-        }`}
+        } ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
       />
 
       {/* Floating label or error inside input */}

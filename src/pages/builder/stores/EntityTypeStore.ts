@@ -14,6 +14,8 @@ export type Layout = 'row' | 'col'
 export type Attribute = {
   key: string
   name?: string
+  labelEn?: string
+  labelDe?: string
   type?: AttributeType
   required?: boolean
   linkage?: boolean

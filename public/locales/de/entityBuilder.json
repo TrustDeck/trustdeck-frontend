@@ -1,0 +1,43 @@
+{
+  "attributes": {
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "birthdate": "Geburtsdatum",
+    "gender": "Geschlecht",
+    "street": "Straße",
+    "housenumber": "Hausnummer",
+    "city": "Stadt",
+    "zip": "PLZ",
+    "country": "Land"
+  },
+  "entityName": "Entitätsname",
+  "entityNameQuestion": "Wie soll diese Entität heißen?",
+  "acceptName": "Diesen Namen verwenden",
+  "confirmName": "Bestätigen",
+  "changeName": "Namen ändern",
+  "customField": "Benutzerdefiniertes Feld",
+  "row": "Zeile",
+  "addBlock": "Block hinzufügen",
+  "addGroup": "Gruppe hinzufügen",
+  "save": "Speichern",
+  "englishLabel": "Englische Bezeichnung",
+  "germanLabel": "Deutsche Bezeichnung",
+  "fieldType": "Feldtyp",
+  "dropdownOptions": "Dropdown-Optionen",
+  "optionLabel": "Option",
+  "yes": "Ja",
+  "no": "Nein",
+  "resetField": "Feld auf Standardwerte zurücksetzen",
+  "selectFieldHint": "Wählen Sie ein Feld im Builder aus, um die Details hier zu bearbeiten.",
+  "configureField": "Feldeigenschaften konfigurieren.",
+  "chooseField": "Feld auswählen",
+  "selectField": "Feld auswählen",
+  "enterGroupName": "Gruppennamen eingeben:",
+  "field": {
+    "required": "Pflichtfeld",
+    "linkage": "Verknüpfung",
+    "repeatable": "Wiederholbar",
+    "minLength": "Mindestlänge",
+    "maxLength": "Maximallänge"
+  }
+}

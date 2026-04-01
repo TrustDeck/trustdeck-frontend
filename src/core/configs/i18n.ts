@@ -3,7 +3,18 @@ import { initReactI18next } from 'react-i18next'
 import HttpApi from 'i18next-http-backend'
 import useUserStore from '../stores/UserStore' // Import the UserStore
 
-const namespaces = ['layout', 'common', 'search', 'identity', 'permission', 'groups', 'pseudonyms', 'projects', 'settings'] // Add all your namespaces here
+const namespaces = [
+  'layout',
+  'common',
+  'search',
+  'identity',
+  'permission',
+  'groups',
+  'pseudonyms',
+  'projects',
+  'settings',
+  'entityBuilder'
+] // Add all your namespaces here
 
 i18n
   .use(HttpApi)

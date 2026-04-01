@@ -2,6 +2,8 @@ import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedBu
 import { AttributeType, useEntityTypeStore } from '../stores/EntityTypeStore'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
+import { defaultAttributes } from '../configs/attributes'
+import { useTranslation } from 'react-i18next'
 
 export default function Inspector() {
 
@@ -13,7 +15,9 @@ export default function Inspector() {
     'layout',
     'attributes',
     'type',
-    'values'
+    'values',
+    'labelEn',
+    'labelDe'
   ]
 
   const {
@@ -24,6 +28,11 @@ export default function Inspector() {
     setSelectedKey
   } = useEntityTypeStore()
   const selected = getSelectedAttribute()
+  const isPredefined =
+    !!selected?.name &&
+    defaultAttributes.some((attr) => attr.name === selected.name)
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language || 'en'
 
   function handleRemoveAttribute() {
     const tempSelectedKey = selectedKey
@@ -33,19 +42,54 @@ export default function Inspector() {
 
   return (
     <div className="p-3 sm:p-4">
-      {selected && selected.name ? (
+      {selected ? (
         <>
           <h3 className="text-lg font-semibold text-black break-words mb-1">
-            {selected.name}
+            {(() => {
+              const hasCustomLabel = !!(selected.labelEn || selected.labelDe)
+              if (selected.group && !hasCustomLabel) {
+                return t('entityBuilder:enterGroupName', 'Enter group name:')
+              }
+              const label =
+                lang.startsWith('de')
+                  ? selected.labelDe ?? selected.labelEn
+                  : selected.labelEn ?? selected.labelDe
+              return label || selected.name || 'Custom field'
+            })()}
           </h3>
           <p className="text-xs text-gray-500 mb-4">
-            Configure field properties.
+            {t('entityBuilder:configureField', 'Configure field properties.')}
           </p>
 
-          {/* Field type selector */}
-          <div className="mb-4">
+          {/* English / German labels */}
+          <div className="mb-4 grid grid-cols-1 gap-2">
+            <CustomFloatLabel
+              id={`${selected.key}-label-en`}
+              value={selected.labelEn ?? ''}
+              placeholder={t('entityBuilder:englishLabel', 'English label')}
+              disabled={isPredefined}
+              onChange={(e) =>
+                updatePartialAttribute(selectedKey, 'labelEn', e.target.value)
+              }
+              required
+            />
+            <CustomFloatLabel
+              id={`${selected.key}-label-de`}
+              value={selected.labelDe ?? ''}
+              placeholder={t('entityBuilder:germanLabel', 'German label')}
+              disabled={isPredefined}
+              onChange={(e) =>
+                updatePartialAttribute(selectedKey, 'labelDe', e.target.value)
+              }
+              required
+            />
+          </div>
+
+          {/* Field type selector (hidden for groups) */}
+          {!selected.group && (
+            <div className="mb-4">
               <CustomDropdown
-                placeholder="Field type"
+                placeholder={t('entityBuilder:fieldType', 'Field type')}
                 id={`${selected.key}-type`}
                 value={selected.type ?? 'string'}
                 onChange={(e) =>
@@ -63,14 +107,16 @@ export default function Inspector() {
                   { label: 'Yes / No', value: 'boolean' },
                   { label: 'Dropdown', value: 'enum' }
                 ]}
+                disabled={isPredefined}
               />
-          </div>
+            </div>
+          )}
 
-          {/* Dropdown options editor for enum fields */}
-          {selected.type === 'enum' && (
+          {/* Dropdown options editor for enum fields (not for groups) */}
+          {!selected.group && selected.type === 'enum' && (
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Dropdown options
+                {t('entityBuilder:dropdownOptions', 'Dropdown options')}
               </label>
               <div className="space-y-2">
                 {(selected.values && selected.values.length
@@ -82,7 +128,7 @@ export default function Inspector() {
                       <CustomFloatLabel
                         id={`${selected.key}-opt-${idx}`}
                         value={opt}
-                        placeholder={`Option ${idx + 1}`}
+                        placeholder={t('entityBuilder:optionLabel', `Option ${idx + 1}`)}
                         onChange={(e) => {
                           const base =
                             selected.values && selected.values.length
@@ -147,8 +193,8 @@ export default function Inspector() {
                       id={`${selected.key}-${key}`}
                       value={raw ? 'true' : 'false'}
                       options={[
-                        { label: 'Yes', value: 'true' },
-                        { label: 'No', value: 'false' }
+                        { label: t('entityBuilder:yes', 'Yes'), value: 'true' },
+                        { label: t('entityBuilder:no', 'No'), value: 'false' }
                       ]}
                       onChange={(e) =>
                         updatePartialAttribute(
@@ -157,13 +203,14 @@ export default function Inspector() {
                           e.value === 'true'
                         )
                       }
-                      placeholder={key}
+                      placeholder={t(`entityBuilder:field.${key}`, key)}
                     />
                   ) : typeof raw === 'number' ? (
                     <CustomFloatLabel
                       id={key}
                       value={String(raw)}
-                      placeholder={key}
+                      placeholder={t(`entityBuilder:field.${key}`, key)}
+                      disabled={isPredefined && (key === 'minLength' || key === 'maxLength')}
                       onChange={(e) => {
                         const v = e.target.value
                         const num = v === '' ? undefined : Number(v)
@@ -176,7 +223,7 @@ export default function Inspector() {
                       value={
                         raw === null || raw === undefined ? '' : String(raw)
                       }
-                      placeholder={key}
+                      placeholder={t(`entityBuilder:field.${key}`, key)}
                       onChange={(e) =>
                         updatePartialAttribute(
                           selectedKey,
@@ -191,14 +238,17 @@ export default function Inspector() {
             })}
           </div>
           <SecondaryOutlinedButton
-            label={'Reset field to defaults'}
+            label={t('entityBuilder:resetField', 'Reset field to defaults')}
             className="w-full"
             onClick={handleRemoveAttribute}
           />
         </>
       ) : (
         <p className="text-sm text-gray-500">
-          Select a field in the builder to edit its details here.
+          {t(
+            'entityBuilder:selectFieldHint',
+            'Select a field in the builder to edit its details here.'
+          )}
         </p>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import React, { useCallback, useState } from 'react'
 import Panel from '../../core/components/common/Panel'
+import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import { Dialog } from 'primereact/dialog'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
@@ -16,23 +17,23 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import { DragContainer } from './components/DragContainer'
 
 const Builder: React.FC = () => {
-  useTranslation()
+  const { t, i18n } = useTranslation()
   const [showLayoutDialog, setShowLayoutDialog] = useState(false)
   const [showAttributesDialog, setShowAttributesDialog] = useState(false)
-  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [entityNameConfirmed, setEntityNameConfirmed] = useState(false)
 
   const {
     selectedKey,
     setSelectedKey,
     entityType,
+    setEntityType,
     attributes,
     appendAttribute,
     appendSubAttributes,
     overrideAttribute,
     getSelectedAttribute,
     moveSubAttribute,
-    deleteAttribute,
-    updatePartialAttribute
+    deleteAttribute
   } = useEntityTypeStore()
 
   const selected = getSelectedAttribute()
@@ -72,7 +73,6 @@ const Builder: React.FC = () => {
 
     if (addGroup) {
       setSelectedKey(newKey)
-      setEditingGroupId(newKey)
     }
   }
 
@@ -126,24 +126,49 @@ const Builder: React.FC = () => {
     return (
       <Dialog
         key={'attributes-dialog'}
-        header="Choose a field"
+        header={t('entityBuilder:chooseField', 'Choose a field')}
         visible={showAttributesDialog}
         style={{ width: '50vw' }}
         onHide={() => setShowAttributesDialog(false)}
       >
-        {defaultAttributes.map((attribute) => (
-          <div
-            key={attribute.name}
-            className="border p-4 mb-2 cursor-pointer"
-            onClick={() => {
-              //TODO use key to override the correct attribute and keep special details
-              setShowAttributesDialog(false)
-              overrideAttribute(selectedKey, attribute)
-            }}
-          >
-            {attribute.name}
-          </div>
-        ))}
+        {defaultAttributes.map((attribute) => {
+          const key = attribute.name ?? ''
+          const label = key ? t(`entityBuilder:attributes.${key}`) : ''
+          return (
+            <div
+              key={key}
+              className="border p-4 mb-2 cursor-pointer"
+              onClick={() => {
+                setShowAttributesDialog(false)
+                overrideAttribute(selectedKey, attribute)
+              }}
+            >
+              {label || attribute.name}
+            </div>
+          )
+        })}
+        <div
+          className="border p-4 mt-4 cursor-pointer"
+          onClick={() => {
+            // Custom field: user fills in all properties in Inspector
+            setShowAttributesDialog(false)
+            overrideAttribute(selectedKey, {
+              key: selectedKey,
+              name: 'custom',
+              labelEn: '',
+              labelDe: '',
+              type: 'string',
+              required: false,
+              linkage: false,
+              repeatable: false,
+              minLength: 0,
+              maxLength: 255
+            } as Attribute)
+            setSelectedKey(selectedKey)
+          }}
+        >
+          {t('entityBuilder:customField', 'Custom field')}
+        </div>
       </Dialog>
     )
   }
@@ -154,21 +179,34 @@ const Builder: React.FC = () => {
         className={`${cssWidthClass} border p-2 bg-white cursor-pointer flex flex-row justify-between items-center`}
         onClick={() => {
           setSelectedKey(attribute.key)
-          if (attribute.name) {
-            //load and show in inspector
-            console.log(attribute)
-          } else {
+          if (!attribute.name) {
             setShowAttributesDialog(true)
           }
         }}
       >
         {attribute.name ? (
           <>
-            <div>{attribute.name}</div>
-            <PencilIcon className="h-5 w-5" />
+            <div>
+              {attribute.name === 'custom'
+                ? t('entityBuilder:customField', 'Custom field')
+                : t(`entityBuilder:attributes.${attribute.name}`, {
+                    defaultValue: attribute.name
+                  })}
+            </div>
+            <button
+              type="button"
+              className="p-1 text-gray-600 hover:text-gray-900"
+              onClick={(e) => {
+                e.stopPropagation()
+                setSelectedKey(attribute.key)
+                setShowAttributesDialog(true)
+              }}
+            >
+              <PencilIcon className="h-5 w-5" />
+            </button>
           </>
         ) : (
-          'Select a field'
+          t('entityBuilder:selectField', 'Select a field')
         )}
       </div>
     )
@@ -187,46 +225,25 @@ const Builder: React.FC = () => {
           </div>
     */
 
-    const isEditingName =
-      editingGroupId === attribute.key || (!attribute.name && attribute.group)
-
     return (
       <div className="flex flex-col w-full">
         <div className="flex flex-col w-full">
-          {isEditingName ? (
-            <div className="mb-3 flex gap-2 items-center">
-              <input
-                autoFocus
-                className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm"
-                placeholder="Section name"
-                value={attribute.name ?? ''}
-                onChange={(e) =>
-                  updatePartialAttribute(attribute.key, 'name', e.target.value)
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    setEditingGroupId(null)
-                  }
-                }}
-              />
-              <PrimaryButton
-                label="Save"
-                onClick={() => setEditingGroupId(null)}
-                className="px-3 py-1 text-sm"
-              />
-            </div>
-          ) : (
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-800">
-                {attribute.name ?? 'Group'}
-              </h3>
-            </div>
-          )}
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-800">
+              {(() => {
+                const lang = i18n.language || 'en'
+                const label =
+                  lang.startsWith('de')
+                    ? attribute.labelDe ?? attribute.labelEn
+                    : attribute.labelEn ?? attribute.labelDe
+                return label || attribute.name || 'Group'
+              })()}
+            </h3>
+          </div>
           {attribute.attributes?.map((subAttr: Attribute, subIndex: number) =>
             renderCard(
               {
-                key: attribute.key,
+                key: subAttr.key,
                 node: (
                   <div className="mb-2 w-full">
                     {subAttr.layout === 'row' &&
@@ -254,18 +271,18 @@ const Builder: React.FC = () => {
           )}
         </div>
         <div className="flex w-full items-center justify-center mt-4">
-          <PrimaryButton
-            label={
-              <span className="flex items-center gap-2">
-                <PlusIcon className="h-5 w-5" />
-                {'Row'}
-              </span>
-            }
-            onClick={() => {
-              setSelectedKey(attribute.key)
-              setShowLayoutDialog(true)
-            }}
-          />
+                <PrimaryButton
+                  label={
+                    <span className="flex items-center gap-2">
+                      <PlusIcon className="h-5 w-5" />
+                      {t('entityBuilder:row', 'Row')}
+                    </span>
+                  }
+                  onClick={() => {
+                    setSelectedKey(attribute.key)
+                    setShowLayoutDialog(true)
+                  }}
+                />
         </div>
       </div>
     )
@@ -302,20 +319,63 @@ const Builder: React.FC = () => {
       <>
         {getLayoutDialog()}
         {getAttributesDisplay()}
-        <div className="w-full">
-          <h1 className="text-center">
-            {entityType == '' ? 'Change me' : entityType}
-          </h1>
-          <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
-            <Panel
-              className={`w-full ${selected && selected.name ? 'basis-3/5' : 'basis-full'}`}
-            >
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-[min(94vw,90rem)]">
+            {!entityNameConfirmed ? (
+              <div className="max-w-xl mx-auto mb-8">
+                <Panel centered>
+                  <h1 className="text-xl font-semibold text-center mb-3">
+                    {t(
+                      'entityBuilder:entityNameQuestion',
+                      'What do you want this entity to be called?'
+                    )}
+                  </h1>
+                  <div className="mb-3">
+                    <CustomFloatLabel
+                      id="entityTypeName"
+                      value={entityType}
+                      placeholder={t('entityBuilder:entityName') || 'Entity name'}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setEntityType(e.target.value)
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <PrimaryOutlinedButton
+                      label={t('entityBuilder:acceptName', 'Use this name')}
+                      onClick={() => setEntityNameConfirmed(true)}
+                      disabled={!entityType}
+                    />
+                  </div>
+                </Panel>
+              </div>
+            ) : (
+              <div className="mb-8 flex flex-col items-center gap-1">
+                <h1 className="text-2xl font-semibold">
+                  {entityType || t('entityBuilder:entityName')}
+                </h1>
+                <button
+                  type="button"
+                  className="text-xs text-blue-600 hover:underline"
+                  onClick={() => setEntityNameConfirmed(false)}
+                >
+                  {t('entityBuilder:changeName', 'Change name')}
+                </button>
+              </div>
+            )}
+
+            {entityNameConfirmed && entityType && (
+              <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
+                <Panel
+                  className={`w-full ${selected && selected.name ? 'basis-3/5' : 'basis-full'}`}
+                >
               <div className="grid grid-cols-2 gap-4 my-4 items-center justify-center justify-items-center">
                 <PrimaryOutlinedButton
                   label={
                     <span className="flex items-center gap-2">
                       <PlusIcon className="h-5 w-5" />
-                      {'Add Block'}
+                      {t('entityBuilder:addBlock', 'Add block')}
                     </span>
                   }
                   onClick={() => handleAddGroup(false)}
@@ -324,7 +384,7 @@ const Builder: React.FC = () => {
                   label={
                     <span className="flex items-center gap-2">
                       <PlusIcon className="h-5 w-5" />
-                      {'Add Group'}
+                      {t('entityBuilder:addGroup', 'Add group')}
                     </span>
                   }
                   onClick={() => handleAddGroup(true)}
@@ -333,11 +393,11 @@ const Builder: React.FC = () => {
 
               {attributes.map((attribute, index) => {
                 return (
-                  <div className="mt-2 mb-4">
+                  <div key={attribute.key} className="mt-2 mb-4">
                     {attribute.group
                       ? renderCard(
                           {
-                            key: index + '-drag',
+                            key: attribute.key,
                             node: (
                               <>
                                 <div className="flex flex-row flex-grow flex-1 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
@@ -348,7 +408,6 @@ const Builder: React.FC = () => {
                                     <IconButton
                                       onClick={() => {
                                         setSelectedKey(attribute.key)
-                                        setEditingGroupId(attribute.key)
                                       }}
                                       icon={<PencilIcon className="h-5 w-5" />}
                                     />
@@ -362,11 +421,11 @@ const Builder: React.FC = () => {
                             )
                           },
                           index,
-                          ''
+                          'root'
                         )
                       : renderCard(
                           {
-                            key: index + '-drag',
+                            key: attribute.key,
                             node: (
                               <>
                                 <div className="flex flex-row flex-grow flex-1 rounded-lg border border-gray-200 bg-gray-50 overflow-hidden">
@@ -384,7 +443,7 @@ const Builder: React.FC = () => {
                             )
                           },
                           index,
-                          ''
+                          'root'
                         )}
                   </div>
                 )
@@ -392,17 +451,19 @@ const Builder: React.FC = () => {
 
               <div className="mt-4 w-full">
                 <PrimaryButton
-                  label={'Speichern'}
+                  label={t('entityBuilder:save', 'Save')}
                   onClick={() => console.log(attributes)}
                   className="w-full"
                 />
               </div>
-            </Panel>
-            {selected && selected.name ? (
-              <Panel className="w-full basis-2/5">
-                <Inspector />
-              </Panel>
-            ) : null}
+                </Panel>
+                {selected ? (
+                  <Panel className="w-full basis-2/5">
+                    <Inspector />
+                  </Panel>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       </>

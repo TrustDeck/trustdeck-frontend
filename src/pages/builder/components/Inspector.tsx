@@ -48,7 +48,7 @@ export default function Inspector() {
             {(() => {
               const hasCustomLabel = !!(selected.labelEn || selected.labelDe)
               if (selected.group && !hasCustomLabel) {
-                return t('entityBuilder:enterGroupName', 'Enter group name:')
+                return t('entityBuilder:enterGroupName', 'Enter section name')
               }
               const label =
                 lang.startsWith('de')

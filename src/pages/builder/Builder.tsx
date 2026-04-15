@@ -243,7 +243,7 @@ const Builder: React.FC = () => {
                   lang.startsWith('de')
                     ? attribute.labelDe ?? attribute.labelEn
                     : attribute.labelEn ?? attribute.labelDe
-                return label || attribute.name || 'Group'
+                return label || attribute.name || 'Section'
               })()}
             </h3>
           </div>
@@ -399,7 +399,7 @@ const Builder: React.FC = () => {
                   label={
                     <span className="flex items-center gap-2">
                       <PlusIcon className="h-5 w-5" />
-                      {t('entityBuilder:addGroup', 'Add group')}
+                      {t('entityBuilder:addGroup', 'Add section')}
                     </span>
                   }
                   onClick={() => handleAddGroup(true)}

@@ -18,7 +18,7 @@
   "customField": "Benutzerdefiniertes Feld",
   "row": "Zeile",
   "addBlock": "Block hinzufügen",
-  "addGroup": "Gruppe hinzufügen",
+  "addGroup": "Abschnitt hinzufügen",
   "save": "Speichern",
   "englishLabel": "Englische Bezeichnung",
   "germanLabel": "Deutsche Bezeichnung",
@@ -32,7 +32,7 @@
   "configureField": "Feldeigenschaften konfigurieren.",
   "chooseField": "Feld auswählen",
   "selectField": "Feld auswählen",
-  "enterGroupName": "Gruppennamen eingeben:",
+  "enterGroupName": "Abschnittsnamen eingeben",
   "field": {
     "required": "Pflichtfeld",
     "linkage": "Verknüpfung",

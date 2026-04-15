@@ -70,8 +70,13 @@ export default function NewProjectSimplified() {
         name: createdProject.name
       })
       setJustCreated(true)
-      // Populate entities and entity attributes so they're available immediately 
-      setEntities(['person', 'biosample'])
+      try {
+        const projectEntities = await ProjectService.getProjectEntities()
+        setEntities(projectEntities)
+      } catch (error) {
+        console.error('Failed to load project entities', error)
+        setEntities([])
+      }
       try {
         setEntityAttributes(ProjectService.getEntityAttributes())
       } catch (e) {

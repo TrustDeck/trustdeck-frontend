@@ -85,9 +85,14 @@ export default function NewProject() {
     try {
       const createdProject = await ProjectService.postProject(payload)
       setSelectedProject({ abbreviation: createdProject.abbreviation, name: createdProject.name })
-      setSelectedEntities(['person', 'biosample'])
       setJustCreated(true)
-      setEntities(selectedEntities.length ? selectedEntities : ['person', 'biosample'])
+      try {
+        const projectEntities = await ProjectService.getProjectEntities()
+        setEntities(projectEntities)
+      } catch (error) {
+        console.error('Failed to load project entities', error)
+        setEntities([])
+      }
       try {
         setEntityAttributes(ProjectService.getEntityAttributes())
       } catch (e) {

@@ -3,7 +3,10 @@ import { persist } from 'zustand/middleware'
 
 
 export type Attribute = {
-  name: string
+  key?: string
+  name?: string
+  labelEn?: string
+  labelDe?: string
   type?: string
   required?: boolean
   linkage?: boolean
@@ -11,11 +14,12 @@ export type Attribute = {
   minLength?: number
   maxLength?: number
   enum?: string[]
+  values?: string[]
   group?: boolean
-  layout?: 'row' | 'group'
+  layout?: 'row' | 'group' | 'col'
   repeatable?: boolean
-  attributes?: Attribute[]      
-  value?: any                   
+  attributes?: Attribute[]
+  value?: any
 }
 
 type EntityDefinition = {

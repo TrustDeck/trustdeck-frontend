@@ -23,6 +23,7 @@ import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
 import GlobalPermissions from '../../pages/projects/GlobalPermissions'
 import Builder from '../../pages/builder/Builder'
+import EntityManager from '../../pages/builder/EntityManager'
 
 export type RouteConfig = {
   path: string
@@ -70,11 +71,19 @@ export const routes: RouteConfig[] = [
   {
     path: '/entity/manager',
     titleKey: 'layout:menu.entityManager',
-    component: Builder,
+    component: EntityManager,
     Icon: IdentificationIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 1
+  },
+  {
+    path: '/entity/manager/new',
+    titleKey: 'entityBuilder:addEntity',
+    component: Builder,
+    Icon: IdentificationIcon,
+    isProtected: true,
+    isSidebar: false
   },
   {
     path: '/identity',

@@ -159,13 +159,19 @@ const BreadcrumbUpdater: React.FC = () => {
 
     // Default behavior for all other paths
     const pathnames = pathname.split('/').filter((x) => x)
-    const breadcrumbList = pathnames.map((_, index) => {
-      const path = `/${pathnames.slice(0, index + 1).join('/')}`
-      const route = routes.find((r) =>
-        matchPath({ path: r.path, end: true }, path)
-      )
-      return { label: route ? route.titleKey : path, url: path }
-    })
+    const breadcrumbList = pathnames
+      .map((_, index) => {
+        const path = `/${pathnames.slice(0, index + 1).join('/')}`
+        const route = routes.find((r) =>
+          matchPath({ path: r.path, end: true }, path)
+        )
+
+        // Skip intermediate synthetic segments like "/entity" when there is no route.
+        if (!route && index < pathnames.length - 1) return null
+
+        return { label: route ? route.titleKey : path, url: path }
+      })
+      .filter((item): item is { label: string; url: string } => item !== null)
 
     setBreadcrumbItems(breadcrumbList)
   }, [location, setBreadcrumbItems])

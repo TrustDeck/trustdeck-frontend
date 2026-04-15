@@ -208,8 +208,8 @@ export default function GlobalPermissions() {
         icon={<ArrowLeftIcon className="h-5 w-5" />}
         iconPos="left"
       />
-      <div className="mx-auto w-full max-w-[min(94vw,90rem)]">
-        <Panel title="Global Permissions" className="w-full">
+      <div className="w-full flex flex-col items-center">
+        <Panel title="Global Permissions" className="w-full mx-auto">
           <p className="text-sm text-gray-500 mb-4">
             Search for a user and manage only global permissions.
           </p>

@@ -103,6 +103,11 @@ class TrustDeck {
     return this.request<ProjectType[]>('GET', '/projects')
   }
 
+  public async getProjectEntities(query = '*') {
+    const projectName = this.getSelectedProjectName()
+    return await this.request<any[]>('GET', `/projects/${projectName}/entities?query=${encodeURIComponent(query)}`)
+  }
+
   public async createBaseType() {
     console.log('fired create base type')
     const res = await this.request('POST', `/entities/base-types`, basePerson)

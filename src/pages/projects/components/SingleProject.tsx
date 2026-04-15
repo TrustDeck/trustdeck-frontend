@@ -37,8 +37,13 @@ export default function SingleProject({ project }: SingleProjectProps) {
       setProjectImage(undefined)
     }
 
-    // TODO: change back to project.entityTypes => currently hardcoded to 'person' and 'biosample'
-    setEntities(['person', 'biosample'])
+    try {
+      const projectEntities = await ProjectService.getProjectEntities()
+      setEntities(projectEntities)
+    } catch (error) {
+      console.error('Failed to load project entities', error)
+      setEntities([])
+    }
 
     try {
       const attributes = await ProjectService.getEntityAttributes()

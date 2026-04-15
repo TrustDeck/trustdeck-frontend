@@ -38,6 +38,22 @@ const ProjectService = {
 
   getEntityAttributes: () => {
     return mockProjectEntities
+  },
+
+  getProjectEntities: async (): Promise<string[]> => {
+    const mapEntityNames = (response: any[]): string[] =>
+      response
+        .map((entry: any) => {
+          if (typeof entry === 'string') return entry
+          if (entry && typeof entry.name === 'string') return entry.name
+          if (entry && typeof entry.typeName === 'string') return entry.typeName
+          return null
+        })
+        .filter((name: string | null): name is string => !!name)
+
+    const response = await TrustDeck.instance().getProjectEntities('*')
+    const names = Array.from(new Set(mapEntityNames(response)))
+    return names
   }
 }
 

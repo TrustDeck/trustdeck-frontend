@@ -1,10 +1,16 @@
 import { useTranslation } from 'react-i18next'
 import React, { useCallback, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import { Dialog } from 'primereact/dialog'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
-import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import {
+  ArrowLeftIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 
@@ -18,6 +24,7 @@ import { DragContainer } from './components/DragContainer'
 
 const Builder: React.FC = () => {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const [showLayoutDialog, setShowLayoutDialog] = useState(false)
   const [showAttributesDialog, setShowAttributesDialog] = useState(false)
   const [entityNameConfirmed, setEntityNameConfirmed] = useState(false)
@@ -320,10 +327,18 @@ const Builder: React.FC = () => {
         {getLayoutDialog()}
         {getAttributesDisplay()}
         <div className="w-full flex justify-center">
-          <div className="w-full max-w-[min(94vw,90rem)]">
+          <div className="w-full text-center flex flex-col items-center">
+            <div className="mb-4 w-full">
+              <PrimaryOutlinedButton
+                label={t('common:back', 'Back')}
+                icon={<ArrowLeftIcon className="h-5 w-5" />}
+                iconPos="left"
+                onClick={() => navigate('/entity/manager')}
+              />
+            </div>
             {!entityNameConfirmed ? (
-              <div className="max-w-xl mx-auto mb-8">
-                <Panel centered>
+              <div className="mb-8 w-full">
+                <Panel centered className="mx-auto">
                   <h1 className="text-xl font-semibold text-center mb-3">
                     {t(
                       'entityBuilder:entityNameQuestion',
@@ -368,7 +383,7 @@ const Builder: React.FC = () => {
             {entityNameConfirmed && entityType && (
               <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
                 <Panel
-                  className={`w-full ${selected && selected.name ? 'basis-3/5' : 'basis-full'}`}
+                  centered className="mx-auto"
                 >
               <div className="grid grid-cols-2 gap-4 my-4 items-center justify-center justify-items-center">
                 <PrimaryOutlinedButton
@@ -452,7 +467,13 @@ const Builder: React.FC = () => {
               <div className="mt-4 w-full">
                 <PrimaryButton
                   label={t('entityBuilder:save', 'Save')}
-                  onClick={() => console.log(attributes)}
+                  onClick={() => {
+                    const payload = {
+                      name: entityType,
+                      attributes
+                    }
+                    console.log(JSON.stringify(payload, null, 2))
+                  }}
                   className="w-full"
                 />
               </div>

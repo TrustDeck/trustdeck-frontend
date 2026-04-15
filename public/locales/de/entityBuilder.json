@@ -39,5 +39,8 @@
     "repeatable": "Wiederholbar",
     "minLength": "Mindestlänge",
     "maxLength": "Maximallänge"
-  }
+  },
+  "entitiesInProject": "Entitäten in diesem Projekt",
+  "newEntity": "Neue Entität",
+  "addEntity": "Entität hinzufügen"
 }

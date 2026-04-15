@@ -5,18 +5,22 @@ import CustomCard from '../../core/components/common/CustomCard'
 import Panel from '../../core/components/common/Panel'
 import { UserIcon } from '@heroicons/react/24/outline'
 import { BeakerIcon } from '@heroicons/react/24/outline'
+import { Squares2X2Icon } from '@heroicons/react/24/outline'
 // import { PencilIcon } from '@heroicons/react/24/outline'
 // import { DocumentTextIcon } from '@heroicons/react/24/outline'
 // import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import { useTranslation } from 'react-i18next'
 import TrustDeck from '../../core/services/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
+import ProjectService from '../projects/services/ProjectService'
 
 export default function PreReg() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { entityType, setEntityType } = useEntityStore()
   const location = useLocation()
+
+  const { entities, selectedProject, setEntities } = useProjectStore()
 
   useEffect(() => {
     setEntityType(null)
@@ -29,8 +33,18 @@ export default function PreReg() {
         console.error('Error fetching domain:', error)
       }
     }
+    const fetchEntities = async () => {
+      if (!selectedProject?.abbreviation) return
+      try {
+        const projectEntities = await ProjectService.getProjectEntities()
+        setEntities(projectEntities)
+      } catch (error) {
+        console.error('Error fetching project entities:', error)
+      }
+    }
     fetchDomain()
-  }, [location.pathname, setEntityType]) 
+    fetchEntities()
+  }, [location.pathname, selectedProject?.abbreviation, setEntities, setEntityType])
 
   function handleTypeClick(type: string) {
     setEntityType(type)
@@ -42,8 +56,6 @@ export default function PreReg() {
   //   navigate('/identity/register')
   // }
 
-  const entities = useProjectStore((state) => state.entities)
-
   return (
     <div className="w-full flex justify-center">
       {!entityType && (
@@ -52,7 +64,7 @@ export default function PreReg() {
           <Panel centered title={t('identity:headers.chooseEntity')}>
             <div className="sm:flex sm:space-y-0 sm:gap-16 justify-center space-y-4 my-4">
               {entities.map((type) => {
-                let icon = null
+                let icon = <Squares2X2Icon />
                 if (type === 'person') icon = <UserIcon />
                 else if (type === 'biosample') icon = <BeakerIcon />
 

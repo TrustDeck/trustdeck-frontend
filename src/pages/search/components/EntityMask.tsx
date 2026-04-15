@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import useSearchStore from '../stores/SearchStore'
 import useSearchResultsStore from '../stores/SearchResultsStore'
 import { useNavigate } from 'react-router-dom'
@@ -11,11 +11,11 @@ import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import BioProbeService from '../services/BioProbeService'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
-import validation from '../../../core/utils/validation'
 import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
 import PersonService from '../services/PersonService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import DynamicForm from '../../identity/components/DynamicForm'
+import ProjectService from '../../projects/services/ProjectService'
 
 /**
  * EntityMask Component
@@ -35,7 +35,13 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   const { t } = useTranslation() // Use multiple namespaces
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const { entities } = useProjectStore()
+  const {
+    entities,
+    entityAttributes,
+    selectedProject,
+    setEntities,
+    setEntityAttributes
+  } = useProjectStore()
   const [selectedType, setSelectedType] = useState<string>(entities[0])
   const navigate = useNavigate()
   // needed to move to the second step in the pseudonymization workflow
@@ -47,30 +53,53 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   }
 
   // Retrieve search-related state and update functions
-  const {
-    lastname,
-    setLastname,
-    firstname,
-    setFirstname,
-    phone,
-    setPhone,
-    // idType,
-    // setIdType,
-    // identifier,
-    // setIdentifier,
-    street,
-    setStreet,
-    houseNumber,
-    setHousenumber,
-    city,
-    setCity,
-    zip,
-    setZip,
-    quick,
-    setQuick
-  } = useSearchStore()
+  const { quick, setQuick } = useSearchStore()
 
   const { setResults } = useSearchResultsStore()
+
+  useEffect(() => {
+    let active = true
+    async function refreshEntities() {
+      if (!selectedProject?.abbreviation) return
+      try {
+        const fetched = await ProjectService.getProjectEntities()
+        if (!active) return
+        setEntities(fetched)
+      } catch (error) {
+        console.error('Failed to refresh project entities', error)
+      }
+    }
+    refreshEntities()
+    return () => {
+      active = false
+    }
+  }, [selectedProject?.abbreviation, setEntities])
+
+  useEffect(() => {
+    if (!entities.length) return
+    if (!selectedType || !entities.includes(selectedType)) {
+      setSelectedType(entities[0])
+    }
+  }, [entities, selectedType])
+
+  useEffect(() => {
+    const hasRowLayout = (attrs: any[] | undefined): boolean => {
+      if (!attrs?.length) return false
+      return attrs.some((attr) => {
+        if (attr.layout === 'row' && Array.isArray(attr.attributes)) return true
+        if (Array.isArray(attr.attributes)) return hasRowLayout(attr.attributes)
+        return false
+      })
+    }
+
+    const personEntity = entityAttributes.find((e) => e.name === 'person')
+    const isLegacyShape =
+      !!personEntity && !hasRowLayout(personEntity.typeDefinition.attributes)
+
+    if (isLegacyShape) {
+      setEntityAttributes(ProjectService.getEntityAttributes())
+    }
+  }, [entityAttributes, setEntityAttributes])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -148,94 +177,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
         </div>
         <Divider />
 
-        {selectedType === 'person' && (
-          <div>
-            <div className="sm:form-grid space-y-5 sm:space-y-0">
-              <CustomFloatLabel
-                id="lastname"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-                placeholder={t('search:entity.person.lastname.placeholder')}
-                errorMessage={t('search:entity.person.lastname.error')}
-                validate={validation.isValidName}
-              />
-              <CustomFloatLabel
-                id="firstname"
-                value={firstname}
-                onChange={(e) => setFirstname(e.target.value)}
-                placeholder={t('search:entity.person.firstname.placeholder')}
-                errorMessage={t('search:entity.person.firstname.error')}
-                validate={validation.isValidName}
-              />
-              <CustomFloatLabel
-                id="phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={t('search:entity.person.phone.placeholder')}
-                errorMessage={t('search:entity.person.phone.error')}
-                validate={validation.isValidPhone}
-              />
-            </div>
-
-            {/* <Divider />
-
-            <div className="form-grid">
-              <CustomDropdown
-                id="idType"
-                placeholder={t('search:entity.person.idType.placeholder')}
-                value={idType}
-                onChange={(e) => setIdType(e.target.value)}
-                options={idDropdownOptions}
-              />
-              <CustomFloatLabel
-                id="identifier"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Identifier"
-              />
-            </div> */}
-
-            <Divider />
-
-            <div className="form-grid">
-              <CustomFloatLabel
-                id="street"
-                value={street}
-                onChange={(e) => setStreet(e.target.value)}
-                placeholder={t('search:entity.person.street.placeholder')}
-                validate={validation.isValidStreet}
-                errorMessage={t('search:entity.person.street.error')}
-              />
-              <CustomFloatLabel
-                id="houseNumber"
-                value={houseNumber}
-                onChange={(e) => setHousenumber(e.target.value)}
-                placeholder={t('search:entity.person.houseNumber.placeholder')}
-                validate={validation.isValidHouseNumber}
-                errorMessage={t('search:entity.person.houseNumber.error')}
-              />
-              <CustomFloatLabel
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder={t('search:entity.person.city.placeholder')}
-                validate={validation.isValidCity}
-                errorMessage={t('search:entity.person.city.error')}
-              />
-              <CustomFloatLabel
-                id="zip"
-                value={zip}
-                onChange={(e) => setZip(e.target.value)}
-                placeholder={t('search:entity.person.zip.placeholder')}
-                validate={validation.isValidZip}
-                errorMessage={t('search:entity.person.zip.error')}
-              />
-            </div>
-          </div>
-        )}
-        {selectedType !== 'person' && (
-          <DynamicForm entityName={selectedType} variant="search" />
-        )}
+        <DynamicForm entityName={selectedType} variant="search" />
         {/* {selectedType === 'bioprobe' && (
           <div className="bioprobe-fields">
             <div className="form-grid">w

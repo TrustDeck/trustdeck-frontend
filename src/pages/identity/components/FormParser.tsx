@@ -10,6 +10,7 @@ interface ParserProps {
   onChange: (key: string, value: any) => void
   showRequired?: boolean
   path?: string
+  language?: string
 }
 
 export const parseAttributes = ({
@@ -17,14 +18,30 @@ export const parseAttributes = ({
   values,
   onChange,
   showRequired = true,
-  path = ''
+  path = '',
+  language = 'en'
 }: ParserProps) => {
+  const getDisplayLabel = (attr: Attribute) => {
+    const isGerman = language.startsWith('de')
+    const localized = isGerman
+      ? attr.labelDe ?? attr.labelEn
+      : attr.labelEn ?? attr.labelDe
+    return localized || attr.name || attr.key || 'Field'
+  }
+
+  const getPathForAttribute = (attr: Attribute) => {
+    const id = attr.name || attr.key || ''
+    if (!id) return path
+    return path ? `${path}.${id}` : id
+  }
+
   const handleChange = (fullPath: string, newValue: any) => {
     onChange(fullPath, newValue)
   }
 
-  return attributes.map((attr) => {
-    const fullPath = path ? `${path}.${attr.name}` : attr.name
+  return attributes.map((attr, index) => {
+    const fullPath = getPathForAttribute(attr)
+    const displayLabel = getDisplayLabel(attr)
     const value = getValue(values, fullPath)
 
     /* =========================
@@ -36,7 +53,7 @@ export const parseAttributes = ({
       return (
         <div key={fullPath} className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">{attr.name}</h3>
+            <h3 className="font-semibold">{displayLabel}</h3>
             <button
               type="button"
               className="text-sm text-primary"
@@ -81,20 +98,49 @@ export const parseAttributes = ({
       GROUP (non-repeatable)
     ========================== */
     if (attr.attributes) {
+      const childPath = attr.name ? fullPath : path
+
+      // Ignore group containers in rendering; only keep their child layout.
+      if (attr.group) {
+        const showSearchGroupDivider = !showRequired && index > 0
+        return (
+          <div
+            key={fullPath}
+            className={`${showSearchGroupDivider ? 'mt-4 border-t border-gray-200 pt-4' : ''} space-y-4`}
+          >
+            {parseAttributes({
+              attributes: attr.attributes,
+              values,
+              onChange,
+              showRequired,
+              path: childPath,
+              language
+            })}
+          </div>
+        )
+      }
+
       const containerClass =
-        attr.layout === 'row' ? 'grid grid-cols-2 gap-4' : 'space-y-4'
+        attr.layout === 'row'
+          ? `grid gap-4 ${
+              attr.attributes.length === 3
+                ? 'grid-cols-1 md:grid-cols-3'
+                : attr.attributes.length === 2
+                ? 'grid-cols-1 md:grid-cols-2'
+                : 'grid-cols-1'
+            }`
+          : 'space-y-4'
 
       return (
         <div key={fullPath} className="mb-4">
-          {attr.group && <h3 className="font-semibold mb-2">{attr.name}</h3>}
-
           <div className={containerClass}>
             {parseAttributes({
               attributes: attr.attributes,
               values,
               onChange,
               showRequired,
-              path: fullPath
+              path: childPath,
+              language
             })}
           </div>
         </div>
@@ -104,16 +150,21 @@ export const parseAttributes = ({
     /* =========================
       ENUM
     ========================== */
-    if (attr.type === 'enum' && attr.enum) {
+    if (attr.type === 'enum') {
+      // Search form should skip enum fields completely.
+      if (!showRequired) return null
+
+      const enumValues = attr.values ?? attr.enum ?? []
       return (
         <div key={fullPath} className="mb-3">
-          <label className="block mb-1">{attr.name}</label>
           <CustomDropdown
             value={value}
-            options={attr.enum}
+            options={enumValues.map((option) => ({ label: option, value: option }))}
             onChange={(e) => handleChange(fullPath, e.value)}
-            placeholder={`Select ${attr.name}`}
+            placeholder={displayLabel}
             className="w-full"
+            id={fullPath}
+            required={showRequired ? attr.required : false}
           />
         </div>
       )
@@ -129,7 +180,7 @@ export const parseAttributes = ({
           id={fullPath}
           value={value ?? ''}
           onChange={(e) => handleChange(fullPath, e.target.value)}
-          placeholder={attr.name}
+          placeholder={displayLabel}
           required={showRequired ? attr.required : false}
         />
       )
@@ -145,7 +196,7 @@ export const parseAttributes = ({
           id={fullPath}
           value={value}
           onChange={(e) => handleChange(fullPath, e.value)}
-          placeholder={attr.name}
+          placeholder={displayLabel}
           className="w-full"
           required={showRequired ? attr.required : false}
         />

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import useSearchResultsStore from './stores/SearchResultsStore'
@@ -10,84 +10,130 @@ import {
   XMarkIcon,
   CheckIcon
 } from '@heroicons/react/24/outline'
+import useProjectStore from '../../core/stores/ProjectStore'
 import useLayoutStore from '../../core/stores/LayoutStore'
-import Person from './components/Person'
-import BioProbe from './components/BioProbe'
-import PersonService from './services/PersonService'
-import usePersonStore from './stores/PersonStore'
 import useToastStore from '../../core/stores/ToastStore'
+import TrustDeck from '../../core/services/TrustDeck'
+import DynamicEntity from './components/DynamicEntity'
+import { pickSchemaData } from './utils/schemaData'
 
 const EntityDetails: React.FC = () => {
   const { results, setResults } = useSearchResultsStore()
+  const { entityAttributes } = useProjectStore()
   const { editMode, setEditMode } = useLayoutStore()
   const { entityId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
-  const {
-    id,
-    lastName,
-    firstName,
-    dateOfBirth,
-    administrativeGender,
-    email,
-    phoneNumber,
-    street,
-    houseNumber,
-    city,
-    country,
-    postalCode,
-    trustdeckID,
-    contactLastName,
-    contactFirstName,
-    contactEmail,
-    contactPhone,
-    contactRelationship
-  } = usePersonStore()
+  const [formData, setFormData] = useState<Record<string, any>>({})
 
   const entity = useMemo(
     () => results.find((e) => e.trustdeckID === entityId),
     [results, entityId]
   )
 
+  const schema = useMemo(() => {
+    if (!entity) return undefined
+    return entityAttributes.find(
+      (definition) =>
+        definition.name?.toLowerCase() === entity.entityTypeName?.toLowerCase() ||
+        definition.name?.toLowerCase() === entity.type?.toLowerCase()
+    )
+  }, [entity, entityAttributes])
+
+  useEffect(() => {
+    if (!entity?.data) return
+    const schemaAttributes = schema?.typeDefinition?.attributes ?? []
+    setFormData(
+      schemaAttributes.length
+        ? pickSchemaData(schemaAttributes, entity.data)
+        : entity.data
+    )
+  }, [entity, schema])
+
   if (!entity) {
     return <p>No result found for ID: {entityId}</p>
   }
 
-  async function handleSave() {
-    const rawData = {
-      id,
-      firstName,
-      lastName,
-      dateOfBirth: dateOfBirth ? `${dateOfBirth}T00:00:00.000Z` : undefined,
-      administrativeGender,
-      phoneNumber,
-      email,
-      street,
-      houseNumber,
-      city,
-      country,
-      postalCode,
-      contactLastName,
-      contactFirstName,
-      contactEmail,
-      contactPhone,
-      contactRelationship
+  const setValueAtPath = (
+    source: Record<string, any>,
+    path: Array<string | number>,
+    value: any
+  ): Record<string, any> => {
+    if (!path.length) return source
+    const next = structuredClone(source ?? {})
+    let cursor: any = next
+
+    for (let i = 0; i < path.length - 1; i++) {
+      const current = path[i]
+      const following = path[i + 1]
+
+      if (typeof current === 'number') {
+        if (!Array.isArray(cursor)) break
+        if (cursor[current] === undefined) {
+          cursor[current] = typeof following === 'number' ? [] : {}
+        }
+        cursor = cursor[current]
+      } else {
+        if (cursor[current] === undefined || cursor[current] === null) {
+          cursor[current] = typeof following === 'number' ? [] : {}
+        }
+        cursor = cursor[current]
+      }
     }
 
-    const data = Object.fromEntries(
-      Object.entries(rawData).filter(([_, value]) => value !== undefined && value !== null && value !== '')
-    )
+    const leaf = path[path.length - 1]
+    if (typeof leaf === 'number' && Array.isArray(cursor)) {
+      cursor[leaf] = value
+    } else if (typeof leaf === 'string') {
+      cursor[leaf] = value
+    }
 
-    const payload = { data }
+    return next
+  }
+
+  const handleFieldChange = (path: Array<string | number>, value: any) => {
+    setFormData((prev) => setValueAtPath(prev, path, value))
+  }
+
+  const handleCancel = () => {
+    const schemaAttributes = schema?.typeDefinition?.attributes ?? []
+    setFormData(
+      schemaAttributes.length
+        ? pickSchemaData(schemaAttributes, entity.data ?? {})
+        : (entity.data ?? {})
+    )
+    setEditMode(false)
+  }
+
+  const handleSave = async () => {
+    const entityType = entity.entityTypeName || entity.type
+    const identifier = entity.trustdeckID || entity.id
+    if (!entityType || !identifier) {
+      showToast({
+        severity: 'error',
+        summary: t('search:save'),
+        detail: t('search:editFailed'),
+        life: 4000
+      })
+      return
+    }
+
     try {
-      await PersonService.personUpdate(payload, trustdeckID)
-      const updated = await PersonService.getPerson(trustdeckID)
+      const schemaAttributes = schema?.typeDefinition?.attributes ?? []
+      const dataToSave =
+        schemaAttributes.length > 0
+          ? pickSchemaData(schemaAttributes, formData)
+          : formData
+      const payload = { data: dataToSave }
+      console.log('Entity details save payload:', payload)
+      await TrustDeck.instance().putEntity(entityType, payload, identifier)
       setResults(
-        results.map((e) =>
-          e.trustdeckID === trustdeckID ? updated : e
+        results.map((entry) =>
+          entry.trustdeckID === entity.trustdeckID ? { ...entry, data: dataToSave } : entry
         )
       )
+      setEditMode(false)
       showToast({
         severity: 'success',
         summary: t('search:save'),
@@ -127,39 +173,33 @@ const EntityDetails: React.FC = () => {
         <div className="flex gap-2 flex-shrink-0">
           {!editMode ? (
             <PrimaryButton
-              label={
-                <span className="hidden sm:inline">{t('search:edit')}</span>
-              }
+              label={<span className="hidden sm:inline">{t('search:edit')}</span>}
               onClick={() => setEditMode(true)}
               icon={<PencilIcon className="h-5 w-5 mr-1" />}
             />
           ) : (
             <>
               <PrimaryOutlinedButton
-                label={
-                  <span className="hidden sm:inline">{t('search:cancel')}</span>
-                }
-                onClick={() => setEditMode(false)}
+                label={<span className="hidden sm:inline">{t('search:cancel')}</span>}
+                onClick={handleCancel}
                 icon={<XMarkIcon className="h-5 w-5 mr-1" />}
               />
               <PrimaryButton
-                label={
-                  <span className="hidden sm:inline">{t('search:save')}</span>
-                }
-                onClick={() => {
-                  setEditMode(false)
-                  handleSave()
-                }}
+                label={<span className="hidden sm:inline">{t('search:save')}</span>}
+                onClick={handleSave}
                 icon={<CheckIcon className="h-5 w-5 mr-1" />}
               />
             </>
           )}
         </div>
       </div>
-      {entity.data.firstName && <Person entity={entity} editMode={editMode} />}
-      {entity.type === 'bioprobe' && (
-        <BioProbe entity={entity} editMode={editMode} />
-      )}
+      <DynamicEntity
+        entity={entity}
+        schemaAttributes={schema?.typeDefinition?.attributes ?? []}
+        editMode={editMode}
+        formData={formData}
+        onFieldChange={handleFieldChange}
+      />
     </div>
   )
 }

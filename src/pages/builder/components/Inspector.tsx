@@ -6,6 +6,7 @@ import { defaultAttributes } from '../configs/attributes'
 import { useTranslation } from 'react-i18next'
 
 export default function Inspector() {
+  const presetDropdownValues = ['option1', 'option2', 'option3']
 
   const blacklist = [
     'id',
@@ -92,13 +93,22 @@ export default function Inspector() {
                 placeholder={t('entityBuilder:fieldType', 'Field type')}
                 id={`${selected.key}-type`}
                 value={selected.type ?? 'string'}
-                onChange={(e) =>
-                  updatePartialAttribute(
-                    selectedKey,
-                    'type',
-                    e.target.value as AttributeType
-                  )
-                }
+                onChange={(e) => {
+                  const nextType = e.value as AttributeType
+                  updatePartialAttribute(selectedKey, 'type', nextType)
+
+                  if (nextType === 'enum') {
+                    if (!selected.values || selected.values.length === 0) {
+                      updatePartialAttribute(
+                        selectedKey,
+                        'values',
+                        presetDropdownValues
+                      )
+                    }
+                  } else {
+                    updatePartialAttribute(selectedKey, 'values', undefined)
+                  }
+                }}
                 options={[
                   { label: 'Text', value: 'string' },
                   { label: 'Integer', value: 'integer' },
@@ -121,7 +131,7 @@ export default function Inspector() {
               <div className="space-y-2">
                 {(selected.values && selected.values.length
                   ? selected.values
-                  : ['male', 'female', 'diverse', 'unknown']
+                  : presetDropdownValues
                 ).map((opt, idx) => (
                   <div key={`${selected.key}-opt-${idx}`} className="flex gap-2">
                     <div className="flex-1">
@@ -133,7 +143,7 @@ export default function Inspector() {
                           const base =
                             selected.values && selected.values.length
                               ? selected.values
-                              : ['male', 'female', 'diverse', 'unknown']
+                              : presetDropdownValues
                           const next = [...base]
                           next[idx] = e.target.value
                           updatePartialAttribute(selectedKey, 'values', next)
@@ -147,7 +157,7 @@ export default function Inspector() {
                         const base =
                           selected.values && selected.values.length
                             ? selected.values
-                            : ['male', 'female', 'diverse', 'unknown']
+                            : presetDropdownValues
                         const next = base.filter((_, i) => i !== idx)
                         updatePartialAttribute(selectedKey, 'values', next)
                       }}
@@ -163,7 +173,7 @@ export default function Inspector() {
                     const base =
                       selected.values && selected.values.length
                         ? selected.values
-                        : ['male', 'female', 'diverse', 'unknown']
+                        : presetDropdownValues
                     updatePartialAttribute(selectedKey, 'values', [
                       ...base,
                       ''
@@ -179,8 +189,11 @@ export default function Inspector() {
           <div className="space-y-3 mb-4">
             {Object.keys(selected).map((key) => {
               if (blacklist.includes(key)) return null
-              // For dropdown fields, hide string-length constraints
-              if (selected.type === 'enum' && (key === 'minLength' || key === 'maxLength')) {
+              // Show length constraints only for string fields
+              if (
+                (key === 'minLength' || key === 'maxLength') &&
+                selected.type !== 'string'
+              ) {
                 return null
               }
 

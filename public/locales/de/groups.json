@@ -10,6 +10,7 @@
     "createGroup": "Gruppe erstellen",
     "edit": "Bearbeiten",
     "save": "Änderungen speichern",
+    "discardChanges": "Änderungen verwerfen",
     "delete": "Gruppe löschen",
     "yesDelete": "Ja, löschen",
     "noDelete": "Gruppe behalten",
@@ -77,6 +78,8 @@
   "groupCreated": "Ihre Gruppe wurde erstellt.",
   "messages": {
     "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
-    "confirmDelete": "Löschen bestatigen"
+    "confirmDelete": "Löschen bestatigen",
+    "unsavedChangesHeader": "Ungespeicherte Änderungen",
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?"
   }
 }

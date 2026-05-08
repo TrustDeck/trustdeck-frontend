@@ -21,11 +21,16 @@ export const parseAttributes = ({
   path = '',
   language = 'en'
 }: ParserProps) => {
-  const getDisplayLabel = (attr: Attribute) => {
+  const resolveLocalizedLabel = (attr: Attribute) => {
+    const a = attr as any
+    const en = a.label_en
+    const de = a.label_de
     const isGerman = language.startsWith('de')
-    const localized = isGerman
-      ? attr.labelDe ?? attr.labelEn
-      : attr.labelEn ?? attr.labelDe
+    return isGerman ? de ?? en : en ?? de
+  }
+
+  const getDisplayLabel = (attr: Attribute) => {
+    const localized = resolveLocalizedLabel(attr)
     return localized || attr.name || attr.key || 'Field'
   }
 
@@ -49,6 +54,22 @@ export const parseAttributes = ({
     ========================== */
     if (attr.repeatable && attr.attributes) {
       const items = value ?? []
+
+      if (showRequired) {
+        // Registration is stepper-driven; avoid add/remove UI here.
+        return (
+          <div key={fullPath} className="mb-4">
+            {parseAttributes({
+              attributes: attr.attributes,
+              values,
+              onChange,
+              showRequired,
+              path: fullPath,
+              language
+            })}
+          </div>
+        )
+      }
 
       return (
         <div key={fullPath} className="mb-6">

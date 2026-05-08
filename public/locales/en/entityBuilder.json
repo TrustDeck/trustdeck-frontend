@@ -42,5 +42,7 @@
   },
   "entitiesInProject": "Entities in this project",
   "newEntity": "New entity",
-  "addEntity": "Add entity"
+  "addEntity": "Add entity",
+  "selectBaseType": "Select a base type",
+  "baseType": "Base type"
 }

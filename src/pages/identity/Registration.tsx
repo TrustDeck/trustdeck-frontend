@@ -12,6 +12,7 @@ export default function Registration() {
   const { entityType } = useEntityStore()
   const navigate = useNavigate()
   const { t } = useTranslation()
+  console.log('[Registration] selected entityType', entityType)
 
   if (!entityType) {
     return <div>No entity selected</div>

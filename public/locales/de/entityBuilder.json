@@ -42,5 +42,7 @@
   },
   "entitiesInProject": "Entitäten in diesem Projekt",
   "newEntity": "Neue Entität",
-  "addEntity": "Entität hinzufügen"
+  "addEntity": "Entität hinzufügen",
+  "selectBaseType": "Basistyp auswählen",
+  "baseType": "Basistyp"
 }

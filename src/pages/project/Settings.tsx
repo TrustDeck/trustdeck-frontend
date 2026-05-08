@@ -221,8 +221,7 @@ const Settings: React.FC = () => {
       const projectPermissions = allPermissionRows.filter(
         (p) =>
           p.resourceType === 'PROJECT' &&
-          p.resourceName === selectedProject.abbreviation &&
-          Boolean(permissionState[permissionKey(p)])
+          p.resourceName === selectedProject.abbreviation
       )
       const payload: DomainPermissionUpdate[] = domainPermissions.map((p) => ({
         subjectId: selectedPersonId,
@@ -237,7 +236,7 @@ const Settings: React.FC = () => {
         resourceType: 'PROJECT',
         projectAbbreviation: selectedProject.abbreviation,
         action: p.action,
-        decision: 'ALLOW'
+        decision: permissionState[permissionKey(p)] ? 'ALLOW' : 'DENY'
       }))
 
       await Promise.all([

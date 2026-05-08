@@ -106,20 +106,21 @@ export default function GroupManager() {
   const [isSaving, setIsSaving] = useState(false)
   const [showSaveBeforeContinue, setShowSaveBeforeContinue] = useState(false)
   const [showNewGroupDialog, setShowNewGroupDialog] = useState(false)
+  const [pendingNodeKey, setPendingNodeKey] = useState<string | null>(null)
   const { justCreated, setJustCreated } = useProjectStore()
   const { t } = useTranslation()
   const showToast = useToastStore((state) => state.show)
   // get all groups
-  useEffect(() => {
-    const fetchGroups = async () => {
-      const groups = await GroupService.getGroups()
-      setTree(groups as CustomTreeNode[])
-    }
+  const fetchGroups = useCallback(async () => {
+    const groups = await GroupService.getGroups()
+    setTree(groups as CustomTreeNode[])
+  }, [setTree])
 
+  useEffect(() => {
     fetchGroups()
     if (justCreated) setVisible(true)
     setJustCreated(false)
-  }, [justCreated, setJustCreated])
+  }, [fetchGroups, justCreated, setJustCreated])
 
   const confirmNewGroup = () => {
     setGroupOption('registration')
@@ -216,6 +217,21 @@ export default function GroupManager() {
     }
   }
 
+  const handleDiscardChanges = async () => {
+    try {
+      await fetchGroups()
+      setShowSaveBeforeContinue(false)
+
+      if (pendingNodeKey) {
+        handleNoddeClick(pendingNodeKey)
+      }
+    } catch (error) {
+      console.error('Failed to discard changes', error)
+    } finally {
+      setPendingNodeKey(null)
+    }
+  }
+
   //TODO localize texts everywhere
   return (
     <>
@@ -229,11 +245,13 @@ export default function GroupManager() {
       />
       <ConfirmDialog
         visible={showSaveBeforeContinue}
-        message="Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?"
-        header="Ungespeicherte Änderungen"
-        label="Speichern"
+        message={t('groups:messages.unsavedChanges')}
+        header={t('groups:messages.unsavedChangesHeader')}
+        label={t('groups:buttons.save')}
+        rejectLabel={t('groups:buttons.discardChanges')}
         onHide={() => setShowSaveBeforeContinue(false)}
         onAccept={() => handleSaveBeforeContinue()}
+        onReject={() => handleDiscardChanges()}
       />
       <div className="w-full">
         <h1 className="text-center">{t('groups:headers.title')}</h1>
@@ -266,6 +284,7 @@ export default function GroupManager() {
                   selectedNodeKey
                 )?.hasChanges
                 if (hasChanges) {
+                  setPendingNodeKey(String(e.node.key))
                   setShowSaveBeforeContinue(true)
                 } else {
                   handleNoddeClick(String(e.node.key))

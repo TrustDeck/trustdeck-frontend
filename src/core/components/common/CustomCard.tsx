@@ -23,6 +23,7 @@ interface CustomCardProps {
   onClick?: () => void
   className?: string
   bgColor?: string
+  compactUntil?: 'sm' | 'md' | 'lg'
 }
 
 export default function CustomCard({
@@ -30,21 +31,34 @@ export default function CustomCard({
   icon,
   onClick,
   className,
-  bgColor
+  bgColor,
+  compactUntil = 'sm'
 }: CustomCardProps) {
   const background = bgColor ?? 'bg-sidebar'
+  const compactClass =
+    compactUntil === 'lg'
+      ? 'lg:hidden'
+      : compactUntil === 'md'
+        ? 'md:hidden'
+        : 'sm:hidden'
+  const expandedClass =
+    compactUntil === 'lg'
+      ? 'hidden lg:block'
+      : compactUntil === 'md'
+        ? 'hidden md:block'
+        : 'hidden sm:block'
   return (
     <div onClick={onClick}>
       {/* phone screen */}
       <div
-        className={`sm:hidden ${background} border-black rounded-lg border-2 flex justify-start items-center p-4 space-x-4 ${className}`}
+        className={`${compactClass} ${background} border-black rounded-lg border-2 flex justify-start items-center p-4 space-x-4 ${className}`}
       >
         <div className="text-black w-12 h-12">{icon}</div>
         <h3>{title}</h3>
       </div>
       {/* screens small and up */}
       <Card
-        className={`hidden sm:block ${background} text-center rounded-lg border-2 border-black cursor-pointer ${className}`}
+        className={`${expandedClass} ${background} text-center rounded-lg border-2 border-black cursor-pointer ${className}`}
         header={
           <h2 className="text-black break-words mt-8 max-w-[300px]">{title}</h2>
         }

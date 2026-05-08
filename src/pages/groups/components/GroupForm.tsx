@@ -164,10 +164,9 @@ export default function GroupForm() {
         <CustomFloatLabel
           id="name"
           value={findNodeByKey(tree, selectedNodeKey)?.label ?? ''}
-          onChange={(e) => {
-            const withoutNumbers = e.target.value.replace(/\d/g, '')
-            updateNodeAttribute(selectedNodeKey, 'label', withoutNumbers)
-          }}
+          onChange={(e) =>
+            updateNodeAttribute(selectedNodeKey, 'label', e.target.value)
+          }
           placeholder={t('groups:inputs.groupname.label')}
           errorMessage={t('groups:inputs.groupname.error')}
           validate={validation.isValidRegistrationGroupName}

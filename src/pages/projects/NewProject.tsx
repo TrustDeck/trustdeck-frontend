@@ -94,7 +94,8 @@ export default function NewProject() {
         setEntities([])
       }
       try {
-        setEntityAttributes(ProjectService.getEntityAttributes())
+        const attributes = await ProjectService.getEntityAttributes()
+        setEntityAttributes(attributes)
       } catch (e) {
         console.error(e)
       }

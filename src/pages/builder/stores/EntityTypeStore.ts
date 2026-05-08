@@ -38,6 +38,7 @@ type EntityTypeStore = {
   entityType: string
   setEntityType: (entityType: string) => void
   attributes: Attribute[]
+  setAttributes: (attributes: Attribute[]) => void
   appendAttribute: (attribute: Attribute) => void
   moveAttribute: (fromIndex: number, toIndex: number) => void
   deleteAttribute: (key: string) => void
@@ -163,6 +164,10 @@ export const useEntityTypeStore = create<EntityTypeStore>((set, get) => ({
       entityType
     })),
   attributes: [],
+  setAttributes: (attributes: Attribute[]) =>
+    set(() => ({
+      attributes
+    })),
   appendAttribute: (attribute: Attribute) =>
     set((state) => ({
       attributes: [...state.attributes, attribute]

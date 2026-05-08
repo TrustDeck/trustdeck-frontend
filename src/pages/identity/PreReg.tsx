@@ -62,7 +62,7 @@ export default function PreReg() {
         <div className="w-full text-center flex flex-col items-center">
           <h1 className="mb-3">{t('identity:headers.registration')}</h1>
           <Panel centered title={t('identity:headers.chooseEntity')}>
-            <div className="sm:flex sm:space-y-0 sm:gap-16 justify-center space-y-4 my-4">
+            <div className="lg:flex lg:space-y-0 lg:gap-16 justify-center space-y-4 my-4">
               {entities.map((type) => {
                 let icon = <Squares2X2Icon />
                 if (type === 'person') icon = <UserIcon />
@@ -73,7 +73,8 @@ export default function PreReg() {
                     key={type}
                     title={type.charAt(0).toUpperCase() + type.slice(1)}
                     icon={icon}
-                    className="mt-6 mb-6 min-w-[200px] sm:min-w-[220px] sm:flex-1 sm:max-w-[280px]"
+                    compactUntil="lg"
+                    className="mt-6 mb-6 min-w-[200px] lg:min-w-[220px] lg:flex-1 lg:max-w-[280px]"
                     onClick={() => handleTypeClick(type)}
                   />
                 )

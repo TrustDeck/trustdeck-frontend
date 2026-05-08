@@ -114,6 +114,13 @@ class TrustDeck {
     console.log(res)
   }
 
+  public async getBaseTypes(query = '*') {
+    return this.request<any[]>(
+      'GET',
+      `/entities/base-types?query=${encodeURIComponent(query)}`
+    )
+  }
+
   public async getType(type: string) {
     const projectName = this.getSelectedProjectName()
     return this.request(
@@ -146,6 +153,24 @@ class TrustDeck {
       'POST',
       `/projects/${projectName}/entities/person`,
       person
+    )
+  }
+
+  public async postEntity(entityType: string, payload: any) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'POST',
+      `/projects/${projectName}/entities/${entityType}`,
+      payload
+    )
+  }
+
+  public async putEntity(entityType: string, payload: any, trustdeckID: string) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'PUT',
+      `/projects/${projectName}/entities/${entityType}/${trustdeckID}`,
+      payload
     )
   }
 

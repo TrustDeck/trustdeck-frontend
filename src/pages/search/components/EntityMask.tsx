@@ -9,12 +9,10 @@ import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Dialog } from 'primereact/dialog'
 import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
-import BioProbeService from '../services/BioProbeService'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
 import PersonService from '../services/PersonService'
 import useProjectStore from '../../../core/stores/ProjectStore'
-import DynamicForm from '../../identity/components/DynamicForm'
 import ProjectService from '../../projects/services/ProjectService'
 
 /**
@@ -57,6 +55,30 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
 
   const { setResults } = useSearchResultsStore()
 
+  const normalizeEntityResult = (result: any) => {
+    if (!result || !result.data) return result
+
+    const data = result.data
+    const firstAddress = Array.isArray(data.address) ? data.address[0] : undefined
+
+    return {
+      ...result,
+      data: {
+        ...data,
+        firstName: data.firstName ?? data.firstname ?? '',
+        lastName: data.lastName ?? data.lastname ?? '',
+        dateOfBirth: data.dateOfBirth ?? data.birthdate ?? '',
+        id: data.id ?? result.trustdeckID ?? '',
+        street: data.street ?? firstAddress?.street ?? '',
+        houseNumber: data.houseNumber ?? data.housenumber ?? firstAddress?.housenumber ?? '',
+        postalCode:
+          data.postalCode ?? data.postalcode ?? data.zip ?? data.plz ?? firstAddress?.postalcode ?? '',
+        city: data.city ?? firstAddress?.city ?? '',
+        country: data.country ?? firstAddress?.country ?? ''
+      }
+    }
+  }
+
   useEffect(() => {
     let active = true
     async function refreshEntities() {
@@ -97,7 +119,12 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       !!personEntity && !hasRowLayout(personEntity.typeDefinition.attributes)
 
     if (isLegacyShape) {
-      setEntityAttributes(ProjectService.getEntityAttributes())
+      ;(async () => {
+        const refreshed = await ProjectService.getEntityAttributes()
+        setEntityAttributes(refreshed)
+      })().catch((error) => {
+        console.error('Failed to refresh entity attributes', error)
+      })
     }
   }, [entityAttributes, setEntityAttributes])
 
@@ -106,14 +133,9 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     setLoading(true)
     setShowModal(false)
     try {
-      let result
-      if (selectedType === 'person') {
-        result = await PersonService.fuzzySearch('person', quick)
-        if (psn && result.length > 0) {
-          handleNext()
-        }
-      } else if (selectedType === 'bioprobe') {
-        result = await BioProbeService.searchBioProbe()
+      const result = await PersonService.fuzzySearch(selectedType, quick)
+      if (psn && result.length > 0) {
+        handleNext()
       }
       if (Array.isArray(result)) {
         if (result.length === 0) {
@@ -121,7 +143,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
           setShowModal(true)
           return
         } else {
-          setResults(result)
+          setResults(result.map(normalizeEntityResult))
           // if searching for an entity to create a pseudonym, the component will not navigate to /search/results
           if (!psn) navigate('/search/results')
         }
@@ -176,8 +198,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
           />
         </div>
         <Divider />
-
-        <DynamicForm entityName={selectedType} variant="search" />
         {/* {selectedType === 'bioprobe' && (
           <div className="bioprobe-fields">
             <div className="form-grid">w

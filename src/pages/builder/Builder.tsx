@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
+import CustomDropdown from '../../core/components/form/CustomDropdown'
 import { Dialog } from 'primereact/dialog'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import {
@@ -21,6 +22,112 @@ import IconButton from './components/IconButton'
 import Inspector from './components/Inspector'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { DragContainer } from './components/DragContainer'
+import TrustDeck from '../../core/services/TrustDeck'
+
+type BaseTypeResponse = {
+  name: string
+  typeDefinition?: any
+}
+
+function mapBaseTypeAttribute(attribute: any): Attribute {
+  const isStringType = attribute?.type === 'string'
+  const mapped: Attribute = {
+    key: crypto.randomUUID(),
+    name: attribute?.name,
+    labelEn: attribute?.label_en ?? attribute?.labelEn,
+    labelDe: attribute?.label_de ?? attribute?.labelDe,
+    type: attribute?.type,
+    required: attribute?.required,
+    linkage: attribute?.linkage,
+    repeatable: attribute?.repeatable,
+    minLength: isStringType ? attribute?.minLength : undefined,
+    maxLength: isStringType ? attribute?.maxLength : undefined,
+    values: attribute?.values ?? attribute?.enum,
+    group: attribute?.layout === 'group' || attribute?.group === true,
+    layout: attribute?.layout === 'row' ? 'row' : 'col'
+  }
+
+  if (Array.isArray(attribute?.attributes)) {
+    mapped.attributes = attribute.attributes.map((sub: any) =>
+      mapBaseTypeAttribute(sub)
+    )
+  }
+
+  return mapped
+}
+
+function buildAttributesFromBaseType(baseType: BaseTypeResponse): Attribute[] {
+  const definition = baseType?.typeDefinition
+  if (!definition) return []
+
+  if (definition.layout === 'group') {
+    return [
+      {
+        key: crypto.randomUUID(),
+        group: true,
+        layout: 'col',
+        labelEn: definition.label_en ?? definition.labelEn ?? baseType.name,
+        labelDe: definition.label_de ?? definition.labelDe ?? baseType.name,
+        name: definition.name,
+        attributes: Array.isArray(definition.attributes)
+          ? definition.attributes.map((attr: any) => mapBaseTypeAttribute(attr))
+          : []
+      }
+    ]
+  }
+
+  if (Array.isArray(definition.attributes)) {
+    return definition.attributes.map((attr: any) => mapBaseTypeAttribute(attr))
+  }
+
+  return []
+}
+
+function serializeAttribute(attribute: Attribute): any {
+  const buildBackendName = () => {
+    if (attribute.name && attribute.name !== 'custom') return attribute.name
+    const englishLabel = (attribute.labelEn ?? '').trim()
+    if (!englishLabel) return attribute.name
+    return englishLabel.replace(/\s+/g, '')
+  }
+
+  if (Array.isArray(attribute.attributes) && attribute.attributes.length > 0) {
+    const container: any = {
+      layout: attribute.group ? 'group' : attribute.layout === 'row' ? 'row' : 'group',
+      attributes: attribute.attributes.map((sub) => serializeAttribute(sub))
+    }
+
+    const backendName = buildBackendName()
+    if (backendName) container.name = backendName
+    if (attribute.labelEn) container.label_en = attribute.labelEn
+    if (attribute.labelDe) container.label_de = attribute.labelDe
+    if (attribute.repeatable !== undefined) container.repeatable = attribute.repeatable
+
+    return container
+  }
+
+  const field: any = {}
+  const backendName = buildBackendName()
+  if (backendName) field.name = backendName
+  if (attribute.labelEn) field.label_en = attribute.labelEn
+  if (attribute.labelDe) field.label_de = attribute.labelDe
+  if (attribute.type) field.type = attribute.type
+  if (attribute.required !== undefined) field.required = attribute.required
+  if (attribute.linkage !== undefined) field.linkage = attribute.linkage
+  if (attribute.repeatable !== undefined) field.repeatable = attribute.repeatable
+  if (attribute.type === 'string') {
+    if (attribute.minLength !== undefined) field.minLength = attribute.minLength
+    if (attribute.maxLength !== undefined) field.maxLength = attribute.maxLength
+  }
+  if (attribute.type === 'enum') {
+    const nextValues = (attribute.values ?? []).filter(
+      (value) => typeof value === 'string' && value.trim().length > 0
+    )
+    field.values = nextValues
+  }
+
+  return field
+}
 
 const Builder: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -28,6 +135,11 @@ const Builder: React.FC = () => {
   const [showLayoutDialog, setShowLayoutDialog] = useState(false)
   const [showAttributesDialog, setShowAttributesDialog] = useState(false)
   const [entityNameConfirmed, setEntityNameConfirmed] = useState(false)
+  const [baseTypeOptions, setBaseTypeOptions] = useState<
+    { label: string; value: string }[]
+  >([])
+  const [selectedBaseType, setSelectedBaseType] = useState('')
+  const [baseTypes, setBaseTypes] = useState<BaseTypeResponse[]>([])
 
   const {
     selectedKey,
@@ -35,6 +147,7 @@ const Builder: React.FC = () => {
     entityType,
     setEntityType,
     attributes,
+    setAttributes,
     appendAttribute,
     appendSubAttributes,
     overrideAttribute,
@@ -44,6 +157,46 @@ const Builder: React.FC = () => {
   } = useEntityTypeStore()
 
   const selected = getSelectedAttribute()
+
+  useEffect(() => {
+    let active = true
+    async function loadBaseTypes() {
+      try {
+        const response = await TrustDeck.instance().getBaseTypes('*')
+        if (!active) return
+        setBaseTypes(response ?? [])
+        const options = (response ?? [])
+          .map((item: any) => item?.name)
+          .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
+          .map((name) => ({ label: name, value: name }))
+        setBaseTypeOptions(options)
+        if (options.length) {
+          setSelectedBaseType((prev) => prev || options[0].value)
+        }
+      } catch (error) {
+        console.error('Failed to load base types', error)
+        if (!active) return
+        setBaseTypeOptions([])
+      }
+    }
+    loadBaseTypes()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedBaseType) return
+    const selectedDefinition = baseTypes.find(
+      (baseType) => baseType.name === selectedBaseType
+    )
+    if (!selectedDefinition) return
+
+    const mappedAttributes = buildAttributesFromBaseType(selectedDefinition)
+    setAttributes(mappedAttributes)
+    setSelectedKey('')
+  }, [baseTypes, selectedBaseType, setAttributes, setSelectedKey])
+
   async function handleLayoutClick(columns: number) {
     setShowLayoutDialog(false)
 
@@ -80,6 +233,28 @@ const Builder: React.FC = () => {
 
     if (addGroup) {
       setSelectedKey(newKey)
+    }
+  }
+
+  async function handleSaveEntityConfig() {
+    const payload = {
+      name: entityType,
+      version: 'v1.0',
+      baseTypeName: selectedBaseType || undefined,
+      typeDefinition: {
+        layout: 'group',
+        label_en: entityType,
+        label_de: entityType,
+        attributes: attributes.map((attribute) => serializeAttribute(attribute))
+      }
+    }
+
+    try {
+      console.log('Entity config payload:', payload)
+      await TrustDeck.instance().createEntityConfig(payload)
+      console.log('Entity config saved successfully')
+    } catch (error) {
+      console.error('Failed to save entity config', error)
     }
   }
 
@@ -194,11 +369,22 @@ const Builder: React.FC = () => {
         {attribute.name ? (
           <>
             <div>
-              {attribute.name === 'custom'
-                ? t('entityBuilder:customField', 'Custom field')
-                : t(`entityBuilder:attributes.${attribute.name}`, {
-                    defaultValue: attribute.name
-                  })}
+              {(() => {
+                const localizedCustomLabel = i18n.language.startsWith('de')
+                  ? attribute.labelDe ?? attribute.labelEn
+                  : attribute.labelEn ?? attribute.labelDe
+
+                if (attribute.name === 'custom') {
+                  return (
+                    localizedCustomLabel ||
+                    t('entityBuilder:customField', 'Custom field')
+                  )
+                }
+
+                return t(`entityBuilder:attributes.${attribute.name}`, {
+                  defaultValue: localizedCustomLabel || attribute.name
+                })
+              })()}
             </div>
             <button
               type="button"
@@ -243,7 +429,7 @@ const Builder: React.FC = () => {
                   lang.startsWith('de')
                     ? attribute.labelDe ?? attribute.labelEn
                     : attribute.labelEn ?? attribute.labelDe
-                return label || attribute.name || 'Group'
+                return label || attribute.name || 'Section'
               })()}
             </h3>
           </div>
@@ -381,6 +567,21 @@ const Builder: React.FC = () => {
             )}
 
             {entityNameConfirmed && entityType && (
+              <>
+                <div className="w-full 2xl:w-4/5 2xl:mx-auto mb-4">
+                  <Panel centered className="mx-auto">
+                    <h2 className="text-lg font-semibold text-center mb-3">
+                      {t('entityBuilder:selectBaseType', 'Select a base type')}
+                    </h2>
+                    <CustomDropdown
+                      id="baseType"
+                      value={selectedBaseType}
+                      onChange={(e) => setSelectedBaseType(e.value)}
+                      options={baseTypeOptions}
+                      placeholder={t('entityBuilder:baseType', 'Base type')}
+                    />
+                  </Panel>
+                </div>
               <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
                 <Panel
                   centered className="mx-auto"
@@ -399,7 +600,7 @@ const Builder: React.FC = () => {
                   label={
                     <span className="flex items-center gap-2">
                       <PlusIcon className="h-5 w-5" />
-                      {t('entityBuilder:addGroup', 'Add group')}
+                      {t('entityBuilder:addGroup', 'Add section')}
                     </span>
                   }
                   onClick={() => handleAddGroup(true)}
@@ -467,13 +668,7 @@ const Builder: React.FC = () => {
               <div className="mt-4 w-full">
                 <PrimaryButton
                   label={t('entityBuilder:save', 'Save')}
-                  onClick={() => {
-                    const payload = {
-                      name: entityType,
-                      attributes
-                    }
-                    console.log(JSON.stringify(payload, null, 2))
-                  }}
+                  onClick={handleSaveEntityConfig}
                   className="w-full"
                 />
               </div>
@@ -484,6 +679,7 @@ const Builder: React.FC = () => {
                   </Panel>
                 ) : null}
               </div>
+              </>
             )}
           </div>
         </div>

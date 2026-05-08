@@ -7,6 +7,7 @@ type Props = {
   onHide: () => void
   onAccept: () => void
   onReject?: () => void
+  rejectLabel?: string
   message: string
   label: string
   header: string
@@ -17,6 +18,7 @@ export default function ConfirmDialog({
   onHide,
   onAccept,
   onReject,
+  rejectLabel,
   label,
   message,
   header
@@ -29,11 +31,11 @@ export default function ConfirmDialog({
       footer={
         <div className="flex justify-end gap-2">
           <SecondaryOutlinedButton label={label} onClick={onAccept} />
-          <PrimaryButton label="Cancel" onClick={onReject ?? onHide} />
+          <PrimaryButton label={rejectLabel ?? 'Cancel'} onClick={onReject ?? onHide} />
         </div>
       }
       style={{ width: '32rem' }}
-      closable={false}
+      closable
       modal
     >
       <p className="mt-2">{message}</p>

@@ -78,7 +78,8 @@ export default function NewProjectSimplified() {
         setEntities([])
       }
       try {
-        setEntityAttributes(ProjectService.getEntityAttributes())
+        const attributes = await ProjectService.getEntityAttributes()
+        setEntityAttributes(attributes)
       } catch (e) {
         console.error(e)
       }

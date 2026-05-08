@@ -1,6 +1,6 @@
 import TrustDeck from '@service/TrustDeck'
 import { ProjectType } from '../types/ProjectType'
-import { mockProjectEntities } from './mockTypes'
+import { personFallbackEntity } from './mockTypes'
 
 const ProjectService = {
   getProjects: async (): Promise<ProjectType[]> => {
@@ -36,8 +36,32 @@ const ProjectService = {
     }
   },
 
-  getEntityAttributes: () => {
-    return mockProjectEntities
+  getEntityAttributes: async () => {
+    try {
+      const response = await TrustDeck.instance().getProjectEntities('*')
+      const entitiesFromBackend = response
+        .filter(
+          (entry: any) =>
+            entry &&
+            typeof entry.name === 'string' &&
+            entry.typeDefinition &&
+            Array.isArray(entry.typeDefinition.attributes)
+        )
+        .map((entry: any) => ({
+          name: entry.name,
+          typeDefinition: {
+            attributes: entry.typeDefinition.attributes
+          }
+        }))
+
+      const hasPerson = entitiesFromBackend.some((e: any) => e.name === 'person')
+      return hasPerson
+        ? entitiesFromBackend
+        : [personFallbackEntity, ...entitiesFromBackend]
+    } catch (error) {
+      console.error('Failed to load entity attributes from backend', error)
+      return [personFallbackEntity]
+    }
   },
 
   getProjectEntities: async (): Promise<string[]> => {

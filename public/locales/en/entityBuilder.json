@@ -18,7 +18,7 @@
   "customField": "Custom field",
   "row": "Row",
   "addBlock": "Add block",
-  "addGroup": "Add group",
+  "addGroup": "Add section",
   "save": "Save",
   "englishLabel": "English label",
   "germanLabel": "German label",
@@ -32,7 +32,7 @@
   "configureField": "Configure field properties.",
   "chooseField": "Choose a field",
   "selectField": "Select a field",
-  "enterGroupName": "Enter group name:",
+  "enterGroupName": "Enter section name",
   "field": {
     "required": "Required",
     "linkage": "Linkage",
@@ -42,5 +42,7 @@
   },
   "entitiesInProject": "Entities in this project",
   "newEntity": "New entity",
-  "addEntity": "Add entity"
+  "addEntity": "Add entity",
+  "selectBaseType": "Select a base type",
+  "baseType": "Base type"
 }

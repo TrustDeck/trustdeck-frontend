@@ -10,6 +10,7 @@
     "createGroup": "Create group",
     "edit": "Edit",
     "save": "Save changes",
+    "discardChanges": "Discard changes",
     "delete": "Delete group",
     "yesDelete": "Yes, delete",
     "noDelete": "Keep group",
@@ -78,6 +79,8 @@
   "groupCreated": "Your group has been created.",
   "messages": {
     "deleteConfirmation": "Are you sure you want to delete this group?",
-    "confirmDelete": "Confirm Delete"
+    "confirmDelete": "Confirm Delete",
+    "unsavedChangesHeader": "Unsaved changes",
+    "unsavedChanges": "You have unsaved changes. Would you like to save before continuing?"
   }
 }

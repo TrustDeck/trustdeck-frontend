@@ -1,6 +1,5 @@
 import TrustDeck from '@service/TrustDeck'
 import { ProjectType } from '../types/ProjectType'
-import { personFallbackEntity } from './mockTypes'
 
 const ProjectService = {
   getProjects: async (): Promise<ProjectType[]> => {
@@ -9,9 +8,6 @@ const ProjectService = {
 
   postProject: async (project: ProjectType): Promise<ProjectType> => {
     const createdProject = await TrustDeck.instance().postProject(project)
-
-    await TrustDeck.instance().createBaseType()
-    await TrustDeck.instance().createType(createdProject.abbreviation)
     console.log(createdProject)
     return createdProject
   },
@@ -54,13 +50,10 @@ const ProjectService = {
           }
         }))
 
-      const hasPerson = entitiesFromBackend.some((e: any) => e.name === 'person')
-      return hasPerson
-        ? entitiesFromBackend
-        : [personFallbackEntity, ...entitiesFromBackend]
+      return entitiesFromBackend
     } catch (error) {
       console.error('Failed to load entity attributes from backend', error)
-      return [personFallbackEntity]
+      return []
     }
   },
 

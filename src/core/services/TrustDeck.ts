@@ -4,8 +4,6 @@ import { ProjectType } from '../../pages/projects/types/ProjectType'
 import useProjectStore from '../stores/ProjectStore.ts'
 import { PersonType } from '../types/PersonEntity.ts'
 import { BioSampleEntity } from 'core/types/BioSampleEntity.ts'
-import { basePerson } from './basePerson.ts'
-import { person } from './person.ts'
 import { Pseudonym } from '../../core/types/Pseudonym.ts'
 
 class TrustDeck {
@@ -108,12 +106,6 @@ class TrustDeck {
     return await this.request<any[]>('GET', `/projects/${projectName}/entities?query=${encodeURIComponent(query)}`)
   }
 
-  public async createBaseType() {
-    console.log('fired create base type')
-    const res = await this.request('POST', `/entities/base-types`, basePerson)
-    console.log(res)
-  }
-
   public async getBaseTypes(query = '*') {
     return this.request<any[]>(
       'GET',
@@ -127,16 +119,6 @@ class TrustDeck {
       'GET',
       `/projects/${projectName}/entities/config/${type}`
     )
-  }
-
-  public async createType(projectName: string) {
-    console.log('create type fired')
-    const res = await this.request(
-      'POST',
-      `/projects/${projectName}/entities/config`,
-      person
-    )
-    console.log(res)
   }
 
   public async fuzzySearch(entity: string, query: string) {
@@ -228,7 +210,7 @@ class TrustDeck {
 
   public async getGroups() {
     const projectName = this.getSelectedProjectName()
-    return this.request<any>('GET', `/domains/${projectName}/subtree`)
+    return this.request<any>('GET', `/domains/${projectName}/subtree`)s
   }
 
   public async updateGroupComplete(

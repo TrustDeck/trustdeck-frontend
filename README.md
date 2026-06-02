@@ -112,3 +112,22 @@ Files involved:
 ---
 
 Following these steps will get the environment running and document how to add pages, routes and translations. Adjust the commands and ports to match your local configuration.
+
+## Docker production deployment
+
+The production Docker image builds the frontend inside Docker and serves the generated `dist/` directory with Nginx. You do not need to run `npm ci` or `npm run build` manually on the server.
+
+1. Create the ignored deployment env file:
+
+```bash
+cp trustdeck-frontend.env.example trustdeck-frontend.env
+nano trustdeck-frontend.env
+```
+
+2. Build and start the container:
+
+```bash
+docker compose --env-file trustdeck-frontend.env up --build --force-recreate -d
+```
+
+When the frontend runs behind a host-level reverse proxy on the same server, keep `FRONTEND_BIND=127.0.0.1:8082` and point the host reverse proxy to `http://127.0.0.1:8082/`.

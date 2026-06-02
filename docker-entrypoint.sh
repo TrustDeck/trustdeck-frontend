@@ -1,24 +1,48 @@
 #!/usr/bin/env sh
-set -e
+set -eu
 
-append_env() {
-  key="$1"
-  val="$2"
-  if [ -n "$val" ]; then
-    esc=$(printf %s "$val" | sed -e 's/\\/\\\\/g' -e "s/'/\\\\'/g")
-    printf "window.__ENV__=Object.assign(window.__ENV__||{}, { %s: '%s' });\n" "$key" "$esc" >> /usr/share/nginx/html/env.js
+require_env() {
+  name="$1"
+  eval "value=\${$name:-}"
+  if [ -z "$value" ]; then
+    echo "Missing required environment variable: $name" >&2
+    exit 1
   fi
 }
 
-# Always initialize env.js so the <script> doesn’t 404
-printf "window.__ENV__=window.__ENV__||{};\n" > /usr/share/nginx/html/env.js
+js_escape() {
+  # Escape values for safe inclusion in a JavaScript double-quoted string.
+  printf '%s' "$1" | sed \
+    -e 's/\\/\\\\/g' \
+    -e 's/"/\\"/g' \
+    -e 's/\r/\\r/g'
+}
 
-# Runtime-provided vars
-append_env "API_BASE_URL" "${API_BASE_URL}"
-append_env "AUTHORITY_URL" "${AUTHORITY_URL}"
-append_env "AUTHORITY_CLIENT" "${AUTHORITY_CLIENT}"
-append_env "AUTHORITY_REDIRECT_URI" "${AUTHORITY_REDIRECT_URI}"
-append_env "AUTHORITY_SILENT_URI" "${AUTHORITY_SILENT_URI}"
+write_env_value() {
+  key="$1"
+  value="$2"
+  escaped="$(js_escape "$value")"
+  printf '  %s: "%s",\n' "$key" "$escaped" >> /usr/share/nginx/html/env.js
+}
 
-# Start nginx in the foreground
+require_env API_BASE_URL
+require_env AUTHORITY_URL
+require_env AUTHORITY_CLIENT
+require_env AUTHORITY_REDIRECT_URI
+require_env AUTHORITY_SILENT_URI
+
+cat > /usr/share/nginx/html/env.js <<'EOF_ENV'
+window.__ENV__ = {
+EOF_ENV
+
+write_env_value API_BASE_URL "$API_BASE_URL"
+write_env_value AUTHORITY_URL "$AUTHORITY_URL"
+write_env_value AUTHORITY_CLIENT "$AUTHORITY_CLIENT"
+write_env_value AUTHORITY_REDIRECT_URI "$AUTHORITY_REDIRECT_URI"
+write_env_value AUTHORITY_SILENT_URI "$AUTHORITY_SILENT_URI"
+
+cat >> /usr/share/nginx/html/env.js <<'EOF_ENV'
+};
+EOF_ENV
+
 exec nginx -g "daemon off;"

@@ -12,8 +12,11 @@ class TrustDeck {
   private baseUrl: string
 
   private constructor() {
-    this.baseUrl =
-      window.__ENV__?.API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL
+    const baseUrl = window.__ENV__?.API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL
+    if (!baseUrl) {
+      throw new Error('API_BASE_URL is not configured')
+    }
+    this.baseUrl = baseUrl
   }
 
   public static instance(): TrustDeck {
@@ -110,6 +113,15 @@ class TrustDeck {
     return this.request<any[]>(
       'GET',
       `/entities/base-types?query=${encodeURIComponent(query)}`
+    )
+  }
+
+  public async createEntityConfig(payload: any) {
+    const projectName = this.getSelectedProjectName()
+    return this.request<any>(
+      'POST',
+      `/projects/${projectName}/entities/config`,
+      payload
     )
   }
 
@@ -210,7 +222,7 @@ class TrustDeck {
 
   public async getGroups() {
     const projectName = this.getSelectedProjectName()
-    return this.request<any>('GET', `/domains/${projectName}/subtree`)s
+    return this.request<any>('GET', `/domains/${projectName}/subtree`)
   }
 
   public async updateGroupComplete(

@@ -1,4 +1,4 @@
-import { ChevronUpDownIcon, EllipsisVerticalIcon} from '@heroicons/react/24/outline'
+import { ChevronUpDownIcon } from '@heroicons/react/24/outline'
 import type { Identifier, XYCoord } from 'dnd-core'
 import type { FC, ReactNode } from 'react'
 import { useRef } from 'react'

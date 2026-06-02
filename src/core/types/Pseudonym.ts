@@ -9,4 +9,5 @@ export interface Pseudonym {
   validFromInherited: boolean
   validTo: string
   validToInherited: boolean
+  children?: Pseudonym[]
 }

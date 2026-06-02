@@ -122,7 +122,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             ) : (
               <CustomFloatLabel
                 id="birthdate"
-                value={entity.data.dateOfBirth.split('T')[0]}
+                value={(entity.data?.dateOfBirth ?? '').split('T')[0]}
                 placeholder={t('search:entity.person.birthdate.placeholder')}
                 readOnly
                 className="flex-1"

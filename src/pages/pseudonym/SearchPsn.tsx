@@ -76,7 +76,7 @@ export default function SearchPsn() {
         const firstGroup = selectedGroupNames[0]
         const pseudonymData = await SearchPseudonymService.searchPseudonym(firstPsn, firstGroup)
         if (pseudonymData) setPseudonymValue(pseudonymData)
-        navigate(`/search/pseudonym/${firstPsn}`)
+        navigate(`/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`)
       } else if (pseudonyms.length > 0) {
         navigate(`/search/pseudonym/${pseudonyms[0]}`)
       }

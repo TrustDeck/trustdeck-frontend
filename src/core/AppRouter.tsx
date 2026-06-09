@@ -7,12 +7,11 @@ import {
   matchPath
 } from 'react-router-dom'
 import Layout from './components/common/Layout'
-import { withAuthenticationRequired, useAuth } from 'react-oidc-context'
+import { useAuth } from 'react-oidc-context'
 import { FC, useEffect } from 'react'
 import { routes } from './configs/routes'
 import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
 import useUserStore from './stores/UserStore.tsx' // Import the UserStore
-import useProjectStore from './stores/ProjectStore.tsx'
 import TrustDeck from '@service/TrustDeck'
 import logger from './Logger.ts'
 import { useSyncApiToken } from './services/setupApi.ts'
@@ -31,36 +30,27 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
   isProtected
 }) => {
   const auth = useAuth()
-  //TODO while this is logged it means the service self reloads somewehere but i dont know where
-  //TODO this causes the page to reload multiple times
-  logger.info('hitting protected route')
+  const location = useLocation()
+  const authenticated = checkAuth || auth.isAuthenticated
 
   logger.info(isProtected ? 'Route is protected' : 'Route is public')
+  logger.info(authenticated ? 'is authenticated' : 'is not authenticated')
 
-  logger.info(checkAuth ? 'is authenticated' : 'is not authenticated')
-
-  if (isProtected && !checkAuth) {
-    auth.removeUser()
-    TrustDeck.instance().clearToken()
-    auth.clearStaleState()
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('selected-project')
-    }
+  if (auth.isLoading && isProtected && !authenticated) {
+    return (
+      <div className="flex min-h-[60vh] w-full items-center justify-center text-gray-500">
+        Checking your session...
+      </div>
+    )
   }
 
-  const WrappedComponent = isProtected
-    ? withAuthenticationRequired(Component, {
-        signinRedirectArgs: {
-          redirect_uri:
-            window.location.origin +
-            window.location.pathname +
-            window.location.search +
-            window.location.hash
-        }
-      })
-    : Component
+  if (isProtected && !authenticated) {
+    TrustDeck.instance().clearToken()
+    const returnTo = `${location.pathname}${location.search}${location.hash}`
+    return <Navigate to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
+  }
 
-  return <WrappedComponent />
+  return <Component />
 }
 
 const AuthStateListener: React.FC = () => {
@@ -140,9 +130,9 @@ const BreadcrumbUpdater: React.FC = () => {
     
     // Special handling for direct pseudonym search: /search/pseudonym/:pseudonymId
     // Should only show: Search > Pseudonym Details (not entities > pseudonyms)
-    if (pathname.match(/^\/search\/pseudonym\/[^/]+$/)) {
+    if (pathname.match(/^\/search\/pseudonym\/([^/]+)(\/[^/]+)?$/)) {
       const searchRoute = routes.find((r) => r.path === '/search')
-      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
+      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:domainName/:pseudonymId') ?? routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
       const breadcrumbList = [
         { label: searchRoute?.titleKey || '/search', url: '/search' },
         { label: pseudonymRoute?.titleKey || pathname, url: pathname }
@@ -179,22 +169,6 @@ const BreadcrumbUpdater: React.FC = () => {
   return null
 }
 
-const ProjectListener: React.FC = () => {
-  //TODO if no project is set navigate the use always to the first page
-  //TODO try to get the project from the current path
-
-  const currentProject = useProjectStore((state) => state.projectName)
-  const setProjectName = useProjectStore((state) => state.setProjectName)
-
-  useEffect(() => {
-    if (!currentProject) {
-      setProjectName('ProjectX') //TODO TODO TODO DO NOT HARDCODE
-    }
-  }, [currentProject, setProjectName])
-
-  return null
-}
-
 const AppRouter: FC = () => {
   useSyncApiToken()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
@@ -202,7 +176,6 @@ const AppRouter: FC = () => {
   return (
     <>
       <AuthStateListener />
-      <ProjectListener />
       <BreadcrumbUpdater />
       <Routes>
         <Route element={<Layout />}>

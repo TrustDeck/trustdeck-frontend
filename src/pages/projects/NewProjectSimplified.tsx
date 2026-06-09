@@ -37,19 +37,23 @@ export default function NewProjectSimplified() {
 
   async function postProject() {
     setLoading(true)
+    const resolvedStartDate = startDate ?? new Date()
+    const resolvedEndDate = endDate ?? new Date(resolvedStartDate.getTime() + 1000 * 60 * 60 * 24 * 365 * 10)
     const payload = {
       name: projectName,
       abbreviation: projectAbbreviation,
-      startDate: startDate ? startDate.toISOString() : 'test',
-      endDate: endDate ? endDate.toISOString() : 'test',
+      startDate: resolvedStartDate.toISOString(),
+      endDate: resolvedEndDate.toISOString(),
+      storeEntities: true,
+      storePseudonyms: true
     }
 
     //TODO: refactor this to object
     const defaultGroup = {
       name: encodeUriName(projectAbbreviation),
       prefix: `${encodeUriName(projectAbbreviation)}-`,
-      validFrom: startDate ?? null,
-      validTo: endDate ?? null,
+      validFrom: resolvedStartDate.toISOString(),
+      validTo: resolvedEndDate.toISOString(),
     }
 
     try {

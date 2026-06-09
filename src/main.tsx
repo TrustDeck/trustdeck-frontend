@@ -16,8 +16,17 @@ const onSigninCallback = (): void => {
   // Remove all OIDC state keys except "oidc.user"
   oidcKeys.forEach((key) => localStorage.removeItem(key))
 
-  //TODO see if this causes any errors in later use if not, keep it
-  window.history.replaceState({}, document.title, window.location.pathname)
+  const storedReturnTo = window.sessionStorage.getItem('trustdeck:returnTo')
+  window.sessionStorage.removeItem('trustdeck:returnTo')
+  const safeReturnTo =
+    storedReturnTo &&
+    storedReturnTo.startsWith('/') &&
+    !storedReturnTo.startsWith('/auth/login') &&
+    !storedReturnTo.startsWith('/logged-out')
+      ? storedReturnTo
+      : window.location.pathname
+
+  window.history.replaceState({}, document.title, safeReturnTo)
 }
 
 createRoot(document.getElementById('root')!).render(

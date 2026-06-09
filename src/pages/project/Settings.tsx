@@ -10,7 +10,6 @@ import TrustDeck from '@service/TrustDeck'
 import type { Operator } from '../../core/types/Permission'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { ProjectType } from '../projects/types/ProjectType'
-import ProjectService from '../projects/services/ProjectService'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import LocalProjectService from './services/ProjectService.ts'
 import { useNavigate } from 'react-router-dom'
@@ -47,8 +46,7 @@ const Settings: React.FC = () => {
     const load = async () => {
       if (!selectedProject?.abbreviation) return
       try {
-        const projects = await ProjectService.getProjects()
-        const match = projects.find((p) => p.abbreviation === selectedProject.abbreviation)
+        const match = await TrustDeck.instance().getProject(selectedProject.abbreviation)
         if (isMounted && match) setProjectDetails(match)
       } catch (e) {
         console.error('Failed to load project details', e)

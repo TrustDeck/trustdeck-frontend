@@ -18,7 +18,7 @@ const PseudonymDetails: React.FC = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { pseudonymValue, setPseudonymValue } = usePseudonymStore()
-  const { entityId, pseudonymId } = useParams()
+  const { entityId, domainName, pseudonymId } = useParams()
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const PseudonymDetails: React.FC = () => {
       setLoading(true)
       async function searchPsn() {
         try {
-          const result = await PseudonymService.searchPseudonym(pseudonymId!)
+          const result = await PseudonymService.searchPseudonym(pseudonymId!, domainName)
 
           if (result) {
             setPseudonymValue(result)
@@ -43,7 +43,7 @@ const PseudonymDetails: React.FC = () => {
 
       searchPsn()
     }
-  }, [pseudonymValue, pseudonymId, setPseudonymValue])
+  }, [domainName, pseudonymValue, pseudonymId, setPseudonymValue])
 
   return (
     <div>

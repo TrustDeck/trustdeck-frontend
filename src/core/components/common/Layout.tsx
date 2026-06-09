@@ -18,8 +18,10 @@ const Layout: React.FC = () => {
   const location = useLocation()
 
   const isLoggedOutPage = location.pathname === '/logged-out'
+  const isLoginPage = location.pathname === '/auth/login'
   const hideSidebar =
     isLoggedOutPage ||
+    isLoginPage ||
     location.pathname === '/projects' ||
     location.pathname === '/projects/new' ||
     location.pathname === '/projects/global-permissions'
@@ -58,7 +60,7 @@ const Layout: React.FC = () => {
         <Sidebar projectName={selectedProject?.abbreviation ?? ''} />
       )}
       <div className={`transition-all duration-300 ${contentOffsetClass}`}>
-        {!isLoggedOutPage && (
+        {!isLoggedOutPage && !isLoginPage && (
           <div className="flex flex-row w-full p-4 items-center">
             <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
             {/* removes breadcrumbs on the project overview page */}

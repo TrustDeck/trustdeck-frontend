@@ -50,7 +50,7 @@ export const routes: RouteConfig[] = [
   },
 
   {
-    path: '/auth/callback',
+    path: '/callback',
     titleKey: 'Login callback',
     component: AuthCallback,
     Icon: Bars3Icon,

@@ -9,7 +9,7 @@ export default function RequireProject({ children }: Props) {
   const selected = useProjectStore((s) => s.selectedProject)
 
   // Allow reaching /projects (and other public-ish paths) without a selected project
-  const allowList = ['/projects', '/projects/new', '/projects/global-permissions', '/auth/login', '/auth/callback', '/logged-out']
+  const allowList = ['/projects', '/projects/new', '/projects/global-permissions', '/auth/login', '/callback', '/logged-out']
   const isAllowed = allowList.some((p) => location.pathname.startsWith(p))
 
   if (!selected && !isAllowed) {

@@ -19,12 +19,7 @@ const Layout: React.FC = () => {
 
   const isLoggedOutPage = location.pathname === '/logged-out'
   const isLoginPage = location.pathname === '/auth/login'
-  const hideSidebar =
-    isLoggedOutPage ||
-    isLoginPage ||
-    location.pathname === '/projects' ||
-    location.pathname === '/projects/new' ||
-    location.pathname === '/projects/global-permissions'
+  const hideSidebar = isLoggedOutPage || isLoginPage
 
   const contentOffsetClass = hideSidebar
     ? 'ml-0'
@@ -57,15 +52,14 @@ const Layout: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-surface">
       {!hideSidebar && (
-        <Sidebar projectName={selectedProject?.abbreviation ?? ''} />
+        <Sidebar projectName={selectedProject?.name ?? 'TrustDeck'} />
       )}
       <div className={`transition-all duration-300 ${contentOffsetClass}`}>
         {!isLoggedOutPage && !isLoginPage && (
           <div className="flex flex-row w-full p-4 items-center">
             <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
             {/* removes breadcrumbs on the project overview page */}
-              {location.pathname !== '/projects' &&
-                location.pathname !== '/projects/global-permissions' && <Breadcrumbs />}
+              {location.pathname !== '/projects' && <Breadcrumbs />}
             </div>
             <div className="w-1/4">
               {isAuthenticated && <UserMenu />}

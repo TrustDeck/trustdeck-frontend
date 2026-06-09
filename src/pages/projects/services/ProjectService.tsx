@@ -27,7 +27,10 @@ const ProjectService = {
         reader.readAsDataURL(blob)
       })
     } catch (err) {
-      console.warn('Failed to get project image', err)
+      const message = err instanceof Error ? err.message : String(err)
+      if (!message.includes('404')) {
+        console.warn('Failed to get project image', err)
+      }
       return undefined
     }
   },
@@ -52,7 +55,10 @@ const ProjectService = {
 
       return entitiesFromBackend
     } catch (error) {
-      console.error('Failed to load entity attributes from backend', error)
+      const message = error instanceof Error ? error.message : String(error)
+      if (!message.includes('404')) {
+        console.error('Failed to load entity attributes from backend', error)
+      }
       return []
     }
   },
@@ -68,9 +74,17 @@ const ProjectService = {
         })
         .filter((name: string | null): name is string => !!name)
 
-    const response = await TrustDeck.instance().getProjectEntities('*')
-    const names = Array.from(new Set(mapEntityNames(response)))
-    return names
+    try {
+      const response = await TrustDeck.instance().getProjectEntities('*')
+      const names = Array.from(new Set(mapEntityNames(response)))
+      return names
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      if (!message.includes('404')) {
+        console.error('Failed to load project entities', error)
+      }
+      return []
+    }
   }
 }
 

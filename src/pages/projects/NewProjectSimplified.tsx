@@ -74,19 +74,8 @@ export default function NewProjectSimplified() {
         name: createdProject.name
       })
       setJustCreated(true)
-      try {
-        const projectEntities = await ProjectService.getProjectEntities()
-        setEntities(projectEntities)
-      } catch (error) {
-        console.error('Failed to load project entities', error)
-        setEntities([])
-      }
-      try {
-        const attributes = await ProjectService.getEntityAttributes()
-        setEntityAttributes(attributes)
-      } catch (e) {
-        console.error(e)
-      }
+      setEntities([])
+      setEntityAttributes([])
       setTimeout(() => {
         navigate('/group-management')
       }, 2000)
@@ -125,12 +114,14 @@ export default function NewProjectSimplified() {
             placeholder={t('projects:startDate')}
             value={startDate}
             onChange={(e) => setStartDate(e.value)}
+            showTime
           />
           <CustomCalendar
             id="endDate"
             placeholder={t('projects:endDate')}
             value={endDate}
             onChange={(e) => setEndDate(e.value)}
+            showTime
           />
         </div>
         <div className="flex justify-end mt-4">

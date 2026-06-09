@@ -16,7 +16,8 @@ import {
   EyeSlashIcon,
   ArchiveBoxIcon,
   Cog8ToothIcon,
-  WrenchScrewdriverIcon
+  ShieldCheckIcon,
+  FolderPlusIcon
 } from '@heroicons/react/24/outline'
 import PseudonymDetails from '../../pages/search/PseudonymDetails'
 import Registration from '../../pages/identity/Registration'
@@ -27,7 +28,6 @@ import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
 import GlobalPermissions from '../../pages/projects/GlobalPermissions'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
-import AdminCenter from '../../pages/admin/AdminCenter'
 
 export type RouteConfig = {
   path: string
@@ -71,23 +71,26 @@ export const routes: RouteConfig[] = [
     component: ProjectOverview,
     Icon: MagnifyingGlassIcon,
     isProtected: true,
-    isSidebar: false
+    isSidebar: true,
+    sideboardOrder: -3
   },
   {
     path: '/projects/new',
-    titleKey: 'layout:menu.projects',
+    titleKey: 'layout:menu.newProject',
     component: NewProjectSimplified,
-    Icon: MagnifyingGlassIcon,
+    Icon: FolderPlusIcon,
     isProtected: true,
-    isSidebar: false
+    isSidebar: true,
+    sideboardOrder: -2
   },
   {
     path: '/projects/global-permissions',
-    titleKey: 'layout:menu.projects',
+    titleKey: 'layout:menu.permissionManagement',
     component: GlobalPermissions,
-    Icon: MagnifyingGlassIcon,
+    Icon: ShieldCheckIcon,
     isProtected: true,
-    isSidebar: false
+    isSidebar: true,
+    sideboardOrder: 6
   },
   {
     path: '/entity/manager',
@@ -165,15 +168,6 @@ export const routes: RouteConfig[] = [
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 4
-  },
-  {
-    path: '/admin',
-    titleKey: 'Backend admin',
-    component: AdminCenter,
-    Icon: WrenchScrewdriverIcon,
-    isProtected: true,
-    isSidebar: true,
-    sideboardOrder: 5
   },
   {
     path: '/search/results',

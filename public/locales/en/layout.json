@@ -1,26 +1,28 @@
 {
-    "menu": {
-        "logout": "Log out",
-        "identityManagement": "Identity Management",
-        "pseudonymManagement": "Pseudonym Management",
-        "groupManagement": "Group Management",
-        "projectSettings": "Project Settings",
-        "search": "Search",
-        "entityManager": "Entity Manager",
-        "searchResults": "Search results",
-        "entityDetails": "Entities",
-        "pseudonymDetails": "Pseudonyms",
-        "registration": "Registration",
-        "duplicates": "Duplicates",
-        "resolveDuplicates": "Resolve duplicates",
-        "projects": "Projects",
-        "backToProjects": "Back to projects"
-    },
-    "logOut": {
-        "loggingOut": "Logging you out",
-        "pleaseWait": "Please wait...",
-        "loggedOut": "You have been logged out",
-        "thankYou": "Thank you for using our service.",
-        "button": "Go to login"
-    }
+  "menu": {
+    "logout": "Log out",
+    "identityManagement": "Identity Management",
+    "pseudonymManagement": "Pseudonym Management",
+    "groupManagement": "Group Management",
+    "projectSettings": "Project Settings",
+    "search": "Search",
+    "entityManager": "Entity Manager",
+    "searchResults": "Search results",
+    "entityDetails": "Entities",
+    "pseudonymDetails": "Pseudonyms",
+    "registration": "Registration",
+    "duplicates": "Duplicates",
+    "resolveDuplicates": "Resolve duplicates",
+    "projects": "Projects",
+    "backToProjects": "Back to projects",
+    "permissionManagement": "Permission management",
+    "newProject": "New project"
+  },
+  "logOut": {
+    "loggingOut": "Logging you out",
+    "pleaseWait": "Please wait...",
+    "loggedOut": "You have been logged out",
+    "thankYou": "Thank you for using our service.",
+    "button": "Go to login"
+  }
 }

@@ -16,6 +16,8 @@ type CustomCalendarProps = {
   readOnly?: boolean
   required?: boolean
   dateFormat?: string
+  showTime?: boolean
+  hourFormat?: '12' | '24'
 }
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -29,7 +31,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   className = '',
   readOnly,
   required,
-  dateFormat = 'yy-mm-dd'
+  dateFormat = 'yy-mm-dd',
+  showTime = false,
+  hourFormat = '24'
 }) => {
   const [visible, setVisible] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -72,6 +76,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         panelClassName="z-[9999]" // Ensure the calendar popup is above modals
         inputClassName="w-full pb-1 h-full border-none font-font-text text-xl focus:ring-0 p-0 m-0 bg-transparent"
         dateFormat={dateFormat}
+        showTime={showTime}
+        hourFormat={hourFormat}
+        showIcon
       />
 
       <label

@@ -7,10 +7,10 @@
   "projectAbbreviation": "Projekt kürzel",
   "startDate": "Startdatum:",
   "endDate": "Enddatum:",
-  "newestFirst": "Neuste zuerst", 
+  "newestFirst": "Neuste zuerst",
   "oldestFirst": "Älteste zuerst",
-  "all": "Alle", 
-  "active": "Laufende Projekte", 
+  "all": "Alle",
+  "active": "Laufende Projekte",
   "completed": "Beendete Projekte",
   "forWhat": "Wofür möchten Sie dies Projekt benutzen?",
   "register": "Entitäten registrieren",
@@ -22,5 +22,5 @@
   "projectStatus": "Projektstatus",
   "projectCreated": "Projekt erfolgreich erstellt",
   "creationFailed": "Projekterstellung fehlgeschlagen",
-  "noProjects": "Sie haben noch keine Projekte erstellt.\n Erstellen Sie ein neues Projekt, indem Sie auf den oben stehenden Knopf klicken oder bitten Sie einen Kollegen, Sie zu einem Projekt hinzuzufügen!"
+  "noProjects": "Derzeit sind für Sie keine Projekte verfügbar. Sie können ein neues Projekt erstellen oder Ihre PI bzw. Projektleitung bitten, Ihnen Zugriff auf ein bestehendes Projekt zu gewähren."
 }

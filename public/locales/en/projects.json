@@ -7,10 +7,10 @@
   "projectAbbreviation": "Project abbreviation",
   "startDate": "Start date:",
   "endDate": "End date:",
-  "newestFirst": "Newest first", 
+  "newestFirst": "Newest first",
   "oldestFirst": "Oldest first",
-  "all": "All", 
-  "active": "Active", 
+  "all": "All",
+  "active": "Active",
   "completed": "Completed",
   "forWhat": "For what do you want to use this project?",
   "register": "Register entities",
@@ -22,5 +22,5 @@
   "projectStatus": "Project status",
   "projectCreated": "Project created successfully",
   "creationFailed": "Project creation failed",
-  "noProjects": "You don't have access to any projects yet. \n Create a new project by clicking on the button above or ask a colleague to add you to a project!"
+  "noProjects": "No projects are currently available to you. You can create a new project, or ask your PI or project lead to grant you access to an existing project."
 }

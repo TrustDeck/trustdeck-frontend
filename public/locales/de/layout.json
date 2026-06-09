@@ -1,26 +1,28 @@
 {
-    "menu": {
-        "logout": "Abmelden",
-        "dentityManagement": "Identitätsmanagement",
-        "pseudonymManagement": "Pseudonym Management",
-        "groupManagement": "Gruppenmanagement",
-        "projectSettings": "Projekteinstellungen",
-        "search": "Suche",
-        "entityBuilder": "Entitäten-Manager",
-        "searchResults": "Suchresultate",
-        "entityDetails": "Entitäten",
-        "pseudonymDetails": "Pseudonyme",
-        "registration": "Registrierung",
-        "duplicates": "Dubletten",
-        "resolveDuplicates": "Dubletten auflösen",
-        "projects": "Projekte",
-        "backToProjects": "Zurück zu Projekte"
-    },
-    "logOut": {
-        "loggingOut": "Sie werden abgemeldet",
-        "pleaseWait": "Bitte warten Sie einen Moment...",
-        "loggedOut": "Sie wurden abgemeldet",
-        "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
-        "button": "Zurück zur Login-Seite"
-    }
+  "menu": {
+    "logout": "Abmelden",
+    "dentityManagement": "Identitätsmanagement",
+    "pseudonymManagement": "Pseudonym Management",
+    "groupManagement": "Gruppenmanagement",
+    "projectSettings": "Projekteinstellungen",
+    "search": "Suche",
+    "entityBuilder": "Entitäten-Manager",
+    "searchResults": "Suchresultate",
+    "entityDetails": "Entitäten",
+    "pseudonymDetails": "Pseudonyme",
+    "registration": "Registrierung",
+    "duplicates": "Dubletten",
+    "resolveDuplicates": "Dubletten auflösen",
+    "projects": "Projekte",
+    "backToProjects": "Zurück zu Projekte",
+    "permissionManagement": "Berechtigungsverwaltung",
+    "newProject": "Neues Projekt"
+  },
+  "logOut": {
+    "loggingOut": "Sie werden abgemeldet",
+    "pleaseWait": "Bitte warten Sie einen Moment...",
+    "loggedOut": "Sie wurden abgemeldet",
+    "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
+    "button": "Zurück zur Login-Seite"
+  }
 }

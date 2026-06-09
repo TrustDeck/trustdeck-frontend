@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Panel from '@component/common/Panel'
 import { useTranslation } from 'react-i18next'
 import {
@@ -6,36 +6,72 @@ import {
   AutoCompleteChangeEvent,
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
-import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
-import { useNavigate } from 'react-router-dom'
 import TrustDeck from '../../core/services/TrustDeck'
 import useToastStore from '../../core/stores/ToastStore'
+import useUserStore from '../../core/stores/UserStore'
 import type { Operator } from '../../core/types/Permission'
 import type {
   DefinedPermission,
   EffectivePermission,
   GlobalPermissionUpdate
 } from '../project/types'
-import { permissionKey } from '../project/utils/permissionRows'
+import { groupPermissionsByScope, permissionKey } from '../project/utils/permissionRows'
 import EffectivePermissionsList from '../project/components/EffectivePermissionsList'
-import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 
 type PersonSuggestion = Operator & {
   name: string
   effectivePermissions?: EffectivePermission[]
 }
 
+function uniquePermissions(permissions: EffectivePermission[]) {
+  return Array.from(new Map(permissions.map((p) => [permissionKey(p), p])).values())
+}
+
+function ReadOnlyPermissionSummary({ permissions }: { permissions: EffectivePermission[] }) {
+  if (!permissions.length) {
+    return <p className="text-sm text-gray-500">No explicit TrustDeck permissions were found for this account.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {Object.entries(groupPermissionsByScope(uniquePermissions(permissions))).map(([group, perms]) => (
+        <div key={group} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <h4 className="mb-2 text-sm font-semibold text-gray-700">{group}</h4>
+          <div className="flex flex-wrap gap-2">
+            {perms.map((perm) => (
+              <span
+                key={permissionKey(perm)}
+                className="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-sm"
+              >
+                {perm.action}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function GlobalPermissions() {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
+  const currentUser = useUserStore((state) => ({
+    id: state.username,
+    fullname: state.fullname,
+    email: state.email,
+    roles: state.roles
+  }))
+
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
   const [selectedPerson, setSelectedPerson] = useState<PersonSuggestion | null>(null)
   const [personValue, setPersonValue] = useState<string>('')
   const [personSuggestions, setPersonSuggestions] = useState<PersonSuggestion[]>([])
   const [permissionState, setPermissionState] = useState<Record<string, boolean>>({})
   const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
+  const [currentEffectivePermissions, setCurrentEffectivePermissions] = useState<EffectivePermission[]>([])
   const [loading, setLoading] = useState(false)
 
   const ensureDefinedPermissions = async () => {
@@ -45,6 +81,35 @@ export default function GlobalPermissions() {
     setDefinedPermissions(resolved)
     return resolved
   }
+
+  useEffect(() => {
+    let active = true
+    async function loadCurrentUserPermissions() {
+      try {
+        await ensureDefinedPermissions()
+        const query = currentUser.email || currentUser.fullname || currentUser.id
+        if (!query) return
+        const results = await TrustDeck.instance().searchOperators(query)
+        if (!active) return
+        const match = results.find(
+          (operator) =>
+            operator.userId === currentUser.id ||
+            operator.email === currentUser.email ||
+            operator.username === currentUser.id
+        ) as PersonSuggestion | undefined
+        setCurrentEffectivePermissions(match?.effectivePermissions ?? [])
+      } catch (error) {
+        if (!active) return
+        console.warn('Could not load current user effective permissions', error)
+        setCurrentEffectivePermissions([])
+      }
+    }
+    loadCurrentUserPermissions()
+    return () => {
+      active = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser.email, currentUser.fullname, currentUser.id])
 
   const globalPermissionRows = useMemo(() => {
     const globalActions = definedPermissions
@@ -60,58 +125,50 @@ export default function GlobalPermissions() {
       (p) => p.resourceType === 'GLOBAL'
     )
     rows.push(...selectedGlobal)
-
-    const unique = new Map<string, EffectivePermission>()
-    rows.forEach((p) => unique.set(permissionKey(p), p))
-    return Array.from(unique.values())
+    return uniquePermissions(rows)
   }, [definedPermissions, selectedPerson?.effectivePermissions])
 
   const fetchPersons = async (query: string): Promise<PersonSuggestion[]> => {
     const fetchedOperators = await TrustDeck.instance().searchOperators(query)
     return fetchedOperators.map((operator) => ({
       ...operator,
-      name: `${operator.firstName} ${operator.lastName}`
+      name: `${operator.firstName ?? ''} ${operator.lastName ?? ''}`.trim() || operator.username
     }))
   }
 
-  const refreshSelectedPersonGlobals = async (
-    userId: string,
-    usernameFallback: string
-  ): Promise<void> => {
+  const buildStateForPerson = (person: PersonSuggestion, rows: EffectivePermission[]) => {
+    const selectedKeys = new Set(
+      (person.effectivePermissions ?? [])
+        .filter((p) => p.resourceType === 'GLOBAL')
+        .map((p) => permissionKey(p))
+    )
+    const nextState: Record<string, boolean> = {}
+    rows.forEach((p) => {
+      nextState[permissionKey(p)] = selectedKeys.has(permissionKey(p))
+    })
+    return nextState
+  }
+
+  const refreshSelectedPersonGlobals = async (userId: string, usernameFallback: string): Promise<void> => {
     const latestMatches = await fetchPersons(usernameFallback)
     const refreshed = latestMatches.find((u) => u.userId === userId)
     if (!refreshed) return
-
     setSelectedPerson(refreshed)
-
-    const selectedGlobal = (refreshed.effectivePermissions ?? []).filter(
-      (p) => p.resourceType === 'GLOBAL'
-    )
-    const globalActions = definedPermissions
-      .filter((p) => p.resourceType === 'GLOBAL')
-      .map((p) => p.action)
-    const rows: EffectivePermission[] = [
-      ...globalActions.map((action) => ({ resourceType: 'GLOBAL', action })),
-      ...selectedGlobal
-    ]
-    const uniqueRows = Array.from(new Map(rows.map((p) => [permissionKey(p), p])).values())
-    const selectedKeys = new Set(selectedGlobal.map((p) => permissionKey(p)))
-    const nextState: Record<string, boolean> = {}
-    uniqueRows.forEach((p) => {
-      nextState[permissionKey(p)] = selectedKeys.has(permissionKey(p))
-    })
-    setPermissionState(nextState)
   }
 
   const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
     setSelectedPersonId(null)
-    await ensureDefinedPermissions()
+    const perms = await ensureDefinedPermissions()
     const results = await fetchPersons(event.query)
     setPersonSuggestions(results.length === 0 ? [] : results)
+    if (!perms.length) {
+      setPermissionState({})
+    }
   }
 
   const handlePersonChange = async (e: AutoCompleteChangeEvent) => {
     if (e.value == null) return
+    const perms = await ensureDefinedPermissions()
     if (e.value && (e.value as PersonSuggestion).username) {
       const personSuggestion = e.value as PersonSuggestion
       setPersonValue(
@@ -124,16 +181,13 @@ export default function GlobalPermissions() {
       setSelectedPersonId(personSuggestion.userId ?? null)
       setSelectedPerson(personSuggestion)
 
-      const initialState: Record<string, boolean> = {}
-      const selectedKeys = new Set(
-        (personSuggestion.effectivePermissions ?? [])
+      const rows = uniquePermissions([
+        ...perms
           .filter((p) => p.resourceType === 'GLOBAL')
-          .map((p) => permissionKey(p))
-      )
-      globalPermissionRows.forEach((p) => {
-        initialState[permissionKey(p)] = selectedKeys.has(permissionKey(p))
-      })
-      setPermissionState(initialState)
+          .map((p) => ({ resourceType: 'GLOBAL', action: p.action })),
+        ...(personSuggestion.effectivePermissions ?? []).filter((p) => p.resourceType === 'GLOBAL')
+      ])
+      setPermissionState(buildStateForPerson(personSuggestion, rows))
       return
     }
 
@@ -166,14 +220,11 @@ export default function GlobalPermissions() {
         decision: 'ALLOW'
       }))
       await TrustDeck.instance().updateGlobalPermissions(selectedPersonId, payload)
-      await refreshSelectedPersonGlobals(
-        selectedPersonId,
-        selectedPerson.username ?? selectedPerson.name
-      )
+      await refreshSelectedPersonGlobals(selectedPersonId, selectedPerson.username ?? selectedPerson.name)
       showToast({
         severity: 'success',
         summary: 'Success',
-        detail: 'Global permissions updated successfully',
+        detail: 'Permissions updated successfully',
         life: 3000
       })
     } catch (error) {
@@ -181,7 +232,7 @@ export default function GlobalPermissions() {
       showToast({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to update global permissions',
+        detail: 'Failed to update permissions',
         life: 4000
       })
     } finally {
@@ -198,20 +249,43 @@ export default function GlobalPermissions() {
   )
 
   return (
-    <div
-      className="relative flex min-h-[calc(100dvh-7rem)] w-full flex-col justify-center px-4 pb-10 pt-14 sm:px-8"
-    >
-      <PrimaryOutlinedButton
-        label="Back to projects"
-        className="absolute left-4 top-4 z-10 sm:left-6"
-        onClick={() => navigate('/projects')}
-        icon={<ArrowLeftIcon className="h-5 w-5" />}
-        iconPos="left"
-      />
-      <div className="w-full flex flex-col items-center">
-        <Panel title="Global Permissions" className="w-full mx-auto">
+    <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 sm:px-8">
+      <div className="w-full space-y-6">
+        <Panel title="Permission management" className="w-full mx-auto">
           <p className="text-sm text-gray-500 mb-4">
-            Search for a user and manage only global permissions.
+            Review your current TrustDeck roles and manage global permissions for other users.
+          </p>
+
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <h2 className="mb-2 text-lg font-semibold text-gray-900">Your current access</h2>
+            <div className="mb-4 text-sm text-gray-600">
+              <div>{currentUser.fullname || currentUser.email || currentUser.id}</div>
+              {currentUser.email && <div>{currentUser.email}</div>}
+            </div>
+            <div className="mb-4">
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Keycloak roles in token</h3>
+              {currentUser.roles.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {currentUser.roles.map((role) => (
+                    <span key={role} className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-color-blue">
+                      {role}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No backend client roles were present in the current access token.</p>
+              )}
+            </div>
+            <div>
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Effective TrustDeck permissions</h3>
+              <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} />
+            </div>
+          </div>
+        </Panel>
+
+        <Panel title="Grant or revoke global permissions" className="w-full mx-auto">
+          <p className="text-sm text-gray-500 mb-4">
+            Search for a user and adjust global permissions. Project and group permissions are managed from the respective project and group views.
           </p>
           <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
             <AutoComplete
@@ -254,7 +328,7 @@ export default function GlobalPermissions() {
 
               <div className="mt-4 flex justify-end">
                 <PrimaryButton
-                  label={loading ? 'Saving...' : 'Save Permissions'}
+                  label={loading ? 'Saving...' : 'Save permissions'}
                   onClick={handleSave}
                   loading={loading}
                 />

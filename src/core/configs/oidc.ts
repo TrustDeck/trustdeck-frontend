@@ -9,9 +9,8 @@ export const oidcConfig = {
   response_type: 'code',
   scope: 'openid profile email',
   userStore: new WebStorageStateStore({ store: window.localStorage }),
-  monitorSession: true,
+  monitorSession: false,
   automaticSilentRenew: true,
-  checkSessionIntervalInSeconds: 5,
   accessTokenExpiringNotificationTimeInSeconds: 5,
   revokeTokensOnSignout: true
 }

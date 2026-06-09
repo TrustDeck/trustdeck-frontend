@@ -40,3 +40,9 @@ Use `/callback` as the frontend redirect URI. Register it in Keycloak, for examp
 - `https://your-trustdeck-host/*` if you use wildcard redirects during testing
 
 The app now uses the standard `oidc-client-ts` localStorage-backed user store and synchronizes the TrustDeck API bearer token and local user store from `react-oidc-context`. This avoids the previous issue where the browser could return from Keycloak but remain on the login page because the local app auth state was not populated reliably.
+
+## Login session prompt update
+
+The login page no longer restores or redirects based on an existing local OIDC user before the user clicks **Sign in**. Starting a login now clears local TrustDeck/OIDC state and sends `prompt=login` plus `max_age=0` to Keycloak so users can authenticate with different credentials instead of being silently reused from an existing browser SSO session.
+
+`monitorSession` is disabled in the OIDC configuration to avoid Keycloak check-session lookups from the login page. Silent token renewal after login remains enabled.

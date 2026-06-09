@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { ProgressSpinner } from 'primereact/progressspinner'
+import { useLocation } from 'react-router-dom'
 import {
   ArrowRightEndOnRectangleIcon,
   LockClosedIcon
@@ -10,6 +9,7 @@ import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { oidcConfig } from '../../core/configs/oidc'
 import useUserStore from '../../core/stores/UserStore'
+import { useAuthStore } from '../../core/stores/AuthWebStore'
 import TrustDeck from '@service/TrustDeck'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
@@ -26,57 +26,69 @@ const getReturnTo = (search: string) => {
   return value ?? '/projects'
 }
 
-const getReturnToFromState = (state: unknown, fallback: string) => {
-  if (
-    state &&
-    typeof state === 'object' &&
-    'returnTo' in state &&
-    typeof (state as { returnTo?: unknown }).returnTo === 'string' &&
-    isSafeLocalPath((state as { returnTo: string }).returnTo)
-  ) {
-    return (state as { returnTo: string }).returnTo
-  }
-  return fallback
+
+const clearStoredOidcState = () => {
+  Object.keys(window.localStorage)
+    .filter((key) => key.startsWith('oidc.'))
+    .forEach((key) => window.localStorage.removeItem(key))
+
+  Object.keys(window.sessionStorage)
+    .filter((key) => key.startsWith('oidc.'))
+    .forEach((key) => window.sessionStorage.removeItem(key))
 }
 
 const Login: React.FC = () => {
   const auth = useAuth()
   const location = useLocation()
-  const navigate = useNavigate()
-  const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const setFromAccessToken = useUserStore((state) => state.setFromAccessToken)
-  const [loginError, setLoginError] = useState<string | null>(null)
   const returnTo = useMemo(() => getReturnTo(location.search), [location.search])
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [isStartingLogin, setIsStartingLogin] = useState(false)
 
-  useEffect(() => {
-    if (!auth.user?.access_token) return
+  const clearLocalAuthState = async () => {
+    TrustDeck.instance().clearToken()
+    useUserStore.getState().clear()
+    useAuthStore.getState().clear()
 
-    setFromAccessToken(auth.user.access_token)
-    TrustDeck.instance().setToken(auth.user.access_token)
-    navigate(getReturnToFromState(auth.user.state, returnTo), { replace: true })
-  }, [auth.user?.access_token, auth.user?.state, navigate, returnTo, setFromAccessToken])
+    try {
+      await auth.removeUser()
+    } catch {
+      // Local cleanup should continue even if the OIDC user store is already empty.
+    }
 
-  useEffect(() => {
-    if (!auth.isAuthenticated && !isAuthenticated) return
-    navigate(returnTo, { replace: true })
-  }, [auth.isAuthenticated, isAuthenticated, navigate, returnTo])
+    clearStoredOidcState()
+
+    try {
+      await auth.clearStaleState()
+    } catch {
+      // Stale state cleanup is best-effort only.
+    }
+  }
 
   const handleLogin = async () => {
     setLoginError(null)
+    setIsStartingLogin(true)
+
     try {
+      await clearLocalAuthState()
       window.sessionStorage.setItem('trustdeck:returnTo', returnTo)
+
       await auth.signinRedirect({
         redirect_uri: oidcConfig.redirect_uri,
-        state: { returnTo }
+        state: { returnTo },
+        extraQueryParams: {
+          prompt: 'login',
+          max_age: '0'
+        }
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not start login'
       setLoginError(message)
+      setIsStartingLogin(false)
     }
   }
 
   const handleRetry = () => {
-    auth.clearStaleState().finally(() => void handleLogin())
+    void handleLogin()
   }
 
   return (
@@ -103,30 +115,22 @@ const Login: React.FC = () => {
 
         <div className="mt-8 space-y-3">
           <PrimaryButton
-            label={auth.isLoading ? 'Checking session...' : 'Sign in'}
+            label={isStartingLogin ? 'Opening sign-in...' : 'Sign in'}
             onClick={handleLogin}
-            loading={auth.isLoading}
+            loading={isStartingLogin}
             icon={<ArrowRightEndOnRectangleIcon className="mr-2 h-5 w-5" />}
             className="w-full justify-center"
           />
           {(auth.error || loginError) && (
             <PrimaryOutlinedButton
-              label="Clear stale login state and retry"
+              label="Clear login state and retry"
               onClick={handleRetry}
               className="w-full justify-center"
             />
           )}
         </div>
-
-        {auth.isLoading && (
-          <div className="mt-8 flex items-center gap-3 text-sm text-slate-500">
-            <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="6" />
-            Restoring an existing session if one is available.
-          </div>
-        )}
       </section>
     </main>
   )
 }
-
 export default Login

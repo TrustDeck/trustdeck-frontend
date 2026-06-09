@@ -29,3 +29,14 @@
 ## Deployment note for Keycloak
 
 The login page calls `auth.signinRedirect()` with the existing `AUTHORITY_*` configuration. Make sure the Keycloak frontend client has the configured `AUTHORITY_REDIRECT_URI` registered as a valid redirect URI. No backend changes were required for the login page because the existing bearer-token flow is preserved.
+
+## Login/callback update
+
+The login page is intentionally minimal and only displays the login box. Authentication is still delegated to Keycloak through the configured OIDC client.
+
+Use `/auth/callback` as the frontend redirect URI. Register it in Keycloak, for example:
+
+- `https://your-trustdeck-host/auth/callback`
+- `https://your-trustdeck-host/*` if you use wildcard redirects during testing
+
+The app now uses the standard `oidc-client-ts` localStorage-backed user store and synchronizes the TrustDeck API bearer token and local user store from `react-oidc-context`. This avoids the previous issue where the browser could return from Keycloak but remain on the login page because the local app auth state was not populated reliably.

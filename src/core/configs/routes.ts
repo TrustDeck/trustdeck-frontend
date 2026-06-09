@@ -1,6 +1,7 @@
 import { FC, SVGProps } from 'react'
 import LoggedOut from '../../pages/general/LoggedOut'
 import Login from '../../pages/general/Login'
+import AuthCallback from '../../pages/general/AuthCallback'
 import ResultsMask from '../../pages/search/ResultsMask'
 import SearchMask from '../../pages/search/SearchMask'
 import SearchPsn from '../../pages/pseudonym/SearchPsn'
@@ -43,6 +44,15 @@ export const routes: RouteConfig[] = [
     path: '/auth/login',
     titleKey: 'Login',
     component: Login,
+    Icon: Bars3Icon,
+    isProtected: false,
+    isSidebar: false
+  },
+
+  {
+    path: '/auth/callback',
+    titleKey: 'Login callback',
+    component: AuthCallback,
     Icon: Bars3Icon,
     isProtected: false,
     isSidebar: false

@@ -29,10 +29,10 @@ export default function SearchMask({ psn = false }) {
         {t('search:searchFor')}
         <span
           onClick={() => handleModeClick('entity')}
-          className={`cursor-pointer px-2 rounded-md transition-colors ${
+          className={`cursor-pointer px-3 py-1 rounded-md transition-colors ${
             mode === 'entity'
-              ? 'font-bold text-gray-900 bg-gray-200'
-              : 'text-gray-400 hover:bg-gray-100'
+              ? 'font-bold text-white bg-color-blue shadow-sm'
+              : 'text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           {t('search:anEntity')}
@@ -40,10 +40,10 @@ export default function SearchMask({ psn = false }) {
         /
         <span
           onClick={() => handleModeClick('pseudonym')}
-          className={`cursor-pointer px-2 rounded-md transition-colors ${
+          className={`cursor-pointer px-3 py-1 rounded-md transition-colors ${
             mode === 'pseudonym'
-              ? 'font-bold text-gray-900 bg-gray-200'
-              : 'text-gray-400 hover:bg-gray-100'
+              ? 'font-bold text-white bg-color-blue shadow-sm'
+              : 'text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           {t('search:aPseudonym')}

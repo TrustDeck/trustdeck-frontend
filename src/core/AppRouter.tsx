@@ -141,9 +141,10 @@ const BreadcrumbUpdater: React.FC = () => {
       return
     }
 
-    // Project overview: only show Home
+    // Project overview still gets an explicit breadcrumb.
     if (pathname === '/projects') {
-      setBreadcrumbItems([])
+      const projectRoute = routes.find((r) => r.path === '/projects')
+      setBreadcrumbItems([{ label: projectRoute?.titleKey || 'Projects', url: '/projects' }])
       return
     }
 

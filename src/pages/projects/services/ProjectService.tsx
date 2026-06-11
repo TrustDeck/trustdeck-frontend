@@ -12,6 +12,14 @@ const ProjectService = {
     return createdProject
   },
 
+  updateProject: async (project: ProjectType, projectAbbreviation?: string): Promise<ProjectType> => {
+    return TrustDeck.instance().updateProject(project, projectAbbreviation)
+  },
+
+  deleteProject: async (projectAbbreviation?: string): Promise<ProjectType> => {
+    return TrustDeck.instance().deleteProject(projectAbbreviation)
+  },
+
   createGroup: async (defaultGroup: any): Promise<any> => {
     return TrustDeck.instance().createGroup(defaultGroup)
   },

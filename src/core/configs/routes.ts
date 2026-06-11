@@ -80,7 +80,7 @@ export const routes: RouteConfig[] = [
     component: NewProjectSimplified,
     Icon: FolderPlusIcon,
     isProtected: true,
-    isSidebar: true,
+    isSidebar: false,
     sideboardOrder: -2
   },
   {

@@ -161,7 +161,15 @@ export default function Sidebar({ projectName }: SidebarProps) {
         </div>
         <div className='flex'>
           {projectImage && projectName !== 'TrustDeck' && <img src={projectImage} alt="" className='w-32 h-32 object-contain shrink-0' />}
-          <h1 className="min-w-0 max-w-[150px] truncate text-[28px] xl:text-[34px] mt-8 pl-4 text-left" title={projectName}>{projectName}</h1>
+          <h1
+            className={[
+              'min-w-0 text-[28px] xl:text-[34px] mt-8 pl-4 text-left',
+              projectName === 'TrustDeck' ? 'max-w-none whitespace-nowrap' : 'max-w-[150px] truncate'
+            ].join(' ')}
+            title={projectName}
+          >
+            {projectName}
+          </h1>
         </div>
 
         <Divider />

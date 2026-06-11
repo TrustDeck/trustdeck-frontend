@@ -16,6 +16,7 @@ const Layout: React.FC = () => {
   const isSidebarOpen = useLayoutStore((state) => state.isSidebarOpen)
   const { selectedProject } = useProjectStore()
   const location = useLocation()
+  const sidebarTitle = location.pathname === '/projects' ? 'TrustDeck' : selectedProject?.name ?? 'TrustDeck'
 
   const isLoggedOutPage = location.pathname === '/logged-out'
   const isLoginPage = location.pathname === '/auth/login'
@@ -52,14 +53,13 @@ const Layout: React.FC = () => {
   return (
     <div className="relative min-h-screen bg-surface">
       {!hideSidebar && (
-        <Sidebar projectName={selectedProject?.name ?? 'TrustDeck'} />
+        <Sidebar projectName={sidebarTitle} />
       )}
       <div className={`transition-all duration-300 ${contentOffsetClass}`}>
         {!isLoggedOutPage && !isLoginPage && (
           <div className="flex flex-row w-full p-4 items-center">
             <div className={`${breadcrumbOffsetClass} mr-4 sm:mr-0 w-3/4`}>
-            {/* removes breadcrumbs on the project overview page */}
-              {location.pathname !== '/projects' && <Breadcrumbs />}
+              <Breadcrumbs />
             </div>
             <div className="w-1/4">
               {isAuthenticated && <UserMenu />}

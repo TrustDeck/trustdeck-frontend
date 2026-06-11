@@ -9,6 +9,7 @@ interface TokenDetails {
   family_name: string
   email: string
   locale: string
+  exp?: number
   resource_access?: {
     backend?: {
       roles?: string[]
@@ -23,6 +24,7 @@ interface UserState {
   fullname: string
   email: string
   roles: string[]
+  tokenExpiresAt: number | null
   isAuthenticated: boolean
   locale: string
   setFromAccessToken: (token: string) => void
@@ -40,6 +42,7 @@ const useUserStore = create<UserState>()(
         email: '',
         locale: 'en',
         roles: [],
+        tokenExpiresAt: null,
         isAuthenticated: false,
         setFromAccessToken: (token: string) => {
           try {
@@ -57,6 +60,7 @@ const useUserStore = create<UserState>()(
               email: decoded.email || '',
               locale: decoded.locale || 'en',
               roles: decoded.resource_access?.backend?.roles || [],
+              tokenExpiresAt: decoded.exp ? decoded.exp * 1000 : null,
               isAuthenticated: true
             })
           } catch (error) {
@@ -69,6 +73,7 @@ const useUserStore = create<UserState>()(
               email: '',
               locale: 'en',
               roles: [],
+              tokenExpiresAt: null,
               isAuthenticated: false
             })
           }
@@ -82,6 +87,7 @@ const useUserStore = create<UserState>()(
             email: '',
             locale: 'en',
             roles: [],
+            tokenExpiresAt: null,
             isAuthenticated: false
           })
       }),

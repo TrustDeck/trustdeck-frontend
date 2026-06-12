@@ -153,3 +153,21 @@
   color: #f8fafc !important;
   border-color: #475569 !important;
 }
+
+.dark .reset-filter-button {
+  color: #93c5fd !important;
+}
+
+.dark .reset-filter-button:hover {
+  color: #bfdbfe !important;
+}
+
+.dark .search-toggle-unselected {
+  background-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.dark .search-toggle-unselected:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}

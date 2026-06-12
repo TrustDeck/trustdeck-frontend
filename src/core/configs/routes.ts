@@ -26,8 +26,10 @@ import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
 import GlobalPermissions from '../../pages/projects/GlobalPermissions'
+import PermissionsRedirect from '../../pages/projects/PermissionsRedirect'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
+
 
 export type RouteConfig = {
   path: string
@@ -84,13 +86,21 @@ export const routes: RouteConfig[] = [
     sideboardOrder: -2
   },
   {
-    path: '/projects/global-permissions',
+    path: '/permissions',
     titleKey: 'layout:menu.permissionManagement',
     component: GlobalPermissions,
     Icon: ShieldCheckIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 6
+  },
+  {
+    path: '/projects/global-permissions',
+    titleKey: 'layout:menu.permissionManagement',
+    component: PermissionsRedirect,
+    Icon: ShieldCheckIcon,
+    isProtected: true,
+    isSidebar: false
   },
   {
     path: '/entity/manager',

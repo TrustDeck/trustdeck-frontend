@@ -84,6 +84,16 @@ const UserMenu: React.FC = () => {
     navigate('/logged-out')
   }
 
+  const closeMenu = () => {
+    setIsOpen(false)
+    op.current?.hide()
+  }
+
+  const handleDarkModeToggle = () => {
+    setDarkMode((value) => !value)
+    closeMenu()
+  }
+
   const toggleMenu = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     setIsOpen(!isOpen)
     op.current?.toggle(e)
@@ -102,7 +112,7 @@ const UserMenu: React.FC = () => {
           <div className="flex items-center gap-2">
             <div className="min-w-0 max-w-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-w-[230px] group-hover:opacity-100">
               <div className="truncate text-sm font-semibold text-gray-900">{displayName}</div>
-              <div className="truncate text-xs text-gray-500">automatic logout in {remaining}</div>
+              <div className="truncate text-[13px] text-gray-500">Automatic logout in {remaining}</div>
             </div>
             <div className="flex flex-col items-center leading-none">
               <Avatar
@@ -111,7 +121,7 @@ const UserMenu: React.FC = () => {
                 size="normal"
                 shape="circle"
               />
-              <span className="mt-1 text-xs font-medium text-gray-500" title="Time until automatic logout">
+              <span className="mt-1 text-[13px] font-semibold text-gray-500" title="Time until automatic logout">
                 {remaining}
               </span>
             </div>
@@ -130,7 +140,7 @@ const UserMenu: React.FC = () => {
             <button
               type="button"
               className="flex w-full items-center justify-between gap-3 text-left"
-              onClick={() => setDarkMode((value) => !value)}
+              onClick={handleDarkModeToggle}
             >
               <span>Dark mode</span>
               <span
@@ -152,6 +162,7 @@ const UserMenu: React.FC = () => {
           <li
             className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
             onClick={() => {
+              closeMenu()
               const newWindow = window.open(
                 oidcConfig.authority + '/account',
                 '_blank',

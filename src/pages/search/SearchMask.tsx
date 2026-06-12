@@ -32,7 +32,7 @@ export default function SearchMask({ psn = false }) {
           className={`cursor-pointer px-3 py-1 rounded-md transition-colors ${
             mode === 'entity'
               ? 'font-bold text-white bg-color-blue shadow-sm'
-              : 'text-gray-600 bg-gray-200 hover:bg-gray-300'
+              : 'search-toggle-unselected text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           {t('search:anEntity')}
@@ -43,7 +43,7 @@ export default function SearchMask({ psn = false }) {
           className={`cursor-pointer px-3 py-1 rounded-md transition-colors ${
             mode === 'pseudonym'
               ? 'font-bold text-white bg-color-blue shadow-sm'
-              : 'text-gray-600 bg-gray-200 hover:bg-gray-300'
+              : 'search-toggle-unselected text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           {t('search:aPseudonym')}

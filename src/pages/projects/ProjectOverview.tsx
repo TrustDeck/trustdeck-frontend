@@ -14,11 +14,6 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 import { Dialog } from 'primereact/dialog'
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import useToastStore from '../../core/stores/ToastStore'
-import {
-  CachedUserAccess,
-  canManageProject,
-  getCurrentUserAccess
-} from '../../core/services/PermissionCache'
 import useUserStore from '../../core/stores/UserStore'
 
 type ProjectFormState = {
@@ -41,8 +36,6 @@ export default function ProjectOverview() {
   const [dateOrder, setDateOrder] = useState<'newest' | 'oldest'>('newest')
   const [searchTerm, setSearchTerm] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [access, setAccess] = useState<CachedUserAccess | null>(null)
-  const [permissionsLoading, setPermissionsLoading] = useState(true)
   const [editingProject, setEditingProject] = useState<ProjectType | null>(null)
   const [deletingProject, setDeletingProject] = useState<ProjectType | null>(null)
   const [formState, setFormState] = useState<ProjectFormState>({
@@ -57,8 +50,6 @@ export default function ProjectOverview() {
   const navigate = useNavigate()
   const auth = useAuth()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const username = useUserStore((state) => state.username)
-  const roles = useUserStore((state) => state.roles)
   const showToast = useToastStore((state) => state.show)
 
   useEffect(() => {
@@ -92,29 +83,6 @@ export default function ProjectOverview() {
       isMounted = false
     }
   }, [auth.user?.access_token, isAuthenticated])
-
-  useEffect(() => {
-    let isMounted = true
-    if (!isAuthenticated && !auth.user?.access_token) return () => {
-      isMounted = false
-    }
-
-    setPermissionsLoading(true)
-    getCurrentUserAccess(true)
-      .then((resolvedAccess) => {
-        if (isMounted) setAccess(resolvedAccess)
-      })
-      .catch((error) => {
-        console.warn('Could not load permission cache for project actions', error)
-        if (isMounted) setAccess(null)
-      })
-      .finally(() => {
-        if (isMounted) setPermissionsLoading(false)
-      })
-    return () => {
-      isMounted = false
-    }
-  }, [auth.user?.access_token, isAuthenticated, roles, username])
 
   const filteredProjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase()
@@ -211,6 +179,7 @@ export default function ProjectOverview() {
         life: 2500
       })
       setDeletingProject(null)
+      setEditingProject(null)
     } catch (error) {
       console.error('Failed to delete project', error)
       showToast({
@@ -265,7 +234,7 @@ export default function ProjectOverview() {
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    className="text-sm font-medium text-color-blue hover:underline"
+                    className="reset-filter-button text-sm font-medium text-color-blue hover:underline"
                     onClick={resetFilters}
                   >
                     Reset
@@ -317,9 +286,9 @@ export default function ProjectOverview() {
               <SingleProject
                 key={project.abbreviation}
                 project={project}
-                permissionsReady={!permissionsLoading}
-                canUpdate={canManageProject(access, project.abbreviation, 'update')}
-                canDelete={canManageProject(access, project.abbreviation, 'delete')}
+                permissionsReady
+                canUpdate
+                canDelete
                 onEdit={openEditDialog}
                 onDelete={setDeletingProject}
               />
@@ -353,7 +322,7 @@ export default function ProjectOverview() {
       )}
 
       <Dialog
-        header="Update project"
+        header="Project details"
         visible={Boolean(editingProject)}
         onHide={() => setEditingProject(null)}
         modal
@@ -361,7 +330,8 @@ export default function ProjectOverview() {
       >
         <div className="space-y-4 pt-2">
           <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
-            Project abbreviation: <span className="font-semibold text-gray-800">{editingProject?.abbreviation}</span>
+            <div>Project abbreviation: <span className="font-semibold text-gray-800">{editingProject?.abbreviation}</span></div>
+            <div className="mt-1 text-xs text-gray-500">You can review the current settings here. The backend will verify whether your account may save changes or delete this project.</div>
           </div>
           <CustomFloatLabel
             id="editProjectName"
@@ -391,14 +361,28 @@ export default function ProjectOverview() {
               showTime
             />
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <SecondaryOutlinedButton label="Cancel" onClick={() => setEditingProject(null)} />
-            <PrimaryButton
-              label="Save changes"
-              loading={savingProject}
-              disabled={!formState.name.trim() || !formState.startDate || !formState.endDate}
-              onClick={handleUpdateProject}
-            />
+          <div className="flex flex-wrap justify-between gap-2 pt-2">
+            <button
+              type="button"
+              className="rounded-lg border border-color-coral px-4 py-2 text-sm font-semibold text-color-coral transition hover:bg-color-coral hover:text-white"
+              onClick={() => {
+                if (editingProject) {
+                  setDeletingProject(editingProject)
+                  setEditingProject(null)
+                }
+              }}
+            >
+              Delete project
+            </button>
+            <div className="flex gap-2">
+              <SecondaryOutlinedButton label="Cancel" onClick={() => setEditingProject(null)} />
+              <PrimaryButton
+                label="Save changes"
+                loading={savingProject}
+                disabled={!formState.name.trim() || !formState.startDate || !formState.endDate}
+                onClick={handleUpdateProject}
+              />
+            </div>
           </div>
         </div>
       </Dialog>

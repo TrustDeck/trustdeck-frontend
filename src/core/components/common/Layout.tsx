@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import { Toast } from 'primereact/toast'
+import RouteErrorBoundary from './RouteErrorBoundary'
 
 const Layout: React.FC = () => {
   const setToast = useToastStore((state) => state.setToast)
@@ -68,7 +69,9 @@ const Layout: React.FC = () => {
         )}
         <Toast ref={setToast} />
         <div className="flex w-full p-4">
-          <Outlet />
+          <RouteErrorBoundary resetKey={`${location.pathname}${location.search}`}>
+            <Outlet />
+          </RouteErrorBoundary>
         </div>
       </div>
     </div>

@@ -4,7 +4,13 @@ import useUserStore from '../stores/UserStore'
 export type CachedEffectivePermission = {
   resourceType?: string
   resourceName?: string
+  projectAbbreviation?: string
+  projectName?: string
+  domainName?: string
   action?: string
+  operation?: string
+  decision?: string
+  [key: string]: unknown
 }
 
 export type CachedUserAccess = {
@@ -27,6 +33,10 @@ function normalize(value: unknown) {
   return String(value ?? '').trim().toLowerCase()
 }
 
+function normalizedParts(value: unknown) {
+  return normalize(value).split(/[^a-z0-9]+/).filter(Boolean)
+}
+
 function currentUserQuery() {
   const user = useUserStore.getState()
   return user.email || user.fullname || user.username
@@ -34,10 +44,22 @@ function currentUserQuery() {
 
 function extractEffectivePermissions(operator: unknown): CachedEffectivePermission[] {
   if (!operator || typeof operator !== 'object') return []
-  const candidate = operator as { effectivePermissions?: unknown }
-  return Array.isArray(candidate.effectivePermissions)
-    ? (candidate.effectivePermissions as CachedEffectivePermission[])
-    : []
+  const candidate = operator as {
+    effectivePermissions?: unknown
+    permissions?: unknown
+    grantedPermissions?: unknown
+    grants?: unknown
+  }
+
+  const candidates = [
+    candidate.effectivePermissions,
+    candidate.permissions,
+    candidate.grantedPermissions,
+    candidate.grants
+  ]
+
+  const firstArray = candidates.find(Array.isArray)
+  return Array.isArray(firstArray) ? (firstArray as CachedEffectivePermission[]) : []
 }
 
 function isCurrentOperator(operator: unknown) {
@@ -47,9 +69,11 @@ function isCurrentOperator(operator: unknown) {
     userId?: string
     username?: string
     email?: string
+    id?: string
+    sub?: string
   }
   return Boolean(
-    (user.username && (candidate.userId === user.username || candidate.username === user.username)) ||
+    (user.username && [candidate.userId, candidate.username, candidate.id, candidate.sub].includes(user.username)) ||
       (user.email && candidate.email === user.email)
   )
 }
@@ -100,6 +124,12 @@ export async function getCurrentUserAccess(forceRefresh = false): Promise<Cached
 function hasPrivilegedRole(roles: string[]) {
   return roles.some((role) => {
     const r = normalize(role)
+    const parts = normalizedParts(role)
+    const joined = parts.join('-')
+    const hasProject = parts.includes('project') || parts.includes('projects') || r.includes('trustdeck')
+    const hasCrud = parts.includes('crud') || r.includes('create-read-update-delete')
+    const hasManage = parts.includes('manage') || parts.includes('manager') || parts.includes('admin')
+
     return (
       r === 'admin' ||
       r === 'administrator' ||
@@ -108,29 +138,60 @@ function hasPrivilegedRole(roles: string[]) {
       r === 'trustdeck_admin' ||
       r === 'backend-admin' ||
       r === 'project-admin' ||
+      r === 'project-crud' ||
+      r === 'projects-crud' ||
+      r === 'all-projects-crud' ||
       r === 'permission-manager' ||
+      joined.includes('all-project') ||
+      (hasProject && (hasCrud || hasManage)) ||
       r.includes('admin') ||
       r.includes('permission-manager')
     )
   })
 }
 
-function actionAllows(action: string, operation: 'create' | 'update' | 'delete') {
-  const a = normalize(action)
-  if (!a) return false
-  if (a === '*' || a === 'all') return true
-  if (
-    a.includes('project-admin') ||
-    a.includes('project-manage') ||
-    a.includes('manage-project') ||
-    a.includes('permission-manager')
-  ) {
-    return true
-  }
-  if (!a.includes('project')) return false
-  if (operation === 'create') return a.includes('create') || a.includes('write')
-  if (operation === 'update') return a.includes('update') || a.includes('edit') || a.includes('write')
-  return a.includes('delete') || a.includes('remove')
+function operationAliases(operation: 'create' | 'update' | 'delete') {
+  if (operation === 'create') return ['create', 'add', 'write', 'save', 'crud', 'manage', 'admin', '*', 'all']
+  if (operation === 'update') return ['update', 'edit', 'write', 'modify', 'crud', 'manage', 'admin', '*', 'all']
+  return ['delete', 'remove', 'write', 'crud', 'manage', 'admin', '*', 'all']
+}
+
+function actionAllows(actionValue: unknown, operation: 'create' | 'update' | 'delete') {
+  const action = normalize(actionValue)
+  if (!action) return false
+  const aliases = operationAliases(operation)
+  if (aliases.includes(action)) return true
+
+  const parts = normalizedParts(action)
+  if (parts.some((part) => aliases.includes(part))) return true
+
+  // Backend actions are often namespaced, e.g. PROJECT_UPDATE, UPDATE_PROJECT, project:update.
+  const mentionsProject = parts.includes('project') || parts.includes('projects') || action.includes('project')
+  return mentionsProject && parts.some((part) => aliases.includes(part))
+}
+
+function permissionAction(permission: CachedEffectivePermission) {
+  return permission.action ?? permission.operation ?? permission.permission ?? permission.name
+}
+
+function permissionResourceType(permission: CachedEffectivePermission) {
+  return permission.resourceType ?? permission.resource ?? permission.scope ?? permission.type
+}
+
+function permissionResourceName(permission: CachedEffectivePermission) {
+  return (
+    permission.resourceName ??
+    permission.projectAbbreviation ??
+    permission.projectName ??
+    permission.domainName ??
+    permission.project ??
+    permission.domain
+  )
+}
+
+function permissionDecisionAllows(permission: CachedEffectivePermission) {
+  const decision = normalize(permission.decision)
+  return !decision || decision === 'allow' || decision === 'allowed' || decision === 'grant' || decision === 'granted'
 }
 
 export function canManageProject(
@@ -142,16 +203,19 @@ export function canManageProject(
   if (hasPrivilegedRole(access.roles)) return true
 
   return access.effectivePermissions.some((permission) => {
-    const resourceType = normalize(permission.resourceType)
-    const resourceName = normalize(permission.resourceName)
+    if (!permissionDecisionAllows(permission)) return false
+
+    const resourceType = normalize(permissionResourceType(permission))
+    const resourceName = normalize(permissionResourceName(permission))
     const project = normalize(projectAbbreviation)
-    const action = normalize(permission.action)
+    const action = permissionAction(permission)
 
     if (!actionAllows(action, operation)) return false
-    if (resourceType === 'global') return true
-    if (resourceType !== 'project') return false
+
+    if (!resourceType || resourceType === 'global' || resourceType === '*' || resourceType === 'all') return true
+    if (resourceType !== 'project' && resourceType !== 'projects') return false
     if (!project) return true
-    return !resourceName || resourceName === project
+    return !resourceName || resourceName === project || resourceName === '*' || resourceName === 'all'
   })
 }
 

@@ -11,6 +11,7 @@ import { oidcConfig } from '../../core/configs/oidc'
 import useUserStore from '../../core/stores/UserStore'
 import { useAuthStore } from '../../core/stores/AuthWebStore'
 import TrustDeck from '@service/TrustDeck'
+import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
   return Boolean(value && value.startsWith('/') && !value.startsWith('//'))
@@ -27,15 +28,6 @@ const getReturnTo = (search: string) => {
 }
 
 
-const clearStoredOidcState = () => {
-  Object.keys(window.localStorage)
-    .filter((key) => key.startsWith('oidc.'))
-    .forEach((key) => window.localStorage.removeItem(key))
-
-  Object.keys(window.sessionStorage)
-    .filter((key) => key.startsWith('oidc.'))
-    .forEach((key) => window.sessionStorage.removeItem(key))
-}
 
 const Login: React.FC = () => {
   const auth = useAuth()
@@ -45,6 +37,7 @@ const Login: React.FC = () => {
   const [isStartingLogin, setIsStartingLogin] = useState(false)
 
   const clearLocalAuthState = async () => {
+    clearLoggedOutMarker()
     TrustDeck.instance().clearToken()
     useUserStore.getState().clear()
     useAuthStore.getState().clear()
@@ -70,7 +63,7 @@ const Login: React.FC = () => {
 
     try {
       await clearLocalAuthState()
-      window.sessionStorage.setItem('trustdeck:returnTo', returnTo)
+      setReturnTo(returnTo)
 
       await auth.signinRedirect({
         redirect_uri: oidcConfig.redirect_uri,

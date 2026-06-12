@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from 'react-oidc-context'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Dialog } from 'primereact/dialog'
 import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -18,6 +19,7 @@ import {
   canManageProject,
   getCurrentUserAccess
 } from '../../core/services/PermissionCache'
+import useUserStore from '../../core/stores/UserStore'
 
 type ProjectFormState = {
   name: string
@@ -53,12 +55,26 @@ export default function ProjectOverview() {
   const [deleting, setDeleting] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const auth = useAuth()
+  const isAuthenticated = useUserStore((state) => state.isAuthenticated)
+  const username = useUserStore((state) => state.username)
+  const roles = useUserStore((state) => state.roles)
   const showToast = useToastStore((state) => state.show)
 
   useEffect(() => {
     let isMounted = true
+    const accessTokenReady = Boolean(auth.user?.access_token || isAuthenticated)
+
+    if (!accessTokenReady) {
+      setIsLoading(true)
+      return () => {
+        isMounted = false
+      }
+    }
+
     const fetchProjects = async () => {
       try {
+        setIsLoading(true)
         const data = await ProjectService.getProjects()
         const uniqueProjects = Array.from(
           new Map(data.map((project) => [project.abbreviation, project])).values()
@@ -75,11 +91,16 @@ export default function ProjectOverview() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [auth.user?.access_token, isAuthenticated])
 
   useEffect(() => {
     let isMounted = true
-    getCurrentUserAccess()
+    if (!isAuthenticated && !auth.user?.access_token) return () => {
+      isMounted = false
+    }
+
+    setPermissionsLoading(true)
+    getCurrentUserAccess(true)
       .then((resolvedAccess) => {
         if (isMounted) setAccess(resolvedAccess)
       })
@@ -93,7 +114,7 @@ export default function ProjectOverview() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [auth.user?.access_token, isAuthenticated, roles, username])
 
   const filteredProjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase()

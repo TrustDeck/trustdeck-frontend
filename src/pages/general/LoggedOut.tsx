@@ -10,6 +10,7 @@ import Panel from '../../core/components/common/Panel'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { clearStoredOidcState, markLoggedOut } from '../../core/services/authSession'
 
 const LoggedOut: React.FC = () => {
   const auth = useAuth()
@@ -22,6 +23,7 @@ const LoggedOut: React.FC = () => {
   const { t } = useTranslation()
 
   async function logout_helper() {
+    markLoggedOut()
     // Clear TrustDeck token
     TrustDeck.instance().clearToken()
     
@@ -35,12 +37,8 @@ const LoggedOut: React.FC = () => {
     await auth.removeUser()
     
     // Ensure AuthWebStorage is cleared (in case removeUser didn't trigger it)
-    // Get all keys from localStorage that start with 'oidc.' and remove them
     if (typeof window !== 'undefined') {
-      const oidcKeys = Object.keys(window.localStorage).filter((key) =>
-        key.startsWith('oidc.')
-      )
-      oidcKeys.forEach((key) => window.localStorage.removeItem(key))
+      clearStoredOidcState()
     }
     
     // Clear stale OIDC state
@@ -58,6 +56,7 @@ const LoggedOut: React.FC = () => {
     const logout = async () => {
       if (!hasRun.current) {
         hasRun.current = true
+        markLoggedOut()
         if (
           isAuthenticated &&
           Object.keys(authData).length > 0 &&

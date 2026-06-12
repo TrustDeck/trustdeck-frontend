@@ -88,3 +88,68 @@
   min-width: 0 !important;
   box-sizing: border-box;
 }
+
+/* Lightweight application dark mode. This keeps PrimeReact's light theme but darkens the app chrome/cards. */
+.dark body,
+.dark #root {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.dark .bg-surface,
+.dark .bg-surface\/95 {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-white,
+.dark .basic-panel,
+.dark .p-overlaypanel,
+.dark .p-dialog,
+.dark .p-dialog-content,
+.dark .p-dialog-header {
+  background-color: #1e293b !important;
+  color: #e5e7eb !important;
+}
+
+.dark .bg-sidebar {
+  background-color: #111827 !important;
+}
+
+.dark .text-black,
+.dark .text-gray-900,
+.dark .text-slate-950,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #f8fafc !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .ring-slate-200 {
+  border-color: #334155 !important;
+  --tw-ring-color: #334155 !important;
+}
+
+.dark .bg-gray-50,
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+.dark input,
+.dark textarea,
+.dark .p-inputtext,
+.dark .p-dropdown,
+.dark .p-calendar,
+.dark .p-autocomplete-input {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}

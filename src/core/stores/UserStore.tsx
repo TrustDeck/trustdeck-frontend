@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { shared } from 'use-broadcast-ts'
 import { jwtDecode } from 'jwt-decode'
 import { subscribeWithSelector } from 'zustand/middleware'
+import { isTimestampExpired } from '../services/authSession'
 
 interface TokenDetails {
   sub: string
@@ -10,11 +11,10 @@ interface TokenDetails {
   email: string
   locale: string
   exp?: number
-  resource_access?: {
-    backend?: {
-      roles?: string[]
-    }
+  realm_access?: {
+    roles?: string[]
   }
+  resource_access?: Record<string, { roles?: string[] }>
 }
 
 interface UserState {
@@ -47,7 +47,28 @@ const useUserStore = create<UserState>()(
         setFromAccessToken: (token: string) => {
           try {
             const decoded = jwtDecode<TokenDetails>(token)
-            //console.log(decoded);
+            const tokenExpiresAt = decoded.exp ? decoded.exp * 1000 : null
+
+            if (isTimestampExpired(tokenExpiresAt, 0)) {
+              set({
+                username: '',
+                firstname: '',
+                lastname: '',
+                fullname: '',
+                email: '',
+                locale: 'en',
+                roles: [],
+                tokenExpiresAt: null,
+                isAuthenticated: false
+              })
+              return
+            }
+
+            const resourceRoles = Object.values(decoded.resource_access ?? {})
+              .flatMap((client) => client.roles ?? [])
+            const realmRoles = decoded.realm_access?.roles ?? []
+            const roles = Array.from(new Set([...realmRoles, ...resourceRoles]))
+
             set({
               username: decoded.sub,
               fullname: (
@@ -59,8 +80,8 @@ const useUserStore = create<UserState>()(
               lastname: decoded.family_name || '',
               email: decoded.email || '',
               locale: decoded.locale || 'en',
-              roles: decoded.resource_access?.backend?.roles || [],
-              tokenExpiresAt: decoded.exp ? decoded.exp * 1000 : null,
+              roles,
+              tokenExpiresAt,
               isAuthenticated: true
             })
           } catch (error) {

@@ -1,30 +1,47 @@
 import { useTranslation } from 'react-i18next'
 import { BreadCrumb } from 'primereact/breadcrumb'
 import { MenuItem, MenuItemOptions } from 'primereact/menuitem'
-import useLayoutStore from '../../stores/LayoutStore' // Import useLayoutStore
+import { useNavigate } from 'react-router-dom'
+import useLayoutStore from '../../stores/LayoutStore'
 
 const Breadcrumbs: React.FC = () => {
-  const { t } = useTranslation() // Use multiple namespaces
-  const breadcrumbItems = useLayoutStore((state) => state.breadcrumbItems) // Use LayoutStore
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const breadcrumbItems = useLayoutStore((state) => state.breadcrumbItems)
 
-  // Custom item template using Tailwind CSS for responsive truncation
+  const navigateTo = (url?: string) => {
+    if (!url) return
+    navigate(url)
+  }
+
   const itemTemplate = (item: MenuItem, options: MenuItemOptions) => {
     return (
-      <a href={item.url} className={options.className}>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault()
+          navigateTo(item.url)
+        }}
+        className={`${options.className} cursor-pointer bg-transparent border-0 p-0`}
+      >
         <span className="block truncate max-w-28 xs:max-w-40 sm:max-w-60 md:max-w-none">
           {item.label}
         </span>
-      </a>
+      </button>
     )
   }
 
   const translatedItems: MenuItem[] = breadcrumbItems.map((item) => ({
-    label: t(item.label), // Translate using i18next
+    label: t(item.label),
     url: item.url,
     template: itemTemplate
   }))
 
-  const home: MenuItem = { label: t('home'), url: '/projects' }
+  const home: MenuItem = {
+    label: t('home'),
+    url: '/projects',
+    template: itemTemplate
+  }
 
   return (
     <BreadCrumb

@@ -16,6 +16,7 @@ import TrustDeck from '@service/TrustDeck'
 import logger from './Logger.ts'
 import { useSyncApiToken } from './services/setupApi.ts'
 import RequireProject from './components/routing/RequireProject'
+import { hasValidOidcUser, isMarkedLoggedOut, isTimestampExpired, markLoggedOut } from './services/authSession'
 
 // Higher-Order Component to handle protected routes dynamically
 interface ProtectedRouteProps {
@@ -31,12 +32,16 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
 }) => {
   const auth = useAuth()
   const location = useLocation()
-  const authenticated = checkAuth || auth.isAuthenticated
+  const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
+  const locallyLoggedOut = isMarkedLoggedOut()
+  const hasValidStoredUser = checkAuth && !isTimestampExpired(tokenExpiresAt, 0)
+  const hasValidOidcSession = auth.isAuthenticated && hasValidOidcUser(auth.user)
+  const authenticated = !locallyLoggedOut && (hasValidStoredUser || hasValidOidcSession)
 
   logger.info(isProtected ? 'Route is protected' : 'Route is public')
   logger.info(authenticated ? 'is authenticated' : 'is not authenticated')
 
-  if (auth.isLoading && isProtected && !authenticated) {
+  if (auth.isLoading && isProtected && !authenticated && !locallyLoggedOut) {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center text-gray-500">
         Checking your session...
@@ -46,6 +51,7 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
 
   if (isProtected && !authenticated) {
     TrustDeck.instance().clearToken()
+    useUserStore.getState().clear()
     const returnTo = `${location.pathname}${location.search}${location.hash}`
     return <Navigate to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
   }
@@ -113,6 +119,9 @@ const AuthStateListener: React.FC = () => {
   useEffect(() => {
     // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
+      markLoggedOut()
+      TrustDeck.instance().clearToken()
+      useUserStore.getState().clear()
       navigate('/logged-out') // Use navigate instead of hard setting the location
     })
   }, [auth.events, navigate])

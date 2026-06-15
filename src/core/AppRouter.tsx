@@ -15,6 +15,7 @@ import useUserStore from './stores/UserStore.tsx' // Import the UserStore
 import TrustDeck from '@service/TrustDeck'
 import logger from './Logger.ts'
 import { useSyncApiToken } from './services/setupApi.ts'
+import { refreshAccessTokenForNavigation } from './services/tokenRefresh.ts'
 import RequireProject from './components/routing/RequireProject'
 import { hasValidOidcUser, isMarkedLoggedOut, isTimestampExpired, markLoggedOut } from './services/authSession'
 
@@ -57,6 +58,25 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
   }
 
   return <Component />
+}
+
+
+const TokenRefreshOnMainNavigation: React.FC = () => {
+  const auth = useAuth()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!auth.isAuthenticated || auth.isLoading || isMarkedLoggedOut()) return
+    const isMainRoute = routes.some(
+      (route) =>
+        route.isSidebar &&
+        Boolean(matchPath({ path: route.path, end: false }, location.pathname))
+    )
+    if (!isMainRoute) return
+    void refreshAccessTokenForNavigation(auth)
+  }, [auth, auth.isAuthenticated, auth.isLoading, location.pathname])
+
+  return null
 }
 
 const AuthStateListener: React.FC = () => {
@@ -186,6 +206,7 @@ const AppRouter: FC = () => {
   return (
     <>
       <AuthStateListener />
+      <TokenRefreshOnMainNavigation />
       <BreadcrumbUpdater />
       <Routes>
         <Route element={<Layout />}>

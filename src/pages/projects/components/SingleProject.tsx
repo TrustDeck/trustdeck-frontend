@@ -15,6 +15,7 @@ interface SingleProjectProps {
   permissionsReady?: boolean
   onEdit?: (project: ProjectType) => void
   onDelete?: (project: ProjectType) => void
+  projectImage?: string
 }
 
 function ProjectActionButton({
@@ -58,7 +59,8 @@ export default function SingleProject({
   canDelete = false,
   permissionsReady = true,
   onEdit,
-  onDelete
+  onDelete,
+  projectImage
 }: SingleProjectProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -79,7 +81,7 @@ export default function SingleProject({
     })
 
     try {
-      const image = await ProjectService.getProjectImage()
+      const image = projectImage ?? await ProjectService.getProjectImage(project.abbreviation)
       setProjectImage(image)
     } catch (error) {
       console.warn('Failed to load project image', error)
@@ -123,9 +125,18 @@ export default function SingleProject({
       className="cursor-pointer hover:bg-gray-100 transition-colors duration-200"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="my-3 truncate" title={project.name}>{project.name}</h2>
-          <p className="text-sm text-gray-500">{project.abbreviation}</p>
+        <div className="flex min-w-0 items-center gap-4">
+          {projectImage ? (
+            <img src={projectImage} alt={`${project.name} icon`} className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+          ) : (
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-lg font-semibold text-color-blue dark:bg-blue-950/50 dark:text-blue-100">
+              {(project.name || project.abbreviation || "?").slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <h2 className="my-1 truncate" title={project.name}>{project.name}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-300">{project.abbreviation}</p>
+          </div>
         </div>
         <div className="flex shrink-0 gap-2 pt-2">
           <ProjectActionButton

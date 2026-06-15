@@ -31,6 +31,7 @@ function toDate(value?: string) {
 
 export default function ProjectOverview() {
   const [projects, setProjects] = useState<ProjectType[]>([])
+  const [projectImages, setProjectImages] = useState<Record<string, string | undefined>>({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [projectStatus, setProjectStatus] = useState<'all' | 'active' | 'completed'>('all')
   const [dateOrder, setDateOrder] = useState<'newest' | 'oldest'>('newest')
@@ -83,6 +84,35 @@ export default function ProjectOverview() {
       isMounted = false
     }
   }, [auth.user?.access_token, isAuthenticated])
+
+  useEffect(() => {
+    let isMounted = true
+    if (!projects.length) {
+      setProjectImages({})
+      return () => {
+        isMounted = false
+      }
+    }
+
+    const loadImages = async () => {
+      const entries = await Promise.all(
+        projects.map(async (project) => {
+          try {
+            const image = await ProjectService.getProjectImage(project.abbreviation)
+            return [project.abbreviation, image] as const
+          } catch {
+            return [project.abbreviation, undefined] as const
+          }
+        })
+      )
+      if (isMounted) setProjectImages(Object.fromEntries(entries))
+    }
+
+    void loadImages()
+    return () => {
+      isMounted = false
+    }
+  }, [projects])
 
   const filteredProjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase()
@@ -291,6 +321,7 @@ export default function ProjectOverview() {
                 canDelete
                 onEdit={openEditDialog}
                 onDelete={setDeletingProject}
+                projectImage={projectImages[project.abbreviation]}
               />
             ))}
           </div>

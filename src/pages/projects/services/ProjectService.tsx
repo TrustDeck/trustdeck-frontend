@@ -24,9 +24,9 @@ const ProjectService = {
     return TrustDeck.instance().createGroup(defaultGroup)
   },
 
-  getProjectImage: async (): Promise<string | undefined> => {
+  getProjectImage: async (projectAbbreviation?: string): Promise<string | undefined> => {
     try {
-      const blob = await TrustDeck.instance().getImage()
+      const blob = await TrustDeck.instance().getImage(projectAbbreviation)
       // Use base64 data URL so the image persists in localStorage and survives refresh
       return await new Promise<string | undefined>((resolve) => {
         const reader = new FileReader()

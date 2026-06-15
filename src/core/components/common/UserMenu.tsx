@@ -1,6 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
-import { Button } from 'primereact/button'
-import { OverlayPanel } from 'primereact/overlaypanel'
+import { useState, useEffect } from 'react'
 import { Avatar } from 'primereact/avatar'
 import useUserStore from '../../stores/UserStore.tsx'
 import { oidcConfig } from '../../configs/oidc.ts'
@@ -42,9 +40,6 @@ function getInitialDarkMode() {
 
 const UserMenu: React.FC = () => {
   const navigate = useNavigate()
-  const op = useRef<OverlayPanel>(null)
-  const buttonRef = useRef<HTMLDivElement>(null)
-  const [buttonWidth, setButtonWidth] = useState('auto')
   const [isOpen, setIsOpen] = useState(false)
   const [remaining, setRemaining] = useState('—')
   const [darkMode, setDarkMode] = useState(getInitialDarkMode)
@@ -52,18 +47,6 @@ const UserMenu: React.FC = () => {
   const email = useUserStore((state) => state.email)
   const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
   const displayName = fullname || email || 'Signed-in user'
-
-  const updateWidth = () => {
-    if (buttonRef.current) {
-      setButtonWidth(`${buttonRef.current.offsetWidth}px`)
-    }
-  }
-
-  useEffect(() => {
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
 
   useEffect(() => {
     const updateRemaining = () => setRemaining(formatRemaining(tokenExpiresAt))
@@ -77,16 +60,12 @@ const UserMenu: React.FC = () => {
     window.localStorage.setItem('trustdeck:theme', darkMode ? 'dark' : 'light')
   }, [darkMode])
 
-  const handleLogout = (e: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
-    markLoggedOut()
-    setIsOpen(false)
-    op.current?.toggle(e)
-    navigate('/logged-out')
-  }
+  const closeMenu = () => setIsOpen(false)
 
-  const closeMenu = () => {
-    setIsOpen(false)
-    op.current?.hide()
+  const handleLogout = () => {
+    markLoggedOut()
+    closeMenu()
+    navigate('/logged-out')
   }
 
   const handleDarkModeToggle = () => {
@@ -94,58 +73,55 @@ const UserMenu: React.FC = () => {
     closeMenu()
   }
 
-  const toggleMenu = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    setIsOpen(!isOpen)
-    op.current?.toggle(e)
-  }
-
   return (
-    <div className="relative w-full">
-      <div ref={buttonRef} className="w-full flex justify-end">
-        <Button
-          className={`group flex w-auto max-w-[340px] font-font-text items-center gap-2 bg-white hover:bg-gray-50 text-black shadow-md border-0 px-2 py-1 transition-all duration-200 ${
+    <div className="relative flex w-full justify-end">
+      <div
+        className="relative"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+        onFocus={() => setIsOpen(true)}
+      >
+        <button
+          type="button"
+          className={`group flex w-auto max-w-[360px] font-font-text items-center gap-2 bg-white hover:bg-gray-50 text-black shadow-md border-0 px-2 py-1 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800 ${
             isOpen ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'
           }`}
-          onClick={toggleMenu}
           aria-label="Open user menu"
         >
           <div className="flex items-center gap-2">
-            <div className="min-w-0 max-w-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-w-[230px] group-hover:opacity-100">
-              <div className="truncate text-sm font-semibold text-gray-900">{displayName}</div>
-              <div className="truncate text-[13px] text-gray-500">Automatic logout in {remaining}</div>
+            <div className="min-w-0 max-w-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-w-[250px] group-hover:opacity-100">
+              <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
+              <div className="truncate text-sm text-gray-500 dark:text-gray-300">Automatic logout in {remaining}</div>
             </div>
             <div className="flex flex-col items-center leading-none">
               <Avatar
-                className="bg-color-light-gray w-[41px] h-[41px]"
+                className="bg-color-light-gray w-[41px] h-[41px] dark:bg-slate-700 dark:text-white"
                 label={getInitials(fullname, email)}
                 size="normal"
                 shape="circle"
               />
-              <span className="mt-1 text-[13px] font-semibold text-gray-500" title="Time until automatic logout">
+              <span className="mt-1 text-sm font-semibold text-gray-500 dark:text-gray-300" title="Time until automatic logout">
                 {remaining}
               </span>
             </div>
           </div>
-        </Button>
-      </div>
+        </button>
 
-      <OverlayPanel
-        ref={op}
-        className="bg-white shadow-lg rounded-b-lg rounded-t-none max-w-[320px] min-w-[190px]"
-        style={{ width: buttonWidth, marginTop: '0px' }}
-        onHide={() => setIsOpen(false)}
-      >
-        <ul>
-          <li className="px-4 py-2 rounded">
+        {isOpen && (
+          <div className="absolute right-0 top-full z-[1000] min-w-[245px] rounded-b-lg rounded-tl-lg bg-white p-2 shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
+            <div className="mb-2 border-b border-gray-100 px-3 pb-2 dark:border-slate-700">
+              <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
+              <div className="mt-1 text-sm text-gray-500 dark:text-gray-300">Automatic logout in {remaining}</div>
+            </div>
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-3 text-left"
+              className="flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
               onClick={handleDarkModeToggle}
             >
               <span>Dark mode</span>
               <span
                 className={`inline-flex h-6 w-11 items-center rounded-full border transition ${
-                  darkMode ? 'bg-color-blue border-color-blue' : 'bg-gray-100 border-gray-300'
+                  darkMode ? 'bg-color-blue border-color-blue' : 'bg-gray-100 border-gray-300 dark:bg-slate-700 dark:border-slate-500'
                 }`}
                 aria-hidden="true"
               >
@@ -158,29 +134,31 @@ const UserMenu: React.FC = () => {
                 </span>
               </span>
             </button>
-          </li>
-          <li
-            className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
-            onClick={() => {
-              closeMenu()
-              const newWindow = window.open(
-                oidcConfig.authority + '/account',
-                '_blank',
-                'noopener,noreferrer'
-              )
-              if (newWindow) newWindow.opener = null
-            }}
-          >
-            Your Account
-          </li>
-          <li
-            className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded"
-            onClick={handleLogout}
-          >
-            Log out
-          </li>
-        </ul>
-      </OverlayPanel>
+            <button
+              type="button"
+              className="w-full rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
+              onClick={() => {
+                closeMenu()
+                const newWindow = window.open(
+                  oidcConfig.authority + '/account',
+                  '_blank',
+                  'noopener,noreferrer'
+                )
+                if (newWindow) newWindow.opener = null
+              }}
+            >
+              Your Account
+            </button>
+            <button
+              type="button"
+              className="w-full rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
+              onClick={handleLogout}
+            >
+              Log out
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

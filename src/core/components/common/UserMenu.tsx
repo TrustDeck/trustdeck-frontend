@@ -75,7 +75,7 @@ const UserMenu: React.FC = () => {
 
   return (
     <div
-      className="relative flex h-[68px] w-full justify-end"
+      className="relative flex h-14 w-full justify-end overflow-visible"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
       onFocus={() => setIsOpen(true)}
@@ -85,7 +85,7 @@ const UserMenu: React.FC = () => {
       }}
     >
       <div
-        className={`absolute right-0 top-0 z-50 w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
+        className={`fixed right-4 top-4 z-[80] w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 sm:right-6 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
       >
         <button
           type="button"

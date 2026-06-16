@@ -137,6 +137,25 @@ export default function GlobalPermissions() {
     }))
   }, [auth])
 
+  const findCurrentUserSuggestion = useCallback(async (): Promise<PersonSuggestion | undefined> => {
+    const queries = [currentUserId, currentUserEmail].filter(
+      (value): value is string => Boolean(value && value.trim())
+    )
+
+    for (const query of queries) {
+      const results = await fetchPersons(query)
+      const match = results.find(
+        (operator) =>
+          operator.username === currentUserId ||
+          operator.userId === currentUserId ||
+          operator.email === currentUserEmail
+      )
+      if (match) return match
+    }
+
+    return undefined
+  }, [currentUserEmail, currentUserId, fetchPersons])
+
   useEffect(() => {
     let active = true
     async function loadProjectDomains() {
@@ -166,10 +185,9 @@ export default function GlobalPermissions() {
     async function loadInitialData() {
       if (!auth.isAuthenticated || auth.isLoading) return
       await refreshAccessTokenForNavigation(auth)
-      const query = currentUserFullname || currentUserEmail || currentUserId
       const definedPromise = loadDefinedPermissions(false)
 
-      if (!query) {
+      if (!currentUserId && !currentUserEmail) {
         setCurrentAccessState('ready')
         await definedPromise
         return
@@ -177,14 +195,8 @@ export default function GlobalPermissions() {
 
       setCurrentAccessState('loading')
       try {
-        const results = await fetchPersons(query)
+        const match = await findCurrentUserSuggestion()
         if (!active) return
-        const match = results.find(
-          (operator) =>
-            operator.userId === currentUserId ||
-            operator.email === currentUserEmail ||
-            operator.username === currentUserId
-        ) as PersonSuggestion | undefined
         setCurrentEffectivePermissions(match?.effectivePermissions ?? [])
         setCurrentAccessState('ready')
       } catch (error) {
@@ -201,7 +213,7 @@ export default function GlobalPermissions() {
     return () => {
       active = false
     }
-  }, [auth, auth.isAuthenticated, auth.isLoading, currentUserEmail, currentUserFullname, currentUserId, fetchPersons, loadDefinedPermissions])
+  }, [auth, auth.isAuthenticated, auth.isLoading, currentUserEmail, currentUserId, findCurrentUserSuggestion, loadDefinedPermissions])
 
   const globalPermissionRows = useMemo(() => {
     const rows: EffectivePermission[] = definedPermissions

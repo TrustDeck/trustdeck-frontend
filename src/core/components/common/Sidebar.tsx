@@ -28,6 +28,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
   const { t } = useTranslation()
   const projectImage = useProjectStore((state) => state.projectImage)
+  const selectedProject = useProjectStore((state) => state.selectedProject)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
   const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
   const hasTriedRefetch = useRef(false)
@@ -54,10 +55,15 @@ export default function Sidebar({ projectName }: SidebarProps) {
 
   // When the selected project changes, clear old image and fetch the new project's image.
   useEffect(() => {
-    if (!projectName) return
+    const projectAbbreviation = selectedProject?.abbreviation
+    if (!projectAbbreviation || projectName === 'TrustDeck') {
+      setProjectImage(undefined)
+      return
+    }
+
     setProjectImage(undefined)
     let cancelled = false
-    ProjectService.getProjectImage()
+    ProjectService.getProjectImage(projectAbbreviation)
       .then((image) => {
         if (!cancelled && image) setProjectImage(image)
       })
@@ -65,11 +71,12 @@ export default function Sidebar({ projectName }: SidebarProps) {
     return () => {
       cancelled = true
     }
-  }, [projectName, setProjectImage])
+  }, [projectName, selectedProject?.abbreviation, setProjectImage])
 
   // Refetch when the stored image is a blob URL (invalid after refresh).
   useEffect(() => {
-    if (!projectName) return
+    const projectAbbreviation = selectedProject?.abbreviation
+    if (!projectAbbreviation || projectName === 'TrustDeck') return
     const stored = projectImage
     const isBrokenBlob =
       typeof stored === 'string' && stored.startsWith('blob:')
@@ -77,7 +84,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
     if (isBrokenBlob && !hasTriedRefetch.current) {
       hasTriedRefetch.current = true
       setProjectImage(undefined)
-      ProjectService.getProjectImage()
+      ProjectService.getProjectImage(projectAbbreviation)
         .then((image) => {
           if (image) setProjectImage(image)
         })
@@ -86,7 +93,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
           hasTriedRefetch.current = false
         })
     }
-  }, [projectName, projectImage, setProjectImage])
+  }, [projectName, projectImage, selectedProject?.abbreviation, setProjectImage])
 
   // Only close sidebar on nav click when below xl (so big screens keep it open).
   const closeSidebarOnNavigate = () => {

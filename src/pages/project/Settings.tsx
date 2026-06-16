@@ -394,24 +394,6 @@ const Settings: React.FC = () => {
               Review all project metadata shown by the backend. The internal
               project ID is intentionally hidden.
             </p>
-            {!isEditingProject ? (
-              <PrimaryButton label="Edit project" onClick={handleStartEdit} />
-            ) : (
-              <div className="flex gap-2">
-                <SecondaryOutlinedButton
-                  label="Cancel"
-                  onClick={handleCancelEdit}
-                />
-                <PrimaryButton
-                  label="Save changes"
-                  loading={savingProject}
-                  disabled={
-                    !projectForm.name.trim() || !projectForm.abbreviation.trim()
-                  }
-                  onClick={handleSaveProject}
-                />
-              </div>
-            )}
           </div>
 
           {loadingDetails && (
@@ -541,10 +523,31 @@ const Settings: React.FC = () => {
               </label>
             </div>
           )}
+
+          <div className="mt-6 flex justify-center gap-3">
+            {!isEditingProject ? (
+              <PrimaryButton label="Edit project" onClick={handleStartEdit} />
+            ) : (
+              <>
+                <SecondaryOutlinedButton
+                  label="Cancel"
+                  onClick={handleCancelEdit}
+                />
+                <PrimaryButton
+                  label="Save changes"
+                  loading={savingProject}
+                  disabled={
+                    !projectForm.name.trim() || !projectForm.abbreviation.trim()
+                  }
+                  onClick={handleSaveProject}
+                />
+              </>
+            )}
+          </div>
         </Panel>
 
         <Panel title={t('settings:photo')} className="w-full max-w-4xl mt-6">
-          <div className="grid gap-6 md:grid-cols-[180px_1fr]">
+          <div className="mt-3 grid gap-6 md:grid-cols-[180px_1fr]">
             <div className="flex justify-center md:justify-start">
               {imagePreview ? (
                 <img

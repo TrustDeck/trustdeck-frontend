@@ -3,6 +3,7 @@ import { ProjectType } from '../types/ProjectType'
 
 const ProjectService = {
   getProjects: async (): Promise<ProjectType[]> => {
+    if (!TrustDeck.instance().hasAccessToken()) return []
     return TrustDeck.instance().getProjects()
   },
 
@@ -36,7 +37,7 @@ const ProjectService = {
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      if (!message.includes('404')) {
+      if (!message.includes('404') && !message.includes('No access token available')) {
         console.warn('Failed to get project image', err)
       }
       return undefined
@@ -64,7 +65,7 @@ const ProjectService = {
       return entitiesFromBackend
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      if (!message.includes('404')) {
+      if (!message.includes('404') && !message.includes('No access token available')) {
         console.error('Failed to load entity attributes from backend', error)
       }
       return []
@@ -88,7 +89,7 @@ const ProjectService = {
       return names
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      if (!message.includes('404')) {
+      if (!message.includes('404') && !message.includes('No access token available')) {
         console.error('Failed to load project entities', error)
       }
       return []

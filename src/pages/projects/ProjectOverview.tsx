@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import SingleProject from './components/SingleProject'
 import ProjectService from './services/ProjectService'
+import TrustDeck from '../../core/services/TrustDeck'
 import { ProjectType } from './types/ProjectType'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomFloatLabel from '../../core/components/form/CustomFloatLabel'
@@ -49,14 +50,16 @@ export default function ProjectOverview() {
 
   useEffect(() => {
     let isMounted = true
-    const accessTokenReady = Boolean(auth.user?.access_token || isAuthenticated)
+    const accessToken = auth.user?.access_token
 
-    if (!accessTokenReady) {
-      setIsLoading(true)
+    if (!accessToken) {
+      setIsLoading(auth.isLoading || isAuthenticated)
       return () => {
         isMounted = false
       }
     }
+
+    TrustDeck.instance().setToken(accessToken)
 
     const fetchProjects = async () => {
       try {
@@ -69,7 +72,10 @@ export default function ProjectOverview() {
         )
         if (isMounted) setProjects(uniqueProjects)
       } catch (e) {
-        console.error('Failed to load projects', e)
+        const message = e instanceof Error ? e.message : String(e)
+        if (!message.includes('No access token available')) {
+          console.error('Failed to load projects', e)
+        }
         if (isMounted) setProjects([])
       } finally {
         if (isMounted) setIsLoading(false)
@@ -79,7 +85,7 @@ export default function ProjectOverview() {
     return () => {
       isMounted = false
     }
-  }, [auth.user?.access_token, isAuthenticated])
+  }, [auth.user?.access_token, auth.isLoading, isAuthenticated])
 
   useEffect(() => {
     let isMounted = true

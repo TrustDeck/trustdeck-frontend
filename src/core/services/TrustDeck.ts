@@ -114,6 +114,14 @@ class TrustDeck {
     this.token = ''
   }
 
+  public hasAccessToken() {
+    return Boolean(this.token)
+  }
+
+  public getAccessToken() {
+    return this.token
+  }
+
   private requireAccessToken() {
     if (!this.token) {
       throw new Error('No access token available; backend request was not sent')

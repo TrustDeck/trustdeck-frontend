@@ -17,7 +17,9 @@ import {
   ArchiveBoxIcon,
   Cog8ToothIcon,
   ShieldCheckIcon,
-  FolderPlusIcon
+  FolderPlusIcon,
+  FolderIcon,
+  CubeTransparentIcon
 } from '@heroicons/react/24/outline'
 import PseudonymDetails from '../../pages/search/PseudonymDetails'
 import Registration from '../../pages/identity/Registration'
@@ -29,7 +31,6 @@ import GlobalPermissions from '../../pages/projects/GlobalPermissions'
 import PermissionsRedirect from '../../pages/projects/PermissionsRedirect'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
-
 
 export type RouteConfig = {
   path: string
@@ -71,7 +72,7 @@ export const routes: RouteConfig[] = [
     path: '/projects',
     titleKey: 'layout:menu.projects',
     component: ProjectOverview,
-    Icon: MagnifyingGlassIcon,
+    Icon: FolderIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: -3
@@ -106,7 +107,7 @@ export const routes: RouteConfig[] = [
     path: '/entity/manager',
     titleKey: 'layout:menu.entityManager',
     component: EntityManager,
-    Icon: IdentificationIcon,
+    Icon: CubeTransparentIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 1

@@ -70,7 +70,8 @@ export default function Sidebar({ projectName }: SidebarProps) {
   useEffect(() => {
     if (!projectName) return
     const stored = projectImage
-    const isBrokenBlob = typeof stored === 'string' && stored.startsWith('blob:')
+    const isBrokenBlob =
+      typeof stored === 'string' && stored.startsWith('blob:')
 
     if (isBrokenBlob && !hasTriedRefetch.current) {
       hasTriedRefetch.current = true
@@ -94,9 +95,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
   // create classes for NavLinks
   function getNavLinkClasses({ isActive }: { isActive: boolean }) {
     return `flex items-center px-4 py-2 rounded-lg transition-all duration-300 
-      ${
-        isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black'
-      }`
+      ${isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black'}`
   }
 
   return (
@@ -109,7 +108,9 @@ export default function Sidebar({ projectName }: SidebarProps) {
         />
       </div>
 
-      <div className={`hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] ${isSidebarOpen ? 'xl:hidden' : ''}`}>
+      <div
+        className={`hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] ${isSidebarOpen ? 'xl:hidden' : ''}`}
+      >
         <ChevronDoubleRightIcon
           onClick={toggleSidebar}
           className="h-6 w-6 absolute top-4 cursor-pointer"
@@ -159,12 +160,20 @@ export default function Sidebar({ projectName }: SidebarProps) {
             aria-label="Close Sidebar"
           />
         </div>
-        <div className='flex'>
-          {projectImage && projectName !== 'TrustDeck' && <img src={projectImage} alt="Project icon" className='mt-8 h-12 w-12 rounded-xl object-cover shrink-0' />}
+        <div className="flex">
+          {projectImage && projectName !== 'TrustDeck' && (
+            <img
+              src={projectImage}
+              alt="Project icon"
+              className="mt-8 h-10 w-10 rounded-xl object-cover shrink-0"
+            />
+          )}
           <h1
             className={[
               'min-w-0 text-[28px] xl:text-[34px] mt-8 pl-3 text-left',
-              projectName === 'TrustDeck' ? 'max-w-none whitespace-nowrap' : 'max-w-[150px] truncate'
+              projectName === 'TrustDeck'
+                ? 'max-w-none whitespace-nowrap'
+                : 'max-w-[150px] truncate'
             ].join(' ')}
             title={projectName}
           >

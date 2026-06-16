@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import useEntityStore from './stores/EntityStore'
 import CustomCard from '../../core/components/common/CustomCard'
 import Panel from '../../core/components/common/Panel'
@@ -13,12 +13,14 @@ import { useTranslation } from 'react-i18next'
 import TrustDeck from '../../core/services/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
 import ProjectService from '../projects/services/ProjectService'
+import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 
 export default function PreReg() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { entityType, setEntityType } = useEntityStore()
   const location = useLocation()
+  const [loadingEntities, setLoadingEntities] = useState(true)
 
   const { entities, selectedProject, setEntities } = useProjectStore()
 
@@ -34,12 +36,19 @@ export default function PreReg() {
       }
     }
     const fetchEntities = async () => {
-      if (!selectedProject?.abbreviation) return
+      if (!selectedProject?.abbreviation) {
+        setLoadingEntities(false)
+        return
+      }
       try {
+        setLoadingEntities(true)
         const projectEntities = await ProjectService.getProjectEntities()
         setEntities(projectEntities)
       } catch (error) {
         console.error('Error fetching project entities:', error)
+        setEntities([])
+      } finally {
+        setLoadingEntities(false)
       }
     }
     fetchDomain()
@@ -62,24 +71,38 @@ export default function PreReg() {
         <div className="w-full text-center flex flex-col items-center">
           <h1 className="mb-3">{t('identity:headers.registration')}</h1>
           <Panel centered title={t('identity:headers.chooseEntity')}>
-            <div className="lg:flex lg:space-y-0 lg:gap-16 justify-center space-y-4 my-4">
-              {entities.map((type) => {
-                let icon = <Squares2X2Icon />
-                if (type === 'person') icon = <UserIcon />
-                else if (type === 'biosample') icon = <BeakerIcon />
+            {loadingEntities ? (
+              <div className="py-10 text-gray-500 dark:text-gray-300">Loading entity types...</div>
+            ) : entities.length === 0 ? (
+              <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No entity types configured yet</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
+                  This project does not have any entity types yet. Create an entity type with the entity builder before registering identities.
+                </p>
+                <div className="mt-6 flex justify-center">
+                  <PrimaryButton label="Open entity builder" onClick={() => navigate('/entity/manager/new')} />
+                </div>
+              </div>
+            ) : (
+              <div className="lg:flex lg:space-y-0 lg:gap-16 justify-center space-y-4 my-4">
+                {entities.map((type) => {
+                  let icon = <Squares2X2Icon />
+                  if (type === 'person') icon = <UserIcon />
+                  else if (type === 'biosample') icon = <BeakerIcon />
 
-                return (
-                  <CustomCard
-                    key={type}
-                    title={type.charAt(0).toUpperCase() + type.slice(1)}
-                    icon={icon}
-                    compactUntil="lg"
-                    className="mt-6 mb-6 min-w-[200px] lg:min-w-[220px] lg:flex-1 lg:max-w-[280px]"
-                    onClick={() => handleTypeClick(type)}
-                  />
-                )
-              })}
-            </div>
+                  return (
+                    <CustomCard
+                      key={type}
+                      title={type.charAt(0).toUpperCase() + type.slice(1)}
+                      icon={icon}
+                      compactUntil="lg"
+                      className="mt-6 mb-6 min-w-[200px] lg:min-w-[220px] lg:flex-1 lg:max-w-[280px]"
+                      onClick={() => handleTypeClick(type)}
+                    />
+                  )
+                })}
+              </div>
+            )}
           </Panel>
         </div>
       )}

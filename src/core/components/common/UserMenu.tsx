@@ -74,18 +74,24 @@ const UserMenu: React.FC = () => {
   }
 
   return (
-    <div className="relative flex w-full justify-end">
+    <div
+      className="relative flex h-[68px] w-full justify-end"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+      onFocus={() => setIsOpen(true)}
+      onBlur={(event) => {
+        const nextFocus = event.relatedTarget
+        if (!(nextFocus instanceof Node) || !event.currentTarget.contains(nextFocus)) setIsOpen(false)
+      }}
+    >
       <div
-        className={`w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
-        onFocus={() => setIsOpen(true)}
+        className={`absolute right-0 top-0 z-50 w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
       >
         <button
           type="button"
           className="flex w-full items-center justify-end gap-3 px-2 py-2 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
           aria-label="Open user menu"
-          onClick={() => setIsOpen((value) => !value)}
+          onClick={() => setIsOpen(true)}
         >
           {isOpen && (
             <div className="min-w-0 flex-1 text-right">

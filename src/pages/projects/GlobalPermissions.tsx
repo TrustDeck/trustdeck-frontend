@@ -166,7 +166,7 @@ export default function GlobalPermissions() {
     async function loadInitialData() {
       if (!auth.isAuthenticated || auth.isLoading) return
       await refreshAccessTokenForNavigation(auth)
-      const query = currentUserId || currentUserFullname || currentUserEmail
+      const query = currentUserFullname || currentUserEmail || currentUserId
       const definedPromise = loadDefinedPermissions(false)
 
       if (!query) {
@@ -400,7 +400,10 @@ export default function GlobalPermissions() {
       }
 
       await Promise.all(updateCalls)
-      await refreshSelectedPerson(selectedPersonId, selectedPerson.username ?? selectedPerson.name)
+      await refreshSelectedPerson(
+        selectedPersonId,
+        selectedPerson.name || selectedPerson.email || selectedPerson.username || selectedPersonId
+      )
       showToast({
         severity: 'success',
         summary: 'Success',

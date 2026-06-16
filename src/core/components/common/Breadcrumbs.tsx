@@ -3,14 +3,17 @@ import { BreadCrumb } from 'primereact/breadcrumb'
 import { MenuItem, MenuItemOptions } from 'primereact/menuitem'
 import { useNavigate } from 'react-router-dom'
 import useLayoutStore from '../../stores/LayoutStore'
+import useProjectStore from '../../stores/ProjectStore'
 
 const Breadcrumbs: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const breadcrumbItems = useLayoutStore((state) => state.breadcrumbItems)
+  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
 
   const navigateTo = (url?: string) => {
     if (!url) return
+    if (url === '/projects') clearSelectedProject()
     navigate(url)
   }
 

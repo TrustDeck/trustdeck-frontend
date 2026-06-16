@@ -114,6 +114,12 @@ class TrustDeck {
     this.token = ''
   }
 
+  private requireAccessToken() {
+    if (!this.token) {
+      throw new Error('No access token available; backend request was not sent')
+    }
+  }
+
   private getSelectedProjectName(): string {
     const selectedProject = useProjectStore.getState().selectedProject
     if (!selectedProject) throw new Error('No project selected')
@@ -151,6 +157,7 @@ class TrustDeck {
     body?: unknown,
     params?: QueryParams
   ): Promise<T> {
+    this.requireAccessToken()
     const url = this.buildUrl(path, params)
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
@@ -176,6 +183,7 @@ class TrustDeck {
     path: string,
     formData: FormData
   ): Promise<T> {
+    this.requireAccessToken()
     const headers: HeadersInit = {}
     if (this.token) headers.Authorization = `Bearer ${this.token}`
 
@@ -267,6 +275,7 @@ class TrustDeck {
   }
 
   public async getImage(projectAbbreviation?: string): Promise<Blob> {
+    this.requireAccessToken()
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
     const headers: HeadersInit = {}
     if (this.token) headers.Authorization = `Bearer ${this.token}`

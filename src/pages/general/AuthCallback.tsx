@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import useUserStore from '../../core/stores/UserStore'
 import TrustDeck from '@service/TrustDeck'
+import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearReturnTo, getReturnTo } from '../../core/services/authSession'
 
 const isSafeLocalPath = (value: unknown): value is string => {
@@ -30,6 +31,7 @@ const AuthCallback: React.FC = () => {
   const auth = useAuth()
   const navigate = useNavigate()
   const setFromAccessToken = useUserStore((state) => state.setFromAccessToken)
+  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
   const returnTo = useMemo(() => readReturnTo(auth.user?.state), [auth.user?.state])
 
   useEffect(() => {
@@ -37,10 +39,11 @@ const AuthCallback: React.FC = () => {
 
     clearLoggedOutMarker()
     clearReturnTo()
+    clearSelectedProject()
     setFromAccessToken(auth.user.access_token)
     TrustDeck.instance().setToken(auth.user.access_token)
     navigate(returnTo, { replace: true })
-  }, [auth.user?.access_token, navigate, returnTo, setFromAccessToken])
+  }, [auth.user?.access_token, clearSelectedProject, navigate, returnTo, setFromAccessToken])
 
   if (auth.error) {
     return (

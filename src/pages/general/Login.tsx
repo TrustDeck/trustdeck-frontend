@@ -11,6 +11,7 @@ import { oidcConfig } from '../../core/configs/oidc'
 import useUserStore from '../../core/stores/UserStore'
 import { useAuthStore } from '../../core/stores/AuthWebStore'
 import TrustDeck from '@service/TrustDeck'
+import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
@@ -39,6 +40,7 @@ const Login: React.FC = () => {
   const clearLocalAuthState = async () => {
     clearLoggedOutMarker()
     TrustDeck.instance().clearToken()
+    useProjectStore.getState().clearSelectedProject()
     useUserStore.getState().clear()
     useAuthStore.getState().clear()
 

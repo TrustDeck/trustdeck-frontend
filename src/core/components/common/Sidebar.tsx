@@ -29,6 +29,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
   const { t } = useTranslation()
   const projectImage = useProjectStore((state) => state.projectImage)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
+  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
   const hasTriedRefetch = useRef(false)
 
   const navigate = useNavigate()
@@ -207,6 +208,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
             label={t('layout:menu.backToProjects')}
             onClick={() => {
               closeSidebarOnNavigate()
+              clearSelectedProject()
               navigate('/projects')
             }}
           />

@@ -24,5 +24,16 @@
     "loggedOut": "You have been logged out",
     "thankYou": "Thank you for using our service.",
     "button": "Go to login"
+  },
+  "userMenu": {
+    "open": "Open user menu",
+    "signedInUser": "Signed-in user",
+    "logoutIn": "Logout in {{time}}",
+    "logoutTimer": "Time until automatic logout",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "yourAccount": "Your Account",
+    "english": "English",
+    "german": "German"
   }
 }

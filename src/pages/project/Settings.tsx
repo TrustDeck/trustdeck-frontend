@@ -7,12 +7,14 @@ import { ProjectType } from '../projects/types/ProjectType'
 import LocalProjectService from './services/ProjectService'
 import ProjectService from '../projects/services/ProjectService'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from 'react-oidc-context'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
 import useToastStore from '../../core/stores/ToastStore'
 import DeleteProjectSection from './components/DeleteProjectSection'
 import CustomCalendar from '@component/form/CustomCalendar'
 import { formatDateTime } from '../../core/utils/date'
+import { CachedUserAccess, canManageProject, getCurrentUserAccess } from '../../core/services/PermissionCache'
 
 const toDate = (value?: string | null) => {
   if (!value) return null
@@ -40,11 +42,9 @@ const emptyProjectForm: ProjectFormState = {
   description: ''
 }
 
-const boolLabel = (value?: boolean) =>
-  value === true ? 'Yes' : value === false ? 'No' : '—'
-
 const Settings: React.FC = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['settings', 'projects', 'common', 'layout'])
+  const auth = useAuth()
   const showToast = useToastStore((state) => state.show)
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const setSelectedProject = useProjectStore(
@@ -66,11 +66,52 @@ const Settings: React.FC = () => {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [savingImage, setSavingImage] = useState(false)
   const [deletingImage, setDeletingImage] = useState(false)
+  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [permissionsReady, setPermissionsReady] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
 
   const selectedAbbreviation = selectedProject?.abbreviation
+
+
+  useEffect(() => {
+    let active = true
+    if (!auth.user?.access_token) {
+      setPermissionAccess(null)
+      setPermissionsReady(false)
+      return () => {
+        active = false
+      }
+    }
+    setPermissionsReady(false)
+    TrustDeck.instance().setToken(auth.user.access_token)
+    getCurrentUserAccess(false)
+      .then((access) => {
+        if (active) setPermissionAccess(access)
+      })
+      .catch((error) => {
+        console.warn('Could not load current-user project permissions', error)
+        if (active) setPermissionAccess(null)
+      })
+      .finally(() => {
+        if (active) setPermissionsReady(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [auth.user?.access_token])
+
+  const canDeleteSelectedProject = canManageProject(permissionAccess, selectedAbbreviation, 'delete')
+
+  const getDeleteErrorDetail = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('403')) return t('settings:delete.notAllowed')
+    if (message.includes('401')) return t('settings:delete.expired')
+    if (message.includes('404')) return t('settings:delete.notFound')
+    if (message.includes('500')) return t('settings:delete.backendError')
+    return t('settings:delete.failedDetail')
+  }
 
   const hydrateForm = useCallback(
     (project: ProjectType | null) => {
@@ -158,41 +199,41 @@ const Settings: React.FC = () => {
   const displayRows = useMemo(
     () => [
       {
-        label: 'Name',
+        label: t('settings:projectName'),
         value: projectDetails?.name ?? selectedProject?.name ?? '—'
       },
       {
-        label: 'Abbreviation',
+        label: t('settings:projectAbbreviation'),
         value:
           projectDetails?.abbreviation ?? selectedProject?.abbreviation ?? '—'
       },
       {
-        label: 'Start date',
+        label: t('settings:projectStartDate'),
         value: projectDetails?.startDate
           ? formatDateTime(projectDetails.startDate)
           : '—'
       },
       {
-        label: 'End date',
+        label: t('settings:projectEndDate'),
         value: projectDetails?.endDate
           ? formatDateTime(projectDetails.endDate)
           : '—'
       },
       {
-        label: 'Store entities',
-        value: boolLabel(projectDetails?.storeEntities)
+        label: t('settings:storeEntities'),
+        value: projectDetails?.storeEntities === true ? t('common:yes') : projectDetails?.storeEntities === false ? t('common:no') : '—'
       },
       {
-        label: 'Create pseudonyms',
-        value: boolLabel(projectDetails?.storePseudonyms)
+        label: t('settings:storePseudonyms'),
+        value: projectDetails?.storePseudonyms === true ? t('common:yes') : projectDetails?.storePseudonyms === false ? t('common:no') : '—'
       },
       {
-        label: 'Description',
+        label: t('settings:description'),
         value: projectDetails?.description || '—',
         wide: true
       }
     ],
-    [projectDetails, selectedProject]
+    [projectDetails, selectedProject, t]
   )
 
   const handleStartEdit = () => {
@@ -210,8 +251,8 @@ const Settings: React.FC = () => {
     if (!projectForm.name.trim() || !projectForm.abbreviation.trim()) {
       showToast({
         severity: 'warn',
-        summary: 'Missing project data',
-        detail: 'Project name and abbreviation are required.',
+        summary: t('settings:missingProjectData'),
+        detail: t('settings:missingProjectDataDetail'),
         life: 3000
       })
       return
@@ -258,17 +299,16 @@ const Settings: React.FC = () => {
       setIsEditingProject(false)
       showToast({
         severity: 'success',
-        summary: 'Project updated',
-        detail: `${updated.name} was updated successfully.`,
+        summary: t('settings:projectUpdated'),
+        detail: t('settings:projectUpdatedDetail', { name: updated.name }),
         life: 2500
       })
     } catch (error) {
       console.error('Failed to update project', error)
       showToast({
         severity: 'error',
-        summary: 'Update failed',
-        detail:
-          'The project could not be updated. Please check your permissions and the entered values.',
+        summary: t('settings:updateFailed'),
+        detail: t('settings:updateFailedDetail'),
         life: 4000
       })
     } finally {
@@ -277,6 +317,16 @@ const Settings: React.FC = () => {
   }
 
   const handleDelete = async () => {
+    if (!canDeleteSelectedProject) {
+      showToast({
+        severity: 'warn',
+        summary: t('settings:delete.notAllowedSummary'),
+        detail: t('settings:delete.notAllowed'),
+        life: 4000
+      })
+      setConfirmVisible(false)
+      return
+    }
     try {
       setLoadingDelete(true)
       await LocalProjectService.deleteProject()
@@ -285,8 +335,8 @@ const Settings: React.FC = () => {
       console.error(error)
       showToast({
         severity: 'error',
-        summary: 'Delete failed',
-        detail: 'The project could not be deleted.',
+        summary: t('settings:delete.failedSummary'),
+        detail: getDeleteErrorDetail(error),
         life: 3500
       })
     } finally {
@@ -314,16 +364,16 @@ const Settings: React.FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = ''
       showToast({
         severity: 'success',
-        summary: 'Project image saved',
-        detail: 'The project image was updated successfully.',
+        summary: t('settings:imageSaved'),
+        detail: t('settings:imageSavedDetail'),
         life: 2500
       })
     } catch (error) {
       console.error('Image upload failed', error)
       showToast({
         severity: 'error',
-        summary: 'Image upload failed',
-        detail: 'The project image could not be saved.',
+        summary: t('settings:imageUploadFailed'),
+        detail: t('settings:imageUploadFailedDetail'),
         life: 3500
       })
     } finally {
@@ -341,16 +391,16 @@ const Settings: React.FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = ''
       showToast({
         severity: 'success',
-        summary: 'Project image deleted',
-        detail: 'The project image was removed.',
+        summary: t('settings:imageDeleted'),
+        detail: t('settings:imageDeletedDetail'),
         life: 2500
       })
     } catch (error) {
       console.error('Image delete failed', error)
       showToast({
         severity: 'error',
-        summary: 'Image delete failed',
-        detail: 'The project image could not be deleted.',
+        summary: t('settings:imageDeleteFailed'),
+        detail: t('settings:imageDeleteFailedDetail'),
         life: 3500
       })
     } finally {
@@ -368,13 +418,13 @@ const Settings: React.FC = () => {
   if (!selectedProject) {
     return (
       <div className="flex w-full justify-center px-4 pt-8">
-        <Panel title="Project settings" className="w-full max-w-4xl">
+        <Panel title={t('settings:header')} className="w-full max-w-4xl">
           <p className="text-base text-gray-600 dark:text-gray-300">
-            Select a project first to view or edit its settings.
+            {t('settings:selectProjectFirst')}
           </p>
           <div className="mt-4">
             <PrimaryButton
-              label="Back to projects"
+              label={t('layout:menu.backToProjects')}
               onClick={() => navigate('/projects')}
             />
           </div>
@@ -388,17 +438,16 @@ const Settings: React.FC = () => {
       <div className="flex flex-1 flex-col items-center w-full px-4 pt-4">
         <h1 className="text-center">{t('settings:header')}</h1>
 
-        <Panel title="Project information" className="w-full max-w-4xl mt-4">
+        <Panel title={t('settings:projectInfo')} className="w-full max-w-4xl mt-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-base text-gray-600 dark:text-gray-300">
-              Review all project metadata shown by the backend. The internal
-              project ID is intentionally hidden.
+              {t('settings:projectInfoHelp')}
             </p>
           </div>
 
           {loadingDetails && (
             <p className="mb-4 text-sm text-gray-500">
-              Loading project details...
+              {t('settings:loadingProjectDetails')}
             </p>
           )}
 
@@ -422,7 +471,7 @@ const Settings: React.FC = () => {
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Project name
+                  {t('settings:projectName')}
                   <input
                     value={projectForm.name}
                     onChange={(event) =>
@@ -435,7 +484,7 @@ const Settings: React.FC = () => {
                   />
                 </label>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                  Abbreviation
+                  {t('settings:projectAbbreviation')}
                   <input
                     value={projectForm.abbreviation}
                     onChange={(event) =>
@@ -452,7 +501,7 @@ const Settings: React.FC = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <CustomCalendar
                   id="settingsStartDate"
-                  placeholder="Start date and time"
+                  placeholder={t('settings:startDateTime')}
                   value={projectForm.startDate}
                   onChange={(event) =>
                     setProjectForm((prev) => ({
@@ -464,7 +513,7 @@ const Settings: React.FC = () => {
                 />
                 <CustomCalendar
                   id="settingsEndDate"
-                  placeholder="End date and time"
+                  placeholder={t('settings:endDateTime')}
                   value={projectForm.endDate}
                   onChange={(event) =>
                     setProjectForm((prev) => ({
@@ -489,7 +538,7 @@ const Settings: React.FC = () => {
                     }
                     className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
                   />
-                  Store entities
+                  {t('settings:storeEntities')}
                 </label>
                 <label className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base font-medium text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100">
                   <input
@@ -503,12 +552,12 @@ const Settings: React.FC = () => {
                     }
                     className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
                   />
-                  Create/store pseudonyms
+                  {t('settings:storePseudonyms')}
                 </label>
               </div>
 
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Description
+                {t('settings:description')}
                 <textarea
                   value={projectForm.description}
                   onChange={(event) =>
@@ -526,15 +575,15 @@ const Settings: React.FC = () => {
 
           <div className="mt-6 flex justify-center gap-3">
             {!isEditingProject ? (
-              <PrimaryButton label="Edit project" onClick={handleStartEdit} />
+              <PrimaryButton label={t('settings:editProject')} onClick={handleStartEdit} />
             ) : (
               <>
                 <SecondaryOutlinedButton
-                  label="Cancel"
+                  label={t('common:cancel')}
                   onClick={handleCancelEdit}
                 />
                 <PrimaryButton
-                  label="Save changes"
+                  label={t('settings:saveChanges')}
                   loading={savingProject}
                   disabled={
                     !projectForm.name.trim() || !projectForm.abbreviation.trim()
@@ -557,14 +606,13 @@ const Settings: React.FC = () => {
                 />
               ) : (
                 <div className="flex h-36 w-36 items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-gray-50 text-center text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                  No project image
+                  {t('settings:noProjectImage')}
                 </div>
               )}
             </div>
             <div className="space-y-4">
               <p className="text-base text-gray-600 dark:text-gray-300">
-                Upload, replace, preview, or remove the image used for this
-                project in the overview and sidebar.
+                {t('settings:projectImageHelp')}
               </p>
               <input
                 ref={fileInputRef}
@@ -575,19 +623,19 @@ const Settings: React.FC = () => {
               />
               <div className="flex flex-wrap gap-2">
                 <PrimaryButton
-                  label={projectImage ? 'Save replacement' : 'Upload image'}
+                  label={projectImage ? t('settings:saveReplacement') : t('settings:uploadImage')}
                   loading={savingImage}
                   disabled={!selectedImageFile}
                   onClick={handleSaveImage}
                 />
                 {selectedImageFile && (
                   <SecondaryOutlinedButton
-                    label="Cancel selection"
+                    label={t('settings:cancelSelection')}
                     onClick={handleResetSelectedFile}
                   />
                 )}
                 <SecondaryOutlinedButton
-                  label="Remove image"
+                  label={t('settings:removeImage')}
                   loading={deletingImage}
                   disabled={!projectImage && !imagePreview}
                   onClick={handleDeleteImage}
@@ -604,6 +652,8 @@ const Settings: React.FC = () => {
         onOpenConfirm={() => setConfirmVisible(true)}
         onCloseConfirm={() => setConfirmVisible(false)}
         onConfirmDelete={handleDelete}
+        deleteDisabled={!permissionsReady || !canDeleteSelectedProject}
+        deleteDisabledReason={!permissionsReady ? t('settings:delete.checking') : t('settings:delete.notAllowed')}
       />
     </div>
   )

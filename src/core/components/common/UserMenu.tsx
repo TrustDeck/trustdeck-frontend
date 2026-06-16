@@ -3,6 +3,7 @@ import { Avatar } from 'primereact/avatar'
 import useUserStore from '../../stores/UserStore.tsx'
 import { oidcConfig } from '../../configs/oidc.ts'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MoonIcon, SunIcon } from '@heroicons/react/24/outline'
 import { markLoggedOut } from '../../services/authSession.ts'
 
@@ -40,13 +41,16 @@ function getInitialDarkMode() {
 
 const UserMenu: React.FC = () => {
   const navigate = useNavigate()
+  const { t } = useTranslation(['layout', 'common'])
   const [isOpen, setIsOpen] = useState(false)
   const [remaining, setRemaining] = useState('—')
   const [darkMode, setDarkMode] = useState(getInitialDarkMode)
   const fullname = useUserStore((state) => state.fullname)
   const email = useUserStore((state) => state.email)
   const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
-  const displayName = fullname || email || 'Signed-in user'
+  const locale = useUserStore((state) => state.locale)
+  const setLocale = useUserStore((state) => state.setLocale)
+  const displayName = fullname || email || t('layout:userMenu.signedInUser')
 
   useEffect(() => {
     const updateRemaining = () => setRemaining(formatRemaining(tokenExpiresAt))
@@ -73,6 +77,11 @@ const UserMenu: React.FC = () => {
     closeMenu()
   }
 
+  const handleLanguageChange = (nextLocale: 'en' | 'de') => {
+    setLocale(nextLocale)
+    closeMenu()
+  }
+
   return (
     <div
       className="relative flex h-14 w-full justify-end overflow-visible"
@@ -90,13 +99,13 @@ const UserMenu: React.FC = () => {
         <button
           type="button"
           className="flex w-full items-center justify-end gap-3 px-2 py-2 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
-          aria-label="Open user menu"
+          aria-label={t('layout:userMenu.open')}
           onClick={() => setIsOpen(true)}
         >
           {isOpen && (
             <div className="min-w-0 flex-1 text-right">
               <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
-              <div className="truncate text-[0.95rem] font-medium text-gray-500 dark:text-gray-300">Logout in {remaining}</div>
+              <div className="truncate text-[0.95rem] font-medium text-gray-500 dark:text-gray-300">{t('layout:userMenu.logoutIn', { time: remaining })}</div>
             </div>
           )}
           <div className="flex flex-col items-center leading-none">
@@ -107,7 +116,7 @@ const UserMenu: React.FC = () => {
               shape="circle"
             />
             {!isOpen && (
-              <span className="mt-1 text-[0.95rem] font-semibold text-gray-500 dark:text-gray-300" title="Time until automatic logout">
+              <span className="mt-1 text-[0.95rem] font-semibold text-gray-500 dark:text-gray-300" title={t('layout:userMenu.logoutTimer')}>
                 {remaining}
               </span>
             )}
@@ -121,7 +130,7 @@ const UserMenu: React.FC = () => {
               className="flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
               onClick={handleDarkModeToggle}
             >
-              <span>Dark mode</span>
+              <span>{t('layout:userMenu.darkMode')}</span>
               <span
                 className={`inline-flex h-6 w-11 items-center rounded-full border transition ${
                   darkMode ? 'border-color-blue bg-color-blue' : 'border-gray-300 bg-gray-100 dark:border-slate-500 dark:bg-slate-700'
@@ -137,6 +146,25 @@ const UserMenu: React.FC = () => {
                 </span>
               </span>
             </button>
+            <div className="mt-1 flex items-center justify-between gap-3 rounded px-3 py-2 text-sm text-gray-800 dark:text-gray-100">
+              <span>{t('layout:userMenu.language')}</span>
+              <div className="inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-slate-700">
+                <button
+                  type="button"
+                  className={`rounded-md px-2 py-1 text-xs font-semibold transition ${locale === 'en' ? 'bg-color-blue text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-slate-800'}`}
+                  onClick={() => handleLanguageChange('en')}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  className={`rounded-md px-2 py-1 text-xs font-semibold transition ${locale === 'de' ? 'bg-color-blue text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-slate-800'}`}
+                  onClick={() => handleLanguageChange('de')}
+                >
+                  DE
+                </button>
+              </div>
+            </div>
             <button
               type="button"
               className="w-full rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
@@ -150,14 +178,14 @@ const UserMenu: React.FC = () => {
                 if (newWindow) newWindow.opener = null
               }}
             >
-              Your Account
+              {t('layout:userMenu.yourAccount')}
             </button>
             <button
               type="button"
               className="w-full rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
               onClick={handleLogout}
             >
-              Log out
+              {t('layout:menu.logout')}
             </button>
           </div>
         )}

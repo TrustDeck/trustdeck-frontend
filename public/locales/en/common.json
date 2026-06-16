@@ -1,6 +1,15 @@
 {
-    "home": "Home",
-    "help": "Help",
-    "yes": "Yes",
-    "no": "No"
+  "home": "Home",
+  "help": "Help",
+  "yes": "Yes",
+  "no": "No",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "loading": "Loading...",
+  "success": "Success",
+  "error": "Error",
+  "warning": "Warning"
 }

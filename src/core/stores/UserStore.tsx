@@ -18,6 +18,20 @@ interface TokenDetails {
   resource_access?: Record<string, { roles?: string[] }>
 }
 
+
+function getStoredLocaleOverride() {
+  if (typeof window === 'undefined') return null
+  const stored = window.localStorage.getItem('trustdeck:locale')
+  return stored === 'de' || stored === 'en' ? stored : null
+}
+
+function persistLocaleOverride(locale: string) {
+  if (typeof window === 'undefined') return
+  if (locale === 'de' || locale === 'en') {
+    window.localStorage.setItem('trustdeck:locale', locale)
+  }
+}
+
 interface UserState {
   username: string
   firstname: string
@@ -29,6 +43,7 @@ interface UserState {
   isAuthenticated: boolean
   locale: string
   setFromAccessToken: (token: string) => void
+  setLocale: (locale: string) => void
   clear: () => void
 }
 
@@ -41,7 +56,7 @@ const useUserStore = create<UserState>()(
         lastname: '',
         fullname: '',
         email: '',
-        locale: 'en',
+        locale: getStoredLocaleOverride() ?? 'en',
         roles: [],
         tokenExpiresAt: null,
         isAuthenticated: false,
@@ -57,7 +72,7 @@ const useUserStore = create<UserState>()(
                 lastname: '',
                 fullname: '',
                 email: '',
-                locale: 'en',
+                locale: getStoredLocaleOverride() ?? 'en',
                 roles: [],
                 tokenExpiresAt: null,
                 isAuthenticated: false
@@ -80,7 +95,7 @@ const useUserStore = create<UserState>()(
               firstname: decoded.given_name || '',
               lastname: decoded.family_name || '',
               email: decoded.email || '',
-              locale: decoded.locale || 'en',
+              locale: getStoredLocaleOverride() ?? decoded.locale ?? 'en',
               roles,
               tokenExpiresAt,
               isAuthenticated: true
@@ -93,12 +108,16 @@ const useUserStore = create<UserState>()(
               lastname: '',
               fullname: '',
               email: '',
-              locale: 'en',
+              locale: getStoredLocaleOverride() ?? 'en',
               roles: [],
               tokenExpiresAt: null,
               isAuthenticated: false
             })
           }
+        },
+        setLocale: (locale: string) => {
+          persistLocaleOverride(locale)
+          set({ locale })
         },
         clear: () =>
           set({
@@ -107,7 +126,7 @@ const useUserStore = create<UserState>()(
             lastname: '',
             fullname: '',
             email: '',
-            locale: 'en',
+            locale: getStoredLocaleOverride() ?? 'en',
             roles: [],
             tokenExpiresAt: null,
             isAuthenticated: false

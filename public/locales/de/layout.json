@@ -16,7 +16,9 @@
     "projects": "Projekte",
     "backToProjects": "Zurück zu Projekte",
     "permissionManagement": "Berechtigungsverwaltung",
-    "newProject": "Neues Projekt"
+    "newProject": "Neues Projekt",
+    "identityManagement": "Identitätsmanagement",
+    "entityManager": "Entitäten-Manager"
   },
   "logOut": {
     "loggingOut": "Sie werden abgemeldet",
@@ -24,5 +26,16 @@
     "loggedOut": "Sie wurden abgemeldet",
     "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
     "button": "Zurück zur Login-Seite"
+  },
+  "userMenu": {
+    "open": "Benutzermenü öffnen",
+    "signedInUser": "Angemeldete Person",
+    "logoutIn": "Abmeldung in {{time}}",
+    "logoutTimer": "Zeit bis zur automatischen Abmeldung",
+    "darkMode": "Dunkelmodus",
+    "language": "Sprache",
+    "yourAccount": "Ihr Konto",
+    "english": "Englisch",
+    "german": "Deutsch"
   }
 }

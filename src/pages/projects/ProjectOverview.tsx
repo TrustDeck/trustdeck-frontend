@@ -16,6 +16,7 @@ import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
+import { CachedUserAccess, canManageProject, getCurrentUserAccess } from '../../core/services/PermissionCache'
 
 export default function ProjectOverview() {
   const [projects, setProjects] = useState<ProjectType[]>([])
@@ -33,6 +34,8 @@ export default function ProjectOverview() {
     null
   )
   const [deleting, setDeleting] = useState(false)
+  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [permissionsReady, setPermissionsReady] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
   const auth = useAuth()
@@ -86,6 +89,47 @@ export default function ProjectOverview() {
       isMounted = false
     }
   }, [auth.user?.access_token, auth.isLoading, isAuthenticated])
+
+
+  useEffect(() => {
+    let active = true
+    const accessToken = auth.user?.access_token
+    if (!accessToken) {
+      setPermissionsReady(false)
+      setPermissionAccess(null)
+      return () => {
+        active = false
+      }
+    }
+
+    TrustDeck.instance().setToken(accessToken)
+    setPermissionsReady(false)
+    getCurrentUserAccess(false)
+      .then((access) => {
+        if (!active) return
+        setPermissionAccess(access)
+      })
+      .catch((error) => {
+        console.warn('Could not load current-user project permissions', error)
+        if (active) setPermissionAccess(null)
+      })
+      .finally(() => {
+        if (active) setPermissionsReady(true)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [auth.user?.access_token])
+
+  const getDeleteErrorDetail = (error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes('403')) return t('projects:noDeletePermissionDetail')
+    if (message.includes('401')) return t('projects:deleteExpired')
+    if (message.includes('404')) return t('projects:deleteNotFound')
+    if (message.includes('500')) return t('projects:deleteBackendError')
+    return t('projects:deleteFailed')
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -163,6 +207,16 @@ export default function ProjectOverview() {
 
   const handleDeleteProject = async () => {
     if (!deletingProject) return
+    if (!canManageProject(permissionAccess, deletingProject.abbreviation, 'delete')) {
+      showToast({
+        severity: 'warn',
+        summary: t('projects:noDeletePermission'),
+        detail: t('projects:noDeletePermissionDetail'),
+        life: 4000
+      })
+      setDeletingProject(null)
+      return
+    }
     try {
       setDeleting(true)
       await ProjectService.deleteProject(deletingProject.abbreviation)
@@ -173,8 +227,8 @@ export default function ProjectOverview() {
       )
       showToast({
         severity: 'success',
-        summary: 'Project deleted',
-        detail: `${deletingProject.name} was deleted.`,
+        summary: t('projects:projectDeleted'),
+        detail: t('projects:projectDeletedDetail', { name: deletingProject.name }),
         life: 2500
       })
       setDeletingProject(null)
@@ -182,8 +236,8 @@ export default function ProjectOverview() {
       console.error('Failed to delete project', error)
       showToast({
         severity: 'error',
-        summary: 'Delete failed',
-        detail: 'The project could not be deleted.',
+        summary: t('projects:deleteFailed'),
+        detail: getDeleteErrorDetail(error),
         life: 3500
       })
     } finally {
@@ -195,9 +249,9 @@ export default function ProjectOverview() {
     <div className="w-full pb-24">
       <div className="mb-6 flex w-full flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Projects</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">{t('projects:title')}</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Select a project to continue.
+            {t('projects:subtitle')}
           </p>
         </div>
         {projects.length > 0 && !isLoading && (
@@ -208,7 +262,7 @@ export default function ProjectOverview() {
             aria-expanded={filtersOpen}
           >
             <FunnelIcon className="h-5 w-5" />
-            Filters
+            {t('projects:filters')}
             {activeFilterCount > 0 && (
               <span className="rounded-full bg-color-blue px-2 py-0.5 text-xs text-white">
                 {activeFilterCount}
@@ -229,10 +283,10 @@ export default function ProjectOverview() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="font-semibold text-gray-900">
-                    Filter projects
+                    {t('projects:filterProjects')}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    Narrow the list by name, status, or start date.
+                    {t('projects:filterHelp')}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -241,13 +295,13 @@ export default function ProjectOverview() {
                     className="reset-filter-button text-sm font-medium text-color-blue hover:underline"
                     onClick={resetFilters}
                   >
-                    Reset
+                    {t('projects:reset')}
                   </button>
                   <button
                     type="button"
                     className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
                     onClick={() => setFiltersOpen(false)}
-                    aria-label="Collapse filters"
+                    aria-label={t('projects:collapseFilters')}
                   >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
@@ -257,7 +311,7 @@ export default function ProjectOverview() {
                 <CustomFloatLabel
                   id="projectSearch"
                   value={searchTerm}
-                  placeholder="Search projects"
+                  placeholder={t('projects:searchProjects')}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <CustomDropdown
@@ -290,9 +344,9 @@ export default function ProjectOverview() {
               <SingleProject
                 key={project.abbreviation}
                 project={project}
-                permissionsReady
-                canUpdate
-                canDelete
+                permissionsReady={permissionsReady}
+                canUpdate={canManageProject(permissionAccess, project.abbreviation, 'update')}
+                canDelete={canManageProject(permissionAccess, project.abbreviation, 'delete')}
                 onEdit={openProjectSettings}
                 onDelete={setDeletingProject}
                 projectImage={projectImages[project.abbreviation]}
@@ -303,12 +357,12 @@ export default function ProjectOverview() {
           {projects.length === 0 && (
             <div className="mx-auto mt-20 max-w-2xl rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm">
               <h2 className="text-xl font-semibold text-gray-900">
-                No projects available
+                {t('projects:noProjectsTitle')}
               </h2>
               <p className="mt-3 text-gray-600">{t('projects:noProjects')}</p>
               <div className="mt-6 flex justify-center">
                 <PrimaryButton
-                  label="Create new project"
+                  label={t('projects:createNewProjectButton')}
                   onClick={() => navigate('/projects/new')}
                 />
               </div>
@@ -317,7 +371,7 @@ export default function ProjectOverview() {
 
           {projects.length > 0 && filteredProjects.length === 0 && (
             <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-600">
-              No projects match the current filters.
+              {t('projects:noFilterMatches')}
             </div>
           )}
 
@@ -325,7 +379,7 @@ export default function ProjectOverview() {
             <div className="sticky bottom-0 z-30 -mx-4 mt-8 border-t border-gray-200 bg-surface/95 px-4 py-3 backdrop-blur">
               <div className="mx-auto flex max-w-7xl justify-end">
                 <PrimaryButton
-                  label="New project"
+                  label={t('projects:newProject')}
                   onClick={() => navigate('/projects/new')}
                 />
               </div>
@@ -335,7 +389,7 @@ export default function ProjectOverview() {
       )}
 
       <Dialog
-        header="Delete project"
+        header={t('projects:deleteProject')}
         visible={Boolean(deletingProject)}
         onHide={() => setDeletingProject(null)}
         modal
@@ -343,17 +397,16 @@ export default function ProjectOverview() {
       >
         <div className="space-y-4 pt-2">
           <p>
-            Are you sure you want to permanently delete{' '}
-            <strong>{deletingProject?.name}</strong>?
+            {t('projects:deleteConfirm', { name: deletingProject?.name ?? '' })}
           </p>
-          <p className="text-sm text-gray-500">This action cannot be undone.</p>
+          <p className="text-sm text-gray-500">{t('projects:deleteIrreversible')}</p>
           <div className="flex justify-end gap-2">
             <SecondaryOutlinedButton
-              label="Cancel"
+              label={t('common:cancel')}
               onClick={() => setDeletingProject(null)}
             />
             <PrimaryButton
-              label="Delete project"
+              label={t('projects:deleteProject')}
               loading={deleting}
               onClick={handleDeleteProject}
               className="bg-color-coral hover:bg-color-coral/80 border-color-coral"

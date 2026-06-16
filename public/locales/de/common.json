@@ -1,6 +1,15 @@
 {
-    "home": "Startseite",
-    "help": "Hilfe",
-    "yes": "Ja",
-    "no": "Nein"
+  "home": "Startseite",
+  "help": "Hilfe",
+  "yes": "Ja",
+  "no": "Nein",
+  "cancel": "Abbrechen",
+  "save": "Speichern",
+  "delete": "Löschen",
+  "edit": "Bearbeiten",
+  "close": "Schließen",
+  "loading": "Lädt...",
+  "success": "Erfolg",
+  "error": "Fehler",
+  "warning": "Warnung"
 }

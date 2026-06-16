@@ -37,9 +37,10 @@ function normalizedParts(value: unknown) {
   return normalize(value).split(/[^a-z0-9]+/).filter(Boolean)
 }
 
-function currentUserQuery() {
+function currentUserQueries() {
   const user = useUserStore.getState()
-  return user.username || user.fullname || user.email
+  return [user.username, user.email, user.fullname]
+    .filter((value): value is string => Boolean(value && value.trim()))
 }
 
 function extractEffectivePermissions(operator: unknown): CachedEffectivePermission[] {
@@ -96,15 +97,20 @@ export async function getCurrentUserAccess(forceRefresh = false): Promise<Cached
 
   pending = (async () => {
     let effectivePermissions: CachedEffectivePermission[] = []
-    const query = currentUserQuery()
+    const queries = currentUserQueries()
 
-    if (query) {
+    for (const query of queries) {
       try {
         const operators = await TrustDeck.instance().searchOperators(query)
         const matchingOperator = operators.find(isCurrentOperator) ?? operators[0]
-        effectivePermissions = extractEffectivePermissions(matchingOperator)
+        const extracted = extractEffectivePermissions(matchingOperator)
+        if (matchingOperator || extracted.length) {
+          effectivePermissions = extracted
+          break
+        }
       } catch (error) {
         console.warn('Could not refresh current-user permission cache', error)
+        break
       }
     }
 
@@ -119,6 +125,18 @@ export async function getCurrentUserAccess(forceRefresh = false): Promise<Cached
   })()
 
   return pending
+}
+
+
+function tokenRoleAllowsProjectOperation(roles: string[], operation: 'create' | 'update' | 'delete') {
+  const exactAction = `project:${operation}`
+  return roles.some((role) => {
+    const r = normalize(role)
+    if (r === exactAction) return true
+    if (operation === 'delete' && (r === 'project:manage-permissions' || r === 'project:*')) return true
+    if (operation === 'update' && (r === 'project:manage-permissions' || r === 'project:*')) return true
+    return false
+  })
 }
 
 function hasPrivilegedRole(roles: string[]) {
@@ -200,7 +218,7 @@ export function canManageProject(
   operation: 'create' | 'update' | 'delete'
 ) {
   if (!access) return false
-  if (hasPrivilegedRole(access.roles)) return true
+  if (hasPrivilegedRole(access.roles) || tokenRoleAllowsProjectOperation(access.roles, operation)) return true
 
   return access.effectivePermissions.some((permission) => {
     if (!permissionDecisionAllows(permission)) return false

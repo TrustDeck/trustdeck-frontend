@@ -20,6 +20,7 @@ i18n
   .use(HttpApi)
   .use(initReactI18next)
   .init({
+    lng: useUserStore.getState().locale,
     fallbackLng: 'en',
     ns: namespaces, // Load all namespaces
     defaultNS: 'common', // Set the default namespace to one of your namespaces

@@ -22,7 +22,7 @@ export default function DeleteProjectSection({
   return (
     <>
       <div className="w-full flex justify-center px-4 pb-20 mb-20">
-        <Panel title="Danger zone" className="w-full max-w-4xl">
+        <Panel title="Danger zone" className="w-full max-w-4xl border-2 border-red-900/80 dark:border-red-700/90">
           <div className="flex justify-center">
             <SecondaryButton label="Delete project permanently" onClick={onOpenConfirm} />
           </div>
@@ -36,6 +36,7 @@ export default function DeleteProjectSection({
         header="Confirm Deletion"
         icon="pi pi-exclamation-triangle"
         closable={true}
+        className="trustdeck-confirm-dialog"
         footer={
           <div className="flex justify-end gap-2">
             <SecondaryOutlinedButton

@@ -109,9 +109,9 @@ export default function EntityManager() {
           {loading ? (
             <div className="py-10 text-gray-500">Loading entity types...</div>
           ) : cards.length === 0 ? (
-            <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-              <h2 className="text-xl font-semibold text-gray-900">No entity types configured yet</h2>
-              <p className="mx-auto mt-3 max-w-2xl text-gray-600">
+            <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No entity types configured yet</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
                 This project does not have any project-specific entity types yet. Create one with the entity builder before registering or searching entities in this project.
               </p>
               <div className="mt-6 flex justify-center">

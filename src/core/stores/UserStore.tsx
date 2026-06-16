@@ -6,6 +6,7 @@ import { isTimestampExpired } from '../services/authSession'
 
 interface TokenDetails {
   sub: string
+  preferred_username?: string
   given_name: string
   family_name: string
   email: string
@@ -70,7 +71,7 @@ const useUserStore = create<UserState>()(
             const roles = Array.from(new Set([...realmRoles, ...resourceRoles]))
 
             set({
-              username: decoded.sub,
+              username: decoded.preferred_username || decoded.sub,
               fullname: (
                 (decoded.given_name || '') +
                 ' ' +

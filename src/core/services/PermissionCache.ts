@@ -39,7 +39,7 @@ function normalizedParts(value: unknown) {
 
 function currentUserQuery() {
   const user = useUserStore.getState()
-  return user.email || user.fullname || user.username
+  return user.username || user.fullname || user.email
 }
 
 function extractEffectivePermissions(operator: unknown): CachedEffectivePermission[] {

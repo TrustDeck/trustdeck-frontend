@@ -41,6 +41,11 @@ export default function ProjectOverview() {
     (state) => state.setSelectedProject
   )
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
+  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
+
+  useEffect(() => {
+    clearSelectedProject()
+  }, [clearSelectedProject])
 
   useEffect(() => {
     let isMounted = true

@@ -103,6 +103,7 @@ export default function GlobalPermissions() {
   const [permissionApiState, setPermissionApiState] = useState<PermissionApiState>('idle')
   const [currentAccessState, setCurrentAccessState] = useState<PermissionApiState>('idle')
   const [loading, setLoading] = useState(false)
+  const [retryingDefinitions, setRetryingDefinitions] = useState(false)
 
   const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || 'Current user'
 
@@ -165,7 +166,7 @@ export default function GlobalPermissions() {
     async function loadInitialData() {
       if (!auth.isAuthenticated || auth.isLoading) return
       await refreshAccessTokenForNavigation(auth)
-      const query = currentUserEmail || currentUserFullname || currentUserId
+      const query = currentUserId || currentUserFullname || currentUserEmail
       const definedPromise = loadDefinedPermissions(false)
 
       if (!query) {
@@ -253,8 +254,29 @@ export default function GlobalPermissions() {
   }
 
   const handleRetry = async () => {
-    await refreshAccessTokenForNavigation(auth, { force: true })
-    await loadDefinedPermissions(true)
+    try {
+      setRetryingDefinitions(true)
+      await refreshAccessTokenForNavigation(auth, { force: true })
+      const permissions = await loadDefinedPermissions(true)
+      showToast({
+        severity: permissions.length ? 'success' : 'warn',
+        summary: permissions.length ? 'Permissions refreshed' : 'No permission definitions loaded',
+        detail: permissions.length
+          ? 'The access token was refreshed and permission definitions were loaded.'
+          : 'The access token was refreshed, but the backend still did not return permission definitions.',
+        life: 3500
+      })
+    } catch (error) {
+      console.error('Retrying permission definitions failed', error)
+      showToast({
+        severity: 'error',
+        summary: 'Retry failed',
+        detail: 'The token refresh or permission lookup failed. Please try again or check your backend role mapping.',
+        life: 4500
+      })
+    } finally {
+      setRetryingDefinitions(false)
+    }
   }
 
   const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
@@ -475,14 +497,14 @@ export default function GlobalPermissions() {
               <p>
                 I refreshed the access token before loading this page. If your role was granted only recently, use the retry button below; otherwise the backend role mapping may need to be checked.
               </p>
-              <SecondaryOutlinedButton label="Refresh token and retry" onClick={handleRetry} />
+              <SecondaryOutlinedButton label={retryingDefinitions ? "Refreshing..." : "Refresh token and retry"} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 
           {permissionApiState === 'error' && (
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
               <p>Permission definitions could not be loaded. Please check the backend logs or try again later.</p>
-              <SecondaryOutlinedButton label="Retry" onClick={handleRetry} />
+              <SecondaryOutlinedButton label={retryingDefinitions ? "Retrying..." : "Retry"} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 

@@ -171,3 +171,20 @@
   background-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
+
+.dark .p-dialog-footer,
+.dark .p-confirm-dialog .p-dialog-footer,
+.dark .trustdeck-confirm-dialog .p-dialog-footer {
+  background-color: #1e293b !important;
+  color: #e5e7eb !important;
+  border-color: #334155 !important;
+}
+
+.dark .p-dialog .p-dialog-header-icons button,
+.dark .p-dialog .p-dialog-header-icon {
+  color: #e5e7eb !important;
+}
+
+.dark .p-dialog-mask .p-dialog {
+  background-color: #1e293b !important;
+}

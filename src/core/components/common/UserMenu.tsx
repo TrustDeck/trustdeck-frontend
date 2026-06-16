@@ -76,43 +76,40 @@ const UserMenu: React.FC = () => {
   return (
     <div className="relative flex w-full justify-end">
       <div
-        className="relative"
+        className={`w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => setIsOpen(false)}
         onFocus={() => setIsOpen(true)}
       >
         <button
           type="button"
-          className={`group flex w-auto max-w-[360px] font-font-text items-center gap-2 bg-white hover:bg-gray-50 text-black shadow-md border-0 px-2 py-1 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800 ${
-            isOpen ? 'rounded-t-lg rounded-b-none' : 'rounded-lg'
-          }`}
+          className="flex w-full items-center justify-end gap-3 px-2 py-2 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
           aria-label="Open user menu"
+          onClick={() => setIsOpen((value) => !value)}
         >
-          <div className="flex items-center gap-2">
-            <div className="min-w-0 max-w-0 overflow-hidden opacity-0 transition-all duration-200 group-hover:max-w-[250px] group-hover:opacity-100">
+          {isOpen && (
+            <div className="min-w-0 flex-1 text-right">
               <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
-              <div className="truncate text-sm text-gray-500 dark:text-gray-300">Automatic logout in {remaining}</div>
+              <div className="truncate text-[0.95rem] font-medium text-gray-500 dark:text-gray-300">Logout in {remaining}</div>
             </div>
-            <div className="flex flex-col items-center leading-none">
-              <Avatar
-                className="bg-color-light-gray w-[41px] h-[41px] dark:bg-slate-700 dark:text-white"
-                label={getInitials(fullname, email)}
-                size="normal"
-                shape="circle"
-              />
-              <span className="mt-1 text-sm font-semibold text-gray-500 dark:text-gray-300" title="Time until automatic logout">
+          )}
+          <div className="flex flex-col items-center leading-none">
+            <Avatar
+              className="bg-color-light-gray h-[41px] w-[41px] dark:bg-slate-700 dark:text-white"
+              label={getInitials(fullname, email)}
+              size="normal"
+              shape="circle"
+            />
+            {!isOpen && (
+              <span className="mt-1 text-[0.95rem] font-semibold text-gray-500 dark:text-gray-300" title="Time until automatic logout">
                 {remaining}
               </span>
-            </div>
+            )}
           </div>
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full z-[1000] min-w-[245px] rounded-b-lg rounded-tl-lg bg-white p-2 shadow-lg ring-1 ring-black/5 dark:bg-slate-900 dark:ring-white/10">
-            <div className="mb-2 border-b border-gray-100 px-3 pb-2 dark:border-slate-700">
-              <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
-              <div className="mt-1 text-sm text-gray-500 dark:text-gray-300">Automatic logout in {remaining}</div>
-            </div>
+          <div className="border-t border-gray-100 p-2 dark:border-slate-700">
             <button
               type="button"
               className="flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
@@ -121,7 +118,7 @@ const UserMenu: React.FC = () => {
               <span>Dark mode</span>
               <span
                 className={`inline-flex h-6 w-11 items-center rounded-full border transition ${
-                  darkMode ? 'bg-color-blue border-color-blue' : 'bg-gray-100 border-gray-300 dark:bg-slate-700 dark:border-slate-500'
+                  darkMode ? 'border-color-blue bg-color-blue' : 'border-gray-300 bg-gray-100 dark:border-slate-500 dark:bg-slate-700'
                 }`}
                 aria-hidden="true"
               >

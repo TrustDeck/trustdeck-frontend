@@ -95,7 +95,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
   // create classes for NavLinks
   function getNavLinkClasses({ isActive }: { isActive: boolean }) {
     return `flex items-center px-4 py-2 rounded-lg transition-all duration-300 
-      ${isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black'}`
+      ${isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black dark:text-gray-100 dark:hover:bg-slate-800'}`
   }
 
   return (
@@ -103,17 +103,17 @@ export default function Sidebar({ projectName }: SidebarProps) {
       <div className="sm:hidden">
         <Bars3Icon
           onClick={toggleSidebar}
-          className="h-7 w-7 absolute top-3 left-3 text-black cursor-pointer"
+          className="h-7 w-7 absolute top-3 left-3 text-black cursor-pointer dark:text-gray-100"
           aria-label="Open Sidebar"
         />
       </div>
 
       <div
-        className={`hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] ${isSidebarOpen ? 'xl:hidden' : ''}`}
+        className={`hidden sm:flex sm:flex-col sm:justify-center sm:items-center sm:fixed sm:inset-0 sm:w-sidebar-collapse sm:bg-sidebar sm:text-black dark:sm:bg-slate-900 dark:sm:text-gray-100 sm:h-screen sm:shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)] ${isSidebarOpen ? 'xl:hidden' : ''}`}
       >
         <ChevronDoubleRightIcon
           onClick={toggleSidebar}
-          className="h-6 w-6 absolute top-4 cursor-pointer"
+          className="h-6 w-6 absolute top-4 cursor-pointer dark:text-gray-100"
           aria-label="Open Sidebar"
         />
         <ul className="space-y-12">
@@ -138,7 +138,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
       </div>
 
       <div
-        className={`fixed inset-0 bg-sidebar text-black w-sidebar-large h-screen p-4 
+        className={`fixed inset-0 bg-sidebar text-black dark:bg-slate-900 dark:text-gray-100 w-sidebar-large h-screen p-4 
         transform transition-transform duration-300 ease-in-out 
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         shadow-[0px_2px_6px_1px_rgba(73,73,73,0.15)]
@@ -148,7 +148,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
         <div className="sm:hidden">
           <XMarkIcon
             onClick={toggleSidebar}
-            className="h-7 w-7 absolute top-3 right-3 text-black cursor-pointer"
+            className="h-7 w-7 absolute top-3 right-3 text-black cursor-pointer dark:text-gray-100"
             aria-label="Close Sidebar"
           />
         </div>
@@ -156,7 +156,7 @@ export default function Sidebar({ projectName }: SidebarProps) {
         <div className="hidden sm:block">
           <ChevronDoubleLeftIcon
             onClick={toggleSidebar}
-            className="h-7 w-7 absolute top-3 right-3 text-black cursor-pointer"
+            className="h-7 w-7 absolute top-3 right-3 text-black cursor-pointer dark:text-gray-100"
             aria-label="Close Sidebar"
           />
         </div>

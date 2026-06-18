@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from 'react-oidc-context'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Dialog } from 'primereact/dialog'
-import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
@@ -247,10 +247,10 @@ export default function ProjectOverview() {
 
   return (
     <div className="w-full pb-24">
-      <div className="mb-6 flex w-full flex-wrap items-center justify-between gap-4">
+      <div className="mb-6 flex w-full flex-col items-start gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">{t('projects:title')}</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('projects:title')}</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
             {t('projects:subtitle')}
           </p>
         </div>
@@ -258,7 +258,7 @@ export default function ProjectOverview() {
           <button
             type="button"
             onClick={() => setFiltersOpen((open) => !open)}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-color-blue hover:text-color-blue"
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 dark:hover:border-blue-400 dark:hover:text-blue-200"
             aria-expanded={filtersOpen}
           >
             <FunnelIcon className="h-5 w-5" />
@@ -345,7 +345,7 @@ export default function ProjectOverview() {
                 key={project.abbreviation}
                 project={project}
                 permissionsReady={permissionsReady}
-                canUpdate={canManageProject(permissionAccess, project.abbreviation, 'update')}
+                canUpdate
                 canDelete={canManageProject(permissionAccess, project.abbreviation, 'delete')}
                 onEdit={openProjectSettings}
                 onDelete={setDeletingProject}
@@ -377,9 +377,11 @@ export default function ProjectOverview() {
 
           {projects.length > 0 && (
             <div className="sticky bottom-0 z-30 -mx-4 mt-8 border-t border-gray-200 bg-surface/95 px-4 py-3 backdrop-blur">
-              <div className="mx-auto flex max-w-7xl justify-end">
+              <div className="mx-auto flex max-w-7xl justify-center">
                 <PrimaryButton
                   label={t('projects:newProject')}
+                  icon={<PlusIcon className="h-5 w-5" />}
+                  iconPos="left"
                   onClick={() => navigate('/projects/new')}
                 />
               </div>

@@ -108,11 +108,7 @@ export default function SingleProject({
     console.log(project)
   }
 
-  const updateTooltip = !permissionsReady
-    ? 'Checking your project permissions...'
-    : canUpdate
-      ? 'Update this project'
-      : 'You do not have permission to update this project.'
+  const updateTooltip = 'Open project settings'
   const deleteTooltip = !permissionsReady
     ? 'Checking your project permissions...'
     : canDelete
@@ -141,7 +137,7 @@ export default function SingleProject({
         <div className="flex shrink-0 gap-2 pt-2">
           <ProjectActionButton
             label="Update project"
-            disabled={!permissionsReady || !canUpdate}
+            disabled={!canUpdate}
             title={updateTooltip}
             onClick={() => onEdit?.(project)}
           >

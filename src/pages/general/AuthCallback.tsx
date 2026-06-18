@@ -53,7 +53,7 @@ const AuthCallback: React.FC = () => {
           <p className="mt-4 text-sm leading-6 text-red-700">{auth.error.message}</p>
           <button
             type="button"
-            onClick={() => navigate('/auth/login', { replace: true })}
+            onClick={() => navigate('/login', { replace: true })}
             className="mt-8 w-full rounded-xl bg-color-blue px-4 py-3 font-semibold text-white hover:opacity-90"
           >
             Back to login

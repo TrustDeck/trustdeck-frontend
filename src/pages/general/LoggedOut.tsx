@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { useAuth } from 'react-oidc-context'
 import useUserStore from '../../core/stores/UserStore'
@@ -10,7 +10,7 @@ import Panel from '../../core/components/common/Panel'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { clearStoredOidcState, markLoggedOut } from '../../core/services/authSession'
+import { clearStoredOidcState, isMarkedLoggedOut } from '../../core/services/authSession'
 
 const LoggedOut: React.FC = () => {
   const auth = useAuth()
@@ -21,9 +21,15 @@ const LoggedOut: React.FC = () => {
   const hasRun = useRef(false)
   const navigate = useNavigate() 
   const { t } = useTranslation()
+  const hasLoggedOutMarker = isMarkedLoggedOut()
 
-  async function logout_helper() {
-    markLoggedOut()
+  useEffect(() => {
+    if (!hasLoggedOutMarker) {
+      navigate('/login', { replace: true })
+    }
+  }, [hasLoggedOutMarker, navigate])
+
+  const logout_helper = useCallback(async () => {
     // Clear TrustDeck token
     TrustDeck.instance().clearToken()
     
@@ -50,13 +56,12 @@ const LoggedOut: React.FC = () => {
     }
     
     setIsLoading(false)
-  }
+  }, [auth])
 
   useEffect(() => {
     const logout = async () => {
       if (!hasRun.current) {
         hasRun.current = true
-        markLoggedOut()
         if (
           isAuthenticated &&
           Object.keys(authData).length > 0 &&
@@ -79,10 +84,12 @@ const LoggedOut: React.FC = () => {
       }
     }
     //make sure that this runs only once
-    if (!hasRun.current) {
+    if (hasLoggedOutMarker && !hasRun.current) {
       logout()
     }
-  }, [auth, isAuthenticated, authData, isTabActive])
+  }, [auth, isAuthenticated, authData, isTabActive, hasLoggedOutMarker, logout_helper])
+
+  if (!hasLoggedOutMarker) return null
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-start pt-[15vh] px-4">
@@ -104,7 +111,7 @@ const LoggedOut: React.FC = () => {
             <h1 className="text-xl font-semibold text-gray-900">{t('layout:logOut.loggedOut')}</h1>
             <p className="text-gray-500">{t('layout:logOut.thankYou')}</p>
             <div className="mt-6">
-              <PrimaryButton label={t('layout:logOut.button')} onClick={() => navigate('/auth/login')} />
+              <PrimaryButton label={t('layout:logOut.button')} onClick={() => navigate('/login')} />
             </div>
           </div>
         )}

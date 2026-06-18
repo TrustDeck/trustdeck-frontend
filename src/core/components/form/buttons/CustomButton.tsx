@@ -11,18 +11,20 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
   loading = false,
   icon,
   disabled = false,
-  tooltip
+  tooltip,
+  iconPos
 }) => {
   return (
     <div className="flex">
       <Button
         type={type}
-        className={`px-6 py-3 text-base font-bold rounded-lg ${colorClass} w-auto ${className}`}
+        className={`inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-bold rounded-lg ${colorClass} w-auto ${className}`}
         onClick={onClick}
         label={label}
         outlined={true}
         loading={loading}
         icon={icon}
+        iconPos={iconPos as any}
         disabled={disabled}
         tooltip={tooltip}
       />

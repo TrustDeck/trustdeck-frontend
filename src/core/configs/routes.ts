@@ -44,7 +44,7 @@ export type RouteConfig = {
 
 export const routes: RouteConfig[] = [
   {
-    path: '/auth/login',
+    path: '/login',
     titleKey: 'Login',
     component: Login,
     Icon: Bars3Icon,

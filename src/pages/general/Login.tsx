@@ -22,7 +22,7 @@ const getReturnTo = (search: string) => {
   const params = new URLSearchParams(search)
   const value = params.get('returnTo')
   if (!isSafeLocalPath(value)) return '/projects'
-  if (value?.startsWith('/auth/login') || value?.startsWith('/callback') || value?.startsWith('/logged-out')) {
+  if (value?.startsWith('/login') || value?.startsWith('/callback') || value?.startsWith('/logged-out')) {
     return '/projects'
   }
   return value ?? '/projects'

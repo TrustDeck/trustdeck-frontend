@@ -33,6 +33,8 @@ type EntityTypePayload = {
   baseTypeName?: string
   associatedDomainName?: string
   typeDefinition: {
+    typeName?: string
+    version?: string
     layout?: string
     label_en?: string
     label_de?: string
@@ -103,24 +105,136 @@ function serializeAttribute(attribute: BuilderAttribute) {
     if (attribute.maxLength !== undefined) field.maxLength = attribute.maxLength
   }
   if (attribute.type === 'enum') {
-    field.values = (attribute.values ?? []).filter(Boolean)
+    const values = (attribute.values ?? []).filter(Boolean)
+    field.values = values
+    field.enum = values
   }
   return field
+}
+
+function createPersonExampleAttributes(): BuilderAttribute[] {
+  const personAttributes: Omit<BuilderAttribute, 'key'>[] = [
+    {
+      name: 'firstName',
+      label_en: 'First name',
+      label_de: 'Vorname',
+      type: 'string',
+      required: true,
+      linkage: true,
+      minLength: 1,
+      maxLength: 100
+    },
+    {
+      name: 'lastName',
+      label_en: 'Last name',
+      label_de: 'Nachname',
+      type: 'string',
+      required: true,
+      linkage: true,
+      minLength: 1,
+      maxLength: 100
+    },
+    {
+      name: 'dateOfBirth',
+      label_en: 'Date of birth',
+      label_de: 'Geburtsdatum',
+      type: 'date',
+      required: true,
+      linkage: true
+    },
+    {
+      name: 'administrativeGender',
+      label_en: 'Administrative gender',
+      label_de: 'Administratives Geschlecht',
+      type: 'enum',
+      required: true,
+      linkage: true,
+      values: ['male', 'female', 'other', 'unknown']
+    },
+    {
+      name: 'email',
+      label_en: 'Email',
+      label_de: 'E-Mail',
+      type: 'string',
+      required: false,
+      linkage: true,
+      maxLength: 254
+    },
+    {
+      name: 'phoneNumber',
+      label_en: 'Phone number',
+      label_de: 'Telefonnummer',
+      type: 'string',
+      required: false,
+      linkage: true,
+      maxLength: 50
+    },
+    {
+      name: 'street',
+      label_en: 'Street',
+      label_de: 'Straße',
+      type: 'string',
+      required: false,
+      linkage: false,
+      maxLength: 200
+    },
+    {
+      name: 'houseNumber',
+      label_en: 'House number',
+      label_de: 'Hausnummer',
+      type: 'string',
+      required: false,
+      linkage: false,
+      maxLength: 20
+    },
+    {
+      name: 'postalCode',
+      label_en: 'Postal code',
+      label_de: 'Postleitzahl',
+      type: 'string',
+      required: false,
+      linkage: false,
+      maxLength: 20
+    },
+    {
+      name: 'city',
+      label_en: 'City',
+      label_de: 'Stadt',
+      type: 'string',
+      required: false,
+      linkage: false,
+      maxLength: 120
+    },
+    {
+      name: 'country',
+      label_en: 'Country',
+      label_de: 'Land',
+      type: 'string',
+      required: false,
+      linkage: false,
+      minLength: 1,
+      maxLength: 50
+    }
+  ]
+
+  return personAttributes.map((attribute) => ({
+    ...attribute,
+    key: crypto.randomUUID()
+  }))
 }
 
 export default function Builder() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
-  const selectedProject = useProjectStore((state) => state.selectedProject)
   const setProjectEntities = useProjectStore((state) => state.setEntities)
 
-  const [entityName, setEntityName] = useState('')
-  const [saveTarget, setSaveTarget] = useState<'project' | 'base'>('project')
+  const [entityName, setEntityName] = useState('person')
+  const [saveTarget, setSaveTarget] = useState<'project' | 'base'>('base')
   const [baseTypeOptions, setBaseTypeOptions] = useState<{ label: string; value: string }[]>([])
   const [selectedBaseType, setSelectedBaseType] = useState('')
-  const [associatedDomainName, setAssociatedDomainName] = useState(selectedProject?.abbreviation ?? '')
-  const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
+  const [associatedGroupName, setAssociatedGroupName] = useState('')
+  const [attributes, setAttributes] = useState<BuilderAttribute[]>(() => createPersonExampleAttributes())
   const [jsonDraft, setJsonDraft] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
   const [jsonError, setJsonError] = useState('')
@@ -137,7 +251,12 @@ export default function Builder() {
           .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
           .map((name) => ({ label: name, value: name }))
         setBaseTypeOptions(options)
-        if (options.length) setSelectedBaseType((current) => current || options[0].value)
+        if (options.length) {
+          setSelectedBaseType((current) => current || options[0].value)
+        } else {
+          setSelectedBaseType('')
+          setSaveTarget('base')
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) console.error('Failed to load base types', error)
@@ -156,18 +275,20 @@ export default function Builder() {
       version: 'v1.0',
       isBaseType: saveTarget === 'base',
       typeDefinition: {
+        typeName: entityName.trim() || 'person',
+        version: 'v1.0',
         layout: 'group',
-        label_en: entityName.trim(),
-        label_de: entityName.trim(),
+        label_en: entityName.trim() || 'Person',
+        label_de: entityName.trim() || 'Person',
         attributes: attributes.map(serializeAttribute)
       }
     }
     if (saveTarget === 'project') {
       built.baseTypeName = selectedBaseType || undefined
-      built.associatedDomainName = associatedDomainName || selectedProject?.abbreviation || undefined
+      built.associatedDomainName = associatedGroupName || undefined
     }
     return built
-  }, [associatedDomainName, attributes, entityName, saveTarget, selectedBaseType, selectedProject?.abbreviation])
+  }, [associatedGroupName, attributes, entityName, saveTarget, selectedBaseType])
 
   useEffect(() => {
     if (!jsonDirty) {
@@ -207,9 +328,9 @@ export default function Builder() {
     try {
       const parsed = normalizeJson(JSON.parse(jsonDraft), entityName, selectedBaseType)
       setEntityName(parsed.name ?? entityName)
-      setSaveTarget(parsed.isBaseType ? 'base' : 'project')
+      setSaveTarget(parsed.isBaseType || !parsed.baseTypeName ? 'base' : 'project')
       setSelectedBaseType(parsed.baseTypeName ?? selectedBaseType)
-      setAssociatedDomainName(parsed.associatedDomainName ?? associatedDomainName)
+      setAssociatedGroupName(parsed.associatedDomainName ?? associatedGroupName)
       setAttributes(attributesFromPayload(parsed))
       setJsonDraft(prettyJson(parsed))
       setJsonDirty(false)
@@ -300,9 +421,9 @@ export default function Builder() {
             {saveTarget === 'project' && (
               <CustomFloatLabel
                 id="associatedDomainName"
-                value={associatedDomainName}
-                placeholder="Associated group/domain"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAssociatedDomainName(e.target.value)}
+                value={associatedGroupName}
+                placeholder="Associated group name"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAssociatedGroupName(e.target.value)}
               />
             )}
           </div>
@@ -310,11 +431,18 @@ export default function Builder() {
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <button
               type="button"
-              onClick={() => setSaveTarget('project')}
-              className={`rounded-xl border p-4 text-left transition ${saveTarget === 'project' ? 'border-color-blue bg-blue-50 text-color-blue' : 'border-gray-200 bg-white hover:border-color-blue'}`}
+              disabled={baseTypeOptions.length === 0}
+              title={baseTypeOptions.length === 0 ? 'Create a base type first before creating project-specific entity types.' : undefined}
+              onClick={() => {
+                if (baseTypeOptions.length > 0) setSaveTarget('project')
+              }}
+              className={`rounded-xl border p-4 text-left transition ${baseTypeOptions.length === 0 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400' : saveTarget === 'project' ? 'border-color-blue bg-blue-50 text-color-blue' : 'border-gray-200 bg-white hover:border-color-blue'}`}
             >
               <div className="font-semibold">Project-specific type</div>
               <p className="mt-1 text-sm text-gray-500">Extends a base type and belongs to the selected project.</p>
+              {baseTypeOptions.length === 0 && (
+                <p className="mt-2 text-xs font-semibold text-amber-700">Unavailable until a base type exists.</p>
+              )}
             </button>
             <button
               type="button"
@@ -336,13 +464,13 @@ export default function Builder() {
                 placeholder={t('entityBuilder:baseType', 'Base type')}
               />
               {baseTypeOptions.length === 0 && (
-                <p className="mt-2 text-sm text-amber-700">No base types were found. Create a base type first, or paste a complete JSON definition that references an existing base type.</p>
+                <p className="mt-2 text-sm text-amber-700">No base types were found. Create a base type first; project-specific entity types become available afterwards.</p>
               )}
             </div>
           )}
         </Panel>
 
-        <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div className="grid w-full items-start gap-6 xl:grid-cols-[1fr_1fr]">
           <Panel title="Visual preview" className="w-full">
             <div className="mb-4 flex flex-wrap gap-2">
               <PrimaryOutlinedButton
@@ -468,7 +596,7 @@ export default function Builder() {
           </Panel>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex w-full justify-center">
           <PrimaryButton label={saving ? 'Saving...' : 'Create entity type'} loading={saving} onClick={save} />
         </div>
       </div>

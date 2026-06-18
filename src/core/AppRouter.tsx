@@ -8,7 +8,7 @@ import {
 } from 'react-router-dom'
 import Layout from './components/common/Layout'
 import { useAuth } from 'react-oidc-context'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useRef } from 'react'
 import { routes } from './configs/routes'
 import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
 import useUserStore from './stores/UserStore.tsx' // Import the UserStore
@@ -54,7 +54,7 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
     TrustDeck.instance().clearToken()
     useUserStore.getState().clear()
     const returnTo = `${location.pathname}${location.search}${location.hash}`
-    return <Navigate to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
   }
 
   return <Component />
@@ -85,6 +85,13 @@ const AuthStateListener: React.FC = () => {
   const isTabActive = useLayoutStore((state) => state.isTabActive) // Use isTabActive from LayoutStore
   const location = useLocation()
   const auth = useAuth()
+  const hadLiveSessionRef = useRef(false)
+
+  useEffect(() => {
+    if (hasValidOidcUser(auth.user)) {
+      hadLiveSessionRef.current = true
+    }
+  }, [auth.user])
 
   useEffect(() => {
     let previousAuthState = isAuthenticated
@@ -94,7 +101,8 @@ const AuthStateListener: React.FC = () => {
       (currentAuthState) => {
         if (previousAuthState && !currentAuthState && !isTabActive) {
           console.log('User is no longer authenticated')
-          navigate('/logged-out') // Use navigate instead of hard setting the location
+          markLoggedOut('timeout')
+          navigate('/logged-out')
         }
         previousAuthState = currentAuthState
       }
@@ -139,10 +147,15 @@ const AuthStateListener: React.FC = () => {
   useEffect(() => {
     // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
-      markLoggedOut()
       TrustDeck.instance().clearToken()
       useUserStore.getState().clear()
-      navigate('/logged-out') // Use navigate instead of hard setting the location
+
+      if (hadLiveSessionRef.current) {
+        markLoggedOut('timeout')
+        navigate('/logged-out')
+      } else {
+        navigate('/login', { replace: true })
+      }
     })
   }, [auth.events, navigate])
 

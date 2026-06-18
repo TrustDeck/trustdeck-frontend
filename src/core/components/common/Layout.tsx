@@ -20,7 +20,7 @@ const Layout: React.FC = () => {
   const sidebarTitle = location.pathname === '/projects' ? 'TrustDeck' : selectedProject?.name ?? 'TrustDeck'
 
   const isLoggedOutPage = location.pathname === '/logged-out'
-  const isLoginPage = location.pathname === '/auth/login'
+  const isLoginPage = location.pathname === '/login'
   const hideSidebar = isLoggedOutPage || isLoginPage
 
   const contentOffsetClass = hideSidebar

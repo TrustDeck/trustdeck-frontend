@@ -23,7 +23,7 @@ const onSigninCallback = (): void => {
 
   const safeReturnTo =
     isSafeLocalPath(storedReturnTo) &&
-    !storedReturnTo?.startsWith('/auth/login') &&
+    !storedReturnTo?.startsWith('/login') &&
     !storedReturnTo?.startsWith('/callback') &&
     !storedReturnTo?.startsWith('/logged-out')
       ? storedReturnTo

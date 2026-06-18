@@ -11,7 +11,7 @@ export default function RequireProject({ children }: Props) {
   const showToast = useToastStore((s) => s.show)
 
   // Allow reaching /projects (and other public-ish paths) without a selected project
-  const allowList = ['/projects', '/projects/new', '/permissions', '/projects/global-permissions', '/auth/login', '/callback', '/logged-out']
+  const allowList = ['/projects', '/projects/new', '/permissions', '/projects/global-permissions', '/login', '/callback', '/logged-out']
   const isAllowed = allowList.some((p) => location.pathname.startsWith(p))
 
   useEffect(() => {

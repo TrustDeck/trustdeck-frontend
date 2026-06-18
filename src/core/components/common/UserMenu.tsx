@@ -67,7 +67,7 @@ const UserMenu: React.FC = () => {
   const closeMenu = () => setIsOpen(false)
 
   const handleLogout = () => {
-    markLoggedOut()
+    markLoggedOut('manual')
     closeMenu()
     navigate('/logged-out')
   }

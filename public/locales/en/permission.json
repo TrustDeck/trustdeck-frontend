@@ -34,7 +34,9 @@
     "noTokenRoles": "No roles were present in the current access token.",
     "noGrantedInScope": "No rights are currently granted in this section.",
     "noMissingInScope": "All rights in this section are currently granted.",
-    "noProjectOrGroupRows": "No project or group permission definitions are available for this project."
+    "noProjectOrGroupRows": "No project or group permission definitions are available for this project.",
+    "missingRightsUnavailable": "Permission definitions are currently unavailable, so only granted rights can be shown. Missing rights cannot be calculated yet.",
+    "missingRightsUnavailableShort": "Missing rights cannot be calculated until permission definitions are available."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",

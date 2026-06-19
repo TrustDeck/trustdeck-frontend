@@ -169,7 +169,57 @@ function PermissionScopeCard({
   )
 }
 
-function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectivePermission[]; t: ReturnType<typeof useTranslation>['t'] }) {
+function scopeTitleForPermissionGroup(group: string, t: ReturnType<typeof useTranslation>['t']) {
+  const [resourceType, resourceName = '*'] = group.split(' / ')
+  if (resourceType === 'GLOBAL') return t('scope.global')
+  if (resourceType === 'PROJECT') return `${t('scope.project')}: ${resourceName}`
+  if (resourceType === 'DOMAIN') return `${t('scope.group')}: ${resourceName}`
+  return resourceName === '*' ? resourceType : `${resourceType}: ${resourceName}`
+}
+
+function buildReadOnlyRowsForCurrentAccess(
+  permissions: EffectivePermission[],
+  definedPermissions: DefinedPermission[]
+) {
+  const effectivePermissions = uniquePermissions(permissions)
+  const groupedEffective = groupPermissionsByScope(effectivePermissions)
+  const rowsByGroup = new Map<string, EffectivePermission[]>()
+
+  Object.entries(groupedEffective).forEach(([group, perms]) => {
+    const [resourceType, resourceNameRaw = '*'] = group.split(' / ')
+    const resourceName = resourceNameRaw === '*' ? undefined : resourceNameRaw
+    const definedRows = definedPermissions
+      .filter((permission) => permission.resourceType === resourceType)
+      .map((permission) => ({
+        resourceType,
+        resourceName,
+        action: permission.action
+      }))
+    rowsByGroup.set(group, uniquePermissions([...definedRows, ...perms]))
+  })
+
+  return Array.from(rowsByGroup.entries()).sort(([a], [b]) => {
+    const order = (group: string) => {
+      if (group.startsWith('GLOBAL')) return 0
+      if (group.startsWith('PROJECT')) return 1
+      if (group.startsWith('DOMAIN')) return 2
+      return 3
+    }
+    return order(a) - order(b) || a.localeCompare(b)
+  })
+}
+
+function ReadOnlyPermissionSummary({
+  permissions,
+  definedPermissions,
+  t
+}: {
+  permissions: EffectivePermission[]
+  definedPermissions: DefinedPermission[]
+  t: ReturnType<typeof useTranslation>['t']
+}) {
+  const [openScopes, setOpenScopes] = useState<Record<string, boolean>>({})
+
   if (!permissions.length) {
     return (
       <p className="text-base text-gray-500 dark:text-gray-300">
@@ -178,26 +228,132 @@ function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectiveP
     )
   }
 
+  const grantedKeys = new Set(uniquePermissions(permissions).map((permission) => permissionKey(permission)))
+  const groupedRows = buildReadOnlyRowsForCurrentAccess(permissions, definedPermissions)
+  const canShowMissing = definedPermissions.length > 0
+
   return (
     <div className="space-y-3">
-      {Object.entries(groupPermissionsByScope(uniquePermissions(permissions))).map(([group, perms]) => (
-        <div
-          key={group}
-          className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800"
-        >
-          <h4 className="mb-2 text-base font-semibold text-gray-700 dark:text-gray-100">{group}</h4>
-          <div className="flex flex-wrap gap-2">
-            {perms.map((perm) => (
-              <span
-                key={permissionKey(perm)}
-                className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm dark:bg-slate-900 dark:text-gray-100"
-              >
-                {perm.action}
-              </span>
-            ))}
-          </div>
+      {!canShowMissing && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+          {t('empty.missingRightsUnavailable')}
         </div>
-      ))}
+      )}
+      {groupedRows.map(([group, rows], index) => {
+        const granted = rows.filter((row) => grantedKeys.has(permissionKey(row)))
+        const missing = canShowMissing ? rows.filter((row) => !grantedKeys.has(permissionKey(row))) : []
+        const isOpen = openScopes[group] ?? index === 0
+
+        return (
+          <section
+            key={group}
+            className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+          >
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
+              onClick={() => setOpenScopes((current) => ({ ...current, [group]: !isOpen }))}
+              aria-expanded={isOpen}
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                {isOpen ? <ChevronDownIcon className="h-4 w-4 shrink-0 text-gray-500" /> : <ChevronRightIcon className="h-4 w-4 shrink-0 text-gray-500" />}
+                <div className="min-w-0">
+                  <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">
+                    {scopeTitleForPermissionGroup(group, t)}
+                  </h4>
+                  <p className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{group}</p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-wrap justify-end gap-2 text-xs font-bold">
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100">
+                  {t('grantedCount', { count: granted.length })}
+                </span>
+                {canShowMissing && (
+                  <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                    {t('missingCount', { count: missing.length })}
+                  </span>
+                )}
+              </div>
+            </button>
+
+            {isOpen && (
+              <div className="grid gap-4 border-t border-gray-100 p-4 dark:border-slate-800 xl:grid-cols-2">
+                <section className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/10">
+                  <div className="mb-2 flex items-center justify-between gap-2 text-sm font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                    <span>{t('sections.grantedRights')}</span>
+                    <span>{granted.length}</span>
+                  </div>
+                  {granted.length ? (
+                    <div className="space-y-2">
+                      {granted.map((permission) => (
+                        <div
+                          key={permissionKey(permission)}
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm dark:border-emerald-900/60 dark:bg-slate-950/60"
+                          title={permission.action}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-gray-900 dark:text-gray-100">
+                              {formatPermissionAction(permission.action)}
+                            </span>
+                            <span className="mt-0.5 block truncate font-mono text-[0.7rem] text-gray-500 dark:text-gray-400">
+                              {permission.action}
+                            </span>
+                          </span>
+                          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
+                            {t('status.granted')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-emerald-200 bg-white/80 px-3 py-2 text-sm text-gray-500 dark:border-emerald-900/50 dark:bg-slate-950/60 dark:text-gray-300">
+                      {t('empty.noGrantedInScope')}
+                    </p>
+                  )}
+                </section>
+
+                <section className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+                  <div className="mb-2 flex items-center justify-between gap-2 text-sm font-bold uppercase tracking-wide text-gray-600 dark:text-gray-200">
+                    <span>{t('sections.missingRights')}</span>
+                    <span>{canShowMissing ? missing.length : '—'}</span>
+                  </div>
+                  {!canShowMissing ? (
+                    <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950/60 dark:text-gray-300">
+                      {t('empty.missingRightsUnavailableShort')}
+                    </p>
+                  ) : missing.length ? (
+                    <div className="space-y-2">
+                      {missing.map((permission) => (
+                        <div
+                          key={permissionKey(permission)}
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950/60"
+                          title={permission.action}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-gray-800 dark:text-gray-100">
+                              {formatPermissionAction(permission.action)}
+                            </span>
+                            <span className="mt-0.5 block truncate font-mono text-[0.7rem] text-gray-500 dark:text-gray-400">
+                              {permission.action}
+                            </span>
+                          </span>
+                          <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-bold text-gray-700 dark:bg-slate-700 dark:text-gray-200">
+                            {t('status.notGranted')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950/60 dark:text-gray-300">
+                      {t('empty.noMissingInScope')}
+                    </p>
+                  )}
+                </section>
+              </div>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }
@@ -639,7 +795,7 @@ export default function GlobalPermissions() {
                   {t('errors.effectiveError')}
                 </p>
               ) : (
-                <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} t={t} />
+                <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} definedPermissions={definedPermissions} t={t} />
               )}
             </div>
           </div>

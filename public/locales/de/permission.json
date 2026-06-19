@@ -34,7 +34,9 @@
     "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten.",
     "noGrantedInScope": "In diesem Bereich sind aktuell keine Rechte vergeben.",
     "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben.",
-    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar."
+    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
+    "missingRightsUnavailable": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Daher können nur vergebene Rechte angezeigt werden; nicht vergebene Rechte können noch nicht berechnet werden.",
+    "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",

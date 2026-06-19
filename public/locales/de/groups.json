@@ -60,7 +60,7 @@
     "maxnumpsn": {
       "label": "Max. Anzahl an Pseudonymen",
       "error": "Bitte geben Sie eine Zahl ein",
-      "help": "Geben Sie 0 ein für eine unbegrentzte Zahl von Pseudonymen."
+      "help": "Geben Sie 0 ein für eine unbegrenzte Zahl von Pseudonymen."
     },
     "multiplepsn": {
       "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
@@ -78,7 +78,7 @@
   "groupCreated": "Ihre Gruppe wurde erstellt.",
   "messages": {
     "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
-    "confirmDelete": "Löschen bestatigen",
+    "confirmDelete": "Löschen bestätigen",
     "unsavedChangesHeader": "Ungespeicherte Änderungen",
     "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?"
   }

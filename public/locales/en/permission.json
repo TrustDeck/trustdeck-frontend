@@ -4,5 +4,77 @@
     "read": "Read Only",
     "read+write_ex_delete": "Read and Write (Excluding Delete)",
     "full": "Full Access"
+  },
+  "currentUser": "Current user",
+  "title": "Permission management",
+  "intro": "Review your current TrustDeck roles and manage global, project, and group permissions for other users.",
+  "currentAccess": "Your current access",
+  "keycloakRoles": "Keycloak roles in token",
+  "effectivePermissions": "Effective TrustDeck permissions",
+  "grantOrRevoke": "Grant or revoke permissions",
+  "searchHelp": "Search for a user and adjust global permissions. If a project is selected, project and group permissions are shown below as well.",
+  "globalPermissions": "Global permissions",
+  "projectAndGroupPermissionsFor": "Project and group permissions for {{project}}",
+  "selectProjectFirst": "Select a project first to manage project and group permissions here.",
+  "grantedCount": "{{count}} granted",
+  "missingCount": "{{count}} not granted",
+  "scope": {
+    "global": "Global permissions",
+    "project": "Project",
+    "group": "Group",
+    "permissions": "Permissions"
+  },
+  "status": {
+    "granted": "Granted",
+    "notGranted": "Not granted"
+  },
+  "empty": {
+    "noPermissionsForUser": "No permissions found for this user.",
+    "noExplicitPermissions": "No explicit TrustDeck permissions were found for this account.",
+    "noTokenRoles": "No roles were present in the current access token."
+  },
+  "loading": {
+    "effectivePermissions": "Loading effective permissions...",
+    "permissionDefinitions": "Loading permission definitions..."
+  },
+  "errors": {
+    "effectiveForbidden": "Your current account is not allowed to read effective permissions from the backend. The token roles above are still shown.",
+    "effectiveError": "Effective permissions could not be loaded. The token roles above are still shown.",
+    "definitionsForbidden": "Permission definitions are currently not available. The backend returned HTTP 403 for the permission-definition endpoint.",
+    "retryExplanation": "I refreshed the access token before loading this page. If your role was granted only recently, use the retry button below; otherwise the backend role mapping may need to be checked.",
+    "definitionsError": "Permission definitions could not be loaded. Please check the backend logs or try again later."
+  },
+  "actions": {
+    "refreshing": "Refreshing...",
+    "refreshAndRetry": "Refresh token and retry",
+    "retrying": "Retrying...",
+    "retry": "Retry",
+    "saving": "Saving...",
+    "savePermissions": "Save permissions"
+  },
+  "toast": {
+    "permissionsRefreshed": "Permissions refreshed",
+    "noDefinitionsLoaded": "No permission definitions loaded",
+    "permissionsRefreshedDetail": "The access token was refreshed and permission definitions were loaded.",
+    "noDefinitionsLoadedDetail": "The access token was refreshed, but the backend still did not return permission definitions.",
+    "retryFailed": "Retry failed",
+    "retryFailedDetail": "The token refresh or permission lookup failed. Please try again or check your backend role mapping.",
+    "searchFailed": "Search failed",
+    "searchFailedDetail": "Users could not be loaded. Please check your permission-management access.",
+    "permissionsUpdated": "Permissions updated successfully.",
+    "updateFailedDetail": "Failed to update permissions. The backend may have rejected this operation."
+  },
+  "subgroup": {
+    "project": {
+      "project": "Project",
+      "image": "Image",
+      "type": "Type",
+      "instance": "Instance"
+    },
+    "group": {
+      "domain": "Group",
+      "pseudonym": "Pseudonym",
+      "pseudonym-batch": "Pseudonym batch"
+    }
   }
 }

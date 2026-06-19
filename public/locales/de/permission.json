@@ -4,5 +4,77 @@
     "read": "Nur Lesen",
     "read+write_ex_delete": "Lesen und Schreiben (Ohne Löschen)",
     "full": "Vollzugriff"
+  },
+  "currentUser": "Aktueller Benutzer",
+  "title": "Berechtigungsverwaltung",
+  "intro": "Prüfen Sie Ihre aktuellen TrustDeck-Rollen und verwalten Sie globale, Projekt- und Gruppenberechtigungen für andere Benutzer.",
+  "currentAccess": "Ihr aktueller Zugriff",
+  "keycloakRoles": "Keycloak-Rollen im Token",
+  "effectivePermissions": "Effektive TrustDeck-Berechtigungen",
+  "grantOrRevoke": "Berechtigungen vergeben oder entziehen",
+  "searchHelp": "Suchen Sie nach einem Benutzer und passen Sie globale Berechtigungen an. Wenn ein Projekt ausgewählt ist, werden darunter auch Projekt- und Gruppenberechtigungen angezeigt.",
+  "globalPermissions": "Globale Berechtigungen",
+  "projectAndGroupPermissionsFor": "Projekt- und Gruppenberechtigungen für {{project}}",
+  "selectProjectFirst": "Wählen Sie zuerst ein Projekt aus, um hier Projekt- und Gruppenberechtigungen zu verwalten.",
+  "grantedCount": "{{count}} vergeben",
+  "missingCount": "{{count}} nicht vergeben",
+  "scope": {
+    "global": "Globale Berechtigungen",
+    "project": "Projekt",
+    "group": "Gruppe",
+    "permissions": "Berechtigungen"
+  },
+  "status": {
+    "granted": "Vergeben",
+    "notGranted": "Nicht vergeben"
+  },
+  "empty": {
+    "noPermissionsForUser": "Für diesen Benutzer wurden keine Berechtigungen gefunden.",
+    "noExplicitPermissions": "Für dieses Konto wurden keine expliziten TrustDeck-Berechtigungen gefunden.",
+    "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten."
+  },
+  "loading": {
+    "effectivePermissions": "Effektive Berechtigungen werden geladen...",
+    "permissionDefinitions": "Berechtigungsdefinitionen werden geladen..."
+  },
+  "errors": {
+    "effectiveForbidden": "Ihr aktuelles Konto darf die effektiven Berechtigungen nicht aus dem Backend lesen. Die Token-Rollen werden weiterhin angezeigt.",
+    "effectiveError": "Effektive Berechtigungen konnten nicht geladen werden. Die Token-Rollen werden weiterhin angezeigt.",
+    "definitionsForbidden": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Das Backend hat für den Berechtigungsdefinitions-Endpunkt HTTP 403 zurückgegeben.",
+    "retryExplanation": "Der Access Token wurde vor dem Laden dieser Seite aktualisiert. Wenn Ihre Rolle erst kürzlich vergeben wurde, verwenden Sie die Schaltfläche unten; andernfalls sollte das Backend-Rollenmapping geprüft werden.",
+    "definitionsError": "Berechtigungsdefinitionen konnten nicht geladen werden. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut."
+  },
+  "actions": {
+    "refreshing": "Aktualisiere...",
+    "refreshAndRetry": "Token aktualisieren und erneut versuchen",
+    "retrying": "Versuche erneut...",
+    "retry": "Erneut versuchen",
+    "saving": "Speichern...",
+    "savePermissions": "Berechtigungen speichern"
+  },
+  "toast": {
+    "permissionsRefreshed": "Berechtigungen aktualisiert",
+    "noDefinitionsLoaded": "Keine Berechtigungsdefinitionen geladen",
+    "permissionsRefreshedDetail": "Der Access Token wurde aktualisiert und die Berechtigungsdefinitionen wurden geladen.",
+    "noDefinitionsLoadedDetail": "Der Access Token wurde aktualisiert, aber das Backend hat weiterhin keine Berechtigungsdefinitionen zurückgegeben.",
+    "retryFailed": "Erneuter Versuch fehlgeschlagen",
+    "retryFailedDetail": "Die Token-Aktualisierung oder Berechtigungssuche ist fehlgeschlagen. Bitte versuchen Sie es erneut oder prüfen Sie das Backend-Rollenmapping.",
+    "searchFailed": "Suche fehlgeschlagen",
+    "searchFailedDetail": "Benutzer konnten nicht geladen werden. Bitte prüfen Sie Ihren Zugriff auf die Berechtigungsverwaltung.",
+    "permissionsUpdated": "Berechtigungen wurden erfolgreich aktualisiert.",
+    "updateFailedDetail": "Berechtigungen konnten nicht aktualisiert werden. Das Backend hat den Vorgang möglicherweise abgelehnt."
+  },
+  "subgroup": {
+    "project": {
+      "project": "Projekt",
+      "image": "Bild",
+      "type": "Typ",
+      "instance": "Instanz"
+    },
+    "group": {
+      "domain": "Gruppe",
+      "pseudonym": "Pseudonym",
+      "pseudonym-batch": "Pseudonym-Stapel"
+    }
   }
 }

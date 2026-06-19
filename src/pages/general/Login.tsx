@@ -13,6 +13,7 @@ import { useAuthStore } from '../../core/stores/AuthWebStore'
 import TrustDeck from '@service/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
+import { useTranslation } from 'react-i18next'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
   return Boolean(value && value.startsWith('/') && !value.startsWith('//'))
@@ -32,6 +33,7 @@ const getReturnTo = (search: string) => {
 
 const Login: React.FC = () => {
   const auth = useAuth()
+  const { t } = useTranslation()
   const location = useLocation()
   const returnTo = useMemo(() => getReturnTo(location.search), [location.search])
   const [loginError, setLoginError] = useState<string | null>(null)
@@ -76,7 +78,7 @@ const Login: React.FC = () => {
         }
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not start login'
+      const message = error instanceof Error ? error.message : t('common:login.couldNotStart')
       setLoginError(message)
       setIsStartingLogin(false)
     }
@@ -92,9 +94,9 @@ const Login: React.FC = () => {
         <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-color-blue/10">
           <LockClosedIcon className="h-9 w-9 text-color-blue" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-950">Welcome to TrustDeck</h1>
+        <h1 className="text-2xl font-bold text-slate-950">{t('common:login.welcome')}</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">
-          Sign in with your institutional account to continue.
+          {t('common:login.subtitle')}
         </p>
 
         {auth.error && (
@@ -110,7 +112,7 @@ const Login: React.FC = () => {
 
         <div className="mt-8 space-y-3">
           <PrimaryButton
-            label={isStartingLogin ? 'Opening sign-in...' : 'Sign in'}
+            label={isStartingLogin ? t('common:login.opening') : t('common:login.signIn')}
             onClick={handleLogin}
             loading={isStartingLogin}
             icon={<ArrowRightEndOnRectangleIcon className="mr-2 h-5 w-5" />}
@@ -118,7 +120,7 @@ const Login: React.FC = () => {
           />
           {(auth.error || loginError) && (
             <PrimaryOutlinedButton
-              label="Clear login state and retry"
+              label={t('common:login.clearAndRetry')}
               onClick={handleRetry}
               className="w-full justify-center"
             />

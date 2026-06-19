@@ -2,8 +2,8 @@
   "title": "Suche",
   "submit": "Suchen",
   "back": "Zurück",
-  "edit": "Editieren",
-  "cancel": "Abrechen",
+  "edit": "Bearbeiten",
+  "cancel": "Abbrechen",
   "save": "Speichern",
   "editSuccess": "Person wurde erfolgreich aktualisiert.",
   "editFailed": "Person konnte nicht aktualisiert werden.",
@@ -13,7 +13,7 @@
   "personView": "Person ansehen",
   "biosampleView": "Bioprobe ansehen",
   "pseudonymView": "Pseudonym ansehen",
-  "history": "Verlauf",
+  "history": "Letzte Suchen:",
   "noResults": "Keine Suchergebnisse.",
   "loadingEntity": "Wird geladen…",
   "searchFor": "Ich suche:",
@@ -140,12 +140,12 @@
     "help": "Geben Sie ein Pseudonym ein",
     "error": "Ungültiges Pseudonym",
     "data": "Daten",
-    "value": "Wert", 
+    "value": "Wert",
     "id": "ID",
-    "idType": "ID Type",
+    "idType": "ID-Typ",
     "createdOn": "Erstellt am:",
     "expiresOn": "Läuft ab am:",
-    "parentGroup": "Elterngruppe"
+    "parentGroup": "Übergeordnete Gruppe"
   },
   "group": {
     "title": "Gruppe",
@@ -160,5 +160,6 @@
     "emergencyContact": "Kontaktperson",
     "links": "Verknüpfungen",
     "identifiers": "Führende Identifikatoren"
-  }
+  },
+  "entityView": "Entitätsdetails"
 }

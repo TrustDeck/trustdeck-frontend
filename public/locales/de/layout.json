@@ -1,8 +1,7 @@
 {
   "menu": {
     "logout": "Abmelden",
-    "dentityManagement": "Identitätsmanagement",
-    "pseudonymManagement": "Pseudonym Management",
+    "pseudonymManagement": "Pseudonymverwaltung",
     "groupManagement": "Gruppenmanagement",
     "projectSettings": "Projekteinstellungen",
     "search": "Suche",
@@ -14,7 +13,7 @@
     "duplicates": "Dubletten",
     "resolveDuplicates": "Dubletten auflösen",
     "projects": "Projekte",
-    "backToProjects": "Zurück zu Projekte",
+    "backToProjects": "Zurück zu Projekten",
     "permissionManagement": "Berechtigungsverwaltung",
     "newProject": "Neues Projekt",
     "identityManagement": "Identitätsmanagement",

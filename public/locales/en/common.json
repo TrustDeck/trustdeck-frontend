@@ -11,5 +11,21 @@
   "loading": "Loading...",
   "success": "Success",
   "error": "Error",
-  "warning": "Warning"
+  "warning": "Warning",
+  "login": {
+    "welcome": "Welcome to TrustDeck",
+    "subtitle": "Sign in with your institutional account to continue.",
+    "opening": "Opening sign-in...",
+    "signIn": "Sign in",
+    "clearAndRetry": "Clear login state and retry",
+    "couldNotStart": "Could not start login",
+    "callbackFailed": "Login could not be completed",
+    "backToLogin": "Back to login",
+    "completing": "Completing login",
+    "preparingSession": "Preparing your TrustDeck session."
+  },
+  "projectRequired": {
+    "summary": "Select a project first",
+    "detail": "Please select a project before opening this section."
+  }
 }

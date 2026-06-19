@@ -94,7 +94,7 @@ const UserMenu: React.FC = () => {
       }}
     >
       <div
-        className={`fixed right-4 top-4 z-[80] w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 sm:right-6 ${isOpen ? 'min-w-[275px]' : 'min-w-[72px]'}`}
+        className={`fixed right-4 top-4 z-[80] w-auto max-w-[360px] overflow-hidden rounded-xl bg-white text-black shadow-md ring-1 ring-black/5 transition-all duration-200 dark:bg-slate-900 dark:text-gray-100 dark:ring-white/10 sm:right-6 ${isOpen ? 'min-w-[275px]' : 'min-w-[88px]'}`}
       >
         <button
           type="button"
@@ -105,18 +105,18 @@ const UserMenu: React.FC = () => {
           {isOpen && (
             <div className="min-w-0 flex-1 text-right">
               <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-50">{displayName}</div>
-              <div className="truncate text-[0.95rem] font-medium text-gray-500 dark:text-gray-300">{t('layout:userMenu.logoutIn', { time: remaining })}</div>
+              <div className="truncate font-mono text-[0.95rem] font-semibold tabular-nums text-gray-500 dark:text-gray-300">{t('layout:userMenu.logoutIn', { time: remaining })}</div>
             </div>
           )}
-          <div className="flex flex-col items-center leading-none">
+          <div className="flex min-w-[56px] flex-col items-center justify-center leading-none">
             <Avatar
-              className="bg-color-light-gray h-[41px] w-[41px] dark:bg-slate-700 dark:text-white"
+              className="bg-color-light-gray flex h-[41px] w-[41px] items-center justify-center dark:bg-slate-700 dark:text-white"
               label={getInitials(fullname, email)}
               size="normal"
               shape="circle"
             />
             {!isOpen && (
-              <span className="mt-1 text-[0.95rem] font-semibold text-gray-500 dark:text-gray-300" title={t('layout:userMenu.logoutTimer')}>
+              <span className="mt-1 w-[4.75rem] text-center font-mono text-[0.95rem] font-semibold tabular-nums text-gray-500 dark:text-gray-300" title={t('layout:userMenu.logoutTimer')}>
                 {remaining}
               </span>
             )}

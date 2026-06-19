@@ -48,11 +48,11 @@ function permissionErrorState(error: unknown): PermissionApiState {
   return message.includes('403') ? 'forbidden' : 'error'
 }
 
-function ReadOnlyPermissionSummary({ permissions }: { permissions: EffectivePermission[] }) {
+function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectivePermission[]; t: ReturnType<typeof useTranslation>['t'] }) {
   if (!permissions.length) {
     return (
       <p className="text-base text-gray-500 dark:text-gray-300">
-        No explicit TrustDeck permissions were found for this account.
+        {t('permission:empty.noExplicitPermissions')}
       </p>
     )
   }
@@ -69,7 +69,7 @@ function ReadOnlyPermissionSummary({ permissions }: { permissions: EffectivePerm
             {perms.map((perm) => (
               <span
                 key={permissionKey(perm)}
-                className="rounded-full bg-white px-3 py-1 text-sm font-medium text-gray-700 shadow-sm dark:bg-slate-900 dark:text-gray-100"
+                className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm dark:bg-slate-900 dark:text-gray-100"
               >
                 {perm.action}
               </span>
@@ -105,7 +105,7 @@ export default function GlobalPermissions() {
   const [loading, setLoading] = useState(false)
   const [retryingDefinitions, setRetryingDefinitions] = useState(false)
 
-  const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || 'Current user'
+  const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || t('permission:currentUser')
 
   const loadDefinedPermissions = useCallback(async (force = false): Promise<DefinedPermission[]> => {
     if (!force && definedPermissionsRef.current) return definedPermissionsRef.current
@@ -272,18 +272,18 @@ export default function GlobalPermissions() {
       const permissions = await loadDefinedPermissions(true)
       showToast({
         severity: permissions.length ? 'success' : 'warn',
-        summary: permissions.length ? 'Permissions refreshed' : 'No permission definitions loaded',
+        summary: permissions.length ? t('permission:toast.permissionsRefreshed') : t('permission:toast.noDefinitionsLoaded'),
         detail: permissions.length
-          ? 'The access token was refreshed and permission definitions were loaded.'
-          : 'The access token was refreshed, but the backend still did not return permission definitions.',
+          ? t('permission:toast.permissionsRefreshedDetail')
+          : t('permission:toast.noDefinitionsLoadedDetail'),
         life: 3500
       })
     } catch (error) {
       console.error('Retrying permission definitions failed', error)
       showToast({
         severity: 'error',
-        summary: 'Retry failed',
-        detail: 'The token refresh or permission lookup failed. Please try again or check your backend role mapping.',
+        summary: t('permission:toast.retryFailed'),
+        detail: t('permission:toast.retryFailedDetail'),
         life: 4500
       })
     } finally {
@@ -307,8 +307,8 @@ export default function GlobalPermissions() {
       setPersonSuggestions([])
       showToast({
         severity: 'error',
-        summary: 'Search failed',
-        detail: 'Users could not be loaded. Please check your permission-management access.',
+        summary: t('permission:toast.searchFailed'),
+        detail: t('permission:toast.searchFailedDetail'),
         life: 4000
       })
     }
@@ -418,16 +418,16 @@ export default function GlobalPermissions() {
       )
       showToast({
         severity: 'success',
-        summary: 'Success',
-        detail: 'Permissions updated successfully',
+        summary: t('common:success'),
+        detail: t('permission:toast.permissionsUpdated'),
         life: 3000
       })
     } catch (error) {
       console.error('Failed to update permissions', error)
       showToast({
         severity: 'error',
-        summary: 'Error',
-        detail: 'Failed to update permissions. The backend may have rejected this operation.',
+        summary: t('common:error'),
+        detail: t('permission:toast.updateFailedDetail'),
         life: 4000
       })
     } finally {
@@ -448,20 +448,20 @@ export default function GlobalPermissions() {
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 text-base sm:px-8">
       <div className="w-full space-y-6">
-        <Panel title="Permission management" className="w-full mx-auto">
+        <Panel title={t('permission:title')} className="w-full mx-auto">
           <p className="mb-5 text-base text-gray-500 dark:text-gray-300">
-            Review your current TrustDeck roles and manage global, project, and group permissions for other users.
+            {t('permission:intro')}
           </p>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">Your current access</h2>
+            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">{t('permission:currentAccess')}</h2>
             <div className="mb-5 text-base text-gray-600 dark:text-gray-300">
               <div>{currentUserLabel}</div>
               {currentUserEmail && <div>{currentUserEmail}</div>}
             </div>
             <div className="mb-5">
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                Keycloak roles in token
+                {t('permission:keycloakRoles')}
               </h3>
               {currentUserRoles.length ? (
                 <div className="flex flex-wrap gap-2">
@@ -475,58 +475,58 @@ export default function GlobalPermissions() {
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-500 dark:text-gray-300">No roles were present in the current access token.</p>
+                <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:empty.noTokenRoles')}</p>
               )}
             </div>
             <div>
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                Effective TrustDeck permissions
+                {t('permission:effectivePermissions')}
               </h3>
               {currentAccessState === 'loading' || currentAccessState === 'idle' ? (
-                <p className="text-base text-gray-500 dark:text-gray-300">Loading effective permissions...</p>
+                <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:loading.effectivePermissions')}</p>
               ) : currentAccessState === 'forbidden' ? (
                 <p className="text-base text-amber-700 dark:text-amber-300">
-                  Your current account is not allowed to read effective permissions from the backend. The token roles above are still shown.
+                  {t('permission:errors.effectiveForbidden')}
                 </p>
               ) : currentAccessState === 'error' ? (
                 <p className="text-base text-amber-700 dark:text-amber-300">
-                  Effective permissions could not be loaded. The token roles above are still shown.
+                  {t('permission:errors.effectiveError')}
                 </p>
               ) : (
-                <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} />
+                <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} t={t} />
               )}
             </div>
           </div>
         </Panel>
 
-        <Panel title="Grant or revoke permissions" className="w-full mx-auto">
+        <Panel title={t('permission:grantOrRevoke')} className="w-full mx-auto">
           {permissionApiState === 'loading' || permissionApiState === 'idle' ? (
-            <p className="text-base text-gray-500 dark:text-gray-300">Loading permission definitions...</p>
+            <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:loading.permissionDefinitions')}</p>
           ) : null}
 
           {permissionApiState === 'forbidden' && (
             <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
               <p>
-                Permission definitions are currently not available. The backend returned HTTP 403 for the permission-definition endpoint.
+                {t('permission:errors.definitionsForbidden')}
               </p>
               <p>
-                I refreshed the access token before loading this page. If your role was granted only recently, use the retry button below; otherwise the backend role mapping may need to be checked.
+                {t('permission:errors.retryExplanation')}
               </p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? "Refreshing..." : "Refresh token and retry"} loading={retryingDefinitions} onClick={handleRetry} />
+              <SecondaryOutlinedButton label={retryingDefinitions ? t('permission:actions.refreshing') : t('permission:actions.refreshAndRetry')} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 
           {permissionApiState === 'error' && (
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
-              <p>Permission definitions could not be loaded. Please check the backend logs or try again later.</p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? "Retrying..." : "Retry"} loading={retryingDefinitions} onClick={handleRetry} />
+              <p>{t('permission:errors.definitionsError')}</p>
+              <SecondaryOutlinedButton label={retryingDefinitions ? t('permission:actions.retrying') : t('permission:actions.retry')} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 
           {!permissionManagementUnavailable && permissionApiState === 'ready' && (
             <>
               <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
-                Search for a user and adjust global permissions. If a project is selected, project and group permissions are shown below as well.
+                {t('permission:searchHelp')}
               </p>
               <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
                 <AutoComplete
@@ -557,7 +557,7 @@ export default function GlobalPermissions() {
               {selectedPersonId && (
                 <div className="mt-6 space-y-6">
                   <div>
-                    <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">Global permissions</h3>
+                    <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">{t('permission:globalPermissions')}</h3>
                     <EffectivePermissionsList
                       allPermissionRows={globalPermissionRows}
                       permissionState={permissionState}
@@ -570,7 +570,7 @@ export default function GlobalPermissions() {
                   {selectedProject?.abbreviation ? (
                     <div>
                       <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">
-                        Project and group permissions for {selectedProject.name}
+                        {t('permission:projectAndGroupPermissionsFor', { project: selectedProject.name })}
                       </h3>
                       <EffectivePermissionsList
                         allPermissionRows={projectPermissionRows}
@@ -582,13 +582,13 @@ export default function GlobalPermissions() {
                     </div>
                   ) : (
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                      Select a project first to manage project and group permissions here.
+                      {t('permission:selectProjectFirst')}
                     </div>
                   )}
 
                   <div className="mt-4 flex justify-end">
                     <PrimaryButton
-                      label={loading ? 'Saving...' : 'Save permissions'}
+                      label={loading ? t('permission:actions.saving') : t('permission:actions.savePermissions')}
                       onClick={handleSave}
                       loading={loading}
                     />

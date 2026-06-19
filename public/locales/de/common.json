@@ -11,5 +11,21 @@
   "loading": "Lädt...",
   "success": "Erfolg",
   "error": "Fehler",
-  "warning": "Warnung"
+  "warning": "Warnung",
+  "login": {
+    "welcome": "Willkommen bei TrustDeck",
+    "subtitle": "Melden Sie sich mit Ihrem institutionellen Konto an, um fortzufahren.",
+    "opening": "Anmeldung wird geöffnet...",
+    "signIn": "Anmelden",
+    "clearAndRetry": "Anmeldestatus löschen und erneut versuchen",
+    "couldNotStart": "Anmeldung konnte nicht gestartet werden",
+    "callbackFailed": "Anmeldung konnte nicht abgeschlossen werden",
+    "backToLogin": "Zurück zur Anmeldung",
+    "completing": "Anmeldung wird abgeschlossen",
+    "preparingSession": "Ihre TrustDeck-Sitzung wird vorbereitet."
+  },
+  "projectRequired": {
+    "summary": "Bitte zuerst ein Projekt auswählen",
+    "detail": "Bitte wählen Sie ein Projekt aus, bevor Sie diesen Bereich öffnen."
+  }
 }

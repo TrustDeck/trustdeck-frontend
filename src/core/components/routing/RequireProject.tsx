@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import useProjectStore from '../../stores/ProjectStore'
 import useToastStore from '../../stores/ToastStore'
+import { useTranslation } from 'react-i18next'
 
 type Props = { children: ReactNode }
 
@@ -9,6 +10,7 @@ export default function RequireProject({ children }: Props) {
   const location = useLocation()
   const selected = useProjectStore((s) => s.selectedProject)
   const showToast = useToastStore((s) => s.show)
+  const { t } = useTranslation()
 
   // Allow reaching /projects (and other public-ish paths) without a selected project
   const allowList = ['/projects', '/projects/new', '/permissions', '/projects/global-permissions', '/login', '/callback', '/logged-out']
@@ -18,12 +20,12 @@ export default function RequireProject({ children }: Props) {
     if (!selected && !isAllowed) {
       showToast({
         severity: 'info',
-        summary: 'Select a project first',
-        detail: 'Please select a project before opening this section.',
+        summary: t('common:projectRequired.summary'),
+        detail: t('common:projectRequired.detail'),
         life: 3000
       })
     }
-  }, [isAllowed, selected, showToast])
+  }, [isAllowed, selected, showToast, t])
 
   if (!selected && !isAllowed) {
     return <Navigate to="/projects" replace state={{ from: location }} />

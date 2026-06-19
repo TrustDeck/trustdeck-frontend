@@ -42,14 +42,14 @@ type EntityTypePayload = {
   }
 }
 
-const typeOptions = [
-  { label: 'Text', value: 'string' },
-  { label: 'Integer', value: 'integer' },
-  { label: 'Number', value: 'number' },
-  { label: 'Boolean', value: 'boolean' },
-  { label: 'Date', value: 'date' },
-  { label: 'Date and time', value: 'datetime' },
-  { label: 'Dropdown', value: 'enum' }
+const typeOptionDefinitions = [
+  { labelKey: 'entityBuilder:type.text', fallback: 'Text', value: 'string' },
+  { labelKey: 'entityBuilder:type.integer', fallback: 'Integer', value: 'integer' },
+  { labelKey: 'entityBuilder:type.number', fallback: 'Number', value: 'number' },
+  { labelKey: 'entityBuilder:type.boolean', fallback: 'Boolean', value: 'boolean' },
+  { labelKey: 'entityBuilder:type.date', fallback: 'Date', value: 'date' },
+  { labelKey: 'entityBuilder:type.datetime', fallback: 'Date and time', value: 'datetime' },
+  { labelKey: 'entityBuilder:type.enum', fallback: 'Dropdown', value: 'enum' }
 ]
 
 function prettyJson(value: unknown) {
@@ -228,6 +228,10 @@ export default function Builder() {
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const setProjectEntities = useProjectStore((state) => state.setEntities)
+  const typeOptions = useMemo(
+    () => typeOptionDefinitions.map((option) => ({ label: t(option.labelKey, option.fallback), value: option.value })),
+    [t]
+  )
 
   const [entityName, setEntityName] = useState('person')
   const [saveTarget, setSaveTarget] = useState<'project' | 'base'>('base')
@@ -335,11 +339,11 @@ export default function Builder() {
       setJsonDraft(prettyJson(parsed))
       setJsonDirty(false)
       setJsonError('')
-      showToast({ severity: 'success', summary: 'JSON applied', detail: 'The builder preview was updated.', life: 2500 })
+      showToast({ severity: 'success', summary: t('entityBuilder:toast.jsonAppliedSummary'), detail: t('entityBuilder:toast.jsonAppliedDetail'), life: 2500 })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       setJsonError(message)
-      showToast({ severity: 'error', summary: 'Invalid JSON', detail: message, life: 4500 })
+      showToast({ severity: 'error', summary: t('entityBuilder:toast.invalidJson'), detail: message, life: 4500 })
     }
   }
 
@@ -362,17 +366,17 @@ export default function Builder() {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         setJsonError(message)
-        showToast({ severity: 'error', summary: 'Invalid JSON', detail: message, life: 4500 })
+        showToast({ severity: 'error', summary: t('entityBuilder:toast.invalidJson'), detail: message, life: 4500 })
         return
       }
     }
 
     if (!finalPayload.name) {
-      showToast({ severity: 'error', summary: 'Missing name', detail: 'Please enter an entity type name.', life: 3500 })
+      showToast({ severity: 'error', summary: t('entityBuilder:toast.missingNameSummary'), detail: t('entityBuilder:toast.missingNameDetail'), life: 3500 })
       return
     }
     if (saveTarget === 'project' && !finalPayload.baseTypeName) {
-      showToast({ severity: 'error', summary: 'Missing base type', detail: 'Project-specific entity types must extend a base type.', life: 3500 })
+      showToast({ severity: 'error', summary: t('entityBuilder:toast.missingBaseSummary'), detail: t('entityBuilder:toast.missingBaseDetail'), life: 3500 })
       return
     }
 
@@ -386,14 +390,14 @@ export default function Builder() {
       }
       showToast({
         severity: 'success',
-        summary: 'Entity type created',
-        detail: saveTarget === 'base' ? 'Base type created successfully.' : 'Project-specific entity type created successfully.',
+        summary: t('entityBuilder:toast.createdSummary'),
+        detail: saveTarget === 'base' ? t('entityBuilder:toast.baseCreatedDetail') : t('entityBuilder:toast.projectCreatedDetail'),
         life: 3500
       })
       navigate('/entity/manager')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      showToast({ severity: 'error', summary: 'Creation failed', detail: message, life: 6000 })
+      showToast({ severity: 'error', summary: t('entityBuilder:toast.creationFailed'), detail: message, life: 6000 })
     } finally {
       setSaving(false)
     }
@@ -409,7 +413,7 @@ export default function Builder() {
           onClick={() => navigate('/entity/manager')}
         />
 
-        <Panel title="Create entity type" className="w-full">
+        <Panel title={t('entityBuilder:createEntityType')} className="w-full">
           <div className="grid gap-4 md:grid-cols-2">
             <CustomFloatLabel
               id="entityTypeName"
@@ -422,7 +426,7 @@ export default function Builder() {
               <CustomFloatLabel
                 id="associatedDomainName"
                 value={associatedGroupName}
-                placeholder="Associated group name"
+                placeholder={t('entityBuilder:associatedGroupName')}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAssociatedGroupName(e.target.value)}
               />
             )}
@@ -432,25 +436,25 @@ export default function Builder() {
             <button
               type="button"
               disabled={baseTypeOptions.length === 0}
-              title={baseTypeOptions.length === 0 ? 'Create a base type first before creating project-specific entity types.' : undefined}
+              title={baseTypeOptions.length === 0 ? t('entityBuilder:baseTypeRequiredHint') : undefined}
               onClick={() => {
                 if (baseTypeOptions.length > 0) setSaveTarget('project')
               }}
-              className={`rounded-xl border p-4 text-left transition ${baseTypeOptions.length === 0 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400' : saveTarget === 'project' ? 'border-color-blue bg-blue-50 text-color-blue' : 'border-gray-200 bg-white hover:border-color-blue'}`}
+              className={`rounded-xl border p-4 text-left transition ${baseTypeOptions.length === 0 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-500' : saveTarget === 'project' ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
             >
-              <div className="font-semibold">Project-specific type</div>
-              <p className="mt-1 text-sm text-gray-500">Extends a base type and belongs to the selected project.</p>
+              <div className="font-semibold">{t('entityBuilder:projectSpecificType')}</div>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">{t('entityBuilder:projectSpecificTypeHelp')}</p>
               {baseTypeOptions.length === 0 && (
-                <p className="mt-2 text-xs font-semibold text-amber-700">Unavailable until a base type exists.</p>
+                <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-300">{t('entityBuilder:baseTypeRequiredHint')}</p>
               )}
             </button>
             <button
               type="button"
               onClick={() => setSaveTarget('base')}
-              className={`rounded-xl border p-4 text-left transition ${saveTarget === 'base' ? 'border-color-blue bg-blue-50 text-color-blue' : 'border-gray-200 bg-white hover:border-color-blue'}`}
+              className={`rounded-xl border p-4 text-left transition ${saveTarget === 'base' ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
             >
-              <div className="font-semibold">Base type</div>
-              <p className="mt-1 text-sm text-gray-500">Creates a reusable blueprint for later project-specific types.</p>
+              <div className="font-semibold">{t('entityBuilder:baseType')}</div>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">{t('entityBuilder:baseTypeHelp')}</p>
             </button>
           </div>
 
@@ -464,26 +468,26 @@ export default function Builder() {
                 placeholder={t('entityBuilder:baseType', 'Base type')}
               />
               {baseTypeOptions.length === 0 && (
-                <p className="mt-2 text-sm text-amber-700">No base types were found. Create a base type first; project-specific entity types become available afterwards.</p>
+                <p className="mt-2 text-sm text-amber-700">{t('entityBuilder:noBaseTypesHint')}</p>
               )}
             </div>
           )}
         </Panel>
 
-        <div className="grid w-full items-start gap-6 xl:grid-cols-[1fr_1fr]">
-          <Panel title="Visual preview" className="w-full">
+        <div className="grid w-full items-start gap-6">
+          <Panel title={t('entityBuilder:visualPreview')} className="w-full">
             <div className="mb-4 flex flex-wrap gap-2">
               <PrimaryOutlinedButton
                 label={
                   <span className="inline-flex items-center gap-2">
                     <PlusIcon className="h-4 w-4" />
-                    Add custom field
+                    {t('entityBuilder:addCustomField')}
                   </span>
                 }
                 onClick={() => addAttribute()}
               />
               <PrimaryOutlinedButton
-                label="Add common person fields"
+                label={t('entityBuilder:addCommonPersonFields')}
                 onClick={() => {
                   defaultAttributes.slice(0, 4).forEach((attr: any) => addAttribute({
                     name: attr.name,
@@ -498,36 +502,36 @@ export default function Builder() {
             </div>
 
             {attributes.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500">
-                No fields configured yet. Add fields visually or paste a JSON definition and apply it to the preview.
+              <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                {t('entityBuilder:noFieldsHint')}
               </div>
             ) : (
               <div className="space-y-4">
                 {attributes.map((attribute) => (
-                  <div key={attribute.key} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div key={attribute.key} className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <h3 className="font-semibold text-gray-900">{attribute.label_en || attribute.name || 'Field'}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{attribute.label_en || attribute.name || t('entityBuilder:fieldLabelFallback')}</h3>
                       <button type="button" onClick={() => removeAttribute(attribute.key)} className="text-red-600 hover:text-red-800">
                         <TrashIcon className="h-5 w-5" />
                       </button>
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
                       <input
-                        className="rounded-lg border border-gray-300 px-3 py-2"
+                        className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
                         value={attribute.name}
-                        placeholder="Backend name"
+                        placeholder={t('entityBuilder:backendName')}
                         onChange={(e) => updateAttribute(attribute.key, { name: e.target.value })}
                       />
                       <input
-                        className="rounded-lg border border-gray-300 px-3 py-2"
+                        className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
                         value={attribute.label_en ?? ''}
-                        placeholder="English label"
+                        placeholder={t('entityBuilder:englishLabel')}
                         onChange={(e) => updateAttribute(attribute.key, { label_en: e.target.value })}
                       />
                       <input
-                        className="rounded-lg border border-gray-300 px-3 py-2"
+                        className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
                         value={attribute.label_de ?? ''}
-                        placeholder="German label"
+                        placeholder={t('entityBuilder:germanLabel')}
                         onChange={(e) => updateAttribute(attribute.key, { label_de: e.target.value })}
                       />
                       <CustomDropdown
@@ -535,10 +539,10 @@ export default function Builder() {
                         value={attribute.type ?? ''}
                         onChange={(e) => updateAttribute(attribute.key, { type: e.value })}
                         options={typeOptions}
-                        placeholder="Field type"
+                        placeholder={t('entityBuilder:fieldType')}
                       />
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700">
+                    <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
                       {(['required', 'linkage', 'repeatable'] as const).map((flag) => (
                         <label key={flag} className="inline-flex items-center gap-2">
                           <input
@@ -546,15 +550,15 @@ export default function Builder() {
                             checked={Boolean(attribute[flag])}
                             onChange={(e) => updateAttribute(attribute.key, { [flag]: e.target.checked })}
                           />
-                          {flag}
+                          {t(`entityBuilder:field.${flag}`)}
                         </label>
                       ))}
                     </div>
                     {attribute.type === 'enum' && (
                       <input
-                        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2"
+                        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
                         value={(attribute.values ?? []).join(', ')}
-                        placeholder="Dropdown values, comma separated"
+                        placeholder={t('entityBuilder:dropdownValuesCommaSeparated')}
                         onChange={(e) => updateAttribute(attribute.key, { values: e.target.value.split(',').map((v) => v.trim()) })}
                       />
                     )}
@@ -564,10 +568,10 @@ export default function Builder() {
             )}
           </Panel>
 
-          <Panel title="JSON import/export" className="w-full">
-            <p className="mb-3 text-sm text-gray-500">Paste an entity type JSON, apply it to update the preview, or copy the generated JSON for reuse.</p>
+          <Panel title={t('entityBuilder:jsonImportExport')} className="w-full">
+            <p className="mb-3 text-sm text-gray-500 dark:text-gray-300">{t('entityBuilder:jsonHelp')}</p>
             <textarea
-              className="h-[420px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm"
+              className="h-[420px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
               spellCheck={false}
               value={jsonDraft}
               onChange={(event) => {
@@ -575,11 +579,11 @@ export default function Builder() {
                 setJsonDirty(true)
               }}
             />
-            {jsonError && <p className="mt-2 text-sm text-red-600">Invalid JSON: {jsonError}</p>}
+            {jsonError && <p className="mt-2 text-sm text-red-600 dark:text-red-300">{t('entityBuilder:invalidJsonWithMessage', { message: jsonError })}</p>}
             <div className="mt-3 flex flex-wrap justify-end gap-2">
-              <PrimaryOutlinedButton label="Apply JSON to preview" onClick={applyJsonToBuilder} />
+              <PrimaryOutlinedButton label={t('entityBuilder:applyJsonToPreview')} onClick={applyJsonToBuilder} />
               <PrimaryOutlinedButton
-                label="Reset JSON from preview"
+                label={t('entityBuilder:resetJsonFromPreview')}
                 onClick={() => {
                   setJsonDirty(false)
                   setJsonDraft(prettyJson(payload))
@@ -588,8 +592,8 @@ export default function Builder() {
               />
             </div>
             <div className="mt-4 text-left">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">Rendered preview</h3>
-              <pre className="max-h-80 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700">
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">{t('entityBuilder:renderedPreview')}</h3>
+              <pre className="max-h-80 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-slate-950 dark:text-gray-100">
                 {jsonDirty ? jsonDraft : prettyJson(payload)}
               </pre>
             </div>
@@ -597,7 +601,7 @@ export default function Builder() {
         </div>
 
         <div className="flex w-full justify-center">
-          <PrimaryButton label={saving ? 'Saving...' : 'Create entity type'} loading={saving} onClick={save} />
+          <PrimaryButton label={saving ? t('common:loading') : t('entityBuilder:createEntityType')} loading={saving} onClick={save} />
         </div>
       </div>
     </div>

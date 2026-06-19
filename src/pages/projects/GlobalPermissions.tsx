@@ -52,7 +52,7 @@ function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectiveP
   if (!permissions.length) {
     return (
       <p className="text-base text-gray-500 dark:text-gray-300">
-        {t('permission:empty.noExplicitPermissions')}
+        {t('empty.noExplicitPermissions')}
       </p>
     )
   }
@@ -82,7 +82,7 @@ function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectiveP
 }
 
 export default function GlobalPermissions() {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['permission', 'common', 'search'])
   const auth = useAuth()
   const showToast = useToastStore((state) => state.show)
   const currentUserId = useUserStore((state) => state.username)
@@ -105,7 +105,7 @@ export default function GlobalPermissions() {
   const [loading, setLoading] = useState(false)
   const [retryingDefinitions, setRetryingDefinitions] = useState(false)
 
-  const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || t('permission:currentUser')
+  const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
 
   const loadDefinedPermissions = useCallback(async (force = false): Promise<DefinedPermission[]> => {
     if (!force && definedPermissionsRef.current) return definedPermissionsRef.current
@@ -272,18 +272,18 @@ export default function GlobalPermissions() {
       const permissions = await loadDefinedPermissions(true)
       showToast({
         severity: permissions.length ? 'success' : 'warn',
-        summary: permissions.length ? t('permission:toast.permissionsRefreshed') : t('permission:toast.noDefinitionsLoaded'),
+        summary: permissions.length ? t('toast.permissionsRefreshed') : t('toast.noDefinitionsLoaded'),
         detail: permissions.length
-          ? t('permission:toast.permissionsRefreshedDetail')
-          : t('permission:toast.noDefinitionsLoadedDetail'),
+          ? t('toast.permissionsRefreshedDetail')
+          : t('toast.noDefinitionsLoadedDetail'),
         life: 3500
       })
     } catch (error) {
       console.error('Retrying permission definitions failed', error)
       showToast({
         severity: 'error',
-        summary: t('permission:toast.retryFailed'),
-        detail: t('permission:toast.retryFailedDetail'),
+        summary: t('toast.retryFailed'),
+        detail: t('toast.retryFailedDetail'),
         life: 4500
       })
     } finally {
@@ -307,8 +307,8 @@ export default function GlobalPermissions() {
       setPersonSuggestions([])
       showToast({
         severity: 'error',
-        summary: t('permission:toast.searchFailed'),
-        detail: t('permission:toast.searchFailedDetail'),
+        summary: t('toast.searchFailed'),
+        detail: t('toast.searchFailedDetail'),
         life: 4000
       })
     }
@@ -419,7 +419,7 @@ export default function GlobalPermissions() {
       showToast({
         severity: 'success',
         summary: t('common:success'),
-        detail: t('permission:toast.permissionsUpdated'),
+        detail: t('toast.permissionsUpdated'),
         life: 3000
       })
     } catch (error) {
@@ -427,7 +427,7 @@ export default function GlobalPermissions() {
       showToast({
         severity: 'error',
         summary: t('common:error'),
-        detail: t('permission:toast.updateFailedDetail'),
+        detail: t('toast.updateFailedDetail'),
         life: 4000
       })
     } finally {
@@ -448,20 +448,20 @@ export default function GlobalPermissions() {
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 text-base sm:px-8">
       <div className="w-full space-y-6">
-        <Panel title={t('permission:title')} className="w-full mx-auto">
+        <Panel title={t('title')} className="w-full mx-auto">
           <p className="mb-5 text-base text-gray-500 dark:text-gray-300">
-            {t('permission:intro')}
+            {t('intro')}
           </p>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">{t('permission:currentAccess')}</h2>
+            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">{t('currentAccess')}</h2>
             <div className="mb-5 text-base text-gray-600 dark:text-gray-300">
               <div>{currentUserLabel}</div>
               {currentUserEmail && <div>{currentUserEmail}</div>}
             </div>
             <div className="mb-5">
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                {t('permission:keycloakRoles')}
+                {t('keycloakRoles')}
               </h3>
               {currentUserRoles.length ? (
                 <div className="flex flex-wrap gap-2">
@@ -475,22 +475,22 @@ export default function GlobalPermissions() {
                   ))}
                 </div>
               ) : (
-                <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:empty.noTokenRoles')}</p>
+                <p className="text-base text-gray-500 dark:text-gray-300">{t('empty.noTokenRoles')}</p>
               )}
             </div>
             <div>
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                {t('permission:effectivePermissions')}
+                {t('effectivePermissions')}
               </h3>
               {currentAccessState === 'loading' || currentAccessState === 'idle' ? (
-                <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:loading.effectivePermissions')}</p>
+                <p className="text-base text-gray-500 dark:text-gray-300">{t('loading.effectivePermissions')}</p>
               ) : currentAccessState === 'forbidden' ? (
                 <p className="text-base text-amber-700 dark:text-amber-300">
-                  {t('permission:errors.effectiveForbidden')}
+                  {t('errors.effectiveForbidden')}
                 </p>
               ) : currentAccessState === 'error' ? (
                 <p className="text-base text-amber-700 dark:text-amber-300">
-                  {t('permission:errors.effectiveError')}
+                  {t('errors.effectiveError')}
                 </p>
               ) : (
                 <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} t={t} />
@@ -499,34 +499,34 @@ export default function GlobalPermissions() {
           </div>
         </Panel>
 
-        <Panel title={t('permission:grantOrRevoke')} className="w-full mx-auto">
+        <Panel title={t('grantOrRevoke')} className="w-full mx-auto">
           {permissionApiState === 'loading' || permissionApiState === 'idle' ? (
-            <p className="text-base text-gray-500 dark:text-gray-300">{t('permission:loading.permissionDefinitions')}</p>
+            <p className="text-base text-gray-500 dark:text-gray-300">{t('loading.permissionDefinitions')}</p>
           ) : null}
 
           {permissionApiState === 'forbidden' && (
             <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
               <p>
-                {t('permission:errors.definitionsForbidden')}
+                {t('errors.definitionsForbidden')}
               </p>
               <p>
-                {t('permission:errors.retryExplanation')}
+                {t('errors.retryExplanation')}
               </p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? t('permission:actions.refreshing') : t('permission:actions.refreshAndRetry')} loading={retryingDefinitions} onClick={handleRetry} />
+              <SecondaryOutlinedButton label={retryingDefinitions ? t('actions.refreshing') : t('actions.refreshAndRetry')} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 
           {permissionApiState === 'error' && (
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
-              <p>{t('permission:errors.definitionsError')}</p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? t('permission:actions.retrying') : t('permission:actions.retry')} loading={retryingDefinitions} onClick={handleRetry} />
+              <p>{t('errors.definitionsError')}</p>
+              <SecondaryOutlinedButton label={retryingDefinitions ? t('actions.retrying') : t('actions.retry')} loading={retryingDefinitions} onClick={handleRetry} />
             </div>
           )}
 
           {!permissionManagementUnavailable && permissionApiState === 'ready' && (
             <>
               <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
-                {t('permission:searchHelp')}
+                {t('searchHelp')}
               </p>
               <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
                 <AutoComplete
@@ -557,7 +557,7 @@ export default function GlobalPermissions() {
               {selectedPersonId && (
                 <div className="mt-6 space-y-6">
                   <div>
-                    <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">{t('permission:globalPermissions')}</h3>
+                    <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">{t('globalPermissions')}</h3>
                     <EffectivePermissionsList
                       allPermissionRows={globalPermissionRows}
                       permissionState={permissionState}
@@ -570,7 +570,7 @@ export default function GlobalPermissions() {
                   {selectedProject?.abbreviation ? (
                     <div>
                       <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">
-                        {t('permission:projectAndGroupPermissionsFor', { project: selectedProject.name })}
+                        {t('projectAndGroupPermissionsFor', { project: selectedProject.name })}
                       </h3>
                       <EffectivePermissionsList
                         allPermissionRows={projectPermissionRows}
@@ -582,13 +582,13 @@ export default function GlobalPermissions() {
                     </div>
                   ) : (
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                      {t('permission:selectProjectFirst')}
+                      {t('selectProjectFirst')}
                     </div>
                   )}
 
                   <div className="mt-4 flex justify-end">
                     <PrimaryButton
-                      label={loading ? t('permission:actions.saving') : t('permission:actions.savePermissions')}
+                      label={loading ? t('actions.saving') : t('actions.savePermissions')}
                       onClick={handleSave}
                       loading={loading}
                     />

@@ -18,7 +18,7 @@
   },
   "default": {
     "text": "Select an entity or a group to see its settings here."
-  }, 
+  },
   "inputs": {
     "psnexample": "The pseudonym looks like this:",
     "psnexampleNew": "The pseudonym will look like this:",

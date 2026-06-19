@@ -198,7 +198,7 @@ export default function DynamicForm({ entityName, variant = 'registration' }: Pr
               return (
                 <StepperPanel key={step.key} header={getStepTitle(step, index)}>
                   <p className="mb-4">
-                    All fields marked with an * are required and must be filled out.
+                    {t('identity:requiredFieldsHint')}
                   </p>
 
                   <div className="space-y-4">

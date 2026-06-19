@@ -142,7 +142,7 @@
     "help": "Enter a pseudonym",
     "error": "Invalid pseudonym",
     "data": "Data",
-    "value": "Value", 
+    "value": "Value",
     "id": "ID",
     "idType": "ID Typ",
     "createdOn": "Created on:",
@@ -162,5 +162,8 @@
     "emergencyContact": "Emergency contact",
     "links": "Links",
     "identifiers": "Identifiers"
-  }
+  },
+  "entityLabel": "Entity",
+  "identifier": "Identifier",
+  "links": "Links"
 }

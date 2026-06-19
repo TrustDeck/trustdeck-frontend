@@ -182,8 +182,8 @@ export default function DynamicEntity({
       : [
           {
             name: '__root__',
-            label_en: t('search:entity'),
-            label_de: t('search:entity'),
+            label_en: t('search:entityLabel'),
+            label_de: t('search:entityLabel'),
             attributes: schemaAttributes
           } as unknown as Attribute
         ]
@@ -238,7 +238,7 @@ export default function DynamicEntity({
               id="entity-type"
               readOnly
               value={entity.type || entity.entityTypeName || ''}
-              placeholder={t('search:entity')}
+              placeholder={t('search:entityLabel')}
             />
           </div>
         </Panel>

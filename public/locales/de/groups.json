@@ -72,7 +72,8 @@
     "checkdigit": {
       "label": "Prüfziffer"
     },
-    "inheritFromParent": "Von Elterngruppe übernehmen"
+    "inheritFromParent": "Von Elterngruppe übernehmen",
+    "psnexampleNew": "Das Pseudonym sieht so aus:"
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",

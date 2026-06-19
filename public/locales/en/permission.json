@@ -31,7 +31,9 @@
   "empty": {
     "noPermissionsForUser": "No permissions found for this user.",
     "noExplicitPermissions": "No explicit TrustDeck permissions were found for this account.",
-    "noTokenRoles": "No roles were present in the current access token."
+    "noTokenRoles": "No roles were present in the current access token.",
+    "noGrantedInScope": "No rights are currently granted in this section.",
+    "noMissingInScope": "All rights in this section are currently granted."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",
@@ -76,5 +78,9 @@
       "pseudonym": "Pseudonym",
       "pseudonym-batch": "Pseudonym batch"
     }
+  },
+  "sections": {
+    "grantedRights": "Granted rights",
+    "missingRights": "Rights not granted"
   }
 }

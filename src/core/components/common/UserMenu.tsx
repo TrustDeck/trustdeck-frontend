@@ -4,7 +4,7 @@ import useUserStore from '../../stores/UserStore.tsx'
 import { oidcConfig } from '../../configs/oidc.ts'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { MoonIcon, SunIcon } from '@heroicons/react/24/outline'
+import { ArrowTopRightOnSquareIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline'
 import { markLoggedOut } from '../../services/authSession.ts'
 
 function getInitials(name: string | undefined, email?: string) {
@@ -167,18 +167,20 @@ const UserMenu: React.FC = () => {
             </div>
             <button
               type="button"
-              className="w-full rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
+              className="flex w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
               onClick={() => {
                 closeMenu()
+                const accountUrl = `${String(oidcConfig.authority).replace(/\/$/, '')}/account/#/`
                 const newWindow = window.open(
-                  oidcConfig.authority + '/account',
+                  accountUrl,
                   '_blank',
                   'noopener,noreferrer'
                 )
                 if (newWindow) newWindow.opener = null
               }}
             >
-              {t('layout:userMenu.yourAccount')}
+              <span>{t('layout:userMenu.yourAccount')}</span>
+              <ArrowTopRightOnSquareIcon className="h-4 w-4 shrink-0" />
             </button>
             <button
               type="button"

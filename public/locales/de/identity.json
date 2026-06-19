@@ -56,5 +56,7 @@
     "newPerson": "Neue Person",
     "oldPerson": "Bereits registrierte Person",
     "useOld": "Bereits registrierte Person verwenden"
-  }
+  },
+  "registerSuccess": "Entität wurde erfolgreich registriert.",
+  "requiredFieldsHint": "Alle mit * markierten Felder sind Pflichtfelder und müssen ausgefüllt werden."
 }

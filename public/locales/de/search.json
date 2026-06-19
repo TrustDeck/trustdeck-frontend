@@ -108,6 +108,9 @@
         "placeholder": "Schnellsuche",
         "help": "Geben Sie ein Suchwort ein",
         "error": "Ungültiges Suchwort"
+      },
+      "address": {
+        "placeholder": "Adresse"
       }
     },
     "biosample": {
@@ -161,5 +164,8 @@
     "links": "Verknüpfungen",
     "identifiers": "Führende Identifikatoren"
   },
-  "entityView": "Entitätsdetails"
+  "entityView": "Entitätsdetails",
+  "entityLabel": "Entität",
+  "identifier": "Identifikator",
+  "links": "Verknüpfungen"
 }

@@ -45,5 +45,7 @@
   "deleteBackendError": "The backend could not delete the project. Please check the backend logs or try again later.",
   "deleteNotFound": "The project no longer exists or is no longer accessible.",
   "deleteExpired": "Your session has expired. Please sign in again.",
-  "collapseFilters": "Collapse filters"
+  "collapseFilters": "Collapse filters",
+  "success": "Success",
+  "error": "Error"
 }

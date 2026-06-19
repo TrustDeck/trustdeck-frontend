@@ -56,5 +56,7 @@
     "newPerson": "New person",
     "oldPerson": "Previously registered person",
     "useOld": "Use Previously Registered Person"
-  }
+  },
+  "registerSuccess": "Entity registered successfully",
+  "requiredFieldsHint": "All fields marked with an * are required and must be filled out."
 }

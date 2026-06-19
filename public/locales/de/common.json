@@ -27,5 +27,6 @@
   "projectRequired": {
     "summary": "Bitte zuerst ein Projekt auswählen",
     "detail": "Bitte wählen Sie ein Projekt aus, bevor Sie diesen Bereich öffnen."
-  }
+  },
+  "back": "Zurück"
 }

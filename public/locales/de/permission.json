@@ -31,7 +31,9 @@
   "empty": {
     "noPermissionsForUser": "Für diesen Benutzer wurden keine Berechtigungen gefunden.",
     "noExplicitPermissions": "Für dieses Konto wurden keine expliziten TrustDeck-Berechtigungen gefunden.",
-    "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten."
+    "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten.",
+    "noGrantedInScope": "In diesem Bereich sind aktuell keine Rechte vergeben.",
+    "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",
@@ -76,5 +78,9 @@
       "pseudonym": "Pseudonym",
       "pseudonym-batch": "Pseudonym-Stapel"
     }
+  },
+  "sections": {
+    "grantedRights": "Vergebene Rechte",
+    "missingRights": "Nicht vergebene Rechte"
   }
 }

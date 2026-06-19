@@ -413,7 +413,7 @@ export default function Builder() {
           onClick={() => navigate('/entity/manager')}
         />
 
-        <Panel title={t('createEntityType')} className="w-full">
+        <Panel title={t('entityBuilder:createEntityType')} className="w-full">
           <div className="grid gap-4 md:grid-cols-2">
             <CustomFloatLabel
               id="entityTypeName"
@@ -474,8 +474,8 @@ export default function Builder() {
           )}
         </Panel>
 
-        <div className="grid w-full items-start gap-6 xl:grid-cols-2">
-          <Panel title={t('visualPreview')} className="w-full">
+        <div className="grid w-full items-start gap-6 lg:grid-cols-2">
+          <Panel title={t('entityBuilder:visualPreview')} className="w-full">
             <div className="mb-4 flex flex-wrap gap-2">
               <PrimaryOutlinedButton
                 label={
@@ -568,7 +568,7 @@ export default function Builder() {
             )}
           </Panel>
 
-          <Panel title={t('jsonImportExport')} className="w-full">
+          <Panel title={t('entityBuilder:jsonImportExport')} className="w-full">
             <p className="mb-3 text-sm text-gray-500 dark:text-gray-300">{t('jsonHelp')}</p>
             <textarea
               className="h-[420px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
@@ -601,7 +601,7 @@ export default function Builder() {
         </div>
 
         <div className="flex w-full justify-center">
-          <PrimaryButton label={saving ? t('common:loading') : t('createEntityType')} loading={saving} onClick={save} />
+          <PrimaryButton label={saving ? t('common:loading') : t('entityBuilder:createEntityType')} loading={saving} onClick={save} />
         </div>
       </div>
     </div>

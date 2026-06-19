@@ -40,6 +40,9 @@ write_env_value AUTHORITY_URL "$AUTHORITY_URL"
 write_env_value AUTHORITY_CLIENT "$AUTHORITY_CLIENT"
 write_env_value AUTHORITY_REDIRECT_URI "$AUTHORITY_REDIRECT_URI"
 write_env_value AUTHORITY_SILENT_URI "$AUTHORITY_SILENT_URI"
+if [ -n "${ACCOUNT_CONSOLE_URL:-}" ]; then
+  write_env_value ACCOUNT_CONSOLE_URL "$ACCOUNT_CONSOLE_URL"
+fi
 
 cat >> /usr/share/nginx/html/env.js <<'EOF_ENV'
 };

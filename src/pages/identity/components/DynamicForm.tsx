@@ -37,7 +37,7 @@ export default function DynamicForm({ entityName, variant = 'registration' }: Pr
   }, [entityName])
 
   if (!entity) {
-    return <div>No entity found for {entityName}</div>
+    return <div>{t('entityBuilder:noEntityFound', { entityName })}</div>
   }
 
   const handleChange = (key: string, value: any) => {

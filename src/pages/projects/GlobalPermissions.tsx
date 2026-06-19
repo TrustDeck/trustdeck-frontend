@@ -7,7 +7,7 @@ import {
   AutoCompleteChangeEvent,
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
 import TrustDeck from '../../core/services/TrustDeck'
@@ -30,7 +30,6 @@ import {
   permissionKey
 } from '../project/utils/permissionRows'
 import { collectDomainNames } from '../project/utils/domainTree'
-import EffectivePermissionsList from '../project/components/EffectivePermissionsList'
 
 type PersonSuggestion = Operator & {
   name: string
@@ -46,6 +45,128 @@ function uniquePermissions(permissions: EffectivePermission[]) {
 function permissionErrorState(error: unknown): PermissionApiState {
   const message = error instanceof Error ? error.message : String(error)
   return message.includes('403') ? 'forbidden' : 'error'
+}
+
+
+function formatPermissionAction(action: string) {
+  return action
+    .replace(/[_:.-]+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+type PermissionScopeCardProps = {
+  title: string
+  subtitle?: string
+  rows: EffectivePermission[]
+  permissionState: Record<string, boolean>
+  onPermissionChange: (key: string, checked: boolean) => void
+  t: ReturnType<typeof useTranslation>['t']
+  defaultOpen?: boolean
+}
+
+function PermissionScopeCard({
+  title,
+  subtitle,
+  rows,
+  permissionState,
+  onPermissionChange,
+  t,
+  defaultOpen = false
+}: PermissionScopeCardProps) {
+  const granted = rows.filter((row) => Boolean(permissionState[permissionKey(row)]))
+  const missing = rows.filter((row) => !permissionState[permissionKey(row)])
+
+  const renderRows = (items: EffectivePermission[], grantedSection: boolean) => {
+    if (!items.length) {
+      return (
+        <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+          {grantedSection ? t('empty.noGrantedInScope') : t('empty.noMissingInScope')}
+        </p>
+      )
+    }
+
+    return (
+      <div className="grid gap-2">
+        {items.map((permission) => {
+          const key = permissionKey(permission)
+          return (
+            <label
+              key={key}
+              className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
+                grantedSection
+                  ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-900/50 dark:bg-emerald-950/30'
+                  : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-950/60'
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-color-blue focus:ring-color-blue"
+                checked={Boolean(permissionState[key])}
+                onChange={(event) => onPermissionChange(key, event.target.checked)}
+              />
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {formatPermissionAction(permission.action)}
+                </span>
+                <span className="mt-0.5 block truncate font-mono text-[0.72rem] text-gray-500 dark:text-gray-400">
+                  {permission.action}
+                </span>
+              </span>
+              <span
+                className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${
+                  grantedSection
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100'
+                    : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                }`}
+              >
+                {grantedSection ? t('status.granted') : t('status.notGranted')}
+              </span>
+            </label>
+          )
+        })}
+      </div>
+    )
+  }
+
+  return (
+    <details
+      className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+      open={defaultOpen}
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <ChevronRightIcon className="h-4 w-4 text-gray-500 transition group-open:hidden" />
+            <ChevronDownIcon className="hidden h-4 w-4 text-gray-500 transition group-open:block" />
+            <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">{title}</h4>
+          </div>
+          {subtitle && <p className="mt-1 truncate pl-6 text-sm text-gray-500 dark:text-gray-300">{subtitle}</p>}
+        </div>
+        <div className="flex shrink-0 flex-wrap justify-end gap-2 text-xs font-bold">
+          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100">
+            {t('grantedCount', { count: granted.length })}
+          </span>
+          <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            {t('missingCount', { count: missing.length })}
+          </span>
+        </div>
+      </summary>
+      <div className="grid gap-4 border-t border-gray-100 p-4 dark:border-slate-800 xl:grid-cols-2">
+        <section>
+          <h5 className="mb-2 text-sm font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            {t('sections.grantedRights')}
+          </h5>
+          {renderRows(granted, true)}
+        </section>
+        <section>
+          <h5 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-300">
+            {t('sections.missingRights')}
+          </h5>
+          {renderRows(missing, false)}
+        </section>
+      </div>
+    </details>
+  )
 }
 
 function ReadOnlyPermissionSummary({ permissions, t }: { permissions: EffectivePermission[]; t: ReturnType<typeof useTranslation>['t'] }) {
@@ -445,6 +566,31 @@ export default function GlobalPermissions() {
 
   const permissionManagementUnavailable = permissionApiState === 'forbidden' || permissionApiState === 'error'
 
+  const projectScopeCards = useMemo(() => {
+    const grouped = new Map<string, EffectivePermission[]>()
+    projectPermissionRows.forEach((row) => {
+      const key = `${row.resourceType}:${row.resourceName ?? '*'}`
+      const existing = grouped.get(key) ?? []
+      existing.push(row)
+      grouped.set(key, existing)
+    })
+
+    return Array.from(grouped.entries()).map(([key, rows]) => {
+      const [resourceType, resourceName = '*'] = key.split(':')
+      const isProject = resourceType === 'PROJECT'
+      return {
+        key,
+        rows,
+        title: isProject
+          ? `${t('scope.project')}: ${selectedProject?.name ?? resourceName}`
+          : `${t('scope.group')}: ${resourceName}`,
+        subtitle: isProject
+          ? selectedProject?.abbreviation
+          : undefined
+      }
+    })
+  }, [projectPermissionRows, selectedProject?.abbreviation, selectedProject?.name, t])
+
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 text-base sm:px-8">
       <div className="w-full space-y-6">
@@ -556,29 +702,42 @@ export default function GlobalPermissions() {
 
               {selectedPersonId && (
                 <div className="mt-6 space-y-6">
-                  <div>
-                    <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">{t('globalPermissions')}</h3>
-                    <EffectivePermissionsList
-                      allPermissionRows={globalPermissionRows}
-                      permissionState={permissionState}
-                      onPermissionChange={(key, checked) =>
-                        setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                      }
-                    />
-                  </div>
+                  <PermissionScopeCard
+                    title={t('globalPermissions')}
+                    rows={globalPermissionRows}
+                    permissionState={permissionState}
+                    onPermissionChange={(key, checked) =>
+                      setPermissionState((prev) => ({ ...prev, [key]: checked }))
+                    }
+                    t={t}
+                    defaultOpen
+                  />
 
                   {selectedProject?.abbreviation ? (
-                    <div>
-                      <h3 className="mb-2 text-xl font-semibold dark:text-gray-100">
+                    <div className="space-y-3">
+                      <h3 className="text-xl font-semibold dark:text-gray-100">
                         {t('projectAndGroupPermissionsFor', { project: selectedProject.name })}
                       </h3>
-                      <EffectivePermissionsList
-                        allPermissionRows={projectPermissionRows}
-                        permissionState={permissionState}
-                        onPermissionChange={(key, checked) =>
-                          setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                        }
-                      />
+                      {projectScopeCards.length ? (
+                        projectScopeCards.map((card, index) => (
+                          <PermissionScopeCard
+                            key={card.key}
+                            title={card.title}
+                            subtitle={card.subtitle}
+                            rows={card.rows}
+                            permissionState={permissionState}
+                            onPermissionChange={(key, checked) =>
+                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
+                            }
+                            t={t}
+                            defaultOpen={index === 0}
+                          />
+                        ))
+                      ) : (
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                          {t('empty.noProjectOrGroupRows')}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">

@@ -86,5 +86,20 @@
     "baseCreatedDetail": "Base type created successfully.",
     "projectCreatedDetail": "Project-specific entity type created successfully.",
     "creationFailed": "Creation failed"
-  }
+  },
+  "loadingEntityTypes": "Loading entity types...",
+  "noEntityTypesTitle": "No entity types configured yet",
+  "noEntityTypesManagerDetail": "This project does not have any project-specific entity types yet. Create one with the entity builder before registering or searching entities in this project.",
+  "noEntityTypesIdentityDetail": "This project does not have any entity types yet. Create an entity type with the entity builder before registering identities.",
+  "openEntityBuilder": "Open entity builder",
+  "chooseEntityType": "Choose entity type",
+  "noEntityTypeSelectedTitle": "No entity type selected",
+  "noEntityTypeSelectedDetail": "Select an entity type first. If no entity types are available, create one with the entity builder before registering identities.",
+  "noEntityFound": "No entity found for {{entityName}}",
+  "exportJson": "Export JSON",
+  "exportReady": "Export ready",
+  "exportReadyDetail": "{{type}} was exported as JSON.",
+  "exportFailed": "Export failed",
+  "exportFailedDetail": "Could not export {{type}}.",
+  "loadFailed": "Could not load entity types."
 }

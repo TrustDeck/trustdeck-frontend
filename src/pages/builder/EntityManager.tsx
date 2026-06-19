@@ -27,7 +27,7 @@ function downloadJson(filename: string, value: unknown) {
 }
 
 export default function EntityManager() {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['entityBuilder', 'common'])
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const entities = useProjectStore((state) => state.entities)
@@ -61,7 +61,7 @@ export default function EntityManager() {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) {
           console.error('Failed to load project entity types', error)
-          showToast({ severity: 'error', summary: 'Error', detail: 'Could not load entity types.', life: 4000 })
+          showToast({ severity: 'error', summary: t('common:error'), detail: t('loadFailed'), life: 4000 })
         }
         if (active) {
           setEntityDefinitions([])
@@ -75,7 +75,7 @@ export default function EntityManager() {
     return () => {
       active = false
     }
-  }, [selectedProject?.abbreviation, setEntities, showToast])
+  }, [selectedProject?.abbreviation, setEntities, showToast, t])
 
   const cards = useMemo(() => {
     return entities.map((type) => {
@@ -91,10 +91,10 @@ export default function EntityManager() {
       const fromList = entityDefinitions.find((definition) => definition.name === type)
       const definition = fromList ?? (await TrustDeck.instance().getType(type))
       downloadJson(`${type}-entity-type.json`, definition)
-      showToast({ severity: 'success', summary: 'Export ready', detail: `${type} was exported as JSON.`, life: 2500 })
+      showToast({ severity: 'success', summary: t('exportReady'), detail: t('exportReadyDetail', { type }), life: 2500 })
     } catch (error) {
       console.error('Could not export entity type', error)
-      showToast({ severity: 'error', summary: 'Export failed', detail: `Could not export ${type}.`, life: 4000 })
+      showToast({ severity: 'error', summary: t('exportFailed'), detail: t('exportFailedDetail', { type }), life: 4000 })
     }
   }
 
@@ -107,15 +107,15 @@ export default function EntityManager() {
           title={t('entityBuilder:entitiesInProject', 'Entities in this project')}
         >
           {loading ? (
-            <div className="py-10 text-gray-500">Loading entity types...</div>
+            <div className="py-10 text-gray-500 dark:text-gray-300">{t('loadingEntityTypes')}</div>
           ) : cards.length === 0 ? (
             <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No entity types configured yet</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('noEntityTypesTitle')}</h2>
               <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
-                This project does not have any project-specific entity types yet. Create one with the entity builder before registering or searching entities in this project.
+                {t('noEntityTypesManagerDetail')}
               </p>
               <div className="mt-6 flex justify-center">
-                <PrimaryButton label="Open entity builder" onClick={() => navigate('/entity/manager/new')} />
+                <PrimaryButton label={t('openEntityBuilder')} onClick={() => navigate('/entity/manager/new')} />
               </div>
             </div>
           ) : (
@@ -131,7 +131,7 @@ export default function EntityManager() {
                     label={
                       <span className="inline-flex items-center gap-2">
                         <ArrowDownTrayIcon className="h-4 w-4" />
-                        Export JSON
+                        {t('exportJson')}
                       </span>
                     }
                     onClick={() => handleExport(type)}

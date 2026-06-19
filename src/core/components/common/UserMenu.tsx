@@ -170,7 +170,8 @@ const UserMenu: React.FC = () => {
               className="flex w-full items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-slate-800"
               onClick={() => {
                 closeMenu()
-                const accountUrl = `${String(oidcConfig.authority).replace(/\/$/, '')}/account/#/`
+                const configuredAccountUrl = (oidcConfig as typeof oidcConfig & { account_console_url?: string }).account_console_url
+                const accountUrl = configuredAccountUrl || `${String(oidcConfig.authority).replace(/\/$/, '')}/account/#/personal-info`
                 const newWindow = window.open(
                   accountUrl,
                   '_blank',

@@ -86,5 +86,20 @@
     "baseCreatedDetail": "Basistyp wurde erfolgreich erstellt.",
     "projectCreatedDetail": "Projektspezifischer Entitätstyp wurde erfolgreich erstellt.",
     "creationFailed": "Erstellung fehlgeschlagen"
-  }
+  },
+  "loadingEntityTypes": "Entitätstypen werden geladen...",
+  "noEntityTypesTitle": "Noch keine Entitätstypen konfiguriert",
+  "noEntityTypesManagerDetail": "Dieses Projekt hat noch keine projektspezifischen Entitätstypen. Erstellen Sie zuerst einen Entitätstyp im Entitäten-Builder, bevor Sie Entitäten in diesem Projekt registrieren oder suchen.",
+  "noEntityTypesIdentityDetail": "Dieses Projekt hat noch keine Entitätstypen. Erstellen Sie zuerst einen Entitätstyp im Entitäten-Builder, bevor Sie Identitäten registrieren.",
+  "openEntityBuilder": "Entitäten-Builder öffnen",
+  "chooseEntityType": "Entitätstyp auswählen",
+  "noEntityTypeSelectedTitle": "Kein Entitätstyp ausgewählt",
+  "noEntityTypeSelectedDetail": "Wählen Sie zuerst einen Entitätstyp aus. Wenn keine Entitätstypen verfügbar sind, erstellen Sie zuerst einen im Entitäten-Builder.",
+  "noEntityFound": "Keine Entität für {{entityName}} gefunden",
+  "exportJson": "JSON exportieren",
+  "exportReady": "Export bereit",
+  "exportReadyDetail": "{{type}} wurde als JSON exportiert.",
+  "exportFailed": "Export fehlgeschlagen",
+  "exportFailedDetail": "{{type}} konnte nicht exportiert werden.",
+  "loadFailed": "Entitätstypen konnten nicht geladen werden."
 }

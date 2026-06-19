@@ -12,20 +12,20 @@ import DynamicForm from './components/DynamicForm'
 export default function Registration() {
   const { entityType } = useEntityStore()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t } = useTranslation(['identity', 'entityBuilder'])
   console.log('[Registration] selected entityType', entityType)
 
   if (!entityType) {
     return (
       <div className="flex w-full justify-center">
         <div className="my-8 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No entity type selected</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('entityBuilder:noEntityTypeSelectedTitle')}</h2>
           <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
-            Select an entity type first. If no entity types are available, create one with the entity builder before registering identities.
+            {t('entityBuilder:noEntityTypeSelectedDetail')}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <PrimaryButton label="Choose entity type" onClick={() => navigate('/identity')} />
-            <PrimaryOutlinedButton label="Open entity builder" onClick={() => navigate('/entity/manager/new')} />
+            <PrimaryButton label={t('entityBuilder:chooseEntityType')} onClick={() => navigate('/identity')} />
+            <PrimaryOutlinedButton label={t('entityBuilder:openEntityBuilder')} onClick={() => navigate('/entity/manager/new')} />
           </div>
         </div>
       </div>

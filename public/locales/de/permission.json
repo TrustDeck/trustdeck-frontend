@@ -33,7 +33,8 @@
     "noExplicitPermissions": "Für dieses Konto wurden keine expliziten TrustDeck-Berechtigungen gefunden.",
     "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten.",
     "noGrantedInScope": "In diesem Bereich sind aktuell keine Rechte vergeben.",
-    "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben."
+    "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben.",
+    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",

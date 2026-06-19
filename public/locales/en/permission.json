@@ -33,7 +33,8 @@
     "noExplicitPermissions": "No explicit TrustDeck permissions were found for this account.",
     "noTokenRoles": "No roles were present in the current access token.",
     "noGrantedInScope": "No rights are currently granted in this section.",
-    "noMissingInScope": "All rights in this section are currently granted."
+    "noMissingInScope": "All rights in this section are currently granted.",
+    "noProjectOrGroupRows": "No project or group permission definitions are available for this project."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",

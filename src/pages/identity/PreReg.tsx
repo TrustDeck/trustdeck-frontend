@@ -17,7 +17,7 @@ import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 
 export default function PreReg() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t } = useTranslation(['identity', 'entityBuilder'])
   const { entityType, setEntityType } = useEntityStore()
   const location = useLocation()
   const [loadingEntities, setLoadingEntities] = useState(true)
@@ -72,15 +72,15 @@ export default function PreReg() {
           <h1 className="mb-3">{t('identity:headers.registration')}</h1>
           <Panel centered title={t('identity:headers.chooseEntity')}>
             {loadingEntities ? (
-              <div className="py-10 text-gray-500 dark:text-gray-300">Loading entity types...</div>
+              <div className="py-10 text-gray-500 dark:text-gray-300">{t('entityBuilder:loadingEntityTypes')}</div>
             ) : entities.length === 0 ? (
               <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No entity types configured yet</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('entityBuilder:noEntityTypesTitle')}</h2>
                 <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
-                  This project does not have any entity types yet. Create an entity type with the entity builder before registering identities.
+                  {t('entityBuilder:noEntityTypesIdentityDetail')}
                 </p>
                 <div className="mt-6 flex justify-center">
-                  <PrimaryButton label="Open entity builder" onClick={() => navigate('/entity/manager/new')} />
+                  <PrimaryButton label={t('entityBuilder:openEntityBuilder')} onClick={() => navigate('/entity/manager/new')} />
                 </div>
               </div>
             ) : (

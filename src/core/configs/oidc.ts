@@ -6,6 +6,7 @@ export const oidcConfig = {
   redirect_uri: window.__ENV__?.AUTHORITY_REDIRECT_URI ?? import.meta.env.VITE_AUTHORITY_REDIRECT_URI,
   silent_redirect_uri: window.__ENV__?.AUTHORITY_SILENT_URI ?? import.meta.env.VITE_AUTHORITY_SILENT_URI,
   post_logout_redirect_uri: window.__ENV__?.AUTHORITY_REDIRECT_URI ?? import.meta.env.VITE_AUTHORITY_REDIRECT_URI,
+  account_console_url: window.__ENV__?.ACCOUNT_CONSOLE_URL ?? import.meta.env.VITE_ACCOUNT_CONSOLE_URL,
   response_type: 'code',
   scope: 'openid profile email',
   userStore: new WebStorageStateStore({ store: window.localStorage }),

@@ -20,12 +20,13 @@ export default function LinksTable({ entity }: LinksTableProps) {
 
   // Transform links when the selected entity changes
   useEffect(() => {
-  if (entity && entity.links) {
-    const normalizedLinks = Array.isArray(entity.links) ? entity.links : [entity.links]
-    const transformedLinks = transformLinks(normalizedLinks, entity.id)
-    setNodes(transformedLinks)
-  }
-}, [entity])
+    if (!entity) {
+      setNodes([])
+      return
+    }
+    const normalizedLinks = Array.isArray(entity.links) ? entity.links : entity.links ? [entity.links] : []
+    setNodes(transformLinks(normalizedLinks, entity.id))
+  }, [entity])
 
 // Recursive function to transform links into a tree structure
 const transformLinks = (links: Link[], parentId: string): TreeNode[] => {

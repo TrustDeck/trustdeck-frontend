@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { useEffect, useState } from 'react'
 import Panel from '../../../core/components/common/Panel'
 import Divider from '../../../core/components/common/Divider'
 import LinksTable from './LinksTable'
@@ -6,8 +7,11 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomInputNumber from '@component/form/CustomInputNumber'
+import { ProgressSpinner } from 'primereact/progressspinner'
 import type { Attribute } from '../../../core/stores/ProjectStore'
 import type { Entity } from '../types/Entity'
+import type { Link } from '../../../core/types/Link'
+import EntityService from '../services/EntityService'
 
 type Props = {
   entity: any
@@ -47,6 +51,40 @@ export default function DynamicEntity({
   onFieldChange
 }: Props) {
   const { t, i18n } = useTranslation()
+  const [links, setLinks] = useState<Link[]>([])
+  const [linksLoading, setLinksLoading] = useState(false)
+
+  const entityId = entity.trustdeckID || entity.id
+  const entityType = entity.entityTypeName || entity.type
+
+  useEffect(() => {
+    if (!entityId || !entityType) {
+      setLinks([])
+      return
+    }
+
+    let active = true
+    setLinksLoading(true)
+
+    EntityService.getEntityPseudonyms(entityType, entityId)
+      .then((fetchedLinks) => {
+        if (!active) return
+        setLinks(fetchedLinks)
+      })
+      .catch((error) => {
+        console.error('Failed to load entity pseudonyms', error)
+        if (!active) return
+        setLinks([])
+      })
+      .finally(() => {
+        if (!active) return
+        setLinksLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [entityId, entityType])
 
   const resolveLabel = (attr: any) => {
     const isGerman = i18n.language.startsWith('de')
@@ -226,7 +264,7 @@ export default function DynamicEntity({
 
       <div className="w-full xl:w-2/5 flex flex-col gap-4">
         <Panel className="h-fit">
-          <Divider text={t('search:identifier')} />
+          <Divider text={t('search:headers.identifiers')} />
           <div className="flex flex-col gap-4">
             <CustomFloatLabel
               id="entity-identifier"
@@ -234,18 +272,26 @@ export default function DynamicEntity({
               value={entity.trustdeckID || entity.id || ''}
               placeholder="trustdeckID"
             />
-            <CustomFloatLabel
+            {/* <CustomFloatLabel
               id="entity-type"
               readOnly
               value={entity.type || entity.entityTypeName || ''}
               placeholder={t('search:entity')}
-            />
+            /> */}
           </div>
         </Panel>
 
         <Panel className="h-fit">
-          <Divider text={t('search:links')} />
-          <LinksTable entity={{ id: entity.id || entity.trustdeckID, links: entity.links || [] } as Entity} />
+          <Divider text={t('search:headers.links')} />
+          {linksLoading ? (
+            <div className="flex justify-center py-4">
+              <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
+            </div>
+          ) : (
+            <LinksTable
+              entity={{ id: entityId, links } as Entity}
+            />
+          )}
         </Panel>
       </div>
     </div>

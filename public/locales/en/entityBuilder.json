@@ -44,5 +44,10 @@
   "newEntity": "New entity",
   "addEntity": "Add entity",
   "selectBaseType": "Select a base type",
-  "baseType": "Base type"
+  "baseType": "Base type",
+  "selectDomainQuestion": "Which domain should this entity be linked to?",
+  "selectDomain": "Domain",
+  "acceptDomain": "Continue",
+  "changeDomain": "Change domain",
+  "noDomainsAvailable": "No domains are available in this project. Create a group first."
 }

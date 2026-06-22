@@ -23,6 +23,8 @@ import Inspector from './components/Inspector'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { DragContainer } from './components/DragContainer'
 import TrustDeck from '../../core/services/TrustDeck'
+import GroupService from '../groups/service/GroupService'
+import useProjectStore from '../../core/stores/ProjectStore'
 
 type BaseTypeResponse = {
   name: string
@@ -31,9 +33,11 @@ type BaseTypeResponse = {
 
 function mapBaseTypeAttribute(attribute: any): Attribute {
   const isStringType = attribute?.type === 'string'
+  const isGroup = attribute?.layout === 'group'
+  const isRow = attribute?.layout === 'row'
   const mapped: Attribute = {
     key: crypto.randomUUID(),
-    name: attribute?.name,
+    ...(attribute?.name && (isGroup || attribute?.type) ? { name: attribute.name } : {}),
     labelEn: attribute?.label_en ?? attribute?.labelEn,
     labelDe: attribute?.label_de ?? attribute?.labelDe,
     type: attribute?.type,
@@ -43,8 +47,8 @@ function mapBaseTypeAttribute(attribute: any): Attribute {
     minLength: isStringType ? attribute?.minLength : undefined,
     maxLength: isStringType ? attribute?.maxLength : undefined,
     values: attribute?.values ?? attribute?.enum,
-    group: attribute?.layout === 'group' || attribute?.group === true,
-    layout: attribute?.layout === 'row' ? 'row' : 'col'
+    group: isGroup,
+    layout: isRow ? 'row' : 'col'
   }
 
   if (Array.isArray(attribute?.attributes)) {
@@ -60,7 +64,17 @@ function buildAttributesFromBaseType(baseType: BaseTypeResponse): Attribute[] {
   const definition = baseType?.typeDefinition
   if (!definition) return []
 
-  if (definition.layout === 'group') {
+  if (definition.layout === 'group' && Array.isArray(definition.attributes)) {
+    const nestedGroups = definition.attributes.filter(
+      (attr: any) => attr?.layout === 'group'
+    )
+    if (
+      nestedGroups.length > 0 &&
+      nestedGroups.length === definition.attributes.length
+    ) {
+      return definition.attributes.map((attr: any) => mapBaseTypeAttribute(attr))
+    }
+
     return [
       {
         key: crypto.randomUUID(),
@@ -69,9 +83,9 @@ function buildAttributesFromBaseType(baseType: BaseTypeResponse): Attribute[] {
         labelEn: definition.label_en ?? definition.labelEn ?? baseType.name,
         labelDe: definition.label_de ?? definition.labelDe ?? baseType.name,
         name: definition.name,
-        attributes: Array.isArray(definition.attributes)
-          ? definition.attributes.map((attr: any) => mapBaseTypeAttribute(attr))
-          : []
+        attributes: definition.attributes.map((attr: any) =>
+          mapBaseTypeAttribute(attr)
+        )
       }
     ]
   }
@@ -83,6 +97,13 @@ function buildAttributesFromBaseType(baseType: BaseTypeResponse): Attribute[] {
   return []
 }
 
+function shouldIncludeContainerName(attribute: Attribute): boolean {
+  if (!attribute.name || attribute.name === 'custom') return false
+  const labelSlug = (attribute.labelEn ?? '').trim().replace(/\s+/g, '').toLowerCase()
+  const nameSlug = attribute.name.replace(/\s+/g, '').toLowerCase()
+  return nameSlug !== labelSlug
+}
+
 function serializeAttribute(attribute: Attribute): any {
   const buildBackendName = () => {
     if (attribute.name && attribute.name !== 'custom') return attribute.name
@@ -91,17 +112,31 @@ function serializeAttribute(attribute: Attribute): any {
     return englishLabel.replace(/\s+/g, '')
   }
 
+  if (
+    attribute.layout === 'row' &&
+    Array.isArray(attribute.attributes) &&
+    attribute.attributes.length > 0
+  ) {
+    return {
+      layout: 'row',
+      attributes: attribute.attributes.map((sub) => serializeAttribute(sub))
+    }
+  }
+
   if (Array.isArray(attribute.attributes) && attribute.attributes.length > 0) {
     const container: any = {
-      layout: attribute.group ? 'group' : attribute.layout === 'row' ? 'row' : 'group',
+      layout: 'group',
       attributes: attribute.attributes.map((sub) => serializeAttribute(sub))
     }
 
-    const backendName = buildBackendName()
-    if (backendName) container.name = backendName
+    if (shouldIncludeContainerName(attribute)) {
+      container.name = attribute.name
+    }
     if (attribute.labelEn) container.label_en = attribute.labelEn
     if (attribute.labelDe) container.label_de = attribute.labelDe
-    if (attribute.repeatable !== undefined) container.repeatable = attribute.repeatable
+    if (attribute.group) {
+      container.repeatable = attribute.repeatable === true
+    }
 
     return container
   }
@@ -112,9 +147,9 @@ function serializeAttribute(attribute: Attribute): any {
   if (attribute.labelEn) field.label_en = attribute.labelEn
   if (attribute.labelDe) field.label_de = attribute.labelDe
   if (attribute.type) field.type = attribute.type
-  if (attribute.required !== undefined) field.required = attribute.required
-  if (attribute.linkage !== undefined) field.linkage = attribute.linkage
-  if (attribute.repeatable !== undefined) field.repeatable = attribute.repeatable
+  field.required = attribute.required === true
+  field.linkage = attribute.linkage === true
+  field.repeatable = attribute.repeatable === true
   if (attribute.type === 'string') {
     if (attribute.minLength !== undefined) field.minLength = attribute.minLength
     if (attribute.maxLength !== undefined) field.maxLength = attribute.maxLength
@@ -129,23 +164,38 @@ function serializeAttribute(attribute: Attribute): any {
   return field
 }
 
+function flattenGroupOptions(nodes: any[]): { label: string; value: string }[] {
+  return nodes.flatMap((n) => [
+    { label: n.label, value: n.label },
+    ...(n.children ? flattenGroupOptions(n.children) : [])
+  ])
+}
+
 const Builder: React.FC = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [showLayoutDialog, setShowLayoutDialog] = useState(false)
   const [showAttributesDialog, setShowAttributesDialog] = useState(false)
   const [entityNameConfirmed, setEntityNameConfirmed] = useState(false)
+  const [domainConfirmed, setDomainConfirmed] = useState(false)
+  const [domainOptions, setDomainOptions] = useState<
+    { label: string; value: string }[]
+  >([])
   const [baseTypeOptions, setBaseTypeOptions] = useState<
     { label: string; value: string }[]
   >([])
   const [selectedBaseType, setSelectedBaseType] = useState('')
   const [baseTypes, setBaseTypes] = useState<BaseTypeResponse[]>([])
 
+  const { selectedProject } = useProjectStore()
+
   const {
     selectedKey,
     setSelectedKey,
     entityType,
     setEntityType,
+    linkedDomain,
+    setLinkedDomain,
     attributes,
     setAttributes,
     appendAttribute,
@@ -157,6 +207,41 @@ const Builder: React.FC = () => {
   } = useEntityTypeStore()
 
   const selected = getSelectedAttribute()
+
+  useEffect(() => {
+    setEntityType('')
+    setLinkedDomain('')
+    setAttributes([])
+    setSelectedKey('')
+    setEntityNameConfirmed(false)
+    setDomainConfirmed(false)
+  }, [setAttributes, setEntityType, setLinkedDomain, setSelectedKey])
+
+  useEffect(() => {
+    if (!entityNameConfirmed) return
+    let active = true
+    GroupService.getGroups()
+      .then((data) => {
+        if (!active) return
+        const options = flattenGroupOptions(data ?? [])
+        setDomainOptions(options)
+        const currentDomain = useEntityTypeStore.getState().linkedDomain
+        if (!currentDomain && options.length > 0) {
+          const defaultDomain =
+            options.find((o) => o.value === selectedProject?.abbreviation)
+              ?.value ?? options[0].value
+          setLinkedDomain(defaultDomain)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load domains', error)
+        if (!active) return
+        setDomainOptions([])
+      })
+    return () => {
+      active = false
+    }
+  }, [entityNameConfirmed, selectedProject?.abbreviation, setLinkedDomain])
 
   useEffect(() => {
     let active = true
@@ -186,7 +271,7 @@ const Builder: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    if (!selectedBaseType) return
+    if (!domainConfirmed || !selectedBaseType) return
     const selectedDefinition = baseTypes.find(
       (baseType) => baseType.name === selectedBaseType
     )
@@ -195,7 +280,7 @@ const Builder: React.FC = () => {
     const mappedAttributes = buildAttributesFromBaseType(selectedDefinition)
     setAttributes(mappedAttributes)
     setSelectedKey('')
-  }, [baseTypes, selectedBaseType, setAttributes, setSelectedKey])
+  }, [baseTypes, domainConfirmed, selectedBaseType, setAttributes, setSelectedKey])
 
   async function handleLayoutClick(columns: number) {
     setShowLayoutDialog(false)
@@ -240,6 +325,7 @@ const Builder: React.FC = () => {
     const payload = {
       name: entityType,
       version: 'v1.0',
+      associatedDomainName: linkedDomain,
       baseTypeName: selectedBaseType || undefined,
       typeDefinition: {
         layout: 'group',
@@ -250,7 +336,6 @@ const Builder: React.FC = () => {
     }
 
     try {
-      console.log('Entity config payload:', payload)
       await TrustDeck.instance().createEntityConfig(payload)
       console.log('Entity config saved successfully')
     } catch (error) {
@@ -551,22 +636,82 @@ const Builder: React.FC = () => {
                   </div>
                 </Panel>
               </div>
+            ) : !domainConfirmed ? (
+              <div className="mb-8 w-full">
+                <Panel centered className="mx-auto">
+                  <h1 className="text-xl font-semibold text-center mb-3">
+                    {t(
+                      'entityBuilder:selectDomainQuestion',
+                      'Which domain should this entity be linked to?'
+                    )}
+                  </h1>
+                  {domainOptions.length > 0 ? (
+                    <div className="mb-3">
+                      <CustomDropdown
+                        id="linkedDomain"
+                        value={linkedDomain}
+                        onChange={(e) => setLinkedDomain(e.value ?? '')}
+                        options={domainOptions}
+                        placeholder={t('entityBuilder:selectDomain', 'Domain')}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600 mb-3">
+                      {t(
+                        'entityBuilder:noDomainsAvailable',
+                        'No domains are available in this project. Create a group first.'
+                      )}
+                    </p>
+                  )}
+                  <div className="flex justify-between gap-3">
+                    <PrimaryOutlinedButton
+                      label={t('entityBuilder:changeName', 'Change name')}
+                      onClick={() => {
+                        setEntityNameConfirmed(false)
+                        setDomainConfirmed(false)
+                        setLinkedDomain('')
+                      }}
+                    />
+                    <PrimaryOutlinedButton
+                      label={t('entityBuilder:acceptDomain', 'Continue')}
+                      onClick={() => setDomainConfirmed(true)}
+                      disabled={!linkedDomain}
+                    />
+                  </div>
+                </Panel>
+              </div>
             ) : (
               <div className="mb-8 flex flex-col items-center gap-1">
                 <h1 className="text-2xl font-semibold">
                   {entityType || t('entityBuilder:entityName')}
                 </h1>
-                <button
-                  type="button"
-                  className="text-xs text-blue-600 hover:underline"
-                  onClick={() => setEntityNameConfirmed(false)}
-                >
-                  {t('entityBuilder:changeName', 'Change name')}
-                </button>
+                <p className="text-sm text-gray-600">
+                  {t('entityBuilder:selectDomain', 'Domain')}: {linkedDomain}
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => {
+                      setEntityNameConfirmed(false)
+                      setDomainConfirmed(false)
+                      setLinkedDomain('')
+                    }}
+                  >
+                    {t('entityBuilder:changeName', 'Change name')}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => setDomainConfirmed(false)}
+                  >
+                    {t('entityBuilder:changeDomain', 'Change domain')}
+                  </button>
+                </div>
               </div>
             )}
 
-            {entityNameConfirmed && entityType && (
+            {entityNameConfirmed && domainConfirmed && entityType && linkedDomain && (
               <>
                 <div className="w-full 2xl:w-4/5 2xl:mx-auto mb-4">
                   <Panel centered className="mx-auto">

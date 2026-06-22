@@ -121,6 +121,19 @@ class TrustDeck {
     )
   }
 
+  public async createEntityConfig(payload: any) {
+    const projectName = this.getSelectedProjectName()
+    console.log(
+      `POST /projects/${projectName}/entities/config`,
+      JSON.stringify(payload, null, 2)
+    )
+    return this.request(
+      'POST',
+      `/projects/${projectName}/entities/config`,
+      payload
+    )
+  }
+
   public async fuzzySearch(entity: string, query: string) {
     const projectName = this.getSelectedProjectName()
     return this.request<PersonType[]>(
@@ -153,6 +166,19 @@ class TrustDeck {
       'PUT',
       `/projects/${projectName}/entities/${entityType}/${trustdeckID}`,
       payload
+    )
+  }
+
+  public async getEntityPseudonyms(
+    entityType: string,
+    trustdeckID: string,
+    query?: string
+  ) {
+    const projectName = this.getSelectedProjectName()
+    const searchQuery = query ?? trustdeckID
+    return this.request<any[]>(
+      'GET',
+      `/projects/${projectName}/entities/${entityType}/${trustdeckID}/pseudonyms?query=${encodeURIComponent(searchQuery)}`
     )
   }
 
@@ -210,7 +236,7 @@ class TrustDeck {
 
   public async getGroups() {
     const projectName = this.getSelectedProjectName()
-    return this.request<any>('GET', `/domains/${projectName}/subtree`)s
+    return this.request<any>('GET', `/domains/${projectName}/subtree`)
   }
 
   public async updateGroupComplete(

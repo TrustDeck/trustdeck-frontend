@@ -37,6 +37,8 @@ type EntityTypeStore = {
   getSelectedAttribute: () => Attribute | undefined
   entityType: string
   setEntityType: (entityType: string) => void
+  linkedDomain: string
+  setLinkedDomain: (domain: string) => void
   attributes: Attribute[]
   setAttributes: (attributes: Attribute[]) => void
   appendAttribute: (attribute: Attribute) => void
@@ -158,10 +160,15 @@ export const useEntityTypeStore = create<EntityTypeStore>((set, get) => ({
     set(() => ({
       selectedKey: key
     })),
-  entityType: 'Person',
+  entityType: '',
   setEntityType: (entityType: string) =>
     set(() => ({
       entityType
+    })),
+  linkedDomain: '',
+  setLinkedDomain: (linkedDomain: string) =>
+    set(() => ({
+      linkedDomain
     })),
   attributes: [],
   setAttributes: (attributes: Attribute[]) =>

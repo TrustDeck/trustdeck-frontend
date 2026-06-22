@@ -44,5 +44,10 @@
   "newEntity": "Neue Entität",
   "addEntity": "Entität hinzufügen",
   "selectBaseType": "Basistyp auswählen",
-  "baseType": "Basistyp"
+  "baseType": "Basistyp",
+  "selectDomainQuestion": "Mit welcher Domäne soll diese Entität verknüpft werden?",
+  "selectDomain": "Domäne",
+  "acceptDomain": "Weiter",
+  "changeDomain": "Domäne ändern",
+  "noDomainsAvailable": "In diesem Projekt sind keine Domänen verfügbar. Erstellen Sie zuerst eine Gruppe."
 }

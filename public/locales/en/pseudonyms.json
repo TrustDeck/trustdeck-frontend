@@ -10,5 +10,6 @@
     "generate": "Generate"
   },
   "infotext": "If you create a pseudonym for a subgroup, the system will automatically generate a chain of pseudonyms for each parent group.",
-  "selectGroup": "Select groups"
+  "selectGroup": "Select groups",
+  "groupHasPseudonym": "This group already has a pseudonym for the selected entity."
 }

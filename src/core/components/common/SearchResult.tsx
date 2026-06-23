@@ -109,8 +109,10 @@ const SearchResult: React.FC<SearchResultProps> = ({
                       navigate(`/identity/duplicates/${result.trustdeckID}`)
                     } else if (pseudonymization) {
                       setSelectedEntityId({
-                        identifier: result.data.id,
-                        identifierType: 'id'
+                        identifier: result.data?.id ?? result.trustdeckID,
+                        identifierType: 'id',
+                        trustdeckID: result.trustdeckID,
+                        entityTypeName: result.entityTypeName ?? result.type
                       })
                       handleNext()
                     } else {
@@ -158,6 +160,12 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   if (duplicate) {
                     navigate(`/identity/duplicates/${result.id}`)
                   } else if (pseudonymization) {
+                    setSelectedEntityId({
+                      identifier: result.id ?? result.trustdeckID,
+                      identifierType: 'id',
+                      trustdeckID: result.trustdeckID ?? result.id,
+                      entityTypeName: result.entityTypeName ?? result.type
+                    })
                     handleNext()
                   } else {
                     navigate(`/search/${result.id}`)

@@ -253,6 +253,7 @@ class TrustDeck {
   }
 
   public async createPseudonym(payload: { identifier: string, idType: string }, selectedGroup: string) {
+    console.log('POST pseudonym payload:', payload)
     return this.request('POST', `/domains/${selectedGroup}/pseudonyms`, payload)
   }
 

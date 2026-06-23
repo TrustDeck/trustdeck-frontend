@@ -11,5 +11,6 @@
     "generate": "Generieren"
   },
   "infotext": "Wenn Sie ein Pseudonym für eine Untergruppe erstellen, generiert das System automatisch eine Kette von Pseudonymen für jede Elterngruppe.",
-  "selectGroup": "Gruppen auswählen"
+  "selectGroup": "Gruppen auswählen",
+  "groupHasPseudonym": "Diese Gruppe hat bereits ein Pseudonym für die ausgewählte Entität."
 }

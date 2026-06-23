@@ -4,6 +4,8 @@ import { create } from 'zustand'
 type EntityId = {
   identifier: string
   identifierType: string
+  trustdeckID?: string
+  entityTypeName?: string
 }
 
 type SelectedEntityStore = {

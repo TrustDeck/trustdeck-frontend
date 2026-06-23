@@ -1,5 +1,5 @@
 import Panel from '../../core/components/common/Panel'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import useSearchResultsStore from '../search/stores/SearchResultsStore'
 import useGroupStore from './stores/GroupStore'
 import { Stepper } from 'primereact/stepper'
@@ -7,7 +7,6 @@ import { StepperPanel } from 'primereact/stepperpanel'
 import SearchMask from '../search/SearchMask'
 import SearchResult from '../../core/components/common/SearchResult'
 import useStepperControlStore from './stores/StepperControlStore'
-import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import GroupService from '../groups/service/GroupService'
 import { useTranslation } from 'react-i18next'
 import SecondaryButton from '@component/form/buttons/SecondaryButton'
@@ -15,9 +14,14 @@ import CustomTreeSelect from '@component/form/CustomTreeSelect'
 import { PseudonymService } from './services/PseudonymService'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
+import {
+  collectGroupsWithPseudonyms,
+  markDisabledGroupsInTree
+} from './utils/groupTree'
 import { useNavigate } from 'react-router-dom'
 import usePseudonymStore from '../search/stores/PseudonymSearchResults'
 import SearchPseudonymService from '../search/services/PseudonymService'
+import EntityService from '../search/services/EntityService'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
 // import { Toast } from 'primereact/toast'
@@ -30,8 +34,23 @@ export default function SearchPsn() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { setPseudonymValue } = usePseudonymStore()
+  const [occupiedGroups, setOccupiedGroups] = useState<Set<string>>(new Set())
 
   const localStepperRef = useRef<any | null>(null)
+
+  const groupOptions = useMemo(
+    () => markDisabledGroupsInTree(groups ?? [], occupiedGroups),
+    [groups, occupiedGroups]
+  )
+
+  const selectedGroupNames = useMemo(
+    () => getSelectedGroupNames(selectedGroup, groups),
+    [selectedGroup, groups]
+  )
+
+  const hasValidGroupSelection =
+    selectedGroupNames.length > 0 &&
+    selectedGroupNames.every((name) => !occupiedGroups.has(name))
 
   useEffect(() => {
     setStepperRef(localStepperRef)
@@ -45,8 +64,41 @@ export default function SearchPsn() {
     loadGroups()
   }, [setStepperRef, clearResults, setGroups])
 
+  useEffect(() => {
+    const { trustdeckID, entityTypeName } = selectedEntityId
+    if (!trustdeckID || !entityTypeName) {
+      setOccupiedGroups(new Set())
+      return
+    }
+
+    let active = true
+    EntityService.getEntityPseudonyms(entityTypeName, trustdeckID)
+      .then((links) => {
+        if (!active) return
+        setOccupiedGroups(collectGroupsWithPseudonyms(links))
+      })
+      .catch((error) => {
+        console.error('Failed to load existing entity pseudonyms', error)
+        if (!active) return
+        setOccupiedGroups(new Set())
+      })
+
+    return () => {
+      active = false
+    }
+  }, [selectedEntityId])
+
+  useEffect(() => {
+    if (!selectedGroup || occupiedGroups.size === 0) return
+    if (selectedGroupNames.some((name) => occupiedGroups.has(name))) {
+      setSelectedGroup('')
+    }
+  }, [occupiedGroups, selectedGroup, selectedGroupNames, setSelectedGroup])
+
   async function handleClick() {
-    const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
+    if (!hasValidGroupSelection) return
+
+    const selectedGroupNamesForCreate = getSelectedGroupNames(selectedGroup, groups)
     const payload = {
       identifierItem: {
         "identifier": selectedEntityId.identifier.toString(),
@@ -57,9 +109,10 @@ export default function SearchPsn() {
       // run all pseudonym creations in parallel
       console.log(payload)
       const responses = await Promise.all(
-        selectedGroupNames.map((groupName) =>
-          PseudonymService.createPseudonym(payload, groupName)
-        )
+        selectedGroupNamesForCreate.map((groupName) => {
+          console.log('Creating pseudonym for group:', groupName)
+          return PseudonymService.createPseudonym(payload, groupName)
+        })
       )
       console.log(responses)
 
@@ -72,9 +125,9 @@ export default function SearchPsn() {
       console.log('Created pseudonyms:', pseudonyms)
 
       // Fetch full pseudonym details in the domain where it was created, set store, then navigate
-      if (pseudonyms.length > 0 && selectedGroupNames.length > 0) {
+      if (pseudonyms.length > 0 && selectedGroupNamesForCreate.length > 0) {
         const firstPsn = pseudonyms[0]
-        const firstGroup = selectedGroupNames[0]
+        const firstGroup = selectedGroupNamesForCreate[0]
         const pseudonymData = await SearchPseudonymService.searchPseudonym(firstPsn, firstGroup)
         if (pseudonymData) setPseudonymValue(pseudonymData)
         navigate(`/search/pseudonym/${firstPsn}`)
@@ -130,9 +183,10 @@ export default function SearchPsn() {
               id="group"
               placeholder={t('pseudonyms:selectGroup')}
               value={selectedGroup || null}
-              options={groups || []}
+              options={groupOptions}
               onChange={handleGroupChange}
               selectionMode="single"
+              disabledNodeTooltip={t('pseudonyms:groupHasPseudonym')}
             />
             <div className="flex justify-between mt-6">
             <PrimaryOutlinedButton
@@ -147,6 +201,7 @@ export default function SearchPsn() {
               <SecondaryButton
                 label={t('pseudonyms:buttons.generate')}
                 onClick={() => handleClick()}
+                disabled={!hasValidGroupSelection}
               />
             </div>
           </StepperPanel>

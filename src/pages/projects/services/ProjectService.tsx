@@ -8,9 +8,7 @@ const ProjectService = {
   },
 
   postProject: async (project: ProjectType): Promise<ProjectType> => {
-    const createdProject = await TrustDeck.instance().postProject(project)
-    console.log(createdProject)
-    return createdProject
+    return TrustDeck.instance().postProject(project)
   },
 
   updateProject: async (project: ProjectType, projectAbbreviation?: string): Promise<ProjectType> => {

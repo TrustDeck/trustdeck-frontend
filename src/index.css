@@ -188,3 +188,8 @@
 .dark .p-dialog-mask .p-dialog {
   background-color: #1e293b !important;
 }
+
+/* PrimeReact calendar title spacing: month and year should not touch (e.g. "June 2026"). */
+.p-datepicker .p-datepicker-title .p-datepicker-month {
+  margin-right: 0.35rem !important;
+}

@@ -13,7 +13,6 @@ import { routes } from './configs/routes'
 import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
 import useUserStore from './stores/UserStore.tsx' // Import the UserStore
 import TrustDeck from '@service/TrustDeck'
-import logger from './Logger.ts'
 import { useSyncApiToken } from './services/setupApi.ts'
 import { refreshAccessTokenForNavigation } from './services/tokenRefresh.ts'
 import RequireProject from './components/routing/RequireProject'
@@ -39,8 +38,6 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
   const hasValidOidcSession = auth.isAuthenticated && hasValidOidcUser(auth.user)
   const authenticated = !locallyLoggedOut && (hasValidStoredUser || hasValidOidcSession)
 
-  logger.info(isProtected ? 'Route is protected' : 'Route is public')
-  logger.info(authenticated ? 'is authenticated' : 'is not authenticated')
 
   if (auth.isLoading && isProtected && !authenticated && !locallyLoggedOut) {
     return (
@@ -100,7 +97,6 @@ const AuthStateListener: React.FC = () => {
       (state) => state.isAuthenticated,
       (currentAuthState) => {
         if (previousAuthState && !currentAuthState && !isTabActive) {
-          console.log('User is no longer authenticated')
           markLoggedOut('timeout')
           navigate('/logged-out')
         }
@@ -122,7 +118,6 @@ const AuthStateListener: React.FC = () => {
           if (url.searchParams.has('code') || url.searchParams.has('state')) {
             navigate(location.pathname, { replace: true })
           }
-          // debug package? log level
         }
         previousAuthState = currentAuthState
       }
@@ -136,7 +131,6 @@ const AuthStateListener: React.FC = () => {
     const handleTokenExpiring = () => {
       // Token is about to expire - automaticSilentRenew should refresh it
       // This event helps ensure we're aware of refresh attempts
-      console.log('Access token expiring. Silent renew should trigger')
     }
 
     const unsubscribeExpiring = auth.events.addAccessTokenExpiring(handleTokenExpiring)

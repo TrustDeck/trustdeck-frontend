@@ -15,6 +15,7 @@ import DeleteProjectSection from './components/DeleteProjectSection'
 import CustomCalendar from '@component/form/CustomCalendar'
 import { formatDateTime } from '../../core/utils/date'
 import { CachedUserAccess, canManageProject, getCurrentUserAccess } from '../../core/services/PermissionCache'
+import { getHttpStatus } from '../../core/utils/httpErrors'
 
 const toDate = (value?: string | null) => {
   if (!value) return null
@@ -103,6 +104,32 @@ const Settings: React.FC = () => {
   }, [auth.user?.access_token])
 
   const canDeleteSelectedProject = canManageProject(permissionAccess, selectedAbbreviation, 'delete')
+
+
+  const getUpdateErrorDetail = (error: unknown) => {
+    const status = getHttpStatus(error)
+    if (status === 403) return t('settings:updateNotAllowed')
+    if (status === 401) return t('settings:updateExpired')
+    if (status === 404) return t('settings:updateNotFound')
+    if (status && status >= 500) return t('settings:updateBackendError')
+    return t('settings:updateFailedDetail')
+  }
+
+  const getImageUploadErrorDetail = (error: unknown) => {
+    const status = getHttpStatus(error)
+    if (status === 403) return t('settings:imageUploadNotAllowed')
+    if (status === 401) return t('settings:updateExpired')
+    if (status === 404) return t('settings:updateNotFound')
+    return t('settings:imageUploadFailedDetail')
+  }
+
+  const getImageDeleteErrorDetail = (error: unknown) => {
+    const status = getHttpStatus(error)
+    if (status === 403) return t('settings:imageDeleteNotAllowed')
+    if (status === 401) return t('settings:updateExpired')
+    if (status === 404) return t('settings:updateNotFound')
+    return t('settings:imageDeleteFailedDetail')
+  }
 
   const getDeleteErrorDetail = (error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
@@ -308,7 +335,7 @@ const Settings: React.FC = () => {
       showToast({
         severity: 'error',
         summary: t('settings:updateFailed'),
-        detail: t('settings:updateFailedDetail'),
+        detail: getUpdateErrorDetail(error),
         life: 4000
       })
     } finally {
@@ -373,7 +400,7 @@ const Settings: React.FC = () => {
       showToast({
         severity: 'error',
         summary: t('settings:imageUploadFailed'),
-        detail: t('settings:imageUploadFailedDetail'),
+        detail: getImageUploadErrorDetail(error),
         life: 3500
       })
     } finally {
@@ -400,7 +427,7 @@ const Settings: React.FC = () => {
       showToast({
         severity: 'error',
         summary: t('settings:imageDeleteFailed'),
-        detail: t('settings:imageDeleteFailedDetail'),
+        detail: getImageDeleteErrorDetail(error),
         life: 3500
       })
     } finally {

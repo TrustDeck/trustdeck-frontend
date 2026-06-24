@@ -51,5 +51,11 @@
   "imageDeleted": "Project image deleted",
   "imageDeletedDetail": "The project image was removed.",
   "imageDeleteFailed": "Image delete failed",
-  "imageDeleteFailedDetail": "The project image could not be deleted."
+  "imageDeleteFailedDetail": "The project image could not be deleted.",
+  "updateNotAllowed": "You do not have permission to update this project.",
+  "updateExpired": "Your session has expired. Please sign in again.",
+  "updateNotFound": "The project no longer exists or is no longer accessible.",
+  "updateBackendError": "The backend could not update the project. Please check the backend logs or try again later.",
+  "imageUploadNotAllowed": "You do not have permission to change the project image.",
+  "imageDeleteNotAllowed": "You do not have permission to remove the project image."
 }

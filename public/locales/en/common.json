@@ -14,7 +14,7 @@
   "warning": "Warning",
   "login": {
     "welcome": "Welcome to TrustDeck",
-    "subtitle": "Sign in with your institutional account to continue.",
+    "subtitle": "Sign in with your account to continue.",
     "opening": "Opening sign-in...",
     "signIn": "Sign in",
     "clearAndRetry": "Clear login state and retry",

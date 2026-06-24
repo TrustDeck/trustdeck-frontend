@@ -47,5 +47,10 @@
   "deleteExpired": "Your session has expired. Please sign in again.",
   "collapseFilters": "Collapse filters",
   "success": "Success",
-  "error": "Error"
+  "error": "Error",
+  "creationForbidden": "Project creation is not allowed for your account.",
+  "creationForbiddenDetail": "You do not have the required permission to create projects. Please ask a PI or system administrator to grant project creation rights if you should create projects.",
+  "creationExpired": "Your session has expired. Please sign in again.",
+  "creationInvalid": "The backend rejected the project data. Please check the name, abbreviation, dates, and settings.",
+  "creationBackendError": "The backend could not create the project. Please check the backend logs or try again later."
 }

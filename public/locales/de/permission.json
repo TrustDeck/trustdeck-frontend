@@ -43,10 +43,10 @@
     "permissionDefinitions": "Berechtigungsdefinitionen werden geladen..."
   },
   "errors": {
-    "effectiveForbidden": "Ihr aktuelles Konto darf die effektiven Berechtigungen nicht aus dem Backend lesen. Die Token-Rollen werden weiterhin angezeigt.",
-    "effectiveError": "Effektive Berechtigungen konnten nicht geladen werden. Die Token-Rollen werden weiterhin angezeigt.",
-    "definitionsForbidden": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Das Backend hat für den Berechtigungsdefinitions-Endpunkt HTTP 403 zurückgegeben.",
-    "retryExplanation": "Der Access Token wurde vor dem Laden dieser Seite aktualisiert. Wenn Ihre Rolle erst kürzlich vergeben wurde, verwenden Sie die Schaltfläche unten; andernfalls sollte das Backend-Rollenmapping geprüft werden.",
+    "effectiveForbidden": "Ihr aktuelles Konto darf die effektiven TrustDeck-Berechtigungen nicht aus dem Backend lesen.",
+    "effectiveError": "Effektive TrustDeck-Berechtigungen konnten nicht geladen werden.",
+    "definitionsForbidden": "Berechtigungsdefinitionen sind aktuell nicht verfügbar, da Ihnen die notwendige Rolle zum Anzeigen und/oder Bearbeiten von Berechtigungen fehlt.",
+    "retryExplanation": "",
     "definitionsError": "Berechtigungsdefinitionen konnten nicht geladen werden. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut."
   },
   "actions": {

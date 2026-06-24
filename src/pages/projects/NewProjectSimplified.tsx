@@ -10,6 +10,7 @@ import ProjectService from './services/ProjectService'
 import { Toast } from 'primereact/toast'
 import useProjectStore from '../../core/stores/ProjectStore'
 import {encodeUriName} from "../../core/utils/encodeURIComponent";
+import { getHttpStatus } from '../../core/utils/httpErrors'
 
 export default function NewProjectSimplified() {
   const toastRef = useRef<Toast>(null)
@@ -18,6 +19,16 @@ export default function NewProjectSimplified() {
     useProjectStore()
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
+
+
+  const getProjectCreationErrorDetail = (error: unknown) => {
+    const status = getHttpStatus(error)
+    if (status === 403) return t('projects:creationForbiddenDetail')
+    if (status === 401) return t('projects:creationExpired')
+    if (status === 400 || status === 422) return t('projects:creationInvalid')
+    if (status && status >= 500) return t('projects:creationBackendError')
+    return t('projects:creationFailed')
+  }
 
   const {
     projectName,
@@ -60,9 +71,7 @@ export default function NewProjectSimplified() {
       const createdProject = await ProjectService.postProject(payload)
 
       //TODO change this later to create groups in groumanager until they work in entitites
-      console.log(createdProject)
-      const group = await ProjectService.createGroup(defaultGroup)
-      console.log(group)
+      await ProjectService.createGroup(defaultGroup)
       toastRef.current?.show({
         severity: 'success',
         summary: t('projects:success'),
@@ -81,11 +90,12 @@ export default function NewProjectSimplified() {
       }, 2000)
     } catch (error) {
       console.error(error)
+      const status = getHttpStatus(error)
       toastRef.current?.show({
         severity: 'error',
-        summary: t('projects:error'),
-        detail: t('projects:creationFailed'),
-        life: 3000
+        summary: status === 403 ? t('projects:creationForbidden') : t('projects:error'),
+        detail: getProjectCreationErrorDetail(error),
+        life: 4500
       })
     } finally {
       setLoading(false)

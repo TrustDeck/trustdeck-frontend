@@ -23,6 +23,7 @@ import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import ProjectService from './services/ProjectService'
 import { Toast } from 'primereact/toast';
 import useProjectStore from '../../core/stores/ProjectStore'
+import { getHttpStatus } from '../../core/utils/httpErrors'
 
 export default function NewProject() {
   const stepperRef = useRef<any | null>(null)
@@ -35,6 +36,16 @@ export default function NewProject() {
   const navigate = useNavigate()
   const { setSelectedProject, setJustCreated, setEntities, setEntityAttributes } =
     useProjectStore()
+
+
+  const getProjectCreationErrorDetail = (error: unknown) => {
+    const status = getHttpStatus(error)
+    if (status === 403) return t('projects:creationForbiddenDetail')
+    if (status === 401) return t('projects:creationExpired')
+    if (status === 400 || status === 422) return t('projects:creationInvalid')
+    if (status && status >= 500) return t('projects:creationBackendError')
+    return t('projects:creationFailed')
+  }
 
   const {
     projectName,
@@ -78,8 +89,8 @@ export default function NewProject() {
       name: projectName,
       description: `This is the project ${projectName}`,
       abbreviation: projectAbbreviation,
-      startDate: startDate ? startDate.toISOString() : 'test',
-      endDate: endDate ? endDate.toISOString() : 'test',
+      startDate: (startDate ?? new Date()).toISOString(),
+      endDate: (endDate ?? new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 10)).toISOString(),
       entityTypes: selectedEntities
     }
     try {
@@ -111,6 +122,13 @@ export default function NewProject() {
 
     } catch (error) {
       console.error(error)
+      const status = getHttpStatus(error)
+      toastRef.current?.show({
+        severity: 'error',
+        summary: status === 403 ? t('projects:creationForbidden') : t('projects:error'),
+        detail: getProjectCreationErrorDetail(error),
+        life: 4500
+      })
     }
   }
 

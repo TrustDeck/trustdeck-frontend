@@ -7,6 +7,18 @@ import { BioSampleEntity } from 'core/types/BioSampleEntity.ts'
 import { Pseudonym } from '../../core/types/Pseudonym.ts'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+
+export class TrustDeckHttpError extends Error {
+  status: number
+  body: string
+
+  constructor(message: string, status: number, body: string) {
+    super(message)
+    this.name = 'TrustDeckHttpError'
+    this.status = status
+    this.body = body
+  }
+}
 export type QueryParams = Record<string, string | number | boolean | null | undefined>
 
 export type IdentifierItem = {
@@ -180,7 +192,7 @@ class TrustDeck {
 
     if (!res.ok) {
       const errorText = await res.text()
-      throw new Error(`Request failed: ${res.status} ${errorText}`)
+      throw new TrustDeckHttpError(`Request failed: ${res.status} ${errorText}`, res.status, errorText)
     }
 
     return this.parseResponse<T>(res)
@@ -203,7 +215,7 @@ class TrustDeck {
 
     if (!res.ok) {
       const errorText = await res.text()
-      throw new Error(`Upload failed: ${res.status} ${errorText}`)
+      throw new TrustDeckHttpError(`Upload failed: ${res.status} ${errorText}`, res.status, errorText)
     }
 
     return this.parseResponse<T>(res)
@@ -295,7 +307,7 @@ class TrustDeck {
 
     if (!res.ok) {
       const errorText = await res.text()
-      throw new Error(`Failed to fetch image: ${res.status} ${errorText}`)
+      throw new TrustDeckHttpError(`Failed to fetch image: ${res.status} ${errorText}`, res.status, errorText)
     }
 
     return res.blob()

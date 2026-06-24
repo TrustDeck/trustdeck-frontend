@@ -43,10 +43,10 @@
     "permissionDefinitions": "Loading permission definitions..."
   },
   "errors": {
-    "effectiveForbidden": "Your current account is not allowed to read effective permissions from the backend. The token roles above are still shown.",
-    "effectiveError": "Effective permissions could not be loaded. The token roles above are still shown.",
-    "definitionsForbidden": "Permission definitions are currently not available. The backend returned HTTP 403 for the permission-definition endpoint.",
-    "retryExplanation": "I refreshed the access token before loading this page. If your role was granted only recently, use the retry button below; otherwise the backend role mapping may need to be checked.",
+    "effectiveForbidden": "Your current account is not allowed to read effective TrustDeck permissions from the backend.",
+    "effectiveError": "Effective TrustDeck permissions could not be loaded.",
+    "definitionsForbidden": "Permission definitions are currently not available because you do not have the necessary role to view and/or edit permissions.",
+    "retryExplanation": "",
     "definitionsError": "Permission definitions could not be loaded. Please check the backend logs or try again later."
   },
   "actions": {

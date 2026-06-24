@@ -347,7 +347,6 @@ export default function GlobalPermissions() {
   const currentUserId = useUserStore((state) => state.username)
   const currentUserFullname = useUserStore((state) => state.fullname)
   const currentUserEmail = useUserStore((state) => state.email)
-  const currentUserRoles = useUserStore((state) => state.roles)
   const selectedProject = useProjectStore((state) => state.selectedProject)
 
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
@@ -743,25 +742,6 @@ export default function GlobalPermissions() {
               <div>{currentUserLabel}</div>
               {currentUserEmail && <div>{currentUserEmail}</div>}
             </div>
-            <div className="mb-5">
-              <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                {t('keycloakRoles')}
-              </h3>
-              {currentUserRoles.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {currentUserRoles.map((role) => (
-                    <span
-                      key={role}
-                      className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-color-blue dark:bg-blue-950/60 dark:text-blue-100"
-                    >
-                      {role}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-base text-gray-500 dark:text-gray-300">{t('empty.noTokenRoles')}</p>
-              )}
-            </div>
             <div>
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
                 {t('effectivePermissions')}
@@ -789,14 +769,8 @@ export default function GlobalPermissions() {
           ) : null}
 
           {permissionApiState === 'forbidden' && (
-            <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-              <p>
-                {t('errors.definitionsForbidden')}
-              </p>
-              <p>
-                {t('errors.retryExplanation')}
-              </p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? t('actions.refreshing') : t('actions.refreshAndRetry')} loading={retryingDefinitions} onClick={handleRetry} />
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+              <p>{t('errors.definitionsForbidden')}</p>
             </div>
           )}
 

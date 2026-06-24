@@ -105,7 +105,6 @@ export default function SingleProject({
 
     const from = location.state?.from?.pathname || '/search'
     navigate(from)
-    console.log(project)
   }
 
   const updateTooltip = 'Open project settings'

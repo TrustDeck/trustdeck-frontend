@@ -101,5 +101,12 @@
   "exportReadyDetail": "{{type}} was exported as JSON.",
   "exportFailed": "Export failed",
   "exportFailedDetail": "Could not export {{type}}.",
-  "loadFailed": "Could not load entity types."
+  "loadFailed": "Could not load entity types.",
+  "openJsonImportExport": "Open JSON import/export",
+  "closeJsonImportExport": "Close JSON import/export",
+  "fieldHelp": {
+    "required": "Marks the field as mandatory. Registration forms must contain a value for this field.",
+    "linkage": "Uses this field during record-linkage and duplicate checks.",
+    "repeatable": "Allows several values or entries for this field instead of only one."
+  }
 }

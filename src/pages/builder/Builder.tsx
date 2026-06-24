@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowLeftIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, CodeBracketIcon, InformationCircleIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '../../core/components/form/CustomDropdown'
@@ -242,6 +242,7 @@ export default function Builder() {
   const [jsonDraft, setJsonDraft] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
   const [jsonError, setJsonError] = useState('')
+  const [jsonModalOpen, setJsonModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -350,7 +351,8 @@ export default function Builder() {
   const refreshProjectEntities = async () => {
     try {
       const response = await TrustDeck.instance().getProjectEntities('*')
-      const names = Array.from(new Set((response ?? []).map((entry: any) => entry?.name).filter(Boolean)))
+      const responseArray = Array.isArray(response) ? response : []
+      const names = Array.from(new Set(responseArray.map((entry: any) => entry?.name).filter(Boolean)))
       setProjectEntities(names as string[])
     } catch {
       setProjectEntities([])
@@ -414,7 +416,7 @@ export default function Builder() {
         />
 
         <Panel title={t('entityBuilder:createEntityType')} className="w-full">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
             <CustomFloatLabel
               id="entityTypeName"
               value={entityName}
@@ -474,8 +476,16 @@ export default function Builder() {
           )}
         </Panel>
 
-        <div className="grid w-full items-start gap-6 lg:grid-cols-2">
-          <Panel title={t('entityBuilder:visualPreview')} className="w-full">
+        <div className="flex justify-center">
+          <PrimaryOutlinedButton
+            label={t('openJsonImportExport')}
+            icon={<CodeBracketIcon className="h-5 w-5" />}
+            iconPos="left"
+            onClick={() => setJsonModalOpen(true)}
+          />
+        </div>
+
+        <Panel title={t('entityBuilder:visualPreview')} className="w-full">
             <div className="mb-4 flex flex-wrap gap-2">
               <PrimaryOutlinedButton
                 label={
@@ -550,7 +560,15 @@ export default function Builder() {
                             checked={Boolean(attribute[flag])}
                             onChange={(e) => updateAttribute(attribute.key, { [flag]: e.target.checked })}
                           />
-                          {t(`field.${flag}`)}
+                          <span className="inline-flex items-center gap-1.5">
+                            {t(`field.${flag}`)}
+                            <span
+                              title={t(`fieldHelp.${flag}`)}
+                              className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+                            >
+                              <InformationCircleIcon className="h-4 w-4" />
+                            </span>
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -568,37 +586,59 @@ export default function Builder() {
             )}
           </Panel>
 
-          <Panel title={t('entityBuilder:jsonImportExport')} className="w-full">
-            <p className="mb-3 text-sm text-gray-500 dark:text-gray-300">{t('jsonHelp')}</p>
-            <textarea
-              className="h-[420px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-              spellCheck={false}
-              value={jsonDraft}
-              onChange={(event) => {
-                setJsonDraft(event.target.value)
-                setJsonDirty(true)
-              }}
-            />
-            {jsonError && <p className="mt-2 text-sm text-red-600 dark:text-red-300">{t('invalidJsonWithMessage', { message: jsonError })}</p>}
-            <div className="mt-3 flex flex-wrap justify-end gap-2">
-              <PrimaryOutlinedButton label={t('applyJsonToPreview')} onClick={applyJsonToBuilder} />
-              <PrimaryOutlinedButton
-                label={t('resetJsonFromPreview')}
-                onClick={() => {
-                  setJsonDirty(false)
-                  setJsonDraft(prettyJson(payload))
-                  setJsonError('')
-                }}
-              />
+        {jsonModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('jsonImportExport')}</h2>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">{t('jsonHelp')}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={t('closeJsonImportExport')}
+                  onClick={() => setJsonModalOpen(false)}
+                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="grid gap-5 lg:grid-cols-2">
+                <div>
+                  <textarea
+                    className="h-[520px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                    spellCheck={false}
+                    value={jsonDraft}
+                    onChange={(event) => {
+                      setJsonDraft(event.target.value)
+                      setJsonDirty(true)
+                    }}
+                  />
+                  {jsonError && <p className="mt-2 text-sm text-red-600 dark:text-red-300">{t('invalidJsonWithMessage', { message: jsonError })}</p>}
+                </div>
+                <div className="text-left">
+                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">{t('renderedPreview')}</h3>
+                  <pre className="h-[520px] overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-slate-950 dark:text-gray-100">
+                    {jsonDirty ? jsonDraft : prettyJson(payload)}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap justify-end gap-2">
+                <PrimaryOutlinedButton
+                  label={t('resetJsonFromPreview')}
+                  onClick={() => {
+                    setJsonDirty(false)
+                    setJsonDraft(prettyJson(payload))
+                    setJsonError('')
+                  }}
+                />
+                <PrimaryButton label={t('applyJsonToPreview')} onClick={applyJsonToBuilder} />
+              </div>
             </div>
-            <div className="mt-4 text-left">
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">{t('renderedPreview')}</h3>
-              <pre className="max-h-80 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-slate-950 dark:text-gray-100">
-                {jsonDirty ? jsonDraft : prettyJson(payload)}
-              </pre>
-            </div>
-          </Panel>
-        </div>
+          </div>
+        )}
 
         <div className="flex w-full justify-center">
           <PrimaryButton label={saving ? t('common:loading') : t('entityBuilder:createEntityType')} loading={saving} onClick={save} />

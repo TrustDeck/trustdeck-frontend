@@ -101,5 +101,12 @@
   "exportReadyDetail": "{{type}} wurde als JSON exportiert.",
   "exportFailed": "Export fehlgeschlagen",
   "exportFailedDetail": "{{type}} konnte nicht exportiert werden.",
-  "loadFailed": "Entitätstypen konnten nicht geladen werden."
+  "loadFailed": "Entitätstypen konnten nicht geladen werden.",
+  "openJsonImportExport": "JSON-Import/-Export öffnen",
+  "closeJsonImportExport": "JSON-Import/-Export schließen",
+  "fieldHelp": {
+    "required": "Kennzeichnet das Feld als Pflichtfeld. Registrierungsformulare müssen für dieses Feld einen Wert enthalten.",
+    "linkage": "Verwendet dieses Feld für Record-Linkage- und Dublettenprüfungen.",
+    "repeatable": "Erlaubt mehrere Werte oder Einträge für dieses Feld statt nur eines einzelnen Werts."
+  }
 }

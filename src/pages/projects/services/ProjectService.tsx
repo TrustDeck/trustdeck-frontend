@@ -1,6 +1,10 @@
 import TrustDeck from '@service/TrustDeck'
 import { ProjectType } from '../types/ProjectType'
 
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : []
+}
+
 const ProjectService = {
   getProjects: async (): Promise<ProjectType[]> => {
     if (!TrustDeck.instance().hasAccessToken()) return []
@@ -45,7 +49,7 @@ const ProjectService = {
   getEntityAttributes: async () => {
     try {
       const response = await TrustDeck.instance().getProjectEntities('*')
-      const entitiesFromBackend = response
+      const entitiesFromBackend = asArray<any>(response)
         .filter(
           (entry: any) =>
             entry &&
@@ -71,8 +75,8 @@ const ProjectService = {
   },
 
   getProjectEntities: async (): Promise<string[]> => {
-    const mapEntityNames = (response: any[]): string[] =>
-      response
+    const mapEntityNames = (response: unknown): string[] =>
+      asArray<any>(response)
         .map((entry: any) => {
           if (typeof entry === 'string') return entry
           if (entry && typeof entry.name === 'string') return entry.name

@@ -171,6 +171,20 @@ class TrustDeck {
     return text as T
   }
 
+
+  private asArray<T>(value: unknown): T[] {
+    if (Array.isArray(value)) return value as T[]
+    if (value === null || value === undefined) return []
+    if (typeof value === 'object') {
+      const candidate = value as Record<string, unknown>
+      if (Array.isArray(candidate.items)) return candidate.items as T[]
+      if (Array.isArray(candidate.results)) return candidate.results as T[]
+      if (Array.isArray(candidate.data)) return candidate.data as T[]
+      if (Object.keys(candidate).length === 0) return []
+    }
+    return []
+  }
+
   private async request<T>(
     method: HttpMethod,
     path: string,
@@ -248,7 +262,8 @@ class TrustDeck {
   }
 
   public async getProjects() {
-    return this.request<ProjectType[]>('GET', '/projects')
+    const response = await this.request<unknown>('GET', '/projects')
+    return this.asArray<ProjectType>(response)
   }
 
   public async getProject(projectAbbreviation?: string) {
@@ -321,7 +336,8 @@ class TrustDeck {
   // Domains/groups
   public async getDomain(name?: string) {
     const domainName = name ?? this.getSelectedProjectName()
-    return this.request<Domain[]>('GET', '/domains', undefined, { name: domainName })
+    const response = await this.request<unknown>('GET', '/domains', undefined, { name: domainName })
+    return this.asArray<Domain>(response)
   }
 
   public async getDomainAttribute(domainName: string, attribute: string) {
@@ -332,7 +348,8 @@ class TrustDeck {
   }
 
   public async getDomainsHierarchy() {
-    return this.request<Domain[]>('GET', '/domains/hierarchy')
+    const response = await this.request<unknown>('GET', '/domains/hierarchy')
+    return this.asArray<Domain>(response)
   }
 
   public async createGroup(payload: unknown) {
@@ -377,7 +394,8 @@ class TrustDeck {
 
   // Entity types
   public async getBaseTypes(query = '*') {
-    return this.request<EntityTypePayload[]>('GET', '/entities/base-types', undefined, { query })
+    const response = await this.request<unknown>('GET', '/entities/base-types', undefined, { query })
+    return this.asArray<EntityTypePayload>(response)
   }
 
   public async createBaseType(payload: EntityTypePayload) {
@@ -393,12 +411,13 @@ class TrustDeck {
 
   public async getProjectEntities(query = '*', projectAbbreviation?: string) {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    return this.request<EntityTypePayload[]>(
+    const response = await this.request<unknown>(
       'GET',
       `/projects/${encodeURIComponent(projectName)}/entities`,
       undefined,
       { query }
     )
+    return this.asArray<EntityTypePayload>(response)
   }
 
   public async createEntityConfig(payload: EntityTypePayload) {
@@ -438,22 +457,24 @@ class TrustDeck {
   // Entity instances
   public async fuzzySearch(entity: string, query: string) {
     const projectName = this.getSelectedProjectName()
-    return this.request<PersonType[]>(
+    const response = await this.request<unknown>(
       'GET',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entity)}`,
       undefined,
       { query }
     )
+    return this.asArray<PersonType>(response)
   }
 
   public async searchEntities(entityTypeName: string, query = '*', projectAbbreviation?: string) {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    return this.request<unknown[]>(
+    const response = await this.request<unknown>(
       'GET',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityTypeName)}`,
       undefined,
       { query }
     )
+    return this.asArray<unknown>(response)
   }
 
   public async getEntity(entityTypeName: string, trustdeckID: string, projectAbbreviation?: string) {
@@ -492,10 +513,11 @@ class TrustDeck {
 
   public async getEntityPseudonyms(entityTypeName: string, trustdeckID: string, projectAbbreviation?: string) {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    return this.request<Pseudonym[]>(
+    const response = await this.request<unknown>(
       'GET',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityTypeName)}/${encodeURIComponent(trustdeckID)}/pseudonyms`
     )
+    return this.asArray<Pseudonym>(response)
   }
 
   public async recordLinkage(entityTypeName: string, payload: unknown, projectAbbreviation?: string) {
@@ -533,7 +555,8 @@ class TrustDeck {
   }
 
   public async createPseudonymsBatch(payload: PseudonymCreatePayload[], domainName: string) {
-    return this.request<Pseudonym[]>('POST', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`, payload)
+    const response = await this.request<unknown>('POST', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`, payload)
+    return this.asArray<Pseudonym>(response)
   }
 
   public async searchPseudonym(query: string, domain?: string): Promise<Pseudonym> {
@@ -551,13 +574,15 @@ class TrustDeck {
   }
 
   public async searchPseudonyms(domainName: string, query = '*') {
-    return this.request<Pseudonym[]>('GET', `/domains/${encodeURIComponent(domainName)}/pseudonyms`, undefined, {
+    const response = await this.request<unknown>('GET', `/domains/${encodeURIComponent(domainName)}/pseudonyms`, undefined, {
       query
     })
+    return this.asArray<Pseudonym>(response)
   }
 
   public async getPseudonymsBatch(domainName: string) {
-    return this.request<Pseudonym[]>('GET', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`)
+    const response = await this.request<unknown>('GET', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`)
+    return this.asArray<Pseudonym>(response)
   }
 
   public async updatePseudonym(domainName: string, payload: PseudonymUpdatePayload) {
@@ -569,7 +594,8 @@ class TrustDeck {
   }
 
   public async updatePseudonymsBatch(domainName: string, payload: PseudonymUpdatePayload[]) {
-    return this.request<Pseudonym[]>('PUT', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`, payload)
+    const response = await this.request<unknown>('PUT', `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`, payload)
+    return this.asArray<Pseudonym>(response)
   }
 
   public async deletePseudonym(domainName: string, payload: { identifierItem?: IdentifierItem; psn?: string }) {
@@ -587,19 +613,22 @@ class TrustDeck {
   }
 
   public async getLinkedPseudonyms(sourceDomain: string, targetDomain: string) {
-    return this.request<Pseudonym[]>('GET', '/domains/linked-pseudonyms', undefined, {
+    const response = await this.request<unknown>('GET', '/domains/linked-pseudonyms', undefined, {
       sourceDomain,
       targetDomain
     })
+    return this.asArray<Pseudonym>(response)
   }
 
   // Permissions/users
   public async searchOperators(q: string) {
-    return this.request<Operator[]>('GET', '/permissions/users', undefined, { query: q })
+    const response = await this.request<unknown>('GET', '/permissions/users', undefined, { query: q })
+    return this.asArray<Operator>(response)
   }
 
   public async getDefinedPermissions() {
-    return this.request<{ resourceType: string; action: string }[]>('GET', '/permissions')
+    const response = await this.request<unknown>('GET', '/permissions')
+    return this.asArray<{ resourceType: string; action: string }>(response)
   }
 
   public async createDomainPermissions(domainName: string, permissions: PermissionGrant[]) {
@@ -615,20 +644,23 @@ class TrustDeck {
   }
 
   public async getDomainPermissions(domainName: string, userId?: string) {
-    return this.request<Permission[]>('GET', `/permissions/domains/${encodeURIComponent(domainName)}`, undefined, {
+    const response = await this.request<unknown>('GET', `/permissions/domains/${encodeURIComponent(domainName)}`, undefined, {
       userId
     })
+    return this.asArray<Permission>(response)
   }
 
   public async getProjectPermissions(projectAbbreviation?: string, userId?: string) {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    return this.request<Permission[]>('GET', `/permissions/projects/${encodeURIComponent(projectName)}`, undefined, {
+    const response = await this.request<unknown>('GET', `/permissions/projects/${encodeURIComponent(projectName)}`, undefined, {
       userId
     })
+    return this.asArray<Permission>(response)
   }
 
   public async getGlobalPermissions(userId?: string) {
-    return this.request<Permission[]>('GET', '/permissions/global', undefined, { userId })
+    const response = await this.request<unknown>('GET', '/permissions/global', undefined, { userId })
+    return this.asArray<Permission>(response)
   }
 
   public async updateDomainPermissions(userId: string, permissions: PermissionUpdate[] | PermissionGrant[]) {

@@ -17,7 +17,9 @@ import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOut
 import useToastStore from '../../core/stores/ToastStore'
 
 function downloadJson(filename: string, value: unknown) {
-  const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' })
+  const blob = new Blob([JSON.stringify(value, null, 2)], {
+    type: 'application/json'
+  })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
@@ -33,7 +35,9 @@ export default function EntityManager() {
   const entities = useProjectStore((state) => state.entities)
   const setEntities = useProjectStore((state) => state.setEntities)
   const selectedProject = useProjectStore((state) => state.selectedProject)
-  const [entityDefinitions, setEntityDefinitions] = useState<EntityTypePayload[]>([])
+  const [entityDefinitions, setEntityDefinitions] = useState<
+    EntityTypePayload[]
+  >([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -53,7 +57,10 @@ export default function EntityManager() {
           new Set(
             definitions
               .map((entry: any) => entry?.name ?? entry?.typeName)
-              .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
+              .filter(
+                (name: unknown): name is string =>
+                  typeof name === 'string' && name.length > 0
+              )
           )
         )
         setEntities(names)
@@ -61,7 +68,12 @@ export default function EntityManager() {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) {
           console.error('Failed to load project entity types', error)
-          showToast({ severity: 'error', summary: t('common:error'), detail: t('loadFailed'), life: 4000 })
+          showToast({
+            severity: 'error',
+            summary: t('common:error'),
+            detail: t('loadFailed'),
+            life: 4000
+          })
         }
         if (active) {
           setEntityDefinitions([])
@@ -88,34 +100,57 @@ export default function EntityManager() {
 
   const handleExport = async (type: string) => {
     try {
-      const fromList = entityDefinitions.find((definition) => definition.name === type)
+      const fromList = entityDefinitions.find(
+        (definition) => definition.name === type
+      )
       const definition = fromList ?? (await TrustDeck.instance().getType(type))
       downloadJson(`${type}-entity-type.json`, definition)
-      showToast({ severity: 'success', summary: t('exportReady'), detail: t('exportReadyDetail', { type }), life: 2500 })
+      showToast({
+        severity: 'success',
+        summary: t('exportReady'),
+        detail: t('exportReadyDetail', { type }),
+        life: 2500
+      })
     } catch (error) {
       console.error('Could not export entity type', error)
-      showToast({ severity: 'error', summary: t('exportFailed'), detail: t('exportFailedDetail', { type }), life: 4000 })
+      showToast({
+        severity: 'error',
+        summary: t('exportFailed'),
+        detail: t('exportFailedDetail', { type }),
+        life: 4000
+      })
     }
   }
 
   return (
-    <div className="w-full flex justify-center">
-      <div className="w-full text-center flex flex-col items-center">
+    <div className="flex w-full justify-center">
+      <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
         <Panel
           centered
-          className="mx-auto"
-          title={t('entityBuilder:entitiesInProject', 'Entities in this project')}
+          noMaxWidth
+          className="mx-auto w-full"
+          title={t(
+            'entityBuilder:entitiesInProject',
+            'Entities in this project'
+          )}
         >
           {loading ? (
-            <div className="py-10 text-gray-500 dark:text-gray-300">{t('loadingEntityTypes')}</div>
+            <div className="py-10 text-gray-500 dark:text-gray-300">
+              {t('loadingEntityTypes')}
+            </div>
           ) : cards.length === 0 ? (
             <div className="my-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('noEntityTypesTitle')}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                {t('noEntityTypesTitle')}
+              </h2>
               <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
                 {t('noEntityTypesManagerDetail')}
               </p>
               <div className="mt-6 flex justify-center">
-                <PrimaryButton label={t('openEntityBuilder')} onClick={() => navigate('/entity/manager/new')} />
+                <PrimaryButton
+                  label={t('openEntityBuilder')}
+                  onClick={() => navigate('/entity/manager/new')}
+                />
               </div>
             </div>
           ) : (

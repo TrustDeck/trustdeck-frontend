@@ -156,7 +156,7 @@
     "pprlSettings": "PPRL settings",
     "pprlMethod": "PPRL method",
     "ngramSize": "N-gram size",
-    "bloomLength": "Bloom length",
+    "bloomLength": "Bloom Filter length",
     "hashPositions": "Hash positions",
     "bandSize": "Band size",
     "exact": "Exact mode",
@@ -173,7 +173,7 @@
     "pprlMethod": "n-gram Bloom Filter encodes approximate string similarity. HMAC-based exact matching supports exact equality without storing the clear value.",
     "ngramSize": "Number of characters per n-gram before Bloom-filter encoding. A value of 2 is common for names.",
     "bloomLength": "Length of the Bloom filter bit array. Larger values reduce collisions but increase storage size.",
-    "hashPositions": "Number of bit positions set for each token. Higher values may improve discrimination but can increase collisions.",
+    "hashPositions": "Number of independent hash positions set in the Bloom filter for each encoded token. Too few positions make different values look too similar; too many positions fill the filter and increase false matches. Keep the backend default unless you have tested different values.",
     "bandSize": "Size used for banded candidate generation or indexing of Bloom filters. Use the backend default unless you have a reason to tune it."
   },
   "normalizerHelp": {
@@ -199,5 +199,6 @@
     "yearMonth": "Uses year and month as a blocking key.",
     "domainExact": "Uses a domain-specific exact blocking key."
   },
-  "dragHint": "Drag attributes to reorder them or drop them into a section."
+  "dragHint": "Drag attributes to reorder them or drop them into a section.",
+  "addMoreAttributesHint": "Add more attributes or sections at the end of the definition."
 }

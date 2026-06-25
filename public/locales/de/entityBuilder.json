@@ -156,7 +156,7 @@
     "pprlSettings": "PPRL-Einstellungen",
     "pprlMethod": "PPRL-Methode",
     "ngramSize": "N-Gramm-Größe",
-    "bloomLength": "Bloom-Länge",
+    "bloomLength": "Bloom-Filter-Länge",
     "hashPositions": "Hash-Positionen",
     "bandSize": "Bandgröße",
     "exact": "Exakter Modus",
@@ -173,7 +173,7 @@
     "pprlMethod": "n-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
     "ngramSize": "Anzahl der Zeichen pro n-Gramm vor der Bloom-Filter-Kodierung. Für Namen ist 2 ein üblicher Wert.",
     "bloomLength": "Länge des Bloom-Filter-Bitarrays. Größere Werte reduzieren Kollisionen, benötigen aber mehr Speicher.",
-    "hashPositions": "Anzahl der gesetzten Bitpositionen pro Token. Höhere Werte können besser unterscheiden, aber auch Kollisionen erhöhen.",
+    "hashPositions": "Anzahl unabhängiger Hash-Positionen, die pro kodiertem Token im Bloom-Filter gesetzt werden. Zu wenige Positionen machen unterschiedliche Werte zu ähnlich; zu viele füllen den Filter und erhöhen Fehlmatches. Verwenden Sie den Backend-Standard, wenn keine getestete Anpassung vorliegt.",
     "bandSize": "Größe für bandbasierte Kandidatengenerierung oder Indizierung von Bloom-Filtern. Verwenden Sie den Backend-Standard, wenn keine Anpassung nötig ist."
   },
   "normalizerHelp": {
@@ -199,5 +199,6 @@
     "yearMonth": "Verwendet Jahr und Monat als Blocking-Schlüssel.",
     "domainExact": "Verwendet einen domänenspezifischen exakten Blocking-Schlüssel."
   },
-  "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben."
+  "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
+  "addMoreAttributesHint": "Fügen Sie am Ende der Definition weitere Attribute oder Abschnitte hinzu."
 }

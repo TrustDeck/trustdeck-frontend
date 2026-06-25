@@ -159,6 +159,45 @@
     "bloomLength": "Bloom-Länge",
     "hashPositions": "Hash-Positionen",
     "bandSize": "Bandgröße",
-    "exact": "Exakter Modus"
-  }
+    "exact": "Exakter Modus",
+    "tags": "Tags",
+    "pprlMethodOptions": {
+      "ngramBloomFilter": "n-Gramm-Bloom-Filter",
+      "hmacExact": "HMAC-basierter exakter Abgleich"
+    }
+  },
+  "linkageConfigHelp": {
+    "tags": "Semantische Tags beschreiben die Bedeutung des Attributs. Standardmäßig verwendet TrustDeck den Entitätstypnamen gefolgt vom Attributnamen, zum Beispiel person.firstName.",
+    "privacyMode": "PPRL transformiert Linkage-Werte vor dem Vergleich. Klartext-Modus lässt Werte für nicht-private Blocking- oder Vergleichsworkflows nutzbar.",
+    "weight": "Relative Bedeutung dieses Attributs beim Record Linkage. Höhere Werte lassen Treffer bei diesem Attribut stärker zählen.",
+    "pprlMethod": "n-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
+    "ngramSize": "Anzahl der Zeichen pro n-Gramm vor der Bloom-Filter-Kodierung. Für Namen ist 2 ein üblicher Wert.",
+    "bloomLength": "Länge des Bloom-Filter-Bitarrays. Größere Werte reduzieren Kollisionen, benötigen aber mehr Speicher.",
+    "hashPositions": "Anzahl der gesetzten Bitpositionen pro Token. Höhere Werte können besser unterscheiden, aber auch Kollisionen erhöhen.",
+    "bandSize": "Größe für bandbasierte Kandidatengenerierung oder Indizierung von Bloom-Filtern. Verwenden Sie den Backend-Standard, wenn keine Anpassung nötig ist."
+  },
+  "normalizerHelp": {
+    "trim": "Entfernt Leerzeichen am Anfang und Ende.",
+    "lower": "Wandelt Text in Kleinbuchstaben um.",
+    "collapseWhitespace": "Ersetzt mehrfaches Whitespace durch ein einzelnes Leerzeichen.",
+    "asciiFold": "Wandelt Akzentzeichen nach Möglichkeit in ASCII-Zeichen um.",
+    "umlautFold": "Normalisiert deutsche Umlaute wie ä/ae, ö/oe und ü/ue für den Abgleich.",
+    "removePunctuation": "Entfernt Satzzeichen vor dem Linkage-Vergleich.",
+    "digitsOnly": "Behält nur Ziffern bei, sinnvoll für Postleitzahlen oder telefonnummernartige Kennungen."
+  },
+  "encoderHelp": {
+    "cologne": "Verwendet die Kölner Phonetik für deutschsprachige phonetische Vergleiche.",
+    "doubleMetaphone": "Verwendet Double Metaphone für ungefähre Aussprachevergleiche."
+  },
+  "blockingHelp": {
+    "exact": "Verwendet den normalisierten Wert selbst als Blocking-Schlüssel.",
+    "prefix3": "Verwendet die ersten drei Zeichen als Blocking-Schlüssel.",
+    "prefix4": "Verwendet die ersten vier Zeichen als Blocking-Schlüssel.",
+    "prefix6": "Verwendet die ersten sechs Zeichen als Blocking-Schlüssel.",
+    "phonetic": "Verwendet eine phonetische Kodierung als Blocking-Schlüssel.",
+    "year": "Verwendet den Jahresanteil als Blocking-Schlüssel.",
+    "yearMonth": "Verwendet Jahr und Monat als Blocking-Schlüssel.",
+    "domainExact": "Verwendet einen domänenspezifischen exakten Blocking-Schlüssel."
+  },
+  "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben."
 }

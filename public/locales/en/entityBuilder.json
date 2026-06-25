@@ -159,6 +159,45 @@
     "bloomLength": "Bloom length",
     "hashPositions": "Hash positions",
     "bandSize": "Band size",
-    "exact": "Exact mode"
-  }
+    "exact": "Exact mode",
+    "tags": "Tags",
+    "pprlMethodOptions": {
+      "ngramBloomFilter": "n-gram Bloom Filter",
+      "hmacExact": "HMAC-based exact matching"
+    }
+  },
+  "linkageConfigHelp": {
+    "tags": "Semantic tags describe what the attribute represents. By default, TrustDeck uses the entity type name followed by the attribute name, for example person.firstName.",
+    "privacyMode": "PPRL transforms linkage values before comparison. Plain mode keeps values usable for non-private blocking or comparison workflows.",
+    "weight": "Relative importance of this attribute during record linkage. Higher values make a match on this attribute count more strongly.",
+    "pprlMethod": "n-gram Bloom Filter encodes approximate string similarity. HMAC-based exact matching supports exact equality without storing the clear value.",
+    "ngramSize": "Number of characters per n-gram before Bloom-filter encoding. A value of 2 is common for names.",
+    "bloomLength": "Length of the Bloom filter bit array. Larger values reduce collisions but increase storage size.",
+    "hashPositions": "Number of bit positions set for each token. Higher values may improve discrimination but can increase collisions.",
+    "bandSize": "Size used for banded candidate generation or indexing of Bloom filters. Use the backend default unless you have a reason to tune it."
+  },
+  "normalizerHelp": {
+    "trim": "Removes leading and trailing whitespace.",
+    "lower": "Converts text to lowercase.",
+    "collapseWhitespace": "Replaces repeated whitespace with a single space.",
+    "asciiFold": "Converts accented characters to ASCII where possible.",
+    "umlautFold": "Normalizes German umlauts such as ä/ae, ö/oe, and ü/ue for matching.",
+    "removePunctuation": "Removes punctuation characters before linkage comparison.",
+    "digitsOnly": "Keeps digits only, useful for postal codes or phone-like identifiers."
+  },
+  "encoderHelp": {
+    "cologne": "Applies the Cologne phonetic encoder for German-language phonetic matching.",
+    "doubleMetaphone": "Applies Double Metaphone phonetic encoding for approximate pronunciation matching."
+  },
+  "blockingHelp": {
+    "exact": "Uses the normalized value itself as a blocking key.",
+    "prefix3": "Uses the first three characters as a blocking key.",
+    "prefix4": "Uses the first four characters as a blocking key.",
+    "prefix6": "Uses the first six characters as a blocking key.",
+    "phonetic": "Uses a phonetic encoding as the blocking key.",
+    "year": "Uses the year part as a blocking key.",
+    "yearMonth": "Uses year and month as a blocking key.",
+    "domainExact": "Uses a domain-specific exact blocking key."
+  },
+  "dragHint": "Drag attributes to reorder them or drop them into a section."
 }

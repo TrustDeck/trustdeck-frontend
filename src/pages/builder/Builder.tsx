@@ -25,7 +25,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 type LayoutValue = 'row' | 'col' | 'group'
 type PrivacyMode = 'plain' | 'pprl'
 type PprlMethod = 'ngramBloomFilter' | 'hmacExact'
-type DropIndicator = { targetKey: string; position: 'before' | 'inside' } | null
+type DropIndicator = { targetKey: string; position: 'before' | 'after' | 'inside' } | null
 
 type LinkageConfig = {
   privacyMode?: PrivacyMode
@@ -60,6 +60,7 @@ type BuilderAttribute = {
   linkageConfig?: LinkageConfig
   layout?: LayoutValue
   attributes?: BuilderAttribute[]
+  locked?: boolean
 }
 
 type EntityTypePayload = {
@@ -243,6 +244,39 @@ function attributesFromPayload(payload: EntityTypePayload): BuilderAttribute[] {
   const attrs = payload.typeDefinition?.attributes
   if (!Array.isArray(attrs)) return []
   return attrs.map(mapBackendAttribute)
+}
+
+function lockBaseAttribute(attribute: BuilderAttribute): BuilderAttribute {
+  return {
+    ...attribute,
+    locked: true,
+    attributes: attribute.attributes?.map(lockBaseAttribute)
+  }
+}
+
+function unlockImportedAttribute(attribute: BuilderAttribute): BuilderAttribute {
+  return {
+    ...attribute,
+    locked: false,
+    attributes: attribute.attributes?.map(unlockImportedAttribute)
+  }
+}
+
+function flattenDomainsForOptions(domains: any[]): { label: string; value: string }[] {
+  const seen = new Set<string>()
+  const out: { label: string; value: string }[] = []
+  const visit = (node: any) => {
+    const domain = node?.domain ?? node
+    const name = domain?.name ?? node?.name ?? node?.label
+    if (typeof name === 'string' && name.trim() && !seen.has(name)) {
+      seen.add(name)
+      out.push({ label: name, value: name })
+    }
+    const children = node?.children ?? domain?.children
+    if (Array.isArray(children)) children.forEach(visit)
+  }
+  domains.forEach(visit)
+  return out.sort((a, b) => a.label.localeCompare(b.label))
 }
 
 function cleanLinkageConfig(config: LinkageConfig): LinkageConfig {
@@ -514,6 +548,26 @@ function insertBefore(
   return next
 }
 
+function insertAfter(
+  attributes: BuilderAttribute[],
+  targetKey: string,
+  item: BuilderAttribute
+): BuilderAttribute[] {
+  const next: BuilderAttribute[] = []
+  for (const attribute of attributes) {
+    if (attribute.attributes) {
+      next.push({
+        ...attribute,
+        attributes: insertAfter(attribute.attributes, targetKey, item)
+      })
+    } else {
+      next.push(attribute)
+    }
+    if (attribute.key === targetKey) next.push(item)
+  }
+  return next
+}
+
 function appendToGroup(
   attributes: BuilderAttribute[],
   groupKey: string,
@@ -581,7 +635,9 @@ export default function Builder() {
     { label: string; value: string }[]
   >([])
   const [selectedBaseType, setSelectedBaseType] = useState('')
+  const [baseTypeLoading, setBaseTypeLoading] = useState(false)
   const [associatedGroupName, setAssociatedGroupName] = useState('')
+  const [groupOptions, setGroupOptions] = useState<{ label: string; value: string }[]>([])
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
   const [jsonDraft, setJsonDraft] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
@@ -628,6 +684,56 @@ export default function Builder() {
       active = false
     }
   }, [])
+
+  useEffect(() => {
+    let active = true
+    async function loadReadableGroups() {
+      if (saveTarget !== 'project') return
+      try {
+        const domains = await TrustDeck.instance().getDomainsHierarchy()
+        if (active) setGroupOptions(flattenDomainsForOptions(domains ?? []))
+      } catch {
+        if (active) setGroupOptions([])
+      }
+    }
+    loadReadableGroups()
+    return () => {
+      active = false
+    }
+  }, [saveTarget])
+
+  useEffect(() => {
+    let active = true
+    async function loadSelectedBaseType() {
+      if (saveTarget !== 'project' || !selectedBaseType) return
+      setBaseTypeLoading(true)
+      try {
+        const base = (await TrustDeck.instance().getBaseType(selectedBaseType)) as any
+        if (!active) return
+        const baseAttributes = attributesFromPayload(base as EntityTypePayload).map(lockBaseAttribute)
+        setRootLayout((base.typeDefinition?.layout as LayoutValue) ?? 'group')
+        setAttributes((current) => [
+          ...baseAttributes,
+          ...current.filter((attribute) => !attribute.locked).map(unlockImportedAttribute)
+        ])
+      } catch {
+        if (active) {
+          showToast({
+            severity: 'error',
+            summary: t('toast.baseLoadFailedSummary'),
+            detail: t('toast.baseLoadFailedDetail'),
+            life: 4500
+          })
+        }
+      } finally {
+        if (active) setBaseTypeLoading(false)
+      }
+    }
+    loadSelectedBaseType()
+    return () => {
+      active = false
+    }
+  }, [saveTarget, selectedBaseType, showToast, t])
 
   const payload = useMemo<EntityTypePayload>(() => {
     const name = entityName.trim()
@@ -682,7 +788,8 @@ export default function Builder() {
     maxLength: source?.maxLength,
     values: source?.values,
     tags: source?.tags,
-    linkageConfig: source?.linkageConfig
+    linkageConfig: source?.linkageConfig,
+    locked: source?.locked ?? false
   })
 
   const newGroupAttribute = (): BuilderAttribute => ({
@@ -692,7 +799,8 @@ export default function Builder() {
     label_de: '',
     layout: 'group',
     repeatable: false,
-    attributes: []
+    attributes: [],
+    locked: false
   })
 
   const addAttribute = (source?: Partial<BuilderAttribute>) => {
@@ -732,6 +840,12 @@ export default function Builder() {
     )
   }
 
+  const addChildGroup = (groupKey: string) => {
+    setAttributes((current) =>
+      addChildAttributeByKey(current, groupKey, newGroupAttribute())
+    )
+  }
+
   const addPersonAttributes = () => {
     setAttributes((current) => [
       ...current,
@@ -743,9 +857,19 @@ export default function Builder() {
     if (!sourceKey || sourceKey === targetKey) return
     setAttributes((current) => {
       const extracted = extractAttribute(current, sourceKey)
-      if (!extracted.found) return current
+      if (!extracted.found || extracted.found.locked) return current
       if (containsKey(extracted.found, targetKey)) return current
       return insertBefore(extracted.next, targetKey, extracted.found)
+    })
+  }
+
+  const moveAfter = (sourceKey: string, targetKey: string) => {
+    if (!sourceKey || sourceKey === targetKey) return
+    setAttributes((current) => {
+      const extracted = extractAttribute(current, sourceKey)
+      if (!extracted.found || extracted.found.locked) return current
+      if (containsKey(extracted.found, targetKey)) return current
+      return insertAfter(extracted.next, targetKey, extracted.found)
     })
   }
 
@@ -753,7 +877,7 @@ export default function Builder() {
     if (!sourceKey || sourceKey === groupKey) return
     setAttributes((current) => {
       const extracted = extractAttribute(current, sourceKey)
-      if (!extracted.found) return current
+      if (!extracted.found || extracted.found.locked) return current
       if (containsKey(extracted.found, groupKey)) return current
       return appendToGroup(extracted.next, groupKey, extracted.found)
     })
@@ -780,7 +904,7 @@ export default function Builder() {
       )
       setSelectedBaseType(parsed.baseTypeName ?? selectedBaseType)
       setAssociatedGroupName(parsed.associatedDomainName ?? associatedGroupName)
-      setAttributes(attributesFromPayload(parsed))
+      setAttributes(attributesFromPayload(parsed).map(unlockImportedAttribute))
       setJsonDraft(prettyJson(parsed))
       setJsonDirty(false)
       setJsonError('')
@@ -986,6 +1110,7 @@ export default function Builder() {
     const pprl = config.pprl ?? defaultLinkageConfig(attribute.type).pprl ?? {}
     const privacyMode = config.privacyMode ?? 'pprl'
     const isCollapsed = Boolean(collapsedLinkageKeys[attribute.key])
+    const locked = Boolean(attribute.locked)
     return (
       <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
         <button
@@ -1024,6 +1149,7 @@ export default function Builder() {
                 ).join(', ')}
                 placeholder={t('linkageConfig.tagsPlaceholder')}
                 info={t('linkageConfigHelp.tags')}
+                disabled={locked}
                 onChange={(value) =>
                   updateAttribute(attribute.key, {
                     tags: value
@@ -1038,6 +1164,7 @@ export default function Builder() {
                 label={t('linkageConfig.privacyMode')}
                 value={privacyMode}
                 info={t('linkageConfigHelp.privacyMode')}
+                disabled={locked}
                 options={[
                   { label: 'PPRL', value: 'pprl' },
                   { label: t('linkageConfig.plain'), value: 'plain' }
@@ -1055,6 +1182,7 @@ export default function Builder() {
                 step="0.1"
                 value={String(config.weight ?? 1)}
                 info={t('linkageConfigHelp.weight')}
+                disabled={locked}
                 onChange={(value) =>
                   updateLinkageConfig(attribute, { weight: Number(value) })
                 }
@@ -1068,6 +1196,7 @@ export default function Builder() {
                 values={normalizerOptions}
                 selected={config.normalizers ?? []}
                 helpPrefix="normalizerHelp"
+                disabled={locked}
                 onChange={(value, checked) =>
                   setListValue(attribute, 'normalizers', value, checked)
                 }
@@ -1077,6 +1206,7 @@ export default function Builder() {
                 values={encoderOptions}
                 selected={config.encoders ?? []}
                 helpPrefix="encoderHelp"
+                disabled={locked}
                 onChange={(value, checked) =>
                   setListValue(attribute, 'encoders', value, checked)
                 }
@@ -1087,6 +1217,7 @@ export default function Builder() {
                   values={blockingOptions}
                   selected={config.blocking ?? []}
                   helpPrefix="blockingHelp"
+                  disabled={locked}
                   onChange={(value, checked) =>
                     setListValue(attribute, 'blocking', value, checked)
                   }
@@ -1104,6 +1235,7 @@ export default function Builder() {
                     label={t('linkageConfig.pprlMethod')}
                     value={pprl.method ?? 'ngramBloomFilter'}
                     info={t('linkageConfigHelp.pprlMethod')}
+                    disabled={locked}
                     options={pprlMethodOptions}
                     onChange={(value) =>
                       updatePprlConfig(attribute, {
@@ -1119,6 +1251,7 @@ export default function Builder() {
                         value={pprl.n ?? 2}
                         label={t('linkageConfig.ngramSize')}
                         info={t('linkageConfigHelp.ngramSize')}
+                        disabled={locked}
                         onChange={(value) =>
                           updatePprlConfig(attribute, { n: value })
                         }
@@ -1128,6 +1261,7 @@ export default function Builder() {
                         value={pprl.length ?? 1024}
                         label={t('linkageConfig.bloomLength')}
                         info={t('linkageConfigHelp.bloomLength')}
+                        disabled={locked}
                         onChange={(value) =>
                           updatePprlConfig(attribute, { length: value })
                         }
@@ -1137,6 +1271,7 @@ export default function Builder() {
                         value={pprl.hashPositions ?? 10}
                         label={t('linkageConfig.hashPositions')}
                         info={t('linkageConfigHelp.hashPositions')}
+                        disabled={locked}
                         onChange={(value) =>
                           updatePprlConfig(attribute, { hashPositions: value })
                         }
@@ -1146,6 +1281,7 @@ export default function Builder() {
                         value={pprl.bandSize ?? 32}
                         label={t('linkageConfig.bandSize')}
                         info={t('linkageConfigHelp.bandSize')}
+                        disabled={locked}
                         onChange={(value) =>
                           updatePprlConfig(attribute, { bandSize: value })
                         }
@@ -1172,6 +1308,10 @@ export default function Builder() {
     const showInsideDropLine =
       dropIndicator?.targetKey === attribute.key &&
       dropIndicator.position === 'inside'
+    const showAfterDropLine =
+      dropIndicator?.targetKey === attribute.key &&
+      dropIndicator.position === 'after'
+    const locked = Boolean(attribute.locked)
 
     return (
       <div key={attribute.key} className="space-y-2">
@@ -1179,8 +1319,12 @@ export default function Builder() {
           <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
         )}
         <div
-          draggable
+          draggable={!locked}
           onDragStart={(event) => {
+            if (locked) {
+              event.preventDefault()
+              return
+            }
             setDraggedAttributeKey(attribute.key)
             event.dataTransfer.effectAllowed = 'move'
             event.dataTransfer.setData('text/plain', attribute.key)
@@ -1192,7 +1336,9 @@ export default function Builder() {
           onDragOver={(event) => {
             if (draggedAttributeKey && draggedAttributeKey !== attribute.key) {
               event.preventDefault()
-              setDropIndicator({ targetKey: attribute.key, position: 'before' })
+              const rect = event.currentTarget.getBoundingClientRect()
+              const position = event.clientY > rect.top + rect.height / 2 ? 'after' : 'before'
+              setDropIndicator({ targetKey: attribute.key, position })
             }
           }}
           onDrop={(event) => {
@@ -1200,26 +1346,35 @@ export default function Builder() {
             event.stopPropagation()
             const source =
               event.dataTransfer.getData('text/plain') || draggedAttributeKey
-            if (source) moveBefore(source, attribute.key)
+            if (source) {
+              if (dropIndicator?.targetKey === attribute.key && dropIndicator.position === 'after') moveAfter(source, attribute.key)
+              else moveBefore(source, attribute.key)
+            }
             setDraggedAttributeKey(null)
             setDropIndicator(null)
           }}
-          className={`rounded-xl border border-gray-200 bg-gray-50 p-4 transition dark:border-slate-700 dark:bg-slate-900 ${depth ? 'ml-4' : ''} ${draggedAttributeKey === attribute.key ? 'opacity-60' : ''} ${showInsideDropLine ? 'ring-2 ring-color-blue ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''}`}
+          className={`rounded-xl border border-gray-200 bg-gray-50 p-4 transition dark:border-slate-700 dark:bg-slate-900 ${depth ? 'ml-4' : ''} ${locked ? 'bg-gray-100 opacity-80 dark:bg-slate-800' : ''} ${draggedAttributeKey === attribute.key ? 'opacity-60' : ''} ${showInsideDropLine ? 'ring-2 ring-color-blue ring-offset-2 ring-offset-white dark:ring-offset-slate-900' : ''}`}
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="inline-flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <ArrowsUpDownIcon className="h-4 w-4 cursor-move text-gray-400" />
+              <ArrowsUpDownIcon className={`h-4 w-4 ${locked ? 'cursor-not-allowed text-gray-300' : 'cursor-move text-gray-400'}`} />
               {attribute.label_en ||
                 attribute.name ||
                 (isGroup ? t('newGroup') : t('newAttribute'))}
             </h3>
-            <button
-              type="button"
-              onClick={() => removeAttribute(attribute.key)}
-              className="text-red-600 hover:text-red-800"
-            >
-              <TrashIcon className="h-5 w-5" />
-            </button>
+            {locked ? (
+              <span className="rounded-full bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-slate-700 dark:text-gray-300">
+                {t('baseAttributeLocked')}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => removeAttribute(attribute.key)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            )}
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
@@ -1229,6 +1384,7 @@ export default function Builder() {
               value={attribute.name}
               placeholder={t('attributeName')}
               onChange={(value) => handleAttributeNameChange(attribute, value)}
+              disabled={locked}
             />
             <FloatingTextInput
               id={`attribute-label-en-${attribute.key}`}
@@ -1238,6 +1394,7 @@ export default function Builder() {
               onChange={(value) =>
                 updateAttribute(attribute.key, { label_en: value })
               }
+              disabled={locked}
             />
             <FloatingTextInput
               id={`attribute-label-de-${attribute.key}`}
@@ -1247,6 +1404,7 @@ export default function Builder() {
               onChange={(value) =>
                 updateAttribute(attribute.key, { label_de: value })
               }
+              disabled={locked}
             />
             {isGroup ? (
               <CustomDropdown
@@ -1257,6 +1415,7 @@ export default function Builder() {
                 }
                 options={layoutOptions}
                 placeholder={t('layout.label')}
+                disabled={locked}
               />
             ) : (
               <CustomDropdown
@@ -1272,6 +1431,7 @@ export default function Builder() {
                 }
                 options={typeOptions}
                 placeholder={t('attributeType')}
+                disabled={locked}
               />
             )}
           </div>
@@ -1282,6 +1442,7 @@ export default function Builder() {
                 <input
                   type="checkbox"
                   checked={Boolean(attribute.repeatable)}
+                  disabled={locked}
                   onChange={(e) =>
                     updateAttribute(attribute.key, {
                       repeatable: e.target.checked
@@ -1296,6 +1457,7 @@ export default function Builder() {
                   <input
                     type="checkbox"
                     checked={Boolean(attribute[flag])}
+                    disabled={locked}
                     onChange={(e) => {
                       const checked = e.target.checked
                       updateAttribute(attribute.key, {
@@ -1324,9 +1486,10 @@ export default function Builder() {
 
           {!isGroup && attribute.type === 'enum' && (
             <input
-              className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+              className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
               value={(attribute.values ?? []).join(', ')}
               placeholder={t('dropdownValuesCommaSeparated')}
+              disabled={locked}
               onChange={(e) =>
                 updateAttribute(attribute.key, {
                   values: e.target.value.split(',').map((v) => v.trim())
@@ -1362,10 +1525,14 @@ export default function Builder() {
                 setDropIndicator(null)
               }}
             >
-              <div className="flex justify-start">
+              <div className="flex flex-wrap justify-start gap-2">
                 <PrimaryOutlinedButton
                   label={t('addNestedAttribute')}
                   onClick={() => addChildAttribute(attribute.key)}
+                />
+                <PrimaryOutlinedButton
+                  label={t('addNestedSection')}
+                  onClick={() => addChildGroup(attribute.key)}
                 />
               </div>
               {showInsideDropLine && (
@@ -1383,6 +1550,9 @@ export default function Builder() {
             </div>
           )}
         </div>
+        {showAfterDropLine && (
+          <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
+        )}
       </div>
     )
   }
@@ -1420,15 +1590,16 @@ export default function Builder() {
               onChange={(e) => setRootLayout(e.value)}
               options={layoutOptions}
               placeholder={t('layout.root')}
+              disabled={saveTarget === 'project' && Boolean(selectedBaseType)}
             />
             {saveTarget === 'project' && (
-              <CustomFloatLabel
+              <GroupSearchInput
                 id="associatedGroupName"
                 value={associatedGroupName}
-                placeholder={t('associatedGroupName')}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setAssociatedGroupName(e.target.value)
-                }
+                label={t('associatedGroupName')}
+                placeholder={t('associatedGroupNamePlaceholder')}
+                options={groupOptions}
+                onChange={setAssociatedGroupName}
               />
             )}
           </div>
@@ -1478,6 +1649,11 @@ export default function Builder() {
                 options={baseTypeOptions}
                 placeholder={t('baseType', 'Base type')}
               />
+              {baseTypeLoading && (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                  {t('loadingBaseType')}
+                </p>
+              )}
               {baseTypeOptions.length === 0 && (
                 <p className="mt-2 text-sm text-amber-700">
                   {t('noBaseTypesHint')}
@@ -1662,19 +1838,22 @@ function FloatingTextInput({
   label,
   value,
   onChange,
-  placeholder
+  placeholder,
+  disabled = false
 }: {
   id: string
   label: string
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  disabled?: boolean
 }) {
   return (
     <div className="relative">
       <input
         id={id}
-        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
+        disabled={disabled}
         value={value}
         placeholder={placeholder ?? ''}
         onChange={(event) => onChange(event.target.value)}
@@ -1719,7 +1898,8 @@ function InputWithInfo({
   info,
   placeholder,
   type = 'text',
-  step
+  step,
+  disabled = false
 }: {
   id: string
   label: string
@@ -1729,12 +1909,14 @@ function InputWithInfo({
   placeholder?: string
   type?: string
   step?: string
+  disabled?: boolean
 }) {
   return (
     <div className="relative">
       <input
         id={id}
-        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 pr-10 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 pr-10 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
+        disabled={disabled}
         type={type}
         step={step}
         value={value}
@@ -1758,7 +1940,8 @@ function DropdownWithInfo({
   value,
   options,
   onChange,
-  info
+  info,
+  disabled = false
 }: {
   id: string
   label: string
@@ -1766,6 +1949,7 @@ function DropdownWithInfo({
   options: { label: string; value: string }[]
   onChange: (value: string) => void
   info: string
+  disabled?: boolean
 }) {
   return (
     <div className="td-dropdown-with-info relative">
@@ -1775,6 +1959,7 @@ function DropdownWithInfo({
         onChange={(event) => onChange(event.value)}
         options={options}
         placeholder={label}
+        disabled={disabled}
       />
       <span
         title={info}
@@ -1786,18 +1971,76 @@ function DropdownWithInfo({
   )
 }
 
+function GroupSearchInput({
+  id,
+  value,
+  label,
+  placeholder,
+  options,
+  onChange
+}: {
+  id: string
+  value: string
+  label: string
+  placeholder: string
+  options: { label: string; value: string }[]
+  onChange: (value: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const filtered = options
+    .filter((option) =>
+      option.label.toLowerCase().includes(value.trim().toLowerCase())
+    )
+    .slice(0, 12)
+
+  return (
+    <div className="relative">
+      <FloatingTextInput
+        id={id}
+        label={label}
+        value={value}
+        placeholder={placeholder}
+        onChange={(next) => {
+          onChange(next)
+          setOpen(true)
+        }}
+      />
+      {open && filtered.length > 0 && (
+        <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          {filtered.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-sm text-gray-800 hover:bg-blue-50 dark:text-gray-100 dark:hover:bg-blue-950/40"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                onChange(option.value)
+                setOpen(false)
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NumberInput({
   id,
   value,
   label,
   info,
-  onChange
+  onChange,
+  disabled = false
 }: {
   id: string
   value: number
   label: string
   info: string
   onChange: (value: number) => void
+  disabled?: boolean
 }) {
   return (
     <InputWithInfo
@@ -1806,6 +2049,7 @@ function NumberInput({
       info={info}
       type="number"
       value={String(value)}
+      disabled={disabled}
       onChange={(value) => onChange(Number(value))}
     />
   )
@@ -1816,13 +2060,15 @@ function MultiCheck({
   values,
   selected,
   helpPrefix,
-  onChange
+  onChange,
+  disabled = false
 }: {
   title: string
   values: string[]
   selected: string[]
   helpPrefix: string
   onChange: (value: string, checked: boolean) => void
+  disabled?: boolean
 }) {
   const { t } = useTranslation(['entityBuilder'])
   return (
@@ -1839,6 +2085,7 @@ function MultiCheck({
             <input
               type="checkbox"
               checked={selected.includes(value)}
+              disabled={disabled}
               onChange={(event) => onChange(value, event.target.checked)}
             />
             <span className="min-w-0 flex-1 truncate">{value}</span>

@@ -91,7 +91,9 @@
     "invalidAttributesSummary": "Ungültige Attribute",
     "invalidAttributesDetail": "Jedes Nicht-Gruppen-Attribut benötigt einen Attributnamen und einen Typ. Leere Gruppen benötigen vor dem Speichern mindestens ein verschachteltes Attribut.",
     "invalidDefinitionDetail": "Das Backend hat die Entitätstyp-Definition abgelehnt. Prüfen Sie, ob alle erforderlichen Attribute Namen/Typen haben und verschachtelte Gruppen Attribute enthalten.",
-    "jsonFileReadFailed": "Die ausgewählte JSON-Datei konnte nicht gelesen werden."
+    "jsonFileReadFailed": "Die ausgewählte JSON-Datei konnte nicht gelesen werden.",
+    "baseLoadFailedSummary": "Basistyp konnte nicht geladen werden",
+    "baseLoadFailedDetail": "Der ausgewählte Basistyp konnte nicht geladen werden. Bitte wählen Sie einen anderen Basistyp oder versuchen Sie es erneut."
   },
   "loadingEntityTypes": "Entitätstypen werden geladen...",
   "noEntityTypesTitle": "Noch keine Entitätstypen konfiguriert",
@@ -173,7 +175,7 @@
     "pprlMethod": "n-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
     "ngramSize": "Anzahl der Zeichen pro n-Gramm vor der Bloom-Filter-Kodierung. Für Namen ist 2 ein üblicher Wert.",
     "bloomLength": "Länge des Bloom-Filter-Bitarrays. Größere Werte reduzieren Kollisionen, benötigen aber mehr Speicher.",
-    "hashPositions": "Anzahl der aus Hashwerten abgeleiteten Bloom-Filter-Positionen, die pro n-Gramm gesetzt werden. Höhere Werte können ähnliche Werte leichter auffindbar machen, erhöhen aber auch die Wahrscheinlichkeit, dass sich nicht zusammengehörige Werte überlappen. Standard: 10.",
+    "hashPositions": "Anzahl hash-abgeleiteter Bloom-Filter-Positionen, die pro n-Gramm gesetzt werden. Höhere Werte können ähnliche Werte leichter vergleichbar machen, können aber auch die Wahrscheinlichkeit erhöhen, dass sich nicht zusammengehörige Werte überschneiden. Standard: 10.",
     "bandSize": "Größe für bandbasierte Kandidatengenerierung oder Indizierung von Bloom-Filtern. Verwenden Sie den Backend-Standard, wenn keine Anpassung nötig ist."
   },
   "normalizerHelp": {
@@ -200,5 +202,9 @@
     "domainExact": "Verwendet einen domänenspezifischen exakten Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
-  "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu."
+  "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu.",
+  "associatedGroupNamePlaceholder": "Lesbare Gruppe suchen und auswählen",
+  "loadingBaseType": "Ausgewählter Basistyp wird geladen...",
+  "addNestedSection": "Verschachtelten Abschnitt hinzufügen",
+  "baseAttributeLocked": "Basisattribut"
 }

@@ -208,9 +208,17 @@
 }
 
 .td-dropdown-with-info .p-dropdown-label {
-  padding-right: 4.5rem !important;
+  max-width: calc(100% - 5.75rem) !important;
+  overflow: hidden !important;
+  padding-right: 5.75rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
 }
 
 .td-dropdown-with-info .p-dropdown-trigger {
-  width: 2.5rem !important;
+  width: 2.75rem !important;
+}
+
+.td-dropdown-with-info .p-dropdown {
+  position: relative !important;
 }

@@ -91,7 +91,9 @@
     "invalidAttributesSummary": "Invalid attributes",
     "invalidAttributesDetail": "Each non-group attribute needs an attribute name and type. Empty groups need at least one nested attribute before saving.",
     "invalidDefinitionDetail": "The backend rejected the entity type definition. Please check that all required attributes have names/types and that nested groups contain attributes.",
-    "jsonFileReadFailed": "The selected JSON file could not be read."
+    "jsonFileReadFailed": "The selected JSON file could not be read.",
+    "baseLoadFailedSummary": "Base type could not be loaded",
+    "baseLoadFailedDetail": "The selected base type could not be loaded. Please select another base type or try again."
   },
   "loadingEntityTypes": "Loading entity types...",
   "noEntityTypesTitle": "No entity types configured yet",
@@ -200,5 +202,9 @@
     "domainExact": "Uses a domain-specific exact blocking key."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
-  "addMoreAttributesHint": "Add more attributes or sections to the definition."
+  "addMoreAttributesHint": "Add more attributes or sections to the definition.",
+  "associatedGroupNamePlaceholder": "Search and select a readable group",
+  "loadingBaseType": "Loading selected base type...",
+  "addNestedSection": "Add nested section",
+  "baseAttributeLocked": "Base attribute"
 }

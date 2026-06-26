@@ -5,6 +5,8 @@ import {
   ArrowLeftIcon,
   ArrowDownTrayIcon,
   ArrowsUpDownIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   CodeBracketIcon,
   InformationCircleIcon,
   PlusIcon,
@@ -590,6 +592,9 @@ export default function Builder() {
     null
   )
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null)
+  const [collapsedLinkageKeys, setCollapsedLinkageKeys] = useState<
+    Record<string, boolean>
+  >({})
 
   useEffect(() => {
     let active = true
@@ -980,150 +985,176 @@ export default function Builder() {
       attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)
     const pprl = config.pprl ?? defaultLinkageConfig(attribute.type).pprl ?? {}
     const privacyMode = config.privacyMode ?? 'pprl'
+    const isCollapsed = Boolean(collapsedLinkageKeys[attribute.key])
     return (
-      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
-        <h4 className="font-semibold text-color-blue dark:text-blue-100">
-          {t('linkageConfig.title')}
-        </h4>
-        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-          {t('linkageConfig.description')}
-        </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <InputWithInfo
-            id={`tags-${attribute.key}`}
-            label={t('linkageConfig.tags')}
-            value={(attribute.tags?.length
-              ? attribute.tags
-              : [buildDefaultTag(entityName, attribute.name)]
-            ).join(', ')}
-            placeholder={t('linkageConfig.tagsPlaceholder')}
-            info={t('linkageConfigHelp.tags')}
-            onChange={(value) =>
-              updateAttribute(attribute.key, {
-                tags: value
-                  .split(',')
-                  .map((item) => item.trim())
-                  .filter(Boolean)
-              })
-            }
-          />
-          <DropdownWithInfo
-            id={`privacy-${attribute.key}`}
-            label={t('linkageConfig.privacyMode')}
-            value={privacyMode}
-            info={t('linkageConfigHelp.privacyMode')}
-            options={[
-              { label: 'PPRL', value: 'pprl' },
-              { label: t('linkageConfig.plain'), value: 'plain' }
-            ]}
-            onChange={(value) =>
-              updateLinkageConfig(attribute, {
-                privacyMode: value as PrivacyMode
-              })
-            }
-          />
-          <InputWithInfo
-            id={`weight-${attribute.key}`}
-            label={t('linkageConfig.weight')}
-            type="number"
-            step="0.1"
-            value={String(config.weight ?? 1)}
-            info={t('linkageConfigHelp.weight')}
-            onChange={(value) =>
-              updateLinkageConfig(attribute, { weight: Number(value) })
-            }
-          />
-        </div>
-        <div
-          className={`mt-4 grid gap-4 ${privacyMode === 'pprl' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 rounded-t-xl px-4 py-3 text-left hover:bg-blue-100/60 dark:hover:bg-blue-900/30"
+          onClick={() =>
+            setCollapsedLinkageKeys((current) => ({
+              ...current,
+              [attribute.key]: !isCollapsed
+            }))
+          }
         >
-          <MultiCheck
-            title={t('linkageConfig.normalizers')}
-            values={normalizerOptions}
-            selected={config.normalizers ?? []}
-            helpPrefix="normalizerHelp"
-            onChange={(value, checked) =>
-              setListValue(attribute, 'normalizers', value, checked)
-            }
-          />
-          <MultiCheck
-            title={t('linkageConfig.encoders')}
-            values={encoderOptions}
-            selected={config.encoders ?? []}
-            helpPrefix="encoderHelp"
-            onChange={(value, checked) =>
-              setListValue(attribute, 'encoders', value, checked)
-            }
-          />
-          {privacyMode !== 'pprl' && (
-            <MultiCheck
-              title={t('linkageConfig.blocking')}
-              values={blockingOptions}
-              selected={config.blocking ?? []}
-              helpPrefix="blockingHelp"
-              onChange={(value, checked) =>
-                setListValue(attribute, 'blocking', value, checked)
-              }
-            />
+          <span>
+            <span className="block font-semibold text-color-blue dark:text-blue-100">
+              {t('linkageConfig.title')}
+            </span>
+            <span className="mt-1 block text-sm font-normal text-gray-600 dark:text-gray-300">
+              {t('linkageConfig.description')}
+            </span>
+          </span>
+          {isCollapsed ? (
+            <ChevronRightIcon className="h-5 w-5 flex-none text-color-blue dark:text-blue-100" />
+          ) : (
+            <ChevronDownIcon className="h-5 w-5 flex-none text-color-blue dark:text-blue-100" />
           )}
-        </div>
-        {privacyMode === 'pprl' && (
-          <div className="mt-4 rounded-lg border border-blue-200 bg-white p-3 dark:border-blue-900 dark:bg-slate-950">
-            <h5 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-              {t('linkageConfig.pprlSettings')}
-            </h5>
+        </button>
+        {isCollapsed ? null : (
+          <div className="px-4 pb-4">
             <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <DropdownWithInfo
-                id={`pprl-method-${attribute.key}`}
-                label={t('linkageConfig.pprlMethod')}
-                value={pprl.method ?? 'ngramBloomFilter'}
-                info={t('linkageConfigHelp.pprlMethod')}
-                options={pprlMethodOptions}
+              <InputWithInfo
+                id={`tags-${attribute.key}`}
+                label={t('linkageConfig.tags')}
+                value={(attribute.tags?.length
+                  ? attribute.tags
+                  : [buildDefaultTag(entityName, attribute.name)]
+                ).join(', ')}
+                placeholder={t('linkageConfig.tagsPlaceholder')}
+                info={t('linkageConfigHelp.tags')}
                 onChange={(value) =>
-                  updatePprlConfig(attribute, { method: value as PprlMethod })
+                  updateAttribute(attribute.key, {
+                    tags: value
+                      .split(',')
+                      .map((item) => item.trim())
+                      .filter(Boolean)
+                  })
                 }
               />
-              {(pprl.method ?? 'ngramBloomFilter') === 'ngramBloomFilter' && (
-                <>
-                  <NumberInput
-                    id={`n-${attribute.key}`}
-                    value={pprl.n ?? 2}
-                    label={t('linkageConfig.ngramSize')}
-                    info={t('linkageConfigHelp.ngramSize')}
-                    onChange={(value) =>
-                      updatePprlConfig(attribute, { n: value })
-                    }
-                  />
-                  <NumberInput
-                    id={`length-${attribute.key}`}
-                    value={pprl.length ?? 1024}
-                    label={t('linkageConfig.bloomLength')}
-                    info={t('linkageConfigHelp.bloomLength')}
-                    onChange={(value) =>
-                      updatePprlConfig(attribute, { length: value })
-                    }
-                  />
-                  <NumberInput
-                    id={`hash-${attribute.key}`}
-                    value={pprl.hashPositions ?? 10}
-                    label={t('linkageConfig.hashPositions')}
-                    info={t('linkageConfigHelp.hashPositions')}
-                    onChange={(value) =>
-                      updatePprlConfig(attribute, { hashPositions: value })
-                    }
-                  />
-                  <NumberInput
-                    id={`band-${attribute.key}`}
-                    value={pprl.bandSize ?? 32}
-                    label={t('linkageConfig.bandSize')}
-                    info={t('linkageConfigHelp.bandSize')}
-                    onChange={(value) =>
-                      updatePprlConfig(attribute, { bandSize: value })
-                    }
-                  />
-                </>
+              <DropdownWithInfo
+                id={`privacy-${attribute.key}`}
+                label={t('linkageConfig.privacyMode')}
+                value={privacyMode}
+                info={t('linkageConfigHelp.privacyMode')}
+                options={[
+                  { label: 'PPRL', value: 'pprl' },
+                  { label: t('linkageConfig.plain'), value: 'plain' }
+                ]}
+                onChange={(value) =>
+                  updateLinkageConfig(attribute, {
+                    privacyMode: value as PrivacyMode
+                  })
+                }
+              />
+              <InputWithInfo
+                id={`weight-${attribute.key}`}
+                label={t('linkageConfig.weight')}
+                type="number"
+                step="0.1"
+                value={String(config.weight ?? 1)}
+                info={t('linkageConfigHelp.weight')}
+                onChange={(value) =>
+                  updateLinkageConfig(attribute, { weight: Number(value) })
+                }
+              />
+            </div>
+            <div
+              className={`mt-4 grid gap-4 ${privacyMode === 'pprl' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}
+            >
+              <MultiCheck
+                title={t('linkageConfig.normalizers')}
+                values={normalizerOptions}
+                selected={config.normalizers ?? []}
+                helpPrefix="normalizerHelp"
+                onChange={(value, checked) =>
+                  setListValue(attribute, 'normalizers', value, checked)
+                }
+              />
+              <MultiCheck
+                title={t('linkageConfig.encoders')}
+                values={encoderOptions}
+                selected={config.encoders ?? []}
+                helpPrefix="encoderHelp"
+                onChange={(value, checked) =>
+                  setListValue(attribute, 'encoders', value, checked)
+                }
+              />
+              {privacyMode !== 'pprl' && (
+                <MultiCheck
+                  title={t('linkageConfig.blocking')}
+                  values={blockingOptions}
+                  selected={config.blocking ?? []}
+                  helpPrefix="blockingHelp"
+                  onChange={(value, checked) =>
+                    setListValue(attribute, 'blocking', value, checked)
+                  }
+                />
               )}
             </div>
+            {privacyMode === 'pprl' && (
+              <div className="mt-4 rounded-lg border border-blue-200 bg-white p-3 dark:border-blue-900 dark:bg-slate-950">
+                <h5 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
+                  {t('linkageConfig.pprlSettings')}
+                </h5>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <DropdownWithInfo
+                    id={`pprl-method-${attribute.key}`}
+                    label={t('linkageConfig.pprlMethod')}
+                    value={pprl.method ?? 'ngramBloomFilter'}
+                    info={t('linkageConfigHelp.pprlMethod')}
+                    options={pprlMethodOptions}
+                    onChange={(value) =>
+                      updatePprlConfig(attribute, {
+                        method: value as PprlMethod
+                      })
+                    }
+                  />
+                  {(pprl.method ?? 'ngramBloomFilter') ===
+                    'ngramBloomFilter' && (
+                    <>
+                      <NumberInput
+                        id={`n-${attribute.key}`}
+                        value={pprl.n ?? 2}
+                        label={t('linkageConfig.ngramSize')}
+                        info={t('linkageConfigHelp.ngramSize')}
+                        onChange={(value) =>
+                          updatePprlConfig(attribute, { n: value })
+                        }
+                      />
+                      <NumberInput
+                        id={`length-${attribute.key}`}
+                        value={pprl.length ?? 1024}
+                        label={t('linkageConfig.bloomLength')}
+                        info={t('linkageConfigHelp.bloomLength')}
+                        onChange={(value) =>
+                          updatePprlConfig(attribute, { length: value })
+                        }
+                      />
+                      <NumberInput
+                        id={`hash-${attribute.key}`}
+                        value={pprl.hashPositions ?? 10}
+                        label={t('linkageConfig.hashPositions')}
+                        info={t('linkageConfigHelp.hashPositions')}
+                        onChange={(value) =>
+                          updatePprlConfig(attribute, { hashPositions: value })
+                        }
+                      />
+                      <NumberInput
+                        id={`band-${attribute.key}`}
+                        value={pprl.bandSize ?? 32}
+                        label={t('linkageConfig.bandSize')}
+                        info={t('linkageConfigHelp.bandSize')}
+                        onChange={(value) =>
+                          updatePprlConfig(attribute, { bandSize: value })
+                        }
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1192,28 +1223,29 @@ export default function Builder() {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <input
-              className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+            <FloatingTextInput
+              id={`attribute-name-${attribute.key}`}
+              label={t('attributeName')}
               value={attribute.name}
               placeholder={t('attributeName')}
-              onChange={(e) =>
-                handleAttributeNameChange(attribute, e.target.value)
-              }
+              onChange={(value) => handleAttributeNameChange(attribute, value)}
             />
-            <input
-              className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+            <FloatingTextInput
+              id={`attribute-label-en-${attribute.key}`}
+              label={t('englishLabel')}
               value={attribute.label_en ?? ''}
               placeholder={t('englishLabel')}
-              onChange={(e) =>
-                updateAttribute(attribute.key, { label_en: e.target.value })
+              onChange={(value) =>
+                updateAttribute(attribute.key, { label_en: value })
               }
             />
-            <input
-              className="rounded-lg border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+            <FloatingTextInput
+              id={`attribute-label-de-${attribute.key}`}
+              label={t('germanLabel')}
               value={attribute.label_de ?? ''}
               placeholder={t('germanLabel')}
-              onChange={(e) =>
-                updateAttribute(attribute.key, { label_de: e.target.value })
+              onChange={(value) =>
+                updateAttribute(attribute.key, { label_de: value })
               }
             />
             {isGroup ? (
@@ -1356,8 +1388,8 @@ export default function Builder() {
   }
 
   return (
-    <div className="w-full flex justify-center">
-      <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="builder-page-shell w-full">
+      <div className="builder-content-column mx-auto w-full max-w-5xl space-y-6">
         <div className="w-full">
           <PrimaryOutlinedButton
             label={t('common:back', 'Back')}
@@ -1369,7 +1401,7 @@ export default function Builder() {
 
         <Panel
           title={t('entityBuilder:createEntityType')}
-          className="w-full"
+          className="!w-full"
           noMaxWidth
         >
           <div className="mt-7 grid gap-4 md:grid-cols-2">
@@ -1466,7 +1498,7 @@ export default function Builder() {
 
         <Panel
           title={t('entityBuilder:visualPreview')}
-          className="w-full"
+          className="!w-full"
           noMaxWidth
         >
           <div className="mt-7 mb-4 flex flex-wrap gap-2">
@@ -1625,6 +1657,38 @@ export default function Builder() {
   )
 }
 
+function FloatingTextInput({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}) {
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+        value={value}
+        placeholder={placeholder ?? ''}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      <label
+        htmlFor={id}
+        className="absolute -top-2 left-3 bg-white px-1 text-sm text-gray-500 dark:bg-slate-950 dark:text-gray-300"
+      >
+        {label}
+      </label>
+    </div>
+  )
+}
+
 function InfoIcon({ title }: { title: string }) {
   return (
     <span
@@ -1704,7 +1768,7 @@ function DropdownWithInfo({
   info: string
 }) {
   return (
-    <div className="relative">
+    <div className="td-dropdown-with-info relative">
       <CustomDropdown
         id={id}
         value={value}
@@ -1714,7 +1778,7 @@ function DropdownWithInfo({
       />
       <span
         title={info}
-        className="absolute right-10 top-1/2 z-20 -translate-y-1/2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+        className="pointer-events-auto absolute right-12 top-1/2 z-20 -translate-y-1/2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
       >
         <InformationCircleIcon className="h-5 w-5" />
       </span>

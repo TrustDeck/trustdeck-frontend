@@ -173,7 +173,7 @@
     "pprlMethod": "n-gram Bloom Filter encodes approximate string similarity. HMAC-based exact matching supports exact equality without storing the clear value.",
     "ngramSize": "Number of characters per n-gram before Bloom-filter encoding. A value of 2 is common for names.",
     "bloomLength": "Length of the Bloom filter bit array. Larger values reduce collisions but increase storage size.",
-    "hashPositions": "Number of independent hash positions set in the Bloom filter for each encoded token. Too few positions make different values look too similar; too many positions fill the filter and increase false matches. Keep the backend default unless you have tested different values.",
+    "hashPositions": "Number of hash-derived Bloom-filter positions set for each n-gram. Higher values can make similar values easier to match, but may also increase the chance of unrelated values overlapping. Default: 10.",
     "bandSize": "Size used for banded candidate generation or indexing of Bloom filters. Use the backend default unless you have a reason to tune it."
   },
   "normalizerHelp": {
@@ -186,8 +186,8 @@
     "digitsOnly": "Keeps digits only, useful for postal codes or phone-like identifiers."
   },
   "encoderHelp": {
-    "cologne": "Applies the Cologne phonetic encoder for German-language phonetic matching.",
-    "doubleMetaphone": "Applies Double Metaphone phonetic encoding for approximate pronunciation matching."
+    "cologne": "Cologne phonetic encoding; mainly useful for German-language names and German pronunciation patterns.",
+    "doubleMetaphone": "Double Metaphone phonetic encoding; mainly useful for English-language names and many international pronunciation variants."
   },
   "blockingHelp": {
     "exact": "Uses the normalized value itself as a blocking key.",
@@ -200,5 +200,5 @@
     "domainExact": "Uses a domain-specific exact blocking key."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
-  "addMoreAttributesHint": "Add more attributes or sections at the end of the definition."
+  "addMoreAttributesHint": "Add more attributes or sections to the definition."
 }

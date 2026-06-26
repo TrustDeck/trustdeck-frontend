@@ -123,12 +123,12 @@ export default function EntityManager() {
   }
 
   return (
-    <div className="flex w-full justify-center">
-      <div className="mx-auto flex w-full max-w-5xl flex-col items-center text-center">
+    <div className="builder-page-shell w-full">
+      <div className="builder-content-column mx-auto flex w-full flex-col items-center text-center">
         <Panel
           centered
           noMaxWidth
-          className="mx-auto w-full"
+          className="mx-auto !w-full"
           title={t(
             'entityBuilder:entitiesInProject',
             'Entities in this project'

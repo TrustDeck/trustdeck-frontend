@@ -1,6 +1,7 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
-@import 'primereact/resources/themes/lara-light-blue/theme.css' layer(primereact);
+@import 'primereact/resources/themes/lara-light-blue/theme.css'
+  layer(primereact);
 
 @layer tailwind-base {
   @tailwind base;
@@ -30,9 +31,8 @@
 
 @layer base {
   html {
-    @apply font-font-text
+    @apply font-font-text;
   }
-
 }
 
 @layer tailwind-utilities {
@@ -49,19 +49,21 @@
     @apply grid grid-cols-2 gap-5;
   }
 
-  @media (min-width: 640px) { /* sm breakpoint */
+  @media (min-width: 640px) {
+    /* sm breakpoint */
     .sm\:form-grid {
       @apply grid-cols-3;
     }
   }
 }
 
-.p-overlaypanel:after, .p-overlaypanel:before{
-  display:none!important; 
+.p-overlaypanel:after,
+.p-overlaypanel:before {
+  display: none !important;
 }
 
-.p-tabview-panels{
-  padding: 0px;;
+.p-tabview-panels {
+  padding: 0px;
 }
 
 .file-upload-button .p-button {
@@ -192,4 +194,23 @@
 /* PrimeReact calendar title spacing: month and year should not touch (e.g. "June 2026"). */
 .p-datepicker .p-datepicker-title .p-datepicker-month {
   margin-right: 0.35rem !important;
+}
+
+/* Entity Builder alignment and dropdown helper spacing. */
+.builder-page-shell {
+  display: flex;
+  justify-content: center;
+  padding-inline: clamp(1rem, 4vw, 4rem);
+}
+
+.builder-content-column {
+  width: min(100%, 58rem);
+}
+
+.td-dropdown-with-info .p-dropdown-label {
+  padding-right: 4.5rem !important;
+}
+
+.td-dropdown-with-info .p-dropdown-trigger {
+  width: 2.5rem !important;
 }

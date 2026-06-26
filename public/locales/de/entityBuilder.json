@@ -173,7 +173,7 @@
     "pprlMethod": "n-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
     "ngramSize": "Anzahl der Zeichen pro n-Gramm vor der Bloom-Filter-Kodierung. Für Namen ist 2 ein üblicher Wert.",
     "bloomLength": "Länge des Bloom-Filter-Bitarrays. Größere Werte reduzieren Kollisionen, benötigen aber mehr Speicher.",
-    "hashPositions": "Anzahl unabhängiger Hash-Positionen, die pro kodiertem Token im Bloom-Filter gesetzt werden. Zu wenige Positionen machen unterschiedliche Werte zu ähnlich; zu viele füllen den Filter und erhöhen Fehlmatches. Verwenden Sie den Backend-Standard, wenn keine getestete Anpassung vorliegt.",
+    "hashPositions": "Anzahl der aus Hashwerten abgeleiteten Bloom-Filter-Positionen, die pro n-Gramm gesetzt werden. Höhere Werte können ähnliche Werte leichter auffindbar machen, erhöhen aber auch die Wahrscheinlichkeit, dass sich nicht zusammengehörige Werte überlappen. Standard: 10.",
     "bandSize": "Größe für bandbasierte Kandidatengenerierung oder Indizierung von Bloom-Filtern. Verwenden Sie den Backend-Standard, wenn keine Anpassung nötig ist."
   },
   "normalizerHelp": {
@@ -186,8 +186,8 @@
     "digitsOnly": "Behält nur Ziffern bei, sinnvoll für Postleitzahlen oder telefonnummernartige Kennungen."
   },
   "encoderHelp": {
-    "cologne": "Verwendet die Kölner Phonetik für deutschsprachige phonetische Vergleiche.",
-    "doubleMetaphone": "Verwendet Double Metaphone für ungefähre Aussprachevergleiche."
+    "cologne": "Kölner Phonetik; hauptsächlich für deutschsprachige Namen und deutsche Aussprachemuster geeignet.",
+    "doubleMetaphone": "Double-Metaphone-Kodierung; hauptsächlich für englischsprachige Namen und viele internationale Aussprachevarianten geeignet."
   },
   "blockingHelp": {
     "exact": "Verwendet den normalisierten Wert selbst als Blocking-Schlüssel.",
@@ -200,5 +200,5 @@
     "domainExact": "Verwendet einen domänenspezifischen exakten Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
-  "addMoreAttributesHint": "Fügen Sie am Ende der Definition weitere Attribute oder Abschnitte hinzu."
+  "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu."
 }

@@ -19,7 +19,8 @@ import {
   ShieldCheckIcon,
   FolderPlusIcon,
   FolderIcon,
-  CubeTransparentIcon
+  CubeTransparentIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline'
 import PseudonymDetails from '../../pages/search/PseudonymDetails'
 import Registration from '../../pages/identity/Registration'
@@ -31,6 +32,7 @@ import GlobalPermissions from '../../pages/projects/GlobalPermissions'
 import PermissionsRedirect from '../../pages/projects/PermissionsRedirect'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
+import BaseTypeManager from '../../pages/builder/BaseTypeManager'
 
 export type RouteConfig = {
   path: string
@@ -40,6 +42,8 @@ export type RouteConfig = {
   isProtected: boolean
   isSidebar: boolean
   sideboardOrder?: number
+  isNonProject?: boolean
+  requiresBaseTypeAccess?: boolean
 }
 
 export const routes: RouteConfig[] = [
@@ -93,7 +97,19 @@ export const routes: RouteConfig[] = [
     Icon: ShieldCheckIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 6
+    sideboardOrder: 8,
+    isNonProject: true
+  },
+  {
+    path: '/base-types',
+    titleKey: 'layout:menu.baseTypeManagement',
+    component: BaseTypeManager,
+    Icon: WrenchScrewdriverIcon,
+    isProtected: true,
+    isSidebar: true,
+    sideboardOrder: 7,
+    isNonProject: true,
+    requiresBaseTypeAccess: true
   },
   {
     path: '/projects/global-permissions',
@@ -105,7 +121,7 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/entity/manager',
-    titleKey: 'layout:menu.entityManager',
+    titleKey: 'layout:menu.entityManagement',
     component: EntityManager,
     Icon: CubeTransparentIcon,
     isProtected: true,

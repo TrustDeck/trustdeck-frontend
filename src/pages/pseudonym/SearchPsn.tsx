@@ -23,9 +23,9 @@ import { ArrowUpIcon } from '@heroicons/react/24/outline'
 
 export default function SearchPsn() {
   const { results, clearResults } = useSearchResultsStore()
-  const { stepperRef, setStepperRef, previousStep } = useStepperControlStore()
+  const { stepperRef, setStepperRef, previousStep, setCurrentStep } = useStepperControlStore()
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
-  const { selectedEntityId } = useSelectedEntityStore()
+  const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { setPseudonymValue } = usePseudonymStore()
@@ -46,10 +46,12 @@ export default function SearchPsn() {
 
   async function handleClick() {
     const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
+    const identifier = selectedEntityId.identifier || crypto.randomUUID()
+    const idType = selectedEntityId.identifierType || 'standalone-pseudonym'
     const payload = {
       identifierItem: {
-        "identifier": selectedEntityId.identifier.toString(),
-        "idType": selectedEntityId.identifierType
+        "identifier": identifier.toString(),
+        "idType": idType
       }
     }
     try {
@@ -87,6 +89,15 @@ export default function SearchPsn() {
     }
   }
 
+  function handleStandalonePseudonym() {
+    setSelectedEntityId({
+      identifier: crypto.randomUUID(),
+      identifierType: 'standalone-pseudonym'
+    })
+    stepperRef.current?.setActiveStep?.(2)
+    setCurrentStep(3)
+  }
+
   // Typ-sicherer Change-Handler für TreeSelect/CustomTreeSelect
   const handleGroupChange = (e: any) => {
     setSelectedGroup(e.value)
@@ -100,6 +111,15 @@ export default function SearchPsn() {
           {/* Step 1 - Search */}
           <StepperPanel header={t('pseudonyms:headers.stepone')}>
             <SearchMask psn />
+            <div className="mt-6 rounded-lg border border-dashed border-gray-300 p-4 text-center dark:border-slate-700">
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
+                {t('pseudonyms:standalone.description')}
+              </p>
+              <PrimaryOutlinedButton
+                label={t('pseudonyms:buttons.generateStandalone')}
+                onClick={handleStandalonePseudonym}
+              />
+            </div>
           </StepperPanel>
 
           {/* Step 2 - Results */}
@@ -125,6 +145,11 @@ export default function SearchPsn() {
 
           {/* Step 3 - Group selection */}
           <StepperPanel header={t('pseudonyms:headers.stepthree')}>
+            {selectedEntityId.identifierType === 'standalone-pseudonym' && (
+              <p className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-color-blue dark:bg-blue-950/40 dark:text-blue-100">
+                {t('pseudonyms:standalone.selected')}
+              </p>
+            )}
             <CustomTreeSelect
               id="group"
               placeholder={t('pseudonyms:selectGroup')}

@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftIcon,
-  ArrowDownTrayIcon,
   ArrowsUpDownIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  CodeBracketIcon,
   InformationCircleIcon,
   PlusIcon,
-  TrashIcon,
-  XMarkIcon
+  TrashIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -66,7 +63,7 @@ type BuilderAttribute = {
   locked?: boolean
 }
 
-type EntityTypePayload = {
+export type EntityTypePayload = {
   name: string
   version?: string
   isBaseType?: boolean
@@ -109,7 +106,6 @@ const typeOptionDefinitions = [
   { labelKey: 'entityBuilder:type.enum', fallback: 'Dropdown', value: 'enum' }
 ]
 
-const layoutOptionValues: LayoutValue[] = ['group', 'row', 'col']
 const normalizerOptions = [
   'trim',
   'lower',
@@ -131,22 +127,8 @@ const blockingOptions = [
   'domainExact'
 ]
 
-function prettyJson(value: unknown) {
-  return JSON.stringify(value, null, 2)
-}
-
 function compactArray(values?: string[]) {
   return (values ?? []).map((value) => value.trim()).filter(Boolean)
-}
-
-function downloadJsonFile(filename: string, value: unknown) {
-  const blob = new Blob([prettyJson(value)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(url)
 }
 
 function buildDefaultTag(entityTypeName: string, attributeName: string) {
@@ -184,22 +166,6 @@ function defaultLinkageConfig(type?: string): LinkageConfig {
           hashPositions: 10,
           bandSize: 32
         }
-  }
-}
-
-function normalizeJson(
-  value: any,
-  fallbackName: string,
-  fallbackBaseType?: string
-): EntityTypePayload {
-  if (value && typeof value === 'object' && value.typeDefinition) {
-    return value as EntityTypePayload
-  }
-  return {
-    name: fallbackName,
-    version: 'v1.0',
-    baseTypeName: fallbackBaseType || undefined,
-    typeDefinition: value
   }
 }
 
@@ -267,19 +233,39 @@ function unlockImportedAttribute(
   }
 }
 
-function removeLockedAttributes(
-  attributes: BuilderAttribute[]
+function attributeNameKey(attribute: BuilderAttribute): string {
+  return attribute.name.trim().toLowerCase()
+}
+
+function removeBaseAttributes(
+  attributes: BuilderAttribute[],
+  baseAttributes: BuilderAttribute[]
 ): BuilderAttribute[] {
   return attributes
-    .filter((attribute) => !attribute.locked)
-    .map((attribute) =>
-      attribute.attributes
-        ? {
-            ...attribute,
-            attributes: removeLockedAttributes(attribute.attributes)
+    .map((attribute) => {
+      const matchingBase = baseAttributes.find(
+        (baseAttribute) =>
+          attributeNameKey(baseAttribute) === attributeNameKey(attribute)
+      )
+
+      if (!matchingBase) return unlockImportedAttribute(attribute)
+
+      if (attribute.attributes && matchingBase.attributes) {
+        const additionalChildren = removeBaseAttributes(
+          attribute.attributes,
+          matchingBase.attributes
+        )
+        if (additionalChildren.length) {
+          return {
+            ...unlockImportedAttribute(attribute),
+            attributes: additionalChildren
           }
-        : attribute
-    )
+        }
+      }
+
+      return null
+    })
+    .filter((attribute): attribute is BuilderAttribute => attribute !== null)
 }
 
 function flattenDomainsForOptions(
@@ -374,98 +360,6 @@ function serializeAttribute(attribute: BuilderAttribute): any {
       field.linkageConfig = cleanLinkageConfig(attribute.linkageConfig)
   }
   return field
-}
-
-function createCommonPersonAttributes(prefix = 'person'): BuilderAttribute[] {
-  const make = (
-    attribute: Omit<BuilderAttribute, 'key'>
-  ): BuilderAttribute => ({ ...attribute, key: crypto.randomUUID() })
-  return [
-    make({
-      name: 'givenName',
-      label_en: 'First name',
-      label_de: 'Vorname',
-      type: 'string',
-      required: true,
-      linkage: true,
-      tags: [`${prefix}.givenName`],
-      linkageConfig: { ...defaultLinkageConfig('string'), weight: 2 }
-    }),
-    make({
-      name: 'familyName',
-      label_en: 'Last name',
-      label_de: 'Nachname',
-      type: 'string',
-      required: true,
-      linkage: true,
-      tags: [`${prefix}.familyName`],
-      linkageConfig: { ...defaultLinkageConfig('string'), weight: 4 }
-    }),
-    make({
-      name: 'birthDate',
-      label_en: 'Date of birth',
-      label_de: 'Geburtstag',
-      type: 'date',
-      required: true,
-      linkage: true,
-      tags: [`${prefix}.birthDate`],
-      linkageConfig: {
-        privacyMode: 'pprl',
-        normalizers: ['trim'],
-        weight: 5,
-        pprl: { method: 'hmacExact' }
-      }
-    }),
-    make({
-      name: 'email',
-      label_en: 'Email',
-      label_de: 'E-Mail',
-      type: 'string',
-      required: false,
-      linkage: true,
-      tags: [`${prefix}.email`],
-      linkageConfig: {
-        privacyMode: 'pprl',
-        normalizers: ['trim', 'lower', 'collapseWhitespace'],
-        weight: 2,
-        pprl: { method: 'hmacExact' }
-      }
-    }),
-    make({
-      name: 'addresses',
-      label_en: 'Addresses',
-      label_de: 'Adressen',
-      layout: 'group',
-      repeatable: true,
-      attributes: [
-        make({
-          name: 'city',
-          label_en: 'City',
-          label_de: 'Stadt',
-          type: 'string',
-          required: false,
-          linkage: true,
-          tags: [`${prefix}.city`],
-          linkageConfig: { ...defaultLinkageConfig('string'), weight: 1 }
-        }),
-        make({
-          name: 'postalCode',
-          label_en: 'ZIP code',
-          label_de: 'Postleitzahl',
-          type: 'string',
-          required: false,
-          linkage: true,
-          tags: [`${prefix}.postalCode`],
-          linkageConfig: {
-            privacyMode: 'pprl',
-            normalizers: ['trim', 'digitsOnly'],
-            weight: 1.5,
-            pprl: { method: 'hmacExact' }
-          }
-        })
-      ]
-    })
-  ]
 }
 
 function updateAttributeByKey(
@@ -618,7 +512,26 @@ function containsKey(attribute: BuilderAttribute, key: string): boolean {
   )
 }
 
-export default function Builder() {
+export type BuilderScope = 'project' | 'base'
+export type BuilderMode = 'create' | 'edit'
+
+type BuilderProps = {
+  scope?: BuilderScope
+  mode?: BuilderMode
+  initialType?: EntityTypePayload | null
+  embedded?: boolean
+  onSaved?: (savedType: EntityTypePayload) => void
+  onCancel?: () => void
+}
+
+export default function Builder({
+  scope = 'project',
+  mode = 'create',
+  initialType = null,
+  embedded = false,
+  onSaved,
+  onCancel
+}: BuilderProps = {}) {
   const { t } = useTranslation(['entityBuilder', 'common'])
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
@@ -628,14 +541,6 @@ export default function Builder() {
       typeOptionDefinitions.map((option) => ({
         label: t(option.labelKey, option.fallback),
         value: option.value
-      })),
-    [t]
-  )
-  const layoutOptions = useMemo(
-    () =>
-      layoutOptionValues.map((value) => ({
-        label: t(`layout.${value}`),
-        value
       })),
     [t]
   )
@@ -655,7 +560,7 @@ export default function Builder() {
 
   const [entityName, setEntityName] = useState('')
   const [rootLayout, setRootLayout] = useState<LayoutValue>('group')
-  const [saveTarget, setSaveTarget] = useState<'project' | 'base'>('base')
+  const [saveTarget, setSaveTarget] = useState<BuilderScope>(scope)
   const [baseTypeOptions, setBaseTypeOptions] = useState<
     { label: string; value: string }[]
   >([])
@@ -667,10 +572,6 @@ export default function Builder() {
   >([])
   const [groupSearchLoading, setGroupSearchLoading] = useState(false)
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
-  const [jsonDraft, setJsonDraft] = useState('')
-  const [jsonDirty, setJsonDirty] = useState(false)
-  const [jsonError, setJsonError] = useState('')
-  const [jsonModalOpen, setJsonModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [draggedAttributeKey, setDraggedAttributeKey] = useState<string | null>(
     null
@@ -679,6 +580,25 @@ export default function Builder() {
   const [collapsedLinkageKeys, setCollapsedLinkageKeys] = useState<
     Record<string, boolean>
   >({})
+
+  useEffect(() => {
+    setSaveTarget(scope)
+    setEntityName(initialType?.name ?? '')
+    setRootLayout(
+      (initialType?.typeDefinition?.layout as LayoutValue | undefined) ??
+        'group'
+    )
+    setAssociatedGroupName(initialType?.associatedDomainName ?? '')
+    setSelectedBaseType(initialType?.baseTypeName ?? '')
+    setAttributes(
+      initialType
+        ? attributesFromPayload(initialType).map(unlockImportedAttribute)
+        : []
+    )
+    setDraggedAttributeKey(null)
+    setDropIndicator(null)
+    setCollapsedLinkageKeys({})
+  }, [initialType, scope])
 
   useEffect(() => {
     let active = true
@@ -694,11 +614,10 @@ export default function Builder() {
           )
           .map((name) => ({ label: name, value: name }))
         setBaseTypeOptions(options)
-        if (options.length) {
+        if (scope === 'project' && options.length) {
           setSelectedBaseType((current) => current || options[0].value)
-        } else {
+        } else if (scope === 'project') {
           setSelectedBaseType('')
-          setSaveTarget('base')
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
@@ -711,7 +630,7 @@ export default function Builder() {
     return () => {
       active = false
     }
-  }, [])
+  }, [scope])
 
   useEffect(() => {
     if (saveTarget !== 'project') {
@@ -756,9 +675,10 @@ export default function Builder() {
         setRootLayout((base.typeDefinition?.layout as LayoutValue) ?? 'group')
         setAttributes((current) => [
           ...baseAttributes,
-          ...current
-            .filter((attribute) => !attribute.locked)
-            .map(unlockImportedAttribute)
+          ...removeBaseAttributes(
+            current.filter((attribute) => !attribute.locked),
+            baseAttributes
+          )
         ])
       } catch {
         if (active) {
@@ -807,13 +727,6 @@ export default function Builder() {
     saveTarget,
     selectedBaseType
   ])
-
-  useEffect(() => {
-    if (!jsonDirty) {
-      setJsonDraft(prettyJson(payload))
-      setJsonError('')
-    }
-  }, [jsonDirty, payload])
 
   const newLeafAttribute = (
     source?: Partial<BuilderAttribute>
@@ -890,13 +803,6 @@ export default function Builder() {
     )
   }
 
-  const addPersonAttributes = () => {
-    setAttributes((current) => [
-      ...current,
-      ...createCommonPersonAttributes(entityName.trim() || 'person')
-    ])
-  }
-
   const moveBefore = (sourceKey: string, targetKey: string) => {
     if (!sourceKey || sourceKey === targetKey) return
     setAttributes((current) => {
@@ -962,88 +868,6 @@ export default function Builder() {
     }
   }
 
-  const openJsonModal = () => {
-    setJsonDraft(prettyJson(payload))
-    setJsonDirty(false)
-    setJsonError('')
-    setJsonModalOpen(true)
-  }
-
-  const applyJsonToBuilder = () => {
-    try {
-      const parsed = normalizeJson(
-        JSON.parse(jsonDraft),
-        entityName,
-        selectedBaseType
-      )
-      setEntityName(parsed.name ?? entityName)
-      setRootLayout((parsed.typeDefinition?.layout as LayoutValue) ?? 'group')
-      setSaveTarget(
-        parsed.isBaseType || !parsed.baseTypeName ? 'base' : 'project'
-      )
-      setSelectedBaseType(parsed.baseTypeName ?? selectedBaseType)
-      setAssociatedGroupName(parsed.associatedDomainName ?? associatedGroupName)
-      setAttributes(attributesFromPayload(parsed).map(unlockImportedAttribute))
-      setJsonDraft(prettyJson(parsed))
-      setJsonDirty(false)
-      setJsonError('')
-      setJsonModalOpen(false)
-      showToast({
-        severity: 'success',
-        summary: t('toast.jsonAppliedSummary'),
-        detail: t('toast.jsonAppliedDetail'),
-        life: 2500
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setJsonError(message)
-      showToast({
-        severity: 'error',
-        summary: t('toast.invalidJson'),
-        detail: message,
-        life: 4500
-      })
-    }
-  }
-
-  const handleJsonUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const text = String(reader.result ?? '')
-      setJsonDraft(text)
-      setJsonDirty(true)
-      setJsonError('')
-    }
-    reader.onerror = () => {
-      showToast({
-        severity: 'error',
-        summary: t('toast.invalidJson'),
-        detail: t('toast.jsonFileReadFailed'),
-        life: 4500
-      })
-    }
-    reader.readAsText(file)
-  }
-
-  const downloadCurrentJson = () => {
-    try {
-      const value = jsonDirty ? JSON.parse(jsonDraft) : payload
-      downloadJsonFile(`${entityName.trim() || 'entity-type'}.json`, value)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      setJsonError(message)
-      showToast({
-        severity: 'error',
-        summary: t('toast.invalidJson'),
-        detail: message,
-        life: 4500
-      })
-    }
-  }
-
   const refreshProjectEntities = async () => {
     try {
       const response = await TrustDeck.instance().getProjectEntities('*')
@@ -1099,32 +923,53 @@ export default function Builder() {
 
     setSaving(true)
     try {
-      if (saveTarget === 'base') {
-        await TrustDeck.instance().createBaseType({
-          ...finalPayload,
-          version: finalPayload.version ?? 'v1.0',
-          isBaseType: true,
-          baseTypeName: undefined,
-          associatedDomainName: undefined
-        })
-      } else {
-        await TrustDeck.instance().createEntityConfig({
-          ...finalPayload,
-          version: finalPayload.version ?? 'v1.0',
-          isBaseType: false
-        })
-        await refreshProjectEntities()
-      }
+      const savedType =
+        saveTarget === 'base'
+          ? mode === 'edit' && initialType?.name
+            ? await TrustDeck.instance().updateBaseType(initialType.name, {
+                ...finalPayload,
+                version: finalPayload.version ?? 'v1.0',
+                isBaseType: true,
+                baseTypeName: undefined,
+                associatedDomainName: undefined
+              })
+            : await TrustDeck.instance().createBaseType({
+                ...finalPayload,
+                version: finalPayload.version ?? 'v1.0',
+                isBaseType: true,
+                baseTypeName: undefined,
+                associatedDomainName: undefined
+              })
+          : mode === 'edit' && initialType?.name
+            ? await TrustDeck.instance().updateEntityConfig(initialType.name, {
+                ...finalPayload,
+                version: finalPayload.version ?? 'v1.0',
+                isBaseType: false
+              })
+            : await TrustDeck.instance().createEntityConfig({
+                ...finalPayload,
+                version: finalPayload.version ?? 'v1.0',
+                isBaseType: false
+              })
+      if (saveTarget === 'project') await refreshProjectEntities()
       showToast({
         severity: 'success',
-        summary: t('toast.createdSummary'),
+        summary:
+          mode === 'edit'
+            ? t('toast.updatedSummary', 'Entity type updated')
+            : t('toast.createdSummary'),
         detail:
           saveTarget === 'base'
-            ? t('toast.baseCreatedDetail')
-            : t('toast.projectCreatedDetail'),
+            ? mode === 'edit'
+              ? t('toast.baseUpdatedDetail', 'The base type was updated.')
+              : t('toast.baseCreatedDetail')
+            : mode === 'edit'
+              ? t('toast.projectUpdatedDetail', 'The project type was updated.')
+              : t('toast.projectCreatedDetail'),
         life: 3500
       })
-      navigate('/entity/manager')
+      onSaved?.(savedType as EntityTypePayload)
+      if (!embedded) navigate('/entity/manager')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       const detail = message.includes('400')
@@ -1132,7 +977,10 @@ export default function Builder() {
         : message
       showToast({
         severity: 'error',
-        summary: t('toast.creationFailed'),
+        summary:
+          mode === 'edit'
+            ? t('toast.updateFailed', 'Update failed')
+            : t('toast.creationFailed'),
         detail,
         life: 7000
       })
@@ -1485,16 +1333,9 @@ export default function Builder() {
               disabled={locked}
             />
             {isGroup ? (
-              <CustomDropdown
-                id={`layout-${attribute.key}`}
-                value={attribute.layout ?? 'group'}
-                onChange={(e) =>
-                  updateAttribute(attribute.key, { layout: e.value })
-                }
-                options={layoutOptions}
-                placeholder={t('layout.label')}
-                disabled={locked}
-              />
+              <div className="relative flex h-[44px] items-center rounded-lg border border-gray-200 bg-gray-100 px-3 text-gray-500 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-300">
+                <span>{t('sectionType', 'Section')}</span>
+              </div>
             ) : (
               <CustomDropdown
                 id={`type-${attribute.key}`}
@@ -1636,9 +1477,15 @@ export default function Builder() {
     )
   }
 
-  return (
-    <div className="builder-page-shell w-full">
-      <div className="builder-content-column mx-auto w-full max-w-5xl space-y-6">
+  const editorContent = (
+    <div
+      className={
+        embedded
+          ? 'w-full space-y-6'
+          : 'builder-content-column mx-auto w-full max-w-5xl space-y-6'
+      }
+    >
+      {!embedded && (
         <div className="w-full">
           <PrimaryOutlinedButton
             label={t('common:back', 'Back')}
@@ -1647,273 +1494,157 @@ export default function Builder() {
             onClick={() => navigate('/entity/manager')}
           />
         </div>
+      )}
 
-        <Panel
-          title={t('entityBuilder:createEntityType')}
-          className="!w-full"
-          noMaxWidth
-        >
-          <div className="mt-7 grid gap-4 md:grid-cols-2">
-            <CustomFloatLabel
-              id="entityTypeName"
-              value={entityName}
-              placeholder={t('entityName', 'Entity name')}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEntityName(e.target.value)
-              }
-              required
+      <Panel
+        title={
+          mode === 'edit'
+            ? t('editEntityType', 'Edit entity type')
+            : saveTarget === 'base'
+              ? t('createBaseType', 'Create base type')
+              : t('entityBuilder:createEntityType')
+        }
+        className="!w-full"
+        noMaxWidth
+      >
+        <div className="mt-7 grid gap-4 md:grid-cols-2">
+          <CustomFloatLabel
+            id="entityTypeName"
+            value={entityName}
+            placeholder={t('entityName', 'Entity name')}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEntityName(e.target.value)
+            }
+            required
+          />
+          {saveTarget === 'project' && (
+            <GroupSearchInput
+              id="associatedGroupName"
+              value={associatedGroupName}
+              label={t('associatedGroupName')}
+              placeholder={t('associatedGroupNamePlaceholder')}
+              info={t('associatedGroupNameHelp')}
+              options={groupOptions}
+              loading={groupSearchLoading}
+              onChange={setAssociatedGroupName}
             />
+          )}
+        </div>
+
+        {saveTarget === 'project' && (
+          <div className="mt-4">
             <CustomDropdown
-              id="rootLayout"
-              value={rootLayout}
-              onChange={(e) => setRootLayout(e.value)}
-              options={layoutOptions}
-              placeholder={t('layout.root')}
-              disabled={saveTarget === 'project' && Boolean(selectedBaseType)}
+              id="baseType"
+              value={selectedBaseType}
+              onChange={(e) => setSelectedBaseType(e.value)}
+              options={baseTypeOptions}
+              placeholder={t('baseType', 'Base type')}
             />
-            {saveTarget === 'project' && (
-              <GroupSearchInput
-                id="associatedGroupName"
-                value={associatedGroupName}
-                label={t('associatedGroupName')}
-                placeholder={t('associatedGroupNamePlaceholder')}
-                options={groupOptions}
-                loading={groupSearchLoading}
-                onChange={setAssociatedGroupName}
-              />
+            {baseTypeLoading && (
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                {t('loadingBaseType')}
+              </p>
+            )}
+            {baseTypeOptions.length === 0 && (
+              <p className="mt-2 text-sm text-amber-700">
+                {t('noBaseTypesHint')}
+              </p>
             )}
           </div>
+        )}
+      </Panel>
 
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <button
-              type="button"
-              disabled={baseTypeOptions.length === 0}
-              title={
-                baseTypeOptions.length === 0
-                  ? t('baseTypeRequiredHint')
-                  : undefined
-              }
-              onClick={() => {
-                if (baseTypeOptions.length > 0) setSaveTarget('project')
-              }}
-              className={`rounded-xl border p-4 text-left transition ${baseTypeOptions.length === 0 ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-500' : saveTarget === 'project' ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
-            >
-              <div className="font-semibold">{t('projectSpecificType')}</div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                {t('projectSpecificTypeHelp')}
-              </p>
-              {baseTypeOptions.length === 0 && (
-                <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  {t('baseTypeRequiredHint')}
-                </p>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSaveTarget('base')
-                setAttributes((current) => removeLockedAttributes(current))
-              }}
-              className={`rounded-xl border p-4 text-left transition ${saveTarget === 'base' ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
-            >
-              <div className="font-semibold">{t('baseType')}</div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                {t('baseTypeHelp')}
-              </p>
-            </button>
-          </div>
-
-          {saveTarget === 'project' && (
-            <div className="mt-4">
-              <CustomDropdown
-                id="baseType"
-                value={selectedBaseType}
-                onChange={(e) => setSelectedBaseType(e.value)}
-                options={baseTypeOptions}
-                placeholder={t('baseType', 'Base type')}
-              />
-              {baseTypeLoading && (
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-                  {t('loadingBaseType')}
-                </p>
-              )}
-              {baseTypeOptions.length === 0 && (
-                <p className="mt-2 text-sm text-amber-700">
-                  {t('noBaseTypesHint')}
-                </p>
-              )}
-            </div>
-          )}
-        </Panel>
-
-        <div className="flex w-full justify-center">
+      <Panel
+        title={t('entityBuilder:visualPreview')}
+        className="!w-full"
+        noMaxWidth
+      >
+        <div className="mt-7 mb-4 flex flex-wrap gap-2">
           <PrimaryOutlinedButton
-            label={t('openJsonImportExport')}
-            icon={<CodeBracketIcon className="h-5 w-5" />}
-            iconPos="left"
-            onClick={openJsonModal}
+            label={
+              <span className="inline-flex items-center gap-2">
+                <PlusIcon className="h-4 w-4" />
+                {t('addCustomAttribute')}
+              </span>
+            }
+            onClick={() => addAttribute()}
+          />
+          <PrimaryOutlinedButton
+            label={
+              <span className="inline-flex items-center gap-2">
+                <PlusIcon className="h-4 w-4" />
+                {t('addGroup')}
+              </span>
+            }
+            onClick={addGroup}
           />
         </div>
 
-        <Panel
-          title={t('entityBuilder:visualPreview')}
-          className="!w-full"
-          noMaxWidth
-        >
-          <div className="mt-7 mb-4 flex flex-wrap gap-2">
-            <PrimaryOutlinedButton
-              label={
-                <span className="inline-flex items-center gap-2">
-                  <PlusIcon className="h-4 w-4" />
-                  {t('addCustomAttribute')}
-                </span>
-              }
-              onClick={() => addAttribute()}
-            />
-            <PrimaryOutlinedButton
-              label={
-                <span className="inline-flex items-center gap-2">
-                  <PlusIcon className="h-4 w-4" />
-                  {t('addGroup')}
-                </span>
-              }
-              onClick={addGroup}
-            />
-            <PrimaryOutlinedButton
-              label={t('addCommonPersonFields')}
-              onClick={addPersonAttributes}
-            />
+        {attributes.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+            {t('noAttributesHint')}
           </div>
-
-          {attributes.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-              {t('noAttributesHint')}
+        ) : (
+          <>
+            <div className="space-y-4">
+              {attributes.map((attribute) => renderAttributeEditor(attribute))}
             </div>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {attributes.map((attribute) =>
-                  renderAttributeEditor(attribute)
-                )}
-              </div>
-              <div className="mt-6 border-t border-gray-200 pt-4 dark:border-slate-700">
-                <p className="mb-3 text-center text-sm text-gray-500 dark:text-gray-300">
-                  {t('addMoreAttributesHint')}
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <PrimaryOutlinedButton
-                    label={
-                      <span className="inline-flex items-center gap-2">
-                        <PlusIcon className="h-4 w-4" />
-                        {t('addCustomAttribute')}
-                      </span>
-                    }
-                    onClick={() => addAttribute()}
-                  />
-                  <PrimaryOutlinedButton
-                    label={
-                      <span className="inline-flex items-center gap-2">
-                        <PlusIcon className="h-4 w-4" />
-                        {t('addGroup')}
-                      </span>
-                    }
-                    onClick={addGroup}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-        </Panel>
-
-        {jsonModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="max-h-[90vh] w-full max-w-5xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    {t('jsonImportExport')}
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-                    {t('jsonHelp')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label={t('closeJsonImportExport')}
-                  onClick={() => setJsonModalOpen(false)}
-                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 mb-4">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-color-blue px-4 py-2 font-semibold text-color-blue hover:bg-blue-50 dark:border-blue-400 dark:text-blue-100 dark:hover:bg-blue-950/40">
-                  <CodeBracketIcon className="h-5 w-5" />
-                  {t('uploadJsonFile')}
-                  <input
-                    className="hidden"
-                    type="file"
-                    accept=".json,.txt,application/json,text/plain"
-                    onChange={handleJsonUpload}
-                  />
-                </label>
+            <div className="mt-6 border-t border-gray-200 pt-4 dark:border-slate-700">
+              <p className="mb-3 text-center text-sm text-gray-500 dark:text-gray-300">
+                {t('addMoreAttributesHint')}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
                 <PrimaryOutlinedButton
                   label={
                     <span className="inline-flex items-center gap-2">
-                      <ArrowDownTrayIcon className="h-5 w-5" />
-                      {t('downloadJsonFile')}
+                      <PlusIcon className="h-4 w-4" />
+                      {t('addCustomAttribute')}
                     </span>
                   }
-                  onClick={downloadCurrentJson}
+                  onClick={() => addAttribute()}
                 />
-              </div>
-
-              <textarea
-                className="h-[560px] w-full rounded-lg border border-gray-300 p-3 font-mono text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-                spellCheck={false}
-                value={jsonDraft}
-                onChange={(event) => {
-                  setJsonDraft(event.target.value)
-                  setJsonDirty(true)
-                }}
-              />
-              {jsonError && (
-                <p className="mt-2 text-sm text-red-600 dark:text-red-300">
-                  {t('invalidJsonWithMessage', { message: jsonError })}
-                </p>
-              )}
-
-              <div className="mt-5 flex flex-wrap justify-end gap-2">
                 <PrimaryOutlinedButton
-                  label={t('resetJsonFromPreview')}
-                  onClick={() => {
-                    setJsonDirty(false)
-                    setJsonDraft(prettyJson(payload))
-                    setJsonError('')
-                  }}
-                />
-                <PrimaryButton
-                  label={t('applyJsonToPreview')}
-                  onClick={applyJsonToBuilder}
+                  label={
+                    <span className="inline-flex items-center gap-2">
+                      <PlusIcon className="h-4 w-4" />
+                      {t('addGroup')}
+                    </span>
+                  }
+                  onClick={addGroup}
                 />
               </div>
             </div>
-          </div>
+          </>
         )}
+      </Panel>
 
-        <div className="flex w-full justify-center">
-          <PrimaryButton
-            label={
-              saving ? t('common:loading') : t('entityBuilder:createEntityType')
-            }
-            loading={saving}
-            onClick={save}
+      <div className="flex w-full flex-wrap justify-center gap-2">
+        {embedded && onCancel && (
+          <PrimaryOutlinedButton
+            label={t('common:cancel')}
+            onClick={onCancel}
           />
-        </div>
+        )}
+        <PrimaryButton
+          label={
+            saving
+              ? t('common:loading')
+              : mode === 'edit'
+                ? t('saveChanges', 'Save changes')
+                : saveTarget === 'base'
+                  ? t('createBaseType', 'Create base type')
+                  : t('createEntityType')
+          }
+          loading={saving}
+          onClick={save}
+        />
       </div>
     </div>
   )
+
+  if (embedded) return editorContent
+
+  return <div className="builder-page-shell w-full">{editorContent}</div>
 }
 
 function FloatingTextInput({
@@ -2065,6 +1796,7 @@ function GroupSearchInput({
   value,
   label,
   placeholder,
+  info,
   options,
   loading = false,
   onChange
@@ -2073,6 +1805,7 @@ function GroupSearchInput({
   value: string
   label: string
   placeholder: string
+  info?: string
   options: { label: string; value: string }[]
   loading?: boolean
   onChange: (value: string) => void
@@ -2085,18 +1818,27 @@ function GroupSearchInput({
 
   return (
     <div className="relative">
-      <FloatingTextInput
-        id={id}
-        label={label}
-        value={value}
-        placeholder={placeholder}
-        onFocus={() => setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-        onChange={(next) => {
-          onChange(next)
-          setOpen(true)
-        }}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          className={`h-[44px] w-full rounded-lg border border-gray-300 px-3 ${info ? 'pr-10' : ''} text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400`}
+          value={value}
+          placeholder={placeholder}
+          onFocus={() => setOpen(true)}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onChange={(event) => {
+            onChange(event.target.value)
+            setOpen(true)
+          }}
+        />
+        <label
+          htmlFor={id}
+          className="absolute -top-2 left-3 bg-white px-1 text-sm text-gray-500 dark:bg-slate-950 dark:text-gray-300"
+        >
+          {label}
+        </label>
+        {info && <FieldInfo title={info} />}
+      </div>
       {shouldShowMenu && (
         <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
           {loading ? (

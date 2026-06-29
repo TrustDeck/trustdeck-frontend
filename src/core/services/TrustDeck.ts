@@ -485,6 +485,24 @@ class TrustDeck {
     )
   }
 
+  public async updateBaseType(
+    entityTypeName: string,
+    payload: EntityTypePayload
+  ) {
+    return this.request<EntityTypePayload>(
+      'PUT',
+      `/entities/base-types/${encodeURIComponent(entityTypeName)}`,
+      payload
+    )
+  }
+
+  public async deleteBaseType(entityTypeName: string) {
+    return this.request<unknown>(
+      'DELETE',
+      `/entities/base-types/${encodeURIComponent(entityTypeName)}`
+    )
+  }
+
   public async getProjectEntities(query = '*', projectAbbreviation?: string) {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
     const response = await this.request<unknown>(

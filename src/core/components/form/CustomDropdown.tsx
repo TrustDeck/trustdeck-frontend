@@ -42,7 +42,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const showFloating = value !== ''
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div
+      className={`td-custom-dropdown relative w-full ${helpText ? 'td-custom-dropdown--with-help' : ''} ${className}`}
+    >
       <div className="relative w-full">
         <Dropdown
           id={id}
@@ -53,8 +55,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           disabled={disabled}
           className="w-full rounded-lg border font-font-text font-normal border-color-light-gray text-xl h-[44px] flex items-center [&_.p-dropdown-label]:flex [&_.p-dropdown-label]:items-center [&_.p-dropdown-label]:h-full [&_.p-dropdown-label]:py-0 [&_.p-dropdown-label]:font-font-text [&_.p-dropdown-label]:font-normal"
           pt={{
-            input: { className: `px-3 h-[44px] flex items-center font-font-text font-normal ${textColor} text-xl` },
-            item: { className: 'font-font-text font-normal text-lg text-gray-500' }
+            input: {
+              className: `px-3 h-[44px] flex items-center font-font-text font-normal ${textColor} text-xl`
+            },
+            item: {
+              className: 'font-font-text font-normal text-lg text-gray-500'
+            }
           }}
           {...props}
         />
@@ -75,7 +81,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         <>
           <QuestionMarkCircleIcon
             id={`${id}-help`}
-            className="absolute -right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer z-10"
+            className="td-custom-dropdown__help absolute top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer z-10"
             onClick={() => setVisible(true)}
           />
           <Dialog

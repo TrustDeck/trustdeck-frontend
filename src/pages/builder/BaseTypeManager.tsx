@@ -7,7 +7,6 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
-import useProjectStore from '../../core/stores/ProjectStore'
 import TrustDeck from '../../core/services/TrustDeck'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
@@ -23,14 +22,10 @@ function typeLabel(type: EntityTypePayload) {
   return `${type.name}${type.version ? ` (${type.version})` : ''}`
 }
 
-export default function EntityManager() {
+export default function BaseTypeManager() {
   const { t } = useTranslation(['entityBuilder', 'common'])
   const showToast = useToastStore((state) => state.show)
-  const setEntities = useProjectStore((state) => state.setEntities)
-  const selectedProject = useProjectStore((state) => state.selectedProject)
-  const [entityDefinitions, setEntityDefinitions] = useState<
-    EntityTypePayload[]
-  >([])
+  const [baseTypes, setBaseTypes] = useState<EntityTypePayload[]>([])
   const [selectedTypeName, setSelectedTypeName] = useState('')
   const [loading, setLoading] = useState(true)
   const [editorOpen, setEditorOpen] = useState(false)
@@ -39,42 +34,21 @@ export default function EntityManager() {
 
   const selectedType = useMemo(
     () =>
-      entityDefinitions.find(
-        (definition) => definition.name === selectedTypeName
-      ) ??
-      entityDefinitions[0] ??
+      baseTypes.find((definition) => definition.name === selectedTypeName) ??
+      baseTypes[0] ??
       null,
-    [entityDefinitions, selectedTypeName]
+    [baseTypes, selectedTypeName]
   )
 
-  const loadEntityTypes = useCallback(
+  const loadBaseTypes = useCallback(
     async (preferredName?: string) => {
-      if (!selectedProject?.abbreviation) {
-        setLoading(false)
-        setEntityDefinitions([])
-        setEntities([])
-        return
-      }
-
       setLoading(true)
       try {
-        const response = await TrustDeck.instance().getProjectEntities('*')
+        const response = await TrustDeck.instance().getBaseTypes('*')
         const definitions = (
           Array.isArray(response) ? response : []
         ) as EntityTypePayload[]
-        setEntityDefinitions(definitions)
-        setEntities(
-          Array.from(
-            new Set(
-              definitions
-                .map((entry) => entry?.name)
-                .filter(
-                  (name: unknown): name is string =>
-                    typeof name === 'string' && name.length > 0
-                )
-            )
-          )
-        )
+        setBaseTypes(definitions)
         const nextSelection =
           preferredName &&
           definitions.some((entry) => entry.name === preferredName)
@@ -84,7 +58,7 @@ export default function EntityManager() {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) {
-          console.error('Failed to load project entity types', error)
+          console.error('Failed to load base entity types', error)
           showToast({
             severity: 'error',
             summary: t('common:error'),
@@ -92,19 +66,18 @@ export default function EntityManager() {
             life: 4000
           })
         }
-        setEntityDefinitions([])
-        setEntities([])
+        setBaseTypes([])
         setSelectedTypeName('')
       } finally {
         setLoading(false)
       }
     },
-    [selectedProject?.abbreviation, setEntities, showToast, t]
+    [showToast, t]
   )
 
   useEffect(() => {
-    void loadEntityTypes()
-  }, [loadEntityTypes])
+    void loadBaseTypes()
+  }, [loadBaseTypes])
 
   const openCreateModal = () => {
     setEditingType(null)
@@ -124,34 +97,31 @@ export default function EntityManager() {
 
   const handleSaved = (savedType: EntityTypePayload) => {
     closeEditor()
-    void loadEntityTypes(savedType.name)
+    void loadBaseTypes(savedType.name)
   }
 
   const deleteSelectedType = async () => {
     if (!selectedType) return
     const confirmed = window.confirm(
-      t('confirmDeleteProjectType', {
+      t('confirmDeleteBaseType', {
         type: typeLabel(selectedType),
-        defaultValue: `Delete project type ${typeLabel(selectedType)}?`
+        defaultValue: `Delete base type ${typeLabel(selectedType)}?`
       })
     )
     if (!confirmed) return
 
     setDeleting(true)
     try {
-      await TrustDeck.instance().deleteEntityConfig(selectedType.name)
+      await TrustDeck.instance().deleteBaseType(selectedType.name)
       showToast({
         severity: 'success',
         summary: t('toast.deletedSummary', 'Entity type deleted'),
-        detail: t(
-          'toast.projectDeletedDetail',
-          'The project type was deleted.'
-        ),
+        detail: t('toast.baseDeletedDetail', 'The base type was deleted.'),
         life: 3500
       })
-      await loadEntityTypes()
+      await loadBaseTypes()
     } catch (error) {
-      console.error('Could not delete project entity type', error)
+      console.error('Could not delete base entity type', error)
       showToast({
         severity: 'error',
         summary: t('toast.deleteFailed', 'Delete failed'),
@@ -169,27 +139,30 @@ export default function EntityManager() {
         <Panel
           noMaxWidth
           className="mx-auto !w-full"
-          title={t('projectTypesTitle', 'Project entity types')}
+          title={t('baseTypesTitle', 'Base type management')}
         >
           {loading ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
-              {t('loadingEntityTypes')}
+              {t('loadingBaseTypes', 'Loading base types...')}
             </div>
           ) : (
             <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
               <div className="space-y-3">
-                {entityDefinitions.length === 0 ? (
+                {baseTypes.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {t('noEntityTypesTitle')}
+                      {t('noBaseTypesTitle', 'No base types available')}
                     </h2>
                     <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                      {t('noEntityTypesManagerDetail')}
+                      {t(
+                        'noBaseTypesManagerDetail',
+                        'Create a base type before project-specific types can extend it.'
+                      )}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {entityDefinitions.map((definition) => (
+                    {baseTypes.map((definition) => (
                       <button
                         key={`${definition.name}-${definition.version ?? ''}`}
                         type="button"
@@ -214,7 +187,7 @@ export default function EntityManager() {
                   label={
                     <span className="inline-flex items-center gap-2">
                       <PlusIcon className="h-5 w-5" />
-                      {t('addType', 'Add type')}
+                      {t('addBaseType', 'Add base type')}
                     </span>
                   }
                   onClick={openCreateModal}
@@ -270,18 +243,10 @@ export default function EntityManager() {
                       </div>
                       <div>
                         <dt className="font-semibold text-gray-500 dark:text-gray-300">
-                          {t('baseType')}
+                          {t('version', 'Version')}
                         </dt>
                         <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {selectedType.baseTypeName ?? '-'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="font-semibold text-gray-500 dark:text-gray-300">
-                          {t('associatedGroupName')}
-                        </dt>
-                        <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {selectedType.associatedDomainName ?? '-'}
+                          {selectedType.version ?? 'v1.0'}
                         </dd>
                       </div>
                     </dl>
@@ -298,8 +263,8 @@ export default function EntityManager() {
                 ) : (
                   <div className="py-10 text-center text-gray-500 dark:text-gray-300">
                     {t(
-                      'selectProjectTypeHint',
-                      'Select a project type from the list or create a new one.'
+                      'selectBaseTypeHint',
+                      'Select a base type from the list or create a new one.'
                     )}
                   </div>
                 )}
@@ -316,13 +281,13 @@ export default function EntityManager() {
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                   {editingType
-                    ? t('editEntityType', 'Edit entity type')
-                    : t('addType', 'Add type')}
+                    ? t('editBaseType', 'Edit base type')
+                    : t('addBaseType', 'Add base type')}
                 </h2>
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
                   {t(
-                    'projectTypeModalHelp',
-                    'Create or update a project-specific entity type.'
+                    'baseTypeModalHelp',
+                    'Create or update a reusable base type.'
                   )}
                 </p>
               </div>
@@ -337,7 +302,7 @@ export default function EntityManager() {
             </div>
             <Builder
               embedded
-              scope="project"
+              scope="base"
               mode={editingType ? 'edit' : 'create'}
               initialType={editingType}
               onSaved={handleSaved}

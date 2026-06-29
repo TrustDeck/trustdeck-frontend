@@ -7,16 +7,22 @@ import {
   ChevronDoubleRightIcon,
   ChevronDoubleLeftIcon
 } from '@heroicons/react/24/outline'
-import { useNavigate } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useAuth } from 'react-oidc-context'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 // internal imports
-import { routes } from '../../configs/routes'
+import { routes, RouteConfig } from '../../configs/routes'
 import useLayoutStore from '../../stores/LayoutStore'
 import Divider from './Divider'
-import PrimaryButton from '../form/buttons/PrimaryButton'
 import useProjectStore from '../../stores/ProjectStore'
 import ProjectService from '../../../pages/projects/services/ProjectService'
+import TrustDeck from '../../services/TrustDeck'
+import useUserStore from '../../stores/UserStore'
+import {
+  CachedUserAccess,
+  canAccessBaseTypes,
+  getCurrentUserAccess
+} from '../../services/PermissionCache'
 
 interface SidebarProps {
   projectName: string
@@ -27,13 +33,14 @@ const XL_BREAKPOINT = 1280
 export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
   const { t } = useTranslation()
+  const auth = useAuth()
   const projectImage = useProjectStore((state) => state.projectImage)
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
-  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
+  const roles = useUserStore((state) => state.roles)
+  const [permissionAccess, setPermissionAccess] =
+    useState<CachedUserAccess | null>(null)
   const hasTriedRefetch = useRef(false)
-
-  const navigate = useNavigate()
 
   // On xl screens, default sidebar to open.
   useEffect(() => {
@@ -93,7 +100,63 @@ export default function Sidebar({ projectName }: SidebarProps) {
           hasTriedRefetch.current = false
         })
     }
-  }, [projectName, projectImage, selectedProject?.abbreviation, setProjectImage])
+  }, [
+    projectName,
+    projectImage,
+    selectedProject?.abbreviation,
+    setProjectImage
+  ])
+
+  useEffect(() => {
+    let active = true
+    if (!auth.user?.access_token) {
+      setPermissionAccess(null)
+      return () => {
+        active = false
+      }
+    }
+
+    TrustDeck.instance().setToken(auth.user.access_token)
+    getCurrentUserAccess(false)
+      .then((access) => {
+        if (active) setPermissionAccess(access)
+      })
+      .catch(() => {
+        if (active) setPermissionAccess(null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [auth.user?.access_token])
+
+  const accessForSidebar = useMemo<CachedUserAccess | null>(() => {
+    if (permissionAccess) return permissionAccess
+    return {
+      userId: 'current-user',
+      roles: roles ?? [],
+      effectivePermissions: [],
+      loadedAt: Date.now()
+    }
+  }, [permissionAccess, roles])
+
+  const sidebarRoutes = useMemo(() => {
+    return routes
+      .filter(({ isSidebar, requiresBaseTypeAccess }) => {
+        if (!isSidebar) return false
+        if (requiresBaseTypeAccess) return canAccessBaseTypes(accessForSidebar)
+        return true
+      })
+      .sort(
+        (a, b) =>
+          (a.sideboardOrder ?? Infinity) - (b.sideboardOrder ?? Infinity)
+      )
+  }, [accessForSidebar])
+
+  const projectScopedRoutes = sidebarRoutes.filter(
+    (route) => !route.isNonProject
+  )
+  const nonProjectRoutes = sidebarRoutes.filter((route) => route.isNonProject)
 
   // Only close sidebar on nav click when below xl (so big screens keep it open).
   const closeSidebarOnNavigate = () => {
@@ -105,6 +168,23 @@ export default function Sidebar({ projectName }: SidebarProps) {
     return `flex items-center px-4 py-2 rounded-lg transition-all duration-300 
       ${isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black dark:text-gray-100 dark:hover:bg-slate-800'}`
   }
+
+  const renderNavLinks = (items: RouteConfig[], collapsed = false) =>
+    items.map(({ titleKey, path, Icon }) => (
+      <li key={titleKey}>
+        <NavLink
+          to={path.replace('*', '/')}
+          className={getNavLinkClasses}
+          onClick={closeSidebarOnNavigate}
+        >
+          <Icon
+            className={collapsed ? 'h-6 w-6' : 'h-6 w-6 mr-2'}
+            aria-label={t(titleKey)}
+          />
+          {!collapsed && t(titleKey)}
+        </NavLink>
+      </li>
+    ))
 
   return (
     <>
@@ -124,24 +204,15 @@ export default function Sidebar({ projectName }: SidebarProps) {
           className="h-6 w-6 absolute top-4 cursor-pointer dark:text-gray-100"
           aria-label="Open Sidebar"
         />
-        <ul className="space-y-12">
-          {routes
-            .filter(({ isSidebar }) => isSidebar)
-            .sort(
-              (a, b) =>
-                (a.sideboardOrder ?? Infinity) - (b.sideboardOrder ?? Infinity)
-            )
-            .map(({ titleKey, path, Icon }) => (
-              <h4 key={t(titleKey)}>
-                <NavLink
-                  to={path.replace('*', '/')}
-                  className={getNavLinkClasses}
-                  onClick={closeSidebarOnNavigate}
-                >
-                  <Icon className="w-6 h-6" aria-label={t(titleKey)} />
-                </NavLink>
-              </h4>
-            ))}
+        <ul className="space-y-8">
+          {renderNavLinks(projectScopedRoutes, true)}
+          {nonProjectRoutes.length > 0 && (
+            <li className="border-t border-gray-300 pt-8 dark:border-slate-700">
+              <ul className="space-y-8">
+                {renderNavLinks(nonProjectRoutes, true)}
+              </ul>
+            </li>
+          )}
         </ul>
       </div>
 
@@ -190,36 +261,15 @@ export default function Sidebar({ projectName }: SidebarProps) {
         </div>
 
         <Divider />
-        <ul className="space-y-10">
-          {routes
-            .filter(({ isSidebar }) => isSidebar)
-            .sort(
-              (a, b) =>
-                (a.sideboardOrder ?? Infinity) - (b.sideboardOrder ?? Infinity)
-            )
-            .map(({ titleKey, path, Icon }) => (
-              <h4 key={t(titleKey)}>
-                <NavLink
-                  to={path.replace('*', '/')}
-                  className={getNavLinkClasses}
-                  onClick={closeSidebarOnNavigate}
-                >
-                  <Icon className="w-6 h-6 mr-2" />
-                  {t(titleKey)}
-                </NavLink>
-              </h4>
-            ))}
-        </ul>
-        <div className="absolute bottom-10 left-0 right-0 flex justify-center">
-          <PrimaryButton
-            label={t('layout:menu.backToProjects')}
-            onClick={() => {
-              closeSidebarOnNavigate()
-              clearSelectedProject()
-              navigate('/projects')
-            }}
-          />
-        </div>
+        <nav className="flex h-[calc(100vh-8rem)] flex-col overflow-y-auto pb-6">
+          <ul className="space-y-6">{renderNavLinks(projectScopedRoutes)}</ul>
+          {nonProjectRoutes.length > 0 && (
+            <div className="mt-auto pt-8">
+              <Divider />
+              <ul className="space-y-6">{renderNavLinks(nonProjectRoutes)}</ul>
+            </div>
+          )}
+        </nav>
       </div>
     </>
   )

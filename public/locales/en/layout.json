@@ -6,7 +6,6 @@
     "groupManagement": "Group Management",
     "projectSettings": "Project Settings",
     "search": "Search",
-    "entityManager": "Entity Manager",
     "searchResults": "Search results",
     "entityDetails": "Entities",
     "pseudonymDetails": "Pseudonyms",
@@ -15,8 +14,10 @@
     "resolveDuplicates": "Resolve duplicates",
     "projects": "Projects",
     "backToProjects": "Back to projects",
-    "permissionManagement": "Permission management",
-    "newProject": "New project"
+    "permissionManagement": "Permission Management",
+    "newProject": "New project",
+    "entityManagement": "Entity Management",
+    "baseTypeManagement": "Base Type Management"
   },
   "logOut": {
     "loggingOut": "Logging you out",

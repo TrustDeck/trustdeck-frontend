@@ -14,10 +14,11 @@
     "resolveDuplicates": "Dubletten auflösen",
     "projects": "Projekte",
     "backToProjects": "Zurück zu Projekten",
-    "permissionManagement": "Berechtigungsverwaltung",
+    "permissionManagement": "Permission Management",
     "newProject": "Neues Projekt",
     "identityManagement": "Identitätsmanagement",
-    "entityManager": "Entitäten-Manager"
+    "entityManagement": "Entity Management",
+    "baseTypeManagement": "Base-Type-Verwaltung"
   },
   "logOut": {
     "loggingOut": "Sie werden abgemeldet",

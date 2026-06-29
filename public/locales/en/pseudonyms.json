@@ -4,11 +4,16 @@
     "stepone": "Search for the entity that you want to pseudonymize.",
     "steptwo": "Select the entity that you want to pseudonymize.",
     "stepthree": "In which group should the pseudonym be saved?"
-  }, 
+  },
   "buttons": {
     "back": "Back",
-    "generate": "Generate"
+    "generate": "Generate",
+    "generateStandalone": "Generate pseudonym without entity"
   },
   "infotext": "If you create a pseudonym for a subgroup, the system will automatically generate a chain of pseudonyms for each parent group.",
-  "selectGroup": "Select groups"
+  "selectGroup": "Select groups",
+  "standalone": {
+    "description": "You can also generate a pseudonym that is not linked to an existing entity. TrustDeck will create an internal standalone identifier for this pseudonym.",
+    "selected": "Standalone pseudonym mode is active. Select the group/domain in which the pseudonym should be saved."
+  }
 }

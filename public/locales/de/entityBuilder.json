@@ -206,5 +206,7 @@
   "associatedGroupNamePlaceholder": "Lesbare Gruppe suchen und auswählen",
   "loadingBaseType": "Ausgewählter Basistyp wird geladen...",
   "addNestedSection": "Verschachtelten Abschnitt hinzufügen",
-  "baseAttributeLocked": "Basisattribut"
+  "baseAttributeLocked": "Basisattribut",
+  "searchingGroups": "Lesbare Gruppen werden gesucht...",
+  "noMatchingGroups": "Keine lesbaren Gruppen passen zu dieser Suche."
 }

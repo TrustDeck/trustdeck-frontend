@@ -25,7 +25,10 @@ import useProjectStore from '../../core/stores/ProjectStore'
 type LayoutValue = 'row' | 'col' | 'group'
 type PrivacyMode = 'plain' | 'pprl'
 type PprlMethod = 'ngramBloomFilter' | 'hmacExact'
-type DropIndicator = { targetKey: string; position: 'before' | 'after' | 'inside' } | null
+type DropIndicator = {
+  targetKey: string
+  position: 'before' | 'after' | 'inside'
+} | null
 
 type LinkageConfig = {
   privacyMode?: PrivacyMode
@@ -254,7 +257,9 @@ function lockBaseAttribute(attribute: BuilderAttribute): BuilderAttribute {
   }
 }
 
-function unlockImportedAttribute(attribute: BuilderAttribute): BuilderAttribute {
+function unlockImportedAttribute(
+  attribute: BuilderAttribute
+): BuilderAttribute {
   return {
     ...attribute,
     locked: false,
@@ -262,7 +267,24 @@ function unlockImportedAttribute(attribute: BuilderAttribute): BuilderAttribute 
   }
 }
 
-function flattenDomainsForOptions(domains: any[]): { label: string; value: string }[] {
+function removeLockedAttributes(
+  attributes: BuilderAttribute[]
+): BuilderAttribute[] {
+  return attributes
+    .filter((attribute) => !attribute.locked)
+    .map((attribute) =>
+      attribute.attributes
+        ? {
+            ...attribute,
+            attributes: removeLockedAttributes(attribute.attributes)
+          }
+        : attribute
+    )
+}
+
+function flattenDomainsForOptions(
+  domains: any[]
+): { label: string; value: string }[] {
   const seen = new Set<string>()
   const out: { label: string; value: string }[] = []
   const visit = (node: any) => {
@@ -334,7 +356,10 @@ function serializeAttribute(attribute: BuilderAttribute): any {
     field.minimum = Number(attribute.minimum)
   if (attribute.maximum !== undefined && attribute.maximum !== null)
     field.maximum = Number(attribute.maximum)
-  // minLength/maxLength are intentionally not serialized because the backend schema currently rejects them.
+  if (attribute.minLength !== undefined && attribute.minLength !== null)
+    field.minLength = Number(attribute.minLength)
+  if (attribute.maxLength !== undefined && attribute.maxLength !== null)
+    field.maxLength = Number(attribute.maxLength)
   if (attribute.type === 'enum') {
     const values = compactArray(attribute.values)
     if (values.length) {
@@ -637,7 +662,10 @@ export default function Builder() {
   const [selectedBaseType, setSelectedBaseType] = useState('')
   const [baseTypeLoading, setBaseTypeLoading] = useState(false)
   const [associatedGroupName, setAssociatedGroupName] = useState('')
-  const [groupOptions, setGroupOptions] = useState<{ label: string; value: string }[]>([])
+  const [groupOptions, setGroupOptions] = useState<
+    { label: string; value: string }[]
+  >([])
+  const [groupSearchLoading, setGroupSearchLoading] = useState(false)
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
   const [jsonDraft, setJsonDraft] = useState('')
   const [jsonDirty, setJsonDirty] = useState(false)
@@ -686,21 +714,31 @@ export default function Builder() {
   }, [])
 
   useEffect(() => {
+    if (saveTarget !== 'project') {
+      setGroupOptions([])
+      setGroupSearchLoading(false)
+      return
+    }
+
     let active = true
-    async function loadReadableGroups() {
-      if (saveTarget !== 'project') return
+    const handle = window.setTimeout(async () => {
+      setGroupSearchLoading(true)
       try {
-        const domains = await TrustDeck.instance().getDomainsHierarchy()
+        const query = associatedGroupName.trim() || '*'
+        const domains = await TrustDeck.instance().searchReadableDomains(query)
         if (active) setGroupOptions(flattenDomainsForOptions(domains ?? []))
       } catch {
         if (active) setGroupOptions([])
+      } finally {
+        if (active) setGroupSearchLoading(false)
       }
-    }
-    loadReadableGroups()
+    }, 250)
+
     return () => {
       active = false
+      window.clearTimeout(handle)
     }
-  }, [saveTarget])
+  }, [associatedGroupName, saveTarget])
 
   useEffect(() => {
     let active = true
@@ -708,13 +746,19 @@ export default function Builder() {
       if (saveTarget !== 'project' || !selectedBaseType) return
       setBaseTypeLoading(true)
       try {
-        const base = (await TrustDeck.instance().getBaseType(selectedBaseType)) as any
+        const base = (await TrustDeck.instance().getBaseType(
+          selectedBaseType
+        )) as any
         if (!active) return
-        const baseAttributes = attributesFromPayload(base as EntityTypePayload).map(lockBaseAttribute)
+        const baseAttributes = attributesFromPayload(
+          base as EntityTypePayload
+        ).map(lockBaseAttribute)
         setRootLayout((base.typeDefinition?.layout as LayoutValue) ?? 'group')
         setAttributes((current) => [
           ...baseAttributes,
-          ...current.filter((attribute) => !attribute.locked).map(unlockImportedAttribute)
+          ...current
+            .filter((attribute) => !attribute.locked)
+            .map(unlockImportedAttribute)
         ])
       } catch {
         if (active) {
@@ -881,6 +925,41 @@ export default function Builder() {
       if (containsKey(extracted.found, groupKey)) return current
       return appendToGroup(extracted.next, groupKey, extracted.found)
     })
+  }
+
+  const resolveDropPosition = (
+    event: React.DragEvent<HTMLElement>,
+    canDropInside: boolean
+  ): NonNullable<DropIndicator>['position'] => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const relativeY = event.clientY - rect.top
+
+    if (canDropInside) {
+      const edgeZone = Math.min(48, rect.height * 0.25)
+      if (relativeY < edgeZone) return 'before'
+      if (relativeY > rect.height - edgeZone) return 'after'
+      return 'inside'
+    }
+
+    return relativeY > rect.height / 2 ? 'after' : 'before'
+  }
+
+  const handleAttributeDrop = (source: string, target: BuilderAttribute) => {
+    if (dropIndicator?.targetKey !== target.key) {
+      moveBefore(source, target.key)
+      return
+    }
+
+    if (
+      dropIndicator.position === 'inside' &&
+      Array.isArray(target.attributes)
+    ) {
+      moveIntoGroup(source, target.key)
+    } else if (dropIndicator.position === 'after') {
+      moveAfter(source, target.key)
+    } else {
+      moveBefore(source, target.key)
+    }
   }
 
   const openJsonModal = () => {
@@ -1336,8 +1415,8 @@ export default function Builder() {
           onDragOver={(event) => {
             if (draggedAttributeKey && draggedAttributeKey !== attribute.key) {
               event.preventDefault()
-              const rect = event.currentTarget.getBoundingClientRect()
-              const position = event.clientY > rect.top + rect.height / 2 ? 'after' : 'before'
+              event.stopPropagation()
+              const position = resolveDropPosition(event, isGroup)
               setDropIndicator({ targetKey: attribute.key, position })
             }
           }}
@@ -1346,10 +1425,7 @@ export default function Builder() {
             event.stopPropagation()
             const source =
               event.dataTransfer.getData('text/plain') || draggedAttributeKey
-            if (source) {
-              if (dropIndicator?.targetKey === attribute.key && dropIndicator.position === 'after') moveAfter(source, attribute.key)
-              else moveBefore(source, attribute.key)
-            }
+            if (source) handleAttributeDrop(source, attribute)
             setDraggedAttributeKey(null)
             setDropIndicator(null)
           }}
@@ -1357,7 +1433,9 @@ export default function Builder() {
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="inline-flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <ArrowsUpDownIcon className={`h-4 w-4 ${locked ? 'cursor-not-allowed text-gray-300' : 'cursor-move text-gray-400'}`} />
+              <ArrowsUpDownIcon
+                className={`h-4 w-4 ${locked ? 'cursor-not-allowed text-gray-300' : 'cursor-move text-gray-400'}`}
+              />
               {attribute.label_en ||
                 attribute.name ||
                 (isGroup ? t('newGroup') : t('newAttribute'))}
@@ -1508,6 +1586,7 @@ export default function Builder() {
                   draggedAttributeKey !== attribute.key
                 ) {
                   event.preventDefault()
+                  event.stopPropagation()
                   setDropIndicator({
                     targetKey: attribute.key,
                     position: 'inside'
@@ -1599,6 +1678,7 @@ export default function Builder() {
                 label={t('associatedGroupName')}
                 placeholder={t('associatedGroupNamePlaceholder')}
                 options={groupOptions}
+                loading={groupSearchLoading}
                 onChange={setAssociatedGroupName}
               />
             )}
@@ -1630,7 +1710,10 @@ export default function Builder() {
             </button>
             <button
               type="button"
-              onClick={() => setSaveTarget('base')}
+              onClick={() => {
+                setSaveTarget('base')
+                setAttributes((current) => removeLockedAttributes(current))
+              }}
               className={`rounded-xl border p-4 text-left transition ${saveTarget === 'base' ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
             >
               <div className="font-semibold">{t('baseType')}</div>
@@ -1839,7 +1922,9 @@ function FloatingTextInput({
   value,
   onChange,
   placeholder,
-  disabled = false
+  disabled = false,
+  onFocus,
+  onBlur
 }: {
   id: string
   label: string
@@ -1847,6 +1932,8 @@ function FloatingTextInput({
   onChange: (value: string) => void
   placeholder?: string
   disabled?: boolean
+  onFocus?: () => void
+  onBlur?: () => void
 }) {
   return (
     <div className="relative">
@@ -1856,6 +1943,8 @@ function FloatingTextInput({
         disabled={disabled}
         value={value}
         placeholder={placeholder ?? ''}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onChange={(event) => onChange(event.target.value)}
       />
       <label
@@ -1963,7 +2052,7 @@ function DropdownWithInfo({
       />
       <span
         title={info}
-        className="pointer-events-auto absolute right-12 top-1/2 z-20 -translate-y-1/2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+        className="td-dropdown-with-info__icon pointer-events-auto absolute top-1/2 z-20 -translate-y-1/2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
       >
         <InformationCircleIcon className="h-5 w-5" />
       </span>
@@ -1977,6 +2066,7 @@ function GroupSearchInput({
   label,
   placeholder,
   options,
+  loading = false,
   onChange
 }: {
   id: string
@@ -1984,14 +2074,14 @@ function GroupSearchInput({
   label: string
   placeholder: string
   options: { label: string; value: string }[]
+  loading?: boolean
   onChange: (value: string) => void
 }) {
+  const { t } = useTranslation(['entityBuilder'])
   const [open, setOpen] = useState(false)
-  const filtered = options
-    .filter((option) =>
-      option.label.toLowerCase().includes(value.trim().toLowerCase())
-    )
-    .slice(0, 12)
+  const visibleOptions = options.slice(0, 12)
+  const shouldShowMenu =
+    open && (loading || visibleOptions.length > 0 || Boolean(value.trim()))
 
   return (
     <div className="relative">
@@ -2000,33 +2090,44 @@ function GroupSearchInput({
         label={label}
         value={value}
         placeholder={placeholder}
+        onFocus={() => setOpen(true)}
+        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
         onChange={(next) => {
           onChange(next)
           setOpen(true)
         }}
       />
-      {open && filtered.length > 0 && (
+      {shouldShowMenu && (
         <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
-          {filtered.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className="block w-full px-3 py-2 text-left text-sm text-gray-800 hover:bg-blue-50 dark:text-gray-100 dark:hover:bg-blue-950/40"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => {
-                onChange(option.value)
-                setOpen(false)
-              }}
-            >
-              {option.label}
-            </button>
-          ))}
+          {loading ? (
+            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-300">
+              {t('searchingGroups')}
+            </div>
+          ) : visibleOptions.length > 0 ? (
+            visibleOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className="block w-full px-3 py-2 text-left text-sm text-gray-800 hover:bg-blue-50 dark:text-gray-100 dark:hover:bg-blue-950/40"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  onChange(option.value)
+                  setOpen(false)
+                }}
+              >
+                {option.label}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-300">
+              {t('noMatchingGroups')}
+            </div>
+          )}
         </div>
       )}
     </div>
   )
 }
-
 function NumberInput({
   id,
   value,

@@ -206,5 +206,7 @@
   "associatedGroupNamePlaceholder": "Search and select a readable group",
   "loadingBaseType": "Loading selected base type...",
   "addNestedSection": "Add nested section",
-  "baseAttributeLocked": "Base attribute"
+  "baseAttributeLocked": "Base attribute",
+  "searchingGroups": "Searching readable groups...",
+  "noMatchingGroups": "No readable groups match this search."
 }

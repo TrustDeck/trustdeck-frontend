@@ -22,6 +22,12 @@ function typeLabel(type: EntityTypePayload) {
   return `${type.name}${type.version ? ` (${type.version})` : ''}`
 }
 
+function statusLabel(type: EntityTypePayload) {
+  if (type.isDeleted) return 'deleted'
+  if (type.isDeprecated) return 'deprecated'
+  return 'active'
+}
+
 export default function BaseTypeManager() {
   const { t } = useTranslation(['entityBuilder', 'common'])
   const showToast = useToastStore((state) => state.show)
@@ -35,7 +41,6 @@ export default function BaseTypeManager() {
   const selectedType = useMemo(
     () =>
       baseTypes.find((definition) => definition.name === selectedTypeName) ??
-      baseTypes[0] ??
       null,
     [baseTypes, selectedTypeName]
   )
@@ -49,12 +54,12 @@ export default function BaseTypeManager() {
           Array.isArray(response) ? response : []
         ) as EntityTypePayload[]
         setBaseTypes(definitions)
-        const nextSelection =
+        setSelectedTypeName(
           preferredName &&
-          definitions.some((entry) => entry.name === preferredName)
+            definitions.some((entry) => entry.name === preferredName)
             ? preferredName
-            : (definitions[0]?.name ?? '')
-        setSelectedTypeName(nextSelection)
+            : ''
+        )
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) {
@@ -139,60 +144,85 @@ export default function BaseTypeManager() {
         <Panel
           noMaxWidth
           className="mx-auto !w-full"
-          title={t('baseTypesTitle', 'Base type management')}
+          title={t('globalSettingsTitle', 'Global settings')}
         >
           {loading ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
               {t('loadingBaseTypes', 'Loading base types...')}
             </div>
           ) : (
-            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(16rem,22rem)_1fr]">
-              <div className="space-y-3">
-                {baseTypes.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      {t('noBaseTypesTitle', 'No base types available')}
-                    </h2>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                      {t(
-                        'noBaseTypesManagerDetail',
-                        'Create a base type before project-specific types can extend it.'
-                      )}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {baseTypes.map((definition) => (
-                      <button
-                        key={`${definition.name}-${definition.version ?? ''}`}
-                        type="button"
-                        onClick={() => setSelectedTypeName(definition.name)}
-                        className={`w-full rounded-xl border px-4 py-3 text-left transition ${selectedType?.name === definition.name ? 'border-color-blue bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'border-gray-200 bg-white hover:border-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100'}`}
-                      >
-                        <span className="block font-semibold">
-                          {definition.name}
-                        </span>
-                        <span className="mt-1 block text-sm text-gray-500 dark:text-gray-300">
-                          {t('versionLabel', {
-                            version: definition.version ?? 'v1.0',
-                            defaultValue: `Version ${definition.version ?? 'v1.0'}`
-                          })}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <PrimaryButton
-                  label={
-                    <span className="inline-flex items-center gap-2">
-                      <PlusIcon className="h-5 w-5" />
-                      {t('addBaseType', 'Add base type')}
-                    </span>
-                  }
-                  onClick={openCreateModal}
-                />
+            <div className="mt-6 space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                  {t('baseTypesSectionTitle', 'Base types')}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
+                  {t(
+                    'baseTypesSectionDescription',
+                    'Manage reusable type blueprints that can be extended by project-specific entity types.'
+                  )}
+                </p>
               </div>
+
+              {baseTypes.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t('noBaseTypesTitle', 'No base types available')}
+                  </h2>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    {t(
+                      'noBaseTypesManagerDetail',
+                      'Create a base type before project-specific types can extend it.'
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                  <div className="grid grid-cols-[1.6fr_0.7fr_0.7fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
+                    <span>{t('entityName')}</span>
+                    <span>{t('version', 'Version')}</span>
+                    <span>{t('status', 'Status')}</span>
+                  </div>
+                  <div className="divide-y divide-gray-200 dark:divide-slate-700">
+                    {baseTypes.map((definition) => {
+                      const selected = selectedType?.name === definition.name
+                      const status = statusLabel(definition)
+                      return (
+                        <button
+                          key={`${definition.name}-${definition.version ?? ''}`}
+                          type="button"
+                          onClick={() => setSelectedTypeName(definition.name)}
+                          className={`grid w-full grid-cols-[1.6fr_0.7fr_0.7fr] gap-3 px-4 py-3 text-left text-sm transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
+                        >
+                          <span className="min-w-0 truncate font-semibold">
+                            {definition.name}
+                          </span>
+                          <span className="min-w-0 truncate text-gray-600 dark:text-gray-300">
+                            {definition.version ?? 'v1.0'}
+                          </span>
+                          <span>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'}`}
+                            >
+                              {t(`typeStatus.${status}`, status)}
+                            </span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <PrimaryButton
+                label={
+                  <span className="inline-flex items-center gap-2">
+                    <PlusIcon className="h-5 w-5" />
+                    {t('addBaseType', 'Add base type')}
+                  </span>
+                }
+                onClick={openCreateModal}
+              />
 
               <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900">
                 {selectedType ? (
@@ -247,6 +277,14 @@ export default function BaseTypeManager() {
                         </dt>
                         <dd className="mt-1 text-gray-900 dark:text-gray-100">
                           {selectedType.version ?? 'v1.0'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-semibold text-gray-500 dark:text-gray-300">
+                          {t('status', 'Status')}
+                        </dt>
+                        <dd className="mt-1 text-gray-900 dark:text-gray-100">
+                          {t(`typeStatus.${statusLabel(selectedType)}`)}
                         </dd>
                       </div>
                     </dl>

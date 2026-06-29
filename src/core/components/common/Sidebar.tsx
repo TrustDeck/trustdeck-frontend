@@ -32,7 +32,7 @@ const XL_BREAKPOINT = 1280
 
 export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
-  const { t } = useTranslation()
+  const { t } = useTranslation(['layout', 'common'])
   const auth = useAuth()
   const projectImage = useProjectStore((state) => state.projectImage)
   const selectedProject = useProjectStore((state) => state.selectedProject)
@@ -169,6 +169,13 @@ export default function Sidebar({ projectName }: SidebarProps) {
       ${isActive ? 'bg-color-blue text-white' : 'hover:bg-gray-100 text-black dark:text-gray-100 dark:hover:bg-slate-800'}`
   }
 
+  const routeTitle = (titleKey: string) => {
+    if (titleKey.startsWith('layout:')) {
+      return t(titleKey.slice('layout:'.length), { ns: 'layout' })
+    }
+    return t(titleKey)
+  }
+
   const renderNavLinks = (items: RouteConfig[], collapsed = false) =>
     items.map(({ titleKey, path, Icon }) => (
       <li key={titleKey}>
@@ -179,9 +186,9 @@ export default function Sidebar({ projectName }: SidebarProps) {
         >
           <Icon
             className={collapsed ? 'h-6 w-6' : 'h-6 w-6 mr-2'}
-            aria-label={t(titleKey)}
+            aria-label={routeTitle(titleKey)}
           />
-          {!collapsed && t(titleKey)}
+          {!collapsed && routeTitle(titleKey)}
         </NavLink>
       </li>
     ))

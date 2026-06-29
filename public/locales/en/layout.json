@@ -17,7 +17,7 @@
     "permissionManagement": "Permission Management",
     "newProject": "New project",
     "entityManagement": "Entity Management",
-    "baseTypeManagement": "Base Type Management"
+    "globalSettings": "Global Settings"
   },
   "logOut": {
     "loggingOut": "Logging you out",

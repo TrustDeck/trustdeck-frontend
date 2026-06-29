@@ -238,12 +238,17 @@
   justify-content: center !important;
   margin-left: auto !important;
   position: absolute !important;
-  right: 0.5rem !important;
+  right: 0.75rem !important;
   top: 0 !important;
   width: 1.75rem !important;
 }
 
+.td-dropdown-with-info .p-dropdown-trigger,
+.td-custom-dropdown--with-help .p-dropdown-trigger {
+  right: 2.5rem !important;
+}
+
 .td-dropdown-with-info__icon,
 .td-custom-dropdown__help {
-  right: 2.35rem;
+  right: 0.75rem;
 }

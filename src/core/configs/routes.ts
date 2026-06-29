@@ -102,7 +102,7 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/base-types',
-    titleKey: 'layout:menu.baseTypeManagement',
+    titleKey: 'layout:menu.globalSettings',
     component: BaseTypeManager,
     Icon: WrenchScrewdriverIcon,
     isProtected: true,

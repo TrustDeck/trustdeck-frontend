@@ -89,7 +89,7 @@
     "missingAttributesSummary": "No attributes configured",
     "missingAttributesDetail": "Add at least one attribute before creating the entity type.",
     "invalidAttributesSummary": "Invalid attributes",
-    "invalidAttributesDetail": "Each non-group attribute needs an attribute name and type. Empty groups need at least one nested attribute before saving.",
+    "invalidAttributesDetail": "Each attribute needs a valid system attribute identifier and type. Use PascalCase, camelCase, or snake_case for identifiers. Empty groups need at least one nested attribute before saving.",
     "invalidDefinitionDetail": "The backend rejected the entity type definition. Please check that all required attributes have names/types and that nested groups contain attributes.",
     "jsonFileReadFailed": "The selected JSON file could not be read.",
     "baseLoadFailedSummary": "Base type could not be loaded",
@@ -128,9 +128,9 @@
   "addCustomAttribute": "Add custom attribute",
   "newAttribute": "New attribute",
   "newGroup": "New group",
-  "attributeName": "Attribute name",
+  "attributeName": "System attribute identifier",
   "attributeType": "Attribute type",
-  "noAttributesHint": "No attributes configured yet. Add attributes visually or import a JSON definition.",
+  "noAttributesHint": "No attributes configured yet. Add attributes visually.",
   "addNestedAttribute": "Add nested attribute",
   "emptyGroupHint": "This group has no nested attributes yet.",
   "uploadJsonFile": "Upload .json/.txt",
@@ -219,7 +219,7 @@
   "noMatchingGroups": "No readable groups match this search.",
   "associatedGroupNameHelp": "The associated group/domain controls where pseudonyms for entities of this type are created and which domain permissions apply. Only groups you are allowed to read are offered in the search results.",
   "projectTypesTitle": "Project entity types",
-  "baseTypesTitle": "Base type management",
+  "baseTypesTitle": "Global settings",
   "addType": "Add type",
   "addBaseType": "Add base type",
   "createBaseType": "Create base type",
@@ -238,5 +238,59 @@
   "projectTypeModalHelp": "Create or update a project-specific entity type.",
   "baseTypeModalHelp": "Create or update a reusable base type.",
   "confirmDeleteProjectType": "Delete project type {{type}}?",
-  "confirmDeleteBaseType": "Delete base type {{type}}?"
+  "confirmDeleteBaseType": "Delete base type {{type}}?",
+  "systemAttributeIdentifier": "System attribute identifier",
+  "systemAttributeIdentifierHelp": "This identifier is used internally to build and reference the attribute in JSON. Use PascalCase, camelCase, or snake_case without spaces or special characters.",
+  "systemAttributeIdentifierInvalid": "Use PascalCase, camelCase, or snake_case. Start with a letter and use only letters, numbers, and underscores.",
+  "attributeLabels": "Labels",
+  "addLabel": "Add label",
+  "noLabelsHint": "No labels configured yet. Add a label for one or more languages.",
+  "labelText": "Label text",
+  "status": "Status",
+  "globalSettingsTitle": "Global settings",
+  "baseTypesSectionTitle": "Base types",
+  "baseTypesSectionDescription": "Manage reusable type blueprints that can be extended by project-specific entity types.",
+  "advancedOptions": {
+    "show": "Advanced options",
+    "hide": "Hide advanced options"
+  },
+  "typeStatus": {
+    "active": "Active",
+    "deprecated": "Deprecated",
+    "deleted": "Deleted"
+  },
+  "labelLanguages": {
+    "en": "English",
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+    "nl": "Dutch",
+    "pl": "Polish",
+    "tr": "Turkish",
+    "uk": "Ukrainian"
+  },
+  "normalizerOptions": {
+    "trim": "Trim whitespace",
+    "lower": "Lowercase text",
+    "collapseWhitespace": "Collapse repeated whitespace",
+    "asciiFold": "Fold accents to ASCII",
+    "umlautFold": "Normalize German umlauts",
+    "removePunctuation": "Remove punctuation",
+    "digitsOnly": "Digits only"
+  },
+  "encoderOptions": {
+    "cologne": "Cologne phonetic",
+    "doubleMetaphone": "Double Metaphone"
+  },
+  "blockingOptions": {
+    "exact": "Exact value",
+    "prefix3": "First 3 characters",
+    "prefix4": "First 4 characters",
+    "prefix6": "First 6 characters",
+    "phonetic": "Phonetic value",
+    "year": "Year",
+    "yearMonth": "Year and month",
+    "domainExact": "Domain-specific exact value"
+  }
 }

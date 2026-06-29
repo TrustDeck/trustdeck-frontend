@@ -27,6 +27,22 @@ type DropIndicator = {
   position: 'before' | 'after' | 'inside'
 } | null
 
+type LabelMap = Record<string, string>
+
+const SYSTEM_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/
+
+const labelLanguageOptions = [
+  { labelKey: 'labelLanguages.en', fallback: 'English', value: 'en' },
+  { labelKey: 'labelLanguages.de', fallback: 'German', value: 'de' },
+  { labelKey: 'labelLanguages.fr', fallback: 'French', value: 'fr' },
+  { labelKey: 'labelLanguages.es', fallback: 'Spanish', value: 'es' },
+  { labelKey: 'labelLanguages.it', fallback: 'Italian', value: 'it' },
+  { labelKey: 'labelLanguages.nl', fallback: 'Dutch', value: 'nl' },
+  { labelKey: 'labelLanguages.pl', fallback: 'Polish', value: 'pl' },
+  { labelKey: 'labelLanguages.tr', fallback: 'Turkish', value: 'tr' },
+  { labelKey: 'labelLanguages.uk', fallback: 'Ukrainian', value: 'uk' }
+]
+
 type LinkageConfig = {
   privacyMode?: PrivacyMode
   normalizers?: string[]
@@ -47,6 +63,7 @@ type BuilderAttribute = {
   name: string
   label_en?: string
   label_de?: string
+  labels?: LabelMap
   type?: string
   required?: boolean
   linkage?: boolean
@@ -69,6 +86,8 @@ export type EntityTypePayload = {
   isBaseType?: boolean
   baseTypeName?: string
   associatedDomainName?: string
+  isDeprecated?: boolean
+  isDeleted?: boolean
   typeDefinition: {
     typeName?: string
     version?: string
@@ -137,6 +156,59 @@ function buildDefaultTag(entityTypeName: string, attributeName: string) {
   return `${entity}.${attribute}`
 }
 
+function isValidSystemIdentifier(value: string) {
+  return SYSTEM_IDENTIFIER_PATTERN.test(value.trim())
+}
+
+function labelKeyToCode(key: string) {
+  const match = /^label_([a-z]{2})$/i.exec(key)
+  return match?.[1]?.toLowerCase()
+}
+
+function labelsFromBackendAttribute(attribute: any): LabelMap {
+  const labels: LabelMap = {}
+  Object.entries(attribute ?? {}).forEach(([key, value]) => {
+    const code = labelKeyToCode(key)
+    if (code && typeof value === 'string') labels[code] = value
+  })
+  if (!labels.en && typeof attribute?.labelEn === 'string') {
+    labels.en = attribute.labelEn
+  }
+  if (!labels.de && typeof attribute?.labelDe === 'string') {
+    labels.de = attribute.labelDe
+  }
+  return labels
+}
+
+function preferredLabel(attribute: BuilderAttribute): string {
+  return (
+    attribute.labels?.en ||
+    attribute.labels?.de ||
+    Object.values(attribute.labels ?? {}).find(Boolean) ||
+    attribute.label_en ||
+    attribute.label_de ||
+    attribute.name
+  )
+}
+
+function serializeLabels(
+  attribute: BuilderAttribute,
+  fallback: string
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  Object.entries(attribute.labels ?? {}).forEach(([code, label]) => {
+    const normalizedCode = code.trim().toLowerCase()
+    const trimmedLabel = label.trim()
+    if (/^[a-z]{2}$/.test(normalizedCode) && trimmedLabel) {
+      out[`label_${normalizedCode}`] = trimmedLabel
+    }
+  })
+  if (Object.keys(out).length === 0 && fallback.trim()) {
+    out.label_en = fallback.trim()
+  }
+  return out
+}
+
 function defaultLinkageConfig(type?: string): LinkageConfig {
   const exact =
     type === 'date' ||
@@ -171,12 +243,18 @@ function defaultLinkageConfig(type?: string): LinkageConfig {
 
 function mapBackendAttribute(attribute: any): BuilderAttribute {
   if (Array.isArray(attribute?.attributes)) {
+    const labels = labelsFromBackendAttribute(attribute)
     return {
       key: crypto.randomUUID(),
       name: attribute?.name ?? '',
       label_en:
-        attribute?.label_en ?? attribute?.labelEn ?? attribute?.name ?? '',
-      label_de: attribute?.label_de ?? attribute?.labelDe ?? '',
+        labels.en ??
+        attribute?.label_en ??
+        attribute?.labelEn ??
+        attribute?.name ??
+        '',
+      label_de: labels.de ?? attribute?.label_de ?? attribute?.labelDe ?? '',
+      labels,
       layout: attribute?.layout ?? 'group',
       repeatable: Boolean(attribute?.repeatable),
       attributes: attribute.attributes.map(mapBackendAttribute)
@@ -189,12 +267,19 @@ function mapBackendAttribute(attribute: any): BuilderAttribute {
   if (importedLinkageConfig) delete importedLinkageConfig.comparator
   if (importedLinkageConfig?.pprl) delete importedLinkageConfig.pprl.exact
 
+  const labels = labelsFromBackendAttribute(attribute)
+
   return {
     key: crypto.randomUUID(),
     name: attribute?.name ?? '',
     label_en:
-      attribute?.label_en ?? attribute?.labelEn ?? attribute?.name ?? '',
-    label_de: attribute?.label_de ?? attribute?.labelDe ?? '',
+      labels.en ??
+      attribute?.label_en ??
+      attribute?.labelEn ??
+      attribute?.name ??
+      '',
+    label_de: labels.de ?? attribute?.label_de ?? attribute?.labelDe ?? '',
+    labels,
     type: attribute?.type ?? 'string',
     required: Boolean(attribute?.required),
     linkage: Boolean(attribute?.linkage),
@@ -312,27 +397,26 @@ function cleanLinkageConfig(config: LinkageConfig): LinkageConfig {
   return cleaned
 }
 
-function serializeAttribute(attribute: BuilderAttribute): any {
+function serializeAttribute(
+  attribute: BuilderAttribute,
+  entityTypeName = ''
+): any {
   if (Array.isArray(attribute.attributes)) {
     const group: any = {
       layout: attribute.layout ?? 'group',
-      attributes: attribute.attributes.map(serializeAttribute)
+      attributes: attribute.attributes.map((child) =>
+        serializeAttribute(child, entityTypeName)
+      )
     }
     if (attribute.name.trim()) group.name = attribute.name.trim()
-    if (attribute.label_en?.trim()) group.label_en = attribute.label_en.trim()
-    if (attribute.label_de?.trim()) group.label_de = attribute.label_de.trim()
+    Object.assign(group, serializeLabels(attribute, attribute.name))
     if (attribute.repeatable) group.repeatable = true
     return group
   }
 
   const field: any = {
     name: attribute.name.trim(),
-    label_en: (attribute.label_en || attribute.name).trim(),
-    label_de: (
-      attribute.label_de ||
-      attribute.label_en ||
-      attribute.name
-    ).trim(),
+    ...serializeLabels(attribute, attribute.name),
     type: attribute.type || 'string',
     required: Boolean(attribute.required),
     linkage: Boolean(attribute.linkage)
@@ -355,7 +439,9 @@ function serializeAttribute(attribute: BuilderAttribute): any {
   }
   if (attribute.linkage) {
     const tags = compactArray(attribute.tags)
-    if (tags.length) field.tags = tags
+    field.tags = tags.length
+      ? tags
+      : [buildDefaultTag(entityTypeName, attribute.name)]
     if (attribute.linkageConfig)
       field.linkageConfig = cleanLinkageConfig(attribute.linkageConfig)
   }
@@ -416,12 +502,23 @@ function addChildAttributeByKey(
 
 function hasInvalidAttribute(attributes: BuilderAttribute[]): boolean {
   return attributes.some((attribute) => {
+    const identifier = attribute.name.trim()
+    const hasInvalidIdentifier = identifier
+      ? !isValidSystemIdentifier(identifier)
+      : !attribute.attributes
+    const hasInvalidLabel = Object.values(attribute.labels ?? {}).some(
+      (label) => label.length > 80
+    )
     if (attribute.attributes)
       return (
+        hasInvalidIdentifier ||
+        hasInvalidLabel ||
         attribute.attributes.length === 0 ||
         hasInvalidAttribute(attribute.attributes)
       )
-    return !attribute.name.trim() || !(attribute.type ?? '').trim()
+    return (
+      hasInvalidIdentifier || hasInvalidLabel || !(attribute.type ?? '').trim()
+    )
   })
 }
 
@@ -580,6 +677,9 @@ export default function Builder({
   const [collapsedLinkageKeys, setCollapsedLinkageKeys] = useState<
     Record<string, boolean>
   >({})
+  const [advancedOptionKeys, setAdvancedOptionKeys] = useState<
+    Record<string, boolean>
+  >({})
 
   useEffect(() => {
     setSaveTarget(scope)
@@ -598,6 +698,7 @@ export default function Builder({
     setDraggedAttributeKey(null)
     setDropIndicator(null)
     setCollapsedLinkageKeys({})
+    setAdvancedOptionKeys({})
   }, [initialType, scope])
 
   useEffect(() => {
@@ -711,7 +812,9 @@ export default function Builder({
         layout: rootLayout,
         label_en: name,
         label_de: name,
-        attributes: attributes.map(serializeAttribute)
+        attributes: attributes.map((attribute) =>
+          serializeAttribute(attribute, name)
+        )
       }
     }
     if (saveTarget === 'project') {
@@ -733,8 +836,9 @@ export default function Builder({
   ): BuilderAttribute => ({
     key: crypto.randomUUID(),
     name: source?.name ?? '',
-    label_en: source?.label_en ?? '',
-    label_de: source?.label_de ?? '',
+    label_en: source?.label_en ?? source?.labels?.en ?? '',
+    label_de: source?.label_de ?? source?.labels?.de ?? '',
+    labels: source?.labels ?? {},
     type: source?.type ?? 'string',
     required: source?.required ?? false,
     linkage: source?.linkage ?? false,
@@ -754,6 +858,7 @@ export default function Builder({
     name: '',
     label_en: '',
     label_de: '',
+    labels: {},
     layout: 'group',
     repeatable: false,
     attributes: [],
@@ -1036,7 +1141,7 @@ export default function Builder({
       attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)
     const pprl = config.pprl ?? defaultLinkageConfig(attribute.type).pprl ?? {}
     const privacyMode = config.privacyMode ?? 'pprl'
-    const isCollapsed = Boolean(collapsedLinkageKeys[attribute.key])
+    const isCollapsed = collapsedLinkageKeys[attribute.key] ?? true
     const locked = Boolean(attribute.locked)
     return (
       <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
@@ -1066,26 +1171,7 @@ export default function Builder({
         </button>
         {isCollapsed ? null : (
           <div className="px-4 pb-4">
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <InputWithInfo
-                id={`tags-${attribute.key}`}
-                label={t('linkageConfig.tags')}
-                value={(attribute.tags?.length
-                  ? attribute.tags
-                  : [buildDefaultTag(entityName, attribute.name)]
-                ).join(', ')}
-                placeholder={t('linkageConfig.tagsPlaceholder')}
-                info={t('linkageConfigHelp.tags')}
-                disabled={locked}
-                onChange={(value) =>
-                  updateAttribute(attribute.key, {
-                    tags: value
-                      .split(',')
-                      .map((item) => item.trim())
-                      .filter(Boolean)
-                  })
-                }
-              />
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
               <DropdownWithInfo
                 id={`privacy-${attribute.key}`}
                 label={t('linkageConfig.privacyMode')}
@@ -1122,6 +1208,7 @@ export default function Builder({
                 title={t('linkageConfig.normalizers')}
                 values={normalizerOptions}
                 selected={config.normalizers ?? []}
+                labelPrefix="normalizerOptions"
                 helpPrefix="normalizerHelp"
                 disabled={locked}
                 onChange={(value, checked) =>
@@ -1132,6 +1219,7 @@ export default function Builder({
                 title={t('linkageConfig.encoders')}
                 values={encoderOptions}
                 selected={config.encoders ?? []}
+                labelPrefix="encoderOptions"
                 helpPrefix="encoderHelp"
                 disabled={locked}
                 onChange={(value, checked) =>
@@ -1143,6 +1231,7 @@ export default function Builder({
                   title={t('linkageConfig.blocking')}
                   values={blockingOptions}
                   selected={config.blocking ?? []}
+                  labelPrefix="blockingOptions"
                   helpPrefix="blockingHelp"
                   disabled={locked}
                   onChange={(value, checked) =>
@@ -1284,8 +1373,7 @@ export default function Builder({
               <ArrowsUpDownIcon
                 className={`h-4 w-4 ${locked ? 'cursor-not-allowed text-gray-300' : 'cursor-move text-gray-400'}`}
               />
-              {attribute.label_en ||
-                attribute.name ||
+              {preferredLabel(attribute) ||
                 (isGroup ? t('newGroup') : t('newAttribute'))}
             </h3>
             {locked ? (
@@ -1306,30 +1394,17 @@ export default function Builder({
           <div className="grid gap-3 md:grid-cols-2">
             <FloatingTextInput
               id={`attribute-name-${attribute.key}`}
-              label={t('attributeName')}
+              label={t('systemAttributeIdentifier')}
               value={attribute.name}
-              placeholder={t('attributeName')}
+              placeholder={t('systemAttributeIdentifier')}
+              info={t('systemAttributeIdentifierHelp')}
+              error={
+                attribute.name.trim() &&
+                !isValidSystemIdentifier(attribute.name)
+                  ? t('systemAttributeIdentifierInvalid')
+                  : undefined
+              }
               onChange={(value) => handleAttributeNameChange(attribute, value)}
-              disabled={locked}
-            />
-            <FloatingTextInput
-              id={`attribute-label-en-${attribute.key}`}
-              label={t('englishLabel')}
-              value={attribute.label_en ?? ''}
-              placeholder={t('englishLabel')}
-              onChange={(value) =>
-                updateAttribute(attribute.key, { label_en: value })
-              }
-              disabled={locked}
-            />
-            <FloatingTextInput
-              id={`attribute-label-de-${attribute.key}`}
-              label={t('germanLabel')}
-              value={attribute.label_de ?? ''}
-              placeholder={t('germanLabel')}
-              onChange={(value) =>
-                updateAttribute(attribute.key, { label_de: value })
-              }
               disabled={locked}
             />
             {isGroup ? (
@@ -1353,9 +1428,22 @@ export default function Builder({
                 disabled={locked}
               />
             )}
+            <div className="md:col-span-2">
+              <LabelListEditor
+                labels={attribute.labels ?? {}}
+                disabled={locked}
+                onChange={(labels) =>
+                  updateAttribute(attribute.key, {
+                    labels,
+                    label_en: labels.en ?? '',
+                    label_de: labels.de ?? ''
+                  })
+                }
+              />
+            </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-200">
+          <div className="mt-3 space-y-3 text-sm text-gray-700 dark:text-gray-200">
             {isGroup ? (
               <label className="inline-flex items-center gap-2">
                 <input
@@ -1371,35 +1459,33 @@ export default function Builder({
                 {t('attribute.repeatable')}
               </label>
             ) : (
-              (['required', 'linkage', 'repeatable'] as const).map((flag) => (
-                <label key={flag} className="inline-flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(attribute[flag])}
-                    disabled={locked}
-                    onChange={(e) => {
-                      const checked = e.target.checked
-                      updateAttribute(attribute.key, {
-                        [flag]: checked,
-                        ...(flag === 'linkage' && checked
-                          ? {
-                              linkageConfig:
-                                attribute.linkageConfig ??
-                                defaultLinkageConfig(attribute.type),
-                              tags: attribute.tags?.length
-                                ? attribute.tags
-                                : [buildDefaultTag(entityName, attribute.name)]
-                            }
-                          : {})
-                      })
-                    }}
-                  />
-                  <span className="inline-flex items-center gap-1.5">
-                    {t(`attribute.${flag}`)}
-                    <InfoIcon title={t(`attributeHelp.${flag}`)} />
-                  </span>
-                </label>
-              ))
+              <AttributeOptions
+                attribute={attribute}
+                locked={locked}
+                advanced={Boolean(advancedOptionKeys[attribute.key])}
+                projectScope={scope === 'project'}
+                onToggleAdvanced={() =>
+                  setAdvancedOptionKeys((current) => ({
+                    ...current,
+                    [attribute.key]: !current[attribute.key]
+                  }))
+                }
+                onToggle={(flag, checked) => {
+                  updateAttribute(attribute.key, {
+                    [flag]: checked,
+                    ...(flag === 'linkage' && checked
+                      ? {
+                          linkageConfig:
+                            attribute.linkageConfig ??
+                            defaultLinkageConfig(attribute.type),
+                          tags: attribute.tags?.length
+                            ? attribute.tags
+                            : [buildDefaultTag(entityName, attribute.name)]
+                        }
+                      : {})
+                  })
+                }}
+              />
             )}
           </div>
 
@@ -1517,41 +1603,43 @@ export default function Builder({
             }
             required
           />
-          {saveTarget === 'project' && (
-            <GroupSearchInput
-              id="associatedGroupName"
-              value={associatedGroupName}
-              label={t('associatedGroupName')}
-              placeholder={t('associatedGroupNamePlaceholder')}
-              info={t('associatedGroupNameHelp')}
-              options={groupOptions}
-              loading={groupSearchLoading}
-              onChange={setAssociatedGroupName}
-            />
-          )}
-        </div>
 
-        {saveTarget === 'project' && (
-          <div className="mt-4">
+          {saveTarget === 'project' && (
             <CustomDropdown
               id="baseType"
               value={selectedBaseType}
               onChange={(e) => setSelectedBaseType(e.value)}
               options={baseTypeOptions}
               placeholder={t('baseType', 'Base type')}
+              required
             />
-            {baseTypeLoading && (
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-                {t('loadingBaseType')}
-              </p>
-            )}
-            {baseTypeOptions.length === 0 && (
-              <p className="mt-2 text-sm text-amber-700">
-                {t('noBaseTypesHint')}
-              </p>
-            )}
-          </div>
-        )}
+          )}
+
+          {saveTarget === 'project' && (
+            <div className="md:col-start-2">
+              <GroupSearchInput
+                id="associatedGroupName"
+                value={associatedGroupName}
+                label={t('associatedGroupName')}
+                placeholder={t('associatedGroupNamePlaceholder')}
+                info={t('associatedGroupNameHelp')}
+                options={groupOptions}
+                loading={groupSearchLoading}
+                onChange={setAssociatedGroupName}
+              />
+              {baseTypeLoading && (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                  {t('loadingBaseType')}
+                </p>
+              )}
+              {baseTypeOptions.length === 0 && (
+                <p className="mt-2 text-sm text-amber-700">
+                  {t('noBaseTypesHint')}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </Panel>
 
       <Panel
@@ -1655,7 +1743,10 @@ function FloatingTextInput({
   placeholder,
   disabled = false,
   onFocus,
-  onBlur
+  onBlur,
+  info,
+  error,
+  maxLength
 }: {
   id: string
   label: string
@@ -1665,25 +1756,35 @@ function FloatingTextInput({
   disabled?: boolean
   onFocus?: () => void
   onBlur?: () => void
+  info?: string
+  error?: string
+  maxLength?: number
 }) {
   return (
-    <div className="relative">
-      <input
-        id={id}
-        className="h-[44px] w-full rounded-lg border border-gray-300 px-3 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
-        disabled={disabled}
-        value={value}
-        placeholder={placeholder ?? ''}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <label
-        htmlFor={id}
-        className="absolute -top-2 left-3 bg-white px-1 text-sm text-gray-500 dark:bg-slate-950 dark:text-gray-300"
-      >
-        {label}
-      </label>
+    <div>
+      <div className="relative">
+        <input
+          id={id}
+          className={`h-[44px] w-full rounded-lg border px-3 ${info ? 'pr-10' : ''} text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400 ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-slate-700'}`}
+          disabled={disabled}
+          value={value}
+          maxLength={maxLength}
+          placeholder={placeholder ?? ''}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <label
+          htmlFor={id}
+          className="absolute -top-2 left-3 bg-white px-1 text-sm text-gray-500 dark:bg-slate-950 dark:text-gray-300"
+        >
+          {label}
+        </label>
+        {info && <FieldInfo title={info} />}
+      </div>
+      {error && (
+        <p className="mt-1 text-xs text-red-600 dark:text-red-300">{error}</p>
+      )}
     </div>
   )
 }
@@ -1870,6 +1971,179 @@ function GroupSearchInput({
     </div>
   )
 }
+
+function AttributeOptions({
+  attribute,
+  locked,
+  advanced,
+  projectScope,
+  onToggleAdvanced,
+  onToggle
+}: {
+  attribute: BuilderAttribute
+  locked: boolean
+  advanced: boolean
+  projectScope: boolean
+  onToggleAdvanced: () => void
+  onToggle: (
+    flag: 'required' | 'linkage' | 'repeatable',
+    checked: boolean
+  ) => void
+}) {
+  const { t } = useTranslation(['entityBuilder'])
+  const renderFlag = (flag: 'required' | 'linkage' | 'repeatable') => (
+    <label key={flag} className="inline-flex items-center gap-2">
+      <input
+        type="checkbox"
+        checked={Boolean(attribute[flag])}
+        disabled={locked}
+        onChange={(event) => onToggle(flag, event.target.checked)}
+      />
+      <span className="inline-flex items-center gap-1.5">
+        {t(`attribute.${flag}`)}
+        <InfoIcon title={t(`attributeHelp.${flag}`)} />
+      </span>
+    </label>
+  )
+
+  if (!projectScope) {
+    return (
+      <div className="flex flex-wrap gap-4">
+        {(['required', 'linkage', 'repeatable'] as const).map(renderFlag)}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-4">
+        {(['required', 'repeatable'] as const).map(renderFlag)}
+        <button
+          type="button"
+          className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-600 hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:text-gray-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
+          onClick={onToggleAdvanced}
+        >
+          {advanced ? t('advancedOptions.hide') : t('advancedOptions.show')}
+        </button>
+      </div>
+      {advanced && (
+        <div className="flex flex-wrap gap-4">{renderFlag('linkage')}</div>
+      )}
+    </div>
+  )
+}
+
+function LabelListEditor({
+  labels,
+  disabled,
+  onChange
+}: {
+  labels: LabelMap
+  disabled: boolean
+  onChange: (labels: LabelMap) => void
+}) {
+  const { t } = useTranslation(['entityBuilder'])
+  const languageOptions = labelLanguageOptions.map((option) => ({
+    label: t(option.labelKey, option.fallback),
+    value: option.value
+  }))
+  const entries = Object.entries(labels)
+  const firstAvailableLanguage =
+    languageOptions.find((option) => !labels[option.value])?.value ??
+    languageOptions[0]?.value ??
+    'en'
+
+  const updateCode = (oldCode: string, newCode: string) => {
+    if (oldCode === newCode) return
+    const next: LabelMap = {}
+    Object.entries(labels).forEach(([code, label]) => {
+      if (code === oldCode) next[newCode] = label
+      else next[code] = label
+    })
+    onChange(next)
+  }
+
+  const updateLabel = (code: string, label: string) => {
+    onChange({ ...labels, [code]: label.slice(0, 80) })
+  }
+
+  const removeLabel = (code: string) => {
+    const next = { ...labels }
+    delete next[code]
+    onChange(next)
+  }
+
+  const addLabel = () => {
+    if (disabled) return
+    onChange({ ...labels, [firstAvailableLanguage]: '' })
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-100">
+          {t('attributeLabels')}
+        </span>
+        <PrimaryOutlinedButton
+          label={t('addLabel')}
+          onClick={addLabel}
+          disabled={disabled || entries.length >= languageOptions.length}
+        />
+      </div>
+      {entries.length === 0 ? (
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+          {t('noLabelsHint')}
+        </p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {entries.map(([code, label]) => (
+            <div
+              key={code}
+              className="grid gap-2 md:grid-cols-[12rem_1fr_auto]"
+            >
+              <select
+                className="h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
+                value={code}
+                disabled={disabled}
+                onChange={(event) => updateCode(code, event.target.value)}
+              >
+                {languageOptions.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                    disabled={
+                      option.value !== code && Boolean(labels[option.value])
+                    }
+                  >
+                    {option.label} ({option.value.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+              <FloatingTextInput
+                id={`label-${code}`}
+                label={t('labelText')}
+                value={label}
+                placeholder={t('labelText')}
+                maxLength={80}
+                disabled={disabled}
+                onChange={(value) => updateLabel(code, value)}
+              />
+              <button
+                type="button"
+                className="inline-flex h-[44px] items-center justify-center rounded-lg border border-red-200 px-3 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30"
+                disabled={disabled}
+                onClick={() => removeLabel(code)}
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NumberInput({
   id,
   value,
@@ -1902,6 +2176,7 @@ function MultiCheck({
   title,
   values,
   selected,
+  labelPrefix,
   helpPrefix,
   onChange,
   disabled = false
@@ -1909,6 +2184,7 @@ function MultiCheck({
   title: string
   values: string[]
   selected: string[]
+  labelPrefix: string
   helpPrefix: string
   onChange: (value: string, checked: boolean) => void
   disabled?: boolean
@@ -1931,7 +2207,9 @@ function MultiCheck({
               disabled={disabled}
               onChange={(event) => onChange(value, event.target.checked)}
             />
-            <span className="min-w-0 flex-1 truncate">{value}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {t(`${labelPrefix}.${value}`)}
+            </span>
             <InfoIcon title={t(`${helpPrefix}.${value}`)} />
           </label>
         ))}

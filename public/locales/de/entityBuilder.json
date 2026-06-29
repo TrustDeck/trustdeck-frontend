@@ -89,7 +89,7 @@
     "missingAttributesSummary": "Keine Attribute konfiguriert",
     "missingAttributesDetail": "Fügen Sie mindestens ein Attribut hinzu, bevor Sie den Entitätstyp erstellen.",
     "invalidAttributesSummary": "Ungültige Attribute",
-    "invalidAttributesDetail": "Jedes Nicht-Gruppen-Attribut benötigt einen Attributnamen und einen Typ. Leere Gruppen benötigen vor dem Speichern mindestens ein verschachteltes Attribut.",
+    "invalidAttributesDetail": "Jedes Attribut benötigt eine gültige System-Attributkennung und einen Typ. Verwenden Sie PascalCase, camelCase oder snake_case für Kennungen. Leere Gruppen benötigen vor dem Speichern mindestens ein verschachteltes Attribut.",
     "invalidDefinitionDetail": "Das Backend hat die Entitätstyp-Definition abgelehnt. Prüfen Sie, ob alle erforderlichen Attribute Namen/Typen haben und verschachtelte Gruppen Attribute enthalten.",
     "jsonFileReadFailed": "Die ausgewählte JSON-Datei konnte nicht gelesen werden.",
     "baseLoadFailedSummary": "Basistyp konnte nicht geladen werden",
@@ -128,9 +128,9 @@
   "addCustomAttribute": "Benutzerdefiniertes Attribut hinzufügen",
   "newAttribute": "Neues Attribut",
   "newGroup": "Neue Gruppe",
-  "attributeName": "Attributname",
+  "attributeName": "System-Attributkennung",
   "attributeType": "Attributtyp",
-  "noAttributesHint": "Es sind noch keine Attribute konfiguriert. Fügen Sie Attribute visuell hinzu oder importieren Sie eine JSON-Definition.",
+  "noAttributesHint": "Es sind noch keine Attribute konfiguriert. Fügen Sie Attribute visuell hinzu.",
   "addNestedAttribute": "Verschachteltes Attribut hinzufügen",
   "emptyGroupHint": "Diese Gruppe enthält noch keine verschachtelten Attribute.",
   "uploadJsonFile": ".json/.txt hochladen",
@@ -219,7 +219,7 @@
   "noMatchingGroups": "Keine lesbaren Gruppen passen zu dieser Suche.",
   "associatedGroupNameHelp": "Die zugeordnete Gruppe/Domäne steuert, wo Pseudonyme für Entitäten dieses Typs erzeugt werden und welche Domänenberechtigungen gelten. In der Suche werden nur Gruppen angezeigt, die Sie lesen dürfen.",
   "projectTypesTitle": "Projekt-Entitätstypen",
-  "baseTypesTitle": "Base-Type-Verwaltung",
+  "baseTypesTitle": "Globale Einstellungen",
   "addType": "Typ hinzufügen",
   "addBaseType": "Base-Type hinzufügen",
   "createBaseType": "Base-Type erstellen",
@@ -238,5 +238,59 @@
   "projectTypeModalHelp": "Erstelle oder aktualisiere einen projektspezifischen Entitätstyp.",
   "baseTypeModalHelp": "Erstelle oder aktualisiere einen wiederverwendbaren Base-Type.",
   "confirmDeleteProjectType": "Projekttyp {{type}} löschen?",
-  "confirmDeleteBaseType": "Base-Type {{type}} löschen?"
+  "confirmDeleteBaseType": "Base-Type {{type}} löschen?",
+  "systemAttributeIdentifier": "System-Attributkennung",
+  "systemAttributeIdentifierHelp": "Diese Kennung wird intern verwendet, um das Attribut im JSON aufzubauen und zu referenzieren. Verwenden Sie PascalCase, camelCase oder snake_case ohne Leerzeichen oder Sonderzeichen.",
+  "systemAttributeIdentifierInvalid": "Verwenden Sie PascalCase, camelCase oder snake_case. Beginnen Sie mit einem Buchstaben und verwenden Sie nur Buchstaben, Zahlen und Unterstriche.",
+  "attributeLabels": "Bezeichnungen",
+  "addLabel": "Bezeichnung hinzufügen",
+  "noLabelsHint": "Noch keine Bezeichnungen konfiguriert. Fügen Sie eine Bezeichnung für eine oder mehrere Sprachen hinzu.",
+  "labelText": "Bezeichnungstext",
+  "status": "Status",
+  "globalSettingsTitle": "Globale Einstellungen",
+  "baseTypesSectionTitle": "Base-Types",
+  "baseTypesSectionDescription": "Verwalten Sie wiederverwendbare Typ-Vorlagen, die von projektspezifischen Entitätstypen erweitert werden können.",
+  "advancedOptions": {
+    "show": "Erweiterte Optionen",
+    "hide": "Erweiterte Optionen ausblenden"
+  },
+  "typeStatus": {
+    "active": "Aktiv",
+    "deprecated": "Veraltet",
+    "deleted": "Gelöscht"
+  },
+  "labelLanguages": {
+    "en": "Englisch",
+    "de": "Deutsch",
+    "fr": "Französisch",
+    "es": "Spanisch",
+    "it": "Italienisch",
+    "nl": "Niederländisch",
+    "pl": "Polnisch",
+    "tr": "Türkisch",
+    "uk": "Ukrainisch"
+  },
+  "normalizerOptions": {
+    "trim": "Leerzeichen entfernen",
+    "lower": "Text kleinschreiben",
+    "collapseWhitespace": "Mehrfache Leerzeichen zusammenfassen",
+    "asciiFold": "Akzente nach ASCII umwandeln",
+    "umlautFold": "Deutsche Umlaute normalisieren",
+    "removePunctuation": "Satzzeichen entfernen",
+    "digitsOnly": "Nur Ziffern"
+  },
+  "encoderOptions": {
+    "cologne": "Kölner Phonetik",
+    "doubleMetaphone": "Double Metaphone"
+  },
+  "blockingOptions": {
+    "exact": "Exakter Wert",
+    "prefix3": "Erste 3 Zeichen",
+    "prefix4": "Erste 4 Zeichen",
+    "prefix6": "Erste 6 Zeichen",
+    "phonetic": "Phonetischer Wert",
+    "year": "Jahr",
+    "yearMonth": "Jahr und Monat",
+    "domainExact": "Domänenspezifischer exakter Wert"
+  }
 }

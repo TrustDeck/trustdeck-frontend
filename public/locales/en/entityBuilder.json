@@ -214,7 +214,7 @@
   "associatedGroupNamePlaceholder": "Search and select a readable group",
   "loadingBaseType": "Loading selected base type...",
   "addNestedSection": "Add nested section",
-  "baseAttributeLocked": "Base attribute",
+  "baseAttributeLocked": "Base type attribute",
   "searchingGroups": "Searching readable groups...",
   "noMatchingGroups": "No readable groups match this search.",
   "associatedGroupNameHelp": "The associated group/domain controls where pseudonyms for entities of this type are created and which domain permissions apply. Only groups you are allowed to read are offered in the search results.",
@@ -242,16 +242,16 @@
   "systemAttributeIdentifier": "System attribute identifier",
   "systemAttributeIdentifierHelp": "This identifier is used internally to build and reference the attribute in JSON. Use PascalCase, camelCase, or snake_case without spaces or special characters.",
   "systemAttributeIdentifierInvalid": "Use PascalCase, camelCase, or snake_case. Start with a letter and use only letters, numbers, and underscores.",
-  "attributeLabels": "Labels",
+  "attributeLabels": "Attribute labels",
   "addLabel": "Add label",
-  "noLabelsHint": "No labels configured yet. Add a label for one or more languages.",
+  "noLabelsHint": "Add at least an English label for this attribute.",
   "labelText": "Label text",
   "status": "Status",
   "globalSettingsTitle": "Global settings",
   "baseTypesSectionTitle": "Base types",
   "baseTypesSectionDescription": "Manage reusable type blueprints that can be extended by project-specific entity types.",
   "advancedOptions": {
-    "show": "Advanced options",
+    "show": "Show advanced options",
     "hide": "Hide advanced options"
   },
   "typeStatus": {
@@ -292,5 +292,11 @@
     "year": "Year",
     "yearMonth": "Year and month",
     "domainExact": "Domain-specific exact value"
-  }
+  },
+  "systemAttributeIdentifierPlaceholder": "e.g. familyName",
+  "labelTextRequired": "Label text *",
+  "labelTextPlaceholder": "Enter a readable label",
+  "englishLabelRequired": "English label is required",
+  "basicSettings": "Basic settings",
+  "confirmDeleteTitle": "Confirm deletion"
 }

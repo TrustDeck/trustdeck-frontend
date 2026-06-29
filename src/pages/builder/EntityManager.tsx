@@ -15,10 +15,6 @@ import SecondaryOutlinedButton from '../../core/components/form/buttons/Secondar
 import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
 
-function prettyJson(value: unknown) {
-  return JSON.stringify(value ?? {}, null, 2)
-}
-
 function typeLabel(type: EntityTypePayload) {
   return `${type.name}${type.version ? ` (${type.version})` : ''}`
 }
@@ -27,6 +23,12 @@ function statusLabel(type: EntityTypePayload) {
   if (type.isDeleted) return 'deleted'
   if (type.isDeprecated) return 'deprecated'
   return 'active'
+}
+
+function statusText(status: string) {
+  if (status === 'deleted') return 'Deleted'
+  if (status === 'deprecated') return 'Deprecated'
+  return 'Active'
 }
 
 export default function EntityManager() {
@@ -42,6 +44,7 @@ export default function EntityManager() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingType, setEditingType] = useState<EntityTypePayload | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const selectedType = useMemo(
     () =>
@@ -134,14 +137,6 @@ export default function EntityManager() {
 
   const deleteSelectedType = async () => {
     if (!selectedType) return
-    const confirmed = window.confirm(
-      t('confirmDeleteProjectType', {
-        type: typeLabel(selectedType),
-        defaultValue: `Delete project type ${typeLabel(selectedType)}?`
-      })
-    )
-    if (!confirmed) return
-
     setDeleting(true)
     try {
       await TrustDeck.instance().deleteEntityConfig(selectedType.name)
@@ -154,6 +149,7 @@ export default function EntityManager() {
         ),
         life: 3500
       })
+      setDeleteConfirmOpen(false)
       await loadEntityTypes()
     } catch (error) {
       console.error('Could not delete project entity type', error)
@@ -223,7 +219,7 @@ export default function EntityManager() {
                             <span
                               className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'}`}
                             >
-                              {t(`typeStatus.${status}`, status)}
+                              {t(`typeStatus.${status}`, statusText(status))}
                             </span>
                           </span>
                         </button>
@@ -233,15 +229,17 @@ export default function EntityManager() {
                 </div>
               )}
 
-              <PrimaryButton
-                label={
-                  <span className="inline-flex items-center gap-2">
-                    <PlusIcon className="h-5 w-5" />
-                    {t('addType', 'Add type')}
-                  </span>
-                }
-                onClick={openCreateModal}
-              />
+              <div className="flex justify-center">
+                <PrimaryButton
+                  label={
+                    <span className="inline-flex items-center gap-2">
+                      <PlusIcon className="h-5 w-5" />
+                      {t('addType', 'Add type')}
+                    </span>
+                  }
+                  onClick={openCreateModal}
+                />
+              </div>
 
               <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900">
                 {selectedType ? (
@@ -276,7 +274,7 @@ export default function EntityManager() {
                             </span>
                           }
                           loading={deleting}
-                          onClick={deleteSelectedType}
+                          onClick={() => setDeleteConfirmOpen(true)}
                         />
                       </div>
                     </div>
@@ -311,7 +309,10 @@ export default function EntityManager() {
                           {t('status', 'Status')}
                         </dt>
                         <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {t(`typeStatus.${statusLabel(selectedType)}`)}
+                          {t(
+                            `typeStatus.${statusLabel(selectedType)}`,
+                            statusText(statusLabel(selectedType))
+                          )}
                         </dd>
                       </div>
                     </dl>
@@ -320,9 +321,15 @@ export default function EntityManager() {
                       <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {t('typeDefinition', 'Type definition')}
                       </h3>
-                      <pre className="max-h-[34rem] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100">
-                        {prettyJson(selectedType.typeDefinition)}
-                      </pre>
+                      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-950">
+                        <Builder
+                          embedded
+                          readOnly
+                          scope="project"
+                          mode="edit"
+                          initialType={selectedType}
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -373,6 +380,33 @@ export default function EntityManager() {
               onSaved={handleSaved}
               onCancel={closeEditor}
             />
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmOpen && selectedType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              {t('confirmDeleteTitle', 'Confirm deletion')}
+            </h2>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+              {t('confirmDeleteProjectType', {
+                type: typeLabel(selectedType),
+                defaultValue: `Delete project type ${typeLabel(selectedType)}?`
+              })}
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <PrimaryOutlinedButton
+                label={t('common:cancel', 'Cancel')}
+                onClick={() => setDeleteConfirmOpen(false)}
+              />
+              <SecondaryOutlinedButton
+                label={t('common:delete', 'Delete')}
+                loading={deleting}
+                onClick={deleteSelectedType}
+              />
+            </div>
           </div>
         </div>
       )}

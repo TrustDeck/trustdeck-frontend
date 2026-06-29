@@ -180,10 +180,11 @@ function labelsFromBackendAttribute(attribute: any): LabelMap {
   return labels
 }
 
-function preferredLabel(attribute: BuilderAttribute): string {
+function preferredLabel(attribute: BuilderAttribute, language = 'en'): string {
+  const code = language.toLowerCase().split('-')[0]
   return (
+    attribute.labels?.[code] ||
     attribute.labels?.en ||
-    attribute.labels?.de ||
     Object.values(attribute.labels ?? {}).find(Boolean) ||
     attribute.label_en ||
     attribute.label_de ||
@@ -506,18 +507,23 @@ function hasInvalidAttribute(attributes: BuilderAttribute[]): boolean {
     const hasInvalidIdentifier = identifier
       ? !isValidSystemIdentifier(identifier)
       : !attribute.attributes
+    const hasMissingEnglishLabel = !attribute.labels?.en?.trim()
     const hasInvalidLabel = Object.values(attribute.labels ?? {}).some(
       (label) => label.length > 80
     )
     if (attribute.attributes)
       return (
         hasInvalidIdentifier ||
+        hasMissingEnglishLabel ||
         hasInvalidLabel ||
         attribute.attributes.length === 0 ||
         hasInvalidAttribute(attribute.attributes)
       )
     return (
-      hasInvalidIdentifier || hasInvalidLabel || !(attribute.type ?? '').trim()
+      hasInvalidIdentifier ||
+      hasMissingEnglishLabel ||
+      hasInvalidLabel ||
+      !(attribute.type ?? '').trim()
     )
   })
 }
@@ -619,6 +625,7 @@ type BuilderProps = {
   embedded?: boolean
   onSaved?: (savedType: EntityTypePayload) => void
   onCancel?: () => void
+  readOnly?: boolean
 }
 
 export default function Builder({
@@ -627,9 +634,10 @@ export default function Builder({
   initialType = null,
   embedded = false,
   onSaved,
-  onCancel
+  onCancel,
+  readOnly = false
 }: BuilderProps = {}) {
-  const { t } = useTranslation(['entityBuilder', 'common'])
+  const { t, i18n } = useTranslation(['entityBuilder', 'common'])
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const setProjectEntities = useProjectStore((state) => state.setEntities)
@@ -715,9 +723,14 @@ export default function Builder({
           )
           .map((name) => ({ label: name, value: name }))
         setBaseTypeOptions(options)
-        if (scope === 'project' && options.length) {
+        if (
+          scope === 'project' &&
+          options.length &&
+          mode === 'create' &&
+          !readOnly
+        ) {
           setSelectedBaseType((current) => current || options[0].value)
-        } else if (scope === 'project') {
+        } else if (scope === 'project' && !options.length) {
           setSelectedBaseType('')
         }
       } catch (error) {
@@ -731,7 +744,7 @@ export default function Builder({
     return () => {
       active = false
     }
-  }, [scope])
+  }, [mode, readOnly, scope])
 
   useEffect(() => {
     if (saveTarget !== 'project') {
@@ -838,7 +851,7 @@ export default function Builder({
     name: source?.name ?? '',
     label_en: source?.label_en ?? source?.labels?.en ?? '',
     label_de: source?.label_de ?? source?.labels?.de ?? '',
-    labels: source?.labels ?? {},
+    labels: source?.labels ?? { en: '' },
     type: source?.type ?? 'string',
     required: source?.required ?? false,
     linkage: source?.linkage ?? false,
@@ -853,27 +866,13 @@ export default function Builder({
     locked: source?.locked ?? false
   })
 
-  const newGroupAttribute = (): BuilderAttribute => ({
-    key: crypto.randomUUID(),
-    name: '',
-    label_en: '',
-    label_de: '',
-    labels: {},
-    layout: 'group',
-    repeatable: false,
-    attributes: [],
-    locked: false
-  })
-
   const addAttribute = (source?: Partial<BuilderAttribute>) => {
+    if (readOnly) return
     setAttributes((current) => [...current, newLeafAttribute(source)])
   }
 
-  const addGroup = () => {
-    setAttributes((current) => [...current, newGroupAttribute()])
-  }
-
   const updateAttribute = (key: string, patch: Partial<BuilderAttribute>) => {
+    if (readOnly) return
     setAttributes((current) => updateAttributeByKey(current, key, patch))
   }
 
@@ -893,18 +892,14 @@ export default function Builder({
   }
 
   const removeAttribute = (key: string) => {
+    if (readOnly) return
     setAttributes((current) => removeAttributeByKey(current, key))
   }
 
   const addChildAttribute = (groupKey: string) => {
+    if (readOnly) return
     setAttributes((current) =>
       addChildAttributeByKey(current, groupKey, newLeafAttribute())
-    )
-  }
-
-  const addChildGroup = (groupKey: string) => {
-    setAttributes((current) =>
-      addChildAttributeByKey(current, groupKey, newGroupAttribute())
     )
   }
 
@@ -1142,7 +1137,7 @@ export default function Builder({
     const pprl = config.pprl ?? defaultLinkageConfig(attribute.type).pprl ?? {}
     const privacyMode = config.privacyMode ?? 'pprl'
     const isCollapsed = collapsedLinkageKeys[attribute.key] ?? true
-    const locked = Boolean(attribute.locked)
+    const locked = readOnly || Boolean(attribute.locked)
     return (
       <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
         <button
@@ -1373,12 +1368,17 @@ export default function Builder({
               <ArrowsUpDownIcon
                 className={`h-4 w-4 ${locked ? 'cursor-not-allowed text-gray-300' : 'cursor-move text-gray-400'}`}
               />
-              {preferredLabel(attribute) ||
-                (isGroup ? t('newGroup') : t('newAttribute'))}
+              {preferredLabel(
+                attribute,
+                i18n.resolvedLanguage ?? i18n.language
+              ) ||
+                (isGroup
+                  ? t('newGroup', 'New section')
+                  : t('newAttribute', 'New attribute'))}
             </h3>
             {locked ? (
               <span className="rounded-full bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-slate-700 dark:text-gray-300">
-                {t('baseAttributeLocked')}
+                {t('baseAttributeLocked', 'Base type attribute')}
               </span>
             ) : (
               <button
@@ -1394,14 +1394,26 @@ export default function Builder({
           <div className="grid gap-3 md:grid-cols-2">
             <FloatingTextInput
               id={`attribute-name-${attribute.key}`}
-              label={t('systemAttributeIdentifier')}
+              label={t(
+                'systemAttributeIdentifier',
+                'System attribute identifier'
+              )}
               value={attribute.name}
-              placeholder={t('systemAttributeIdentifier')}
-              info={t('systemAttributeIdentifierHelp')}
+              placeholder={t(
+                'systemAttributeIdentifierPlaceholder',
+                'e.g. familyName'
+              )}
+              info={t(
+                'systemAttributeIdentifierHelp',
+                'This identifier is used internally to build and reference the attribute in JSON. Use PascalCase, camelCase, or snake_case without spaces or special characters.'
+              )}
               error={
                 attribute.name.trim() &&
                 !isValidSystemIdentifier(attribute.name)
-                  ? t('systemAttributeIdentifierInvalid')
+                  ? t(
+                      'systemAttributeIdentifierInvalid',
+                      'Use PascalCase, camelCase, or snake_case. Start with a letter and use only letters, numbers, and underscores.'
+                    )
                   : undefined
               }
               onChange={(value) => handleAttributeNameChange(attribute, value)}
@@ -1424,7 +1436,7 @@ export default function Builder({
                   })
                 }
                 options={typeOptions}
-                placeholder={t('attributeType')}
+                placeholder={t('attributeType', 'Attribute type')}
                 disabled={locked}
               />
             )}
@@ -1502,7 +1514,10 @@ export default function Builder({
               }
             />
           )}
-          {!isGroup && renderLinkageConfig(attribute)}
+          {!isGroup &&
+            (scope !== 'project' ||
+              Boolean(advancedOptionKeys[attribute.key])) &&
+            renderLinkageConfig(attribute)}
 
           {isGroup && (
             <div
@@ -1531,16 +1546,14 @@ export default function Builder({
                 setDropIndicator(null)
               }}
             >
-              <div className="flex flex-wrap justify-start gap-2">
-                <PrimaryOutlinedButton
-                  label={t('addNestedAttribute')}
-                  onClick={() => addChildAttribute(attribute.key)}
-                />
-                <PrimaryOutlinedButton
-                  label={t('addNestedSection')}
-                  onClick={() => addChildGroup(attribute.key)}
-                />
-              </div>
+              {!readOnly && (
+                <div className="flex flex-wrap justify-start gap-2">
+                  <PrimaryOutlinedButton
+                    label={t('addNestedAttribute')}
+                    onClick={() => addChildAttribute(attribute.key)}
+                  />
+                </div>
+              )}
               {showInsideDropLine && (
                 <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
               )}
@@ -1584,11 +1597,13 @@ export default function Builder({
 
       <Panel
         title={
-          mode === 'edit'
-            ? t('editEntityType', 'Edit entity type')
-            : saveTarget === 'base'
-              ? t('createBaseType', 'Create base type')
-              : t('entityBuilder:createEntityType')
+          embedded || readOnly
+            ? t('basicSettings', 'Basic settings')
+            : mode === 'edit'
+              ? t('editEntityType', 'Edit entity type')
+              : saveTarget === 'base'
+                ? t('createBaseType', 'Create base type')
+                : t('entityBuilder:createEntityType', 'Create entity type')
         }
         className="!w-full"
         noMaxWidth
@@ -1601,6 +1616,7 @@ export default function Builder({
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setEntityName(e.target.value)
             }
+            disabled={readOnly}
             required
           />
 
@@ -1610,13 +1626,14 @@ export default function Builder({
               value={selectedBaseType}
               onChange={(e) => setSelectedBaseType(e.value)}
               options={baseTypeOptions}
+              disabled={readOnly}
               placeholder={t('baseType', 'Base type')}
               required
             />
           )}
 
           {saveTarget === 'project' && (
-            <div className="md:col-start-2">
+            <div className="md:col-span-2">
               <GroupSearchInput
                 id="associatedGroupName"
                 value={associatedGroupName}
@@ -1625,6 +1642,7 @@ export default function Builder({
                 info={t('associatedGroupNameHelp')}
                 options={groupOptions}
                 loading={groupSearchLoading}
+                disabled={readOnly}
                 onChange={setAssociatedGroupName}
               />
               {baseTypeLoading && (
@@ -1647,26 +1665,19 @@ export default function Builder({
         className="!w-full"
         noMaxWidth
       >
-        <div className="mt-7 mb-4 flex flex-wrap gap-2">
-          <PrimaryOutlinedButton
-            label={
-              <span className="inline-flex items-center gap-2">
-                <PlusIcon className="h-4 w-4" />
-                {t('addCustomAttribute')}
-              </span>
-            }
-            onClick={() => addAttribute()}
-          />
-          <PrimaryOutlinedButton
-            label={
-              <span className="inline-flex items-center gap-2">
-                <PlusIcon className="h-4 w-4" />
-                {t('addGroup')}
-              </span>
-            }
-            onClick={addGroup}
-          />
-        </div>
+        {!readOnly && (
+          <div className="mt-7 mb-4 flex flex-wrap gap-2">
+            <PrimaryOutlinedButton
+              label={
+                <span className="inline-flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4" />
+                  {t('addCustomAttribute')}
+                </span>
+              }
+              onClick={() => addAttribute()}
+            />
+          </div>
+        )}
 
         {attributes.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
@@ -1677,56 +1688,51 @@ export default function Builder({
             <div className="space-y-4">
               {attributes.map((attribute) => renderAttributeEditor(attribute))}
             </div>
-            <div className="mt-6 border-t border-gray-200 pt-4 dark:border-slate-700">
-              <p className="mb-3 text-center text-sm text-gray-500 dark:text-gray-300">
-                {t('addMoreAttributesHint')}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                <PrimaryOutlinedButton
-                  label={
-                    <span className="inline-flex items-center gap-2">
-                      <PlusIcon className="h-4 w-4" />
-                      {t('addCustomAttribute')}
-                    </span>
-                  }
-                  onClick={() => addAttribute()}
-                />
-                <PrimaryOutlinedButton
-                  label={
-                    <span className="inline-flex items-center gap-2">
-                      <PlusIcon className="h-4 w-4" />
-                      {t('addGroup')}
-                    </span>
-                  }
-                  onClick={addGroup}
-                />
+            {!readOnly && (
+              <div className="mt-6 border-t border-gray-200 pt-4 dark:border-slate-700">
+                <p className="mb-3 text-center text-sm text-gray-500 dark:text-gray-300">
+                  {t('addMoreAttributesHint')}
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <PrimaryOutlinedButton
+                    label={
+                      <span className="inline-flex items-center gap-2">
+                        <PlusIcon className="h-4 w-4" />
+                        {t('addCustomAttribute')}
+                      </span>
+                    }
+                    onClick={() => addAttribute()}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </Panel>
 
-      <div className="flex w-full flex-wrap justify-center gap-2">
-        {embedded && onCancel && (
-          <PrimaryOutlinedButton
-            label={t('common:cancel')}
-            onClick={onCancel}
+      {!readOnly && (
+        <div className="flex w-full flex-wrap justify-center gap-2">
+          {embedded && onCancel && (
+            <PrimaryOutlinedButton
+              label={t('common:cancel')}
+              onClick={onCancel}
+            />
+          )}
+          <PrimaryButton
+            label={
+              saving
+                ? t('common:loading')
+                : mode === 'edit'
+                  ? t('saveChanges', 'Save changes')
+                  : saveTarget === 'base'
+                    ? t('createBaseType', 'Create base type')
+                    : t('createEntityType')
+            }
+            loading={saving}
+            onClick={save}
           />
-        )}
-        <PrimaryButton
-          label={
-            saving
-              ? t('common:loading')
-              : mode === 'edit'
-                ? t('saveChanges', 'Save changes')
-                : saveTarget === 'base'
-                  ? t('createBaseType', 'Create base type')
-                  : t('createEntityType')
-          }
-          loading={saving}
-          onClick={save}
-        />
-      </div>
+        </div>
+      )}
     </div>
   )
 
@@ -1900,7 +1906,8 @@ function GroupSearchInput({
   info,
   options,
   loading = false,
-  onChange
+  onChange,
+  disabled = false
 }: {
   id: string
   value: string
@@ -1910,6 +1917,7 @@ function GroupSearchInput({
   options: { label: string; value: string }[]
   loading?: boolean
   onChange: (value: string) => void
+  disabled?: boolean
 }) {
   const { t } = useTranslation(['entityBuilder'])
   const [open, setOpen] = useState(false)
@@ -1925,11 +1933,12 @@ function GroupSearchInput({
           className={`h-[44px] w-full rounded-lg border border-gray-300 px-3 ${info ? 'pr-10' : ''} text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400`}
           value={value}
           placeholder={placeholder}
-          onFocus={() => setOpen(true)}
+          disabled={disabled}
+          onFocus={() => !disabled && setOpen(true)}
           onBlur={() => window.setTimeout(() => setOpen(false), 120)}
           onChange={(event) => {
             onChange(event.target.value)
-            setOpen(true)
+            setOpen(!disabled)
           }}
         />
         <label
@@ -2000,8 +2009,8 @@ function AttributeOptions({
         onChange={(event) => onToggle(flag, event.target.checked)}
       />
       <span className="inline-flex items-center gap-1.5">
-        {t(`attribute.${flag}`)}
-        <InfoIcon title={t(`attributeHelp.${flag}`)} />
+        {t(`attribute.${flag}`, flag.charAt(0).toUpperCase() + flag.slice(1))}
+        <InfoIcon title={t(`attributeHelp.${flag}`, '')} />
       </span>
     </label>
   )
@@ -2023,7 +2032,9 @@ function AttributeOptions({
           className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-600 hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:text-gray-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
           onClick={onToggleAdvanced}
         >
-          {advanced ? t('advancedOptions.hide') : t('advancedOptions.show')}
+          {advanced
+            ? t('advancedOptions.hide', 'Hide advanced options')
+            : t('advancedOptions.show', 'Show advanced options')}
         </button>
       </div>
       {advanced && (
@@ -2047,7 +2058,9 @@ function LabelListEditor({
     label: t(option.labelKey, option.fallback),
     value: option.value
   }))
-  const entries = Object.entries(labels)
+  const entries = Object.entries(
+    labels.en === undefined ? { en: '', ...labels } : labels
+  )
   const firstAvailableLanguage =
     languageOptions.find((option) => !labels[option.value])?.value ??
     languageOptions[0]?.value ??
@@ -2082,17 +2095,20 @@ function LabelListEditor({
     <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-semibold text-gray-700 dark:text-gray-100">
-          {t('attributeLabels')}
+          {t('attributeLabels', 'Attribute labels')}
         </span>
         <PrimaryOutlinedButton
-          label={t('addLabel')}
+          label={t('addLabel', 'Add label')}
           onClick={addLabel}
           disabled={disabled || entries.length >= languageOptions.length}
         />
       </div>
       {entries.length === 0 ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-          {t('noLabelsHint')}
+          {t(
+            'noLabelsHint',
+            'Add at least an English label for this attribute.'
+          )}
         </p>
       ) : (
         <div className="mt-3 space-y-2">
@@ -2104,7 +2120,7 @@ function LabelListEditor({
               <select
                 className="h-[44px] rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
                 value={code}
-                disabled={disabled}
+                disabled={disabled || code === 'en'}
                 onChange={(event) => updateCode(code, event.target.value)}
               >
                 {languageOptions.map((option) => (
@@ -2121,9 +2137,16 @@ function LabelListEditor({
               </select>
               <FloatingTextInput
                 id={`label-${code}`}
-                label={t('labelText')}
+                label={
+                  code === 'en'
+                    ? t('labelTextRequired', 'Label text *')
+                    : t('labelText', 'Label text')
+                }
                 value={label}
-                placeholder={t('labelText')}
+                placeholder={t(
+                  'labelTextPlaceholder',
+                  'Enter a readable label'
+                )}
                 maxLength={80}
                 disabled={disabled}
                 onChange={(value) => updateLabel(code, value)}
@@ -2131,7 +2154,12 @@ function LabelListEditor({
               <button
                 type="button"
                 className="inline-flex h-[44px] items-center justify-center rounded-lg border border-red-200 px-3 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30"
-                disabled={disabled}
+                disabled={disabled || code === 'en'}
+                title={
+                  code === 'en'
+                    ? t('englishLabelRequired', 'English label is required')
+                    : undefined
+                }
                 onClick={() => removeLabel(code)}
               >
                 <TrashIcon className="h-5 w-5" />
@@ -2172,6 +2200,29 @@ function NumberInput({
   )
 }
 
+function readableOptionLabel(value: string) {
+  const labels: Record<string, string> = {
+    trim: 'Trim whitespace',
+    lower: 'Lowercase text',
+    collapseWhitespace: 'Collapse whitespace',
+    asciiFold: 'Normalize accents',
+    umlautFold: 'Normalize German umlauts',
+    removePunctuation: 'Remove punctuation',
+    digitsOnly: 'Keep digits only',
+    cologne: 'Cologne phonetics',
+    doubleMetaphone: 'Double Metaphone phonetics',
+    exact: 'Exact match',
+    prefix3: 'First 3 characters',
+    prefix4: 'First 4 characters',
+    prefix6: 'First 6 characters',
+    phonetic: 'Phonetic key',
+    year: 'Year',
+    yearMonth: 'Year and month',
+    domainExact: 'Exact domain value'
+  }
+  return labels[value] ?? value
+}
+
 function MultiCheck({
   title,
   values,
@@ -2208,9 +2259,9 @@ function MultiCheck({
               onChange={(event) => onChange(value, event.target.checked)}
             />
             <span className="min-w-0 flex-1 truncate">
-              {t(`${labelPrefix}.${value}`)}
+              {t(`${labelPrefix}.${value}`, readableOptionLabel(value))}
             </span>
-            <InfoIcon title={t(`${helpPrefix}.${value}`)} />
+            <InfoIcon title={t(`${helpPrefix}.${value}`, '')} />
           </label>
         ))}
       </div>

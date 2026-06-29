@@ -214,7 +214,7 @@
   "associatedGroupNamePlaceholder": "Lesbare Gruppe suchen und auswählen",
   "loadingBaseType": "Ausgewählter Basistyp wird geladen...",
   "addNestedSection": "Verschachtelten Abschnitt hinzufügen",
-  "baseAttributeLocked": "Basisattribut",
+  "baseAttributeLocked": "Basistyp-Attribut",
   "searchingGroups": "Lesbare Gruppen werden gesucht...",
   "noMatchingGroups": "Keine lesbaren Gruppen passen zu dieser Suche.",
   "associatedGroupNameHelp": "Die zugeordnete Gruppe/Domäne steuert, wo Pseudonyme für Entitäten dieses Typs erzeugt werden und welche Domänenberechtigungen gelten. In der Suche werden nur Gruppen angezeigt, die Sie lesen dürfen.",
@@ -242,16 +242,16 @@
   "systemAttributeIdentifier": "System-Attributkennung",
   "systemAttributeIdentifierHelp": "Diese Kennung wird intern verwendet, um das Attribut im JSON aufzubauen und zu referenzieren. Verwenden Sie PascalCase, camelCase oder snake_case ohne Leerzeichen oder Sonderzeichen.",
   "systemAttributeIdentifierInvalid": "Verwenden Sie PascalCase, camelCase oder snake_case. Beginnen Sie mit einem Buchstaben und verwenden Sie nur Buchstaben, Zahlen und Unterstriche.",
-  "attributeLabels": "Bezeichnungen",
+  "attributeLabels": "Attributbezeichnungen",
   "addLabel": "Bezeichnung hinzufügen",
-  "noLabelsHint": "Noch keine Bezeichnungen konfiguriert. Fügen Sie eine Bezeichnung für eine oder mehrere Sprachen hinzu.",
-  "labelText": "Bezeichnungstext",
+  "noLabelsHint": "Fügen Sie mindestens eine englische Bezeichnung für dieses Attribut hinzu.",
+  "labelText": "Bezeichnung",
   "status": "Status",
   "globalSettingsTitle": "Globale Einstellungen",
   "baseTypesSectionTitle": "Base-Types",
   "baseTypesSectionDescription": "Verwalten Sie wiederverwendbare Typ-Vorlagen, die von projektspezifischen Entitätstypen erweitert werden können.",
   "advancedOptions": {
-    "show": "Erweiterte Optionen",
+    "show": "Erweiterte Optionen anzeigen",
     "hide": "Erweiterte Optionen ausblenden"
   },
   "typeStatus": {
@@ -292,5 +292,11 @@
     "year": "Jahr",
     "yearMonth": "Jahr und Monat",
     "domainExact": "Domänenspezifischer exakter Wert"
-  }
+  },
+  "systemAttributeIdentifierPlaceholder": "z. B. familyName",
+  "labelTextRequired": "Bezeichnung *",
+  "labelTextPlaceholder": "Lesbare Bezeichnung eingeben",
+  "englishLabelRequired": "Die englische Bezeichnung ist erforderlich",
+  "basicSettings": "Grundeinstellungen",
+  "confirmDeleteTitle": "Löschen bestätigen"
 }

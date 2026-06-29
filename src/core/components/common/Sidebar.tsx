@@ -32,7 +32,7 @@ const XL_BREAKPOINT = 1280
 
 export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
-  const { t } = useTranslation(['layout', 'common'])
+  const { t, i18n } = useTranslation(['layout', 'common'])
   const auth = useAuth()
   const projectImage = useProjectStore((state) => state.projectImage)
   const selectedProject = useProjectStore((state) => state.selectedProject)
@@ -170,6 +170,30 @@ export default function Sidebar({ projectName }: SidebarProps) {
   }
 
   const routeTitle = (titleKey: string) => {
+    const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en')
+      .toLowerCase()
+      .split('-')[0]
+    const fixedSidebarTitles: Record<string, Record<string, string>> = {
+      'layout:menu.entityManagement': {
+        en: 'Entity Management',
+        de: 'Entitätenverwaltung'
+      },
+      'layout:menu.globalSettings': {
+        en: 'Global Settings',
+        de: 'Globale Einstellungen'
+      },
+      'layout:menu.permissionManagement': {
+        en: 'Permission Management',
+        de: 'Berechtigungsverwaltung'
+      }
+    }
+
+    if (fixedSidebarTitles[titleKey]) {
+      return (
+        fixedSidebarTitles[titleKey][lang] ?? fixedSidebarTitles[titleKey].en
+      )
+    }
+
     if (titleKey.startsWith('layout:')) {
       return t(titleKey.slice('layout:'.length), { ns: 'layout' })
     }

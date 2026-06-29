@@ -31,16 +31,191 @@ type LabelMap = Record<string, string>
 
 const SYSTEM_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/
 
-const labelLanguageOptions = [
-  { labelKey: 'labelLanguages.en', fallback: 'English', value: 'en' },
-  { labelKey: 'labelLanguages.de', fallback: 'German', value: 'de' },
-  { labelKey: 'labelLanguages.fr', fallback: 'French', value: 'fr' },
-  { labelKey: 'labelLanguages.es', fallback: 'Spanish', value: 'es' },
-  { labelKey: 'labelLanguages.it', fallback: 'Italian', value: 'it' },
-  { labelKey: 'labelLanguages.nl', fallback: 'Dutch', value: 'nl' },
-  { labelKey: 'labelLanguages.pl', fallback: 'Polish', value: 'pl' },
-  { labelKey: 'labelLanguages.tr', fallback: 'Turkish', value: 'tr' },
-  { labelKey: 'labelLanguages.uk', fallback: 'Ukrainian', value: 'uk' }
+const ISO_639_1_LANGUAGE_CODES = [
+  'aa',
+  'ab',
+  'ae',
+  'af',
+  'ak',
+  'am',
+  'an',
+  'ar',
+  'as',
+  'av',
+  'ay',
+  'az',
+  'ba',
+  'be',
+  'bg',
+  'bh',
+  'bi',
+  'bm',
+  'bn',
+  'bo',
+  'br',
+  'bs',
+  'ca',
+  'ce',
+  'ch',
+  'co',
+  'cr',
+  'cs',
+  'cu',
+  'cv',
+  'cy',
+  'da',
+  'de',
+  'dv',
+  'dz',
+  'ee',
+  'el',
+  'en',
+  'eo',
+  'es',
+  'et',
+  'eu',
+  'fa',
+  'ff',
+  'fi',
+  'fj',
+  'fo',
+  'fr',
+  'fy',
+  'ga',
+  'gd',
+  'gl',
+  'gn',
+  'gu',
+  'gv',
+  'ha',
+  'he',
+  'hi',
+  'ho',
+  'hr',
+  'ht',
+  'hu',
+  'hy',
+  'hz',
+  'ia',
+  'id',
+  'ie',
+  'ig',
+  'ii',
+  'ik',
+  'io',
+  'is',
+  'it',
+  'iu',
+  'ja',
+  'jv',
+  'ka',
+  'kg',
+  'ki',
+  'kj',
+  'kk',
+  'kl',
+  'km',
+  'kn',
+  'ko',
+  'kr',
+  'ks',
+  'ku',
+  'kv',
+  'kw',
+  'ky',
+  'la',
+  'lb',
+  'lg',
+  'li',
+  'ln',
+  'lo',
+  'lt',
+  'lu',
+  'lv',
+  'mg',
+  'mh',
+  'mi',
+  'mk',
+  'ml',
+  'mn',
+  'mr',
+  'ms',
+  'mt',
+  'my',
+  'na',
+  'nb',
+  'nd',
+  'ne',
+  'ng',
+  'nl',
+  'nn',
+  'no',
+  'nr',
+  'nv',
+  'ny',
+  'oc',
+  'oj',
+  'om',
+  'or',
+  'os',
+  'pa',
+  'pi',
+  'pl',
+  'ps',
+  'pt',
+  'qu',
+  'rm',
+  'rn',
+  'ro',
+  'ru',
+  'rw',
+  'sa',
+  'sc',
+  'sd',
+  'se',
+  'sg',
+  'si',
+  'sk',
+  'sl',
+  'sm',
+  'sn',
+  'so',
+  'sq',
+  'sr',
+  'ss',
+  'st',
+  'su',
+  'sv',
+  'sw',
+  'ta',
+  'te',
+  'tg',
+  'th',
+  'ti',
+  'tk',
+  'tl',
+  'tn',
+  'to',
+  'tr',
+  'ts',
+  'tt',
+  'tw',
+  'ty',
+  'ug',
+  'uk',
+  'ur',
+  'uz',
+  've',
+  'vi',
+  'vo',
+  'wa',
+  'wo',
+  'xh',
+  'yi',
+  'yo',
+  'za',
+  'zh',
+  'zu'
 ]
 
 type LinkageConfig = {
@@ -481,26 +656,6 @@ function removeAttributeByKey(
     )
 }
 
-function addChildAttributeByKey(
-  attributes: BuilderAttribute[],
-  key: string,
-  child: BuilderAttribute
-): BuilderAttribute[] {
-  return attributes.map((attribute) => {
-    if (attribute.key === key)
-      return {
-        ...attribute,
-        attributes: [...(attribute.attributes ?? []), child]
-      }
-    if (attribute.attributes)
-      return {
-        ...attribute,
-        attributes: addChildAttributeByKey(attribute.attributes, key, child)
-      }
-    return attribute
-  })
-}
-
 function hasInvalidAttribute(attributes: BuilderAttribute[]): boolean {
   return attributes.some((attribute) => {
     const identifier = attribute.name.trim()
@@ -894,13 +1049,6 @@ export default function Builder({
   const removeAttribute = (key: string) => {
     if (readOnly) return
     setAttributes((current) => removeAttributeByKey(current, key))
-  }
-
-  const addChildAttribute = (groupKey: string) => {
-    if (readOnly) return
-    setAttributes((current) =>
-      addChildAttributeByKey(current, groupKey, newLeafAttribute())
-    )
   }
 
   const moveBefore = (sourceKey: string, targetKey: string) => {
@@ -1378,7 +1526,7 @@ export default function Builder({
             </h3>
             {locked ? (
               <span className="rounded-full bg-gray-200 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-slate-700 dark:text-gray-300">
-                {t('baseAttributeLocked', 'Base type attribute')}
+                {t('baseTypeAttributeLocked', 'Base type attribute')}
               </span>
             ) : (
               <button
@@ -1546,14 +1694,6 @@ export default function Builder({
                 setDropIndicator(null)
               }}
             >
-              {!readOnly && (
-                <div className="flex flex-wrap justify-start gap-2">
-                  <PrimaryOutlinedButton
-                    label={t('addNestedAttribute')}
-                    onClick={() => addChildAttribute(attribute.key)}
-                  />
-                </div>
-              )}
               {showInsideDropLine && (
                 <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
               )}
@@ -1639,7 +1779,10 @@ export default function Builder({
                 value={associatedGroupName}
                 label={t('associatedGroupName')}
                 placeholder={t('associatedGroupNamePlaceholder')}
-                info={t('associatedGroupNameHelp')}
+                info={t(
+                  'associatedGroupNameHelp',
+                  'The associated group/domain controls where pseudonyms for entities of this type are created and which domain permissions apply. Only groups you are allowed to read are offered in the search results.'
+                )}
                 options={groupOptions}
                 loading={groupSearchLoading}
                 disabled={readOnly}
@@ -1810,7 +1953,9 @@ function FieldInfo({ title }: { title: string }) {
   return (
     <span
       title={title}
-      className="absolute right-2 top-1/2 z-10 -translate-y-1/2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+      role="img"
+      aria-label={title}
+      className="absolute right-2 top-1/2 z-10 -translate-y-1/2 cursor-help text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
     >
       <InformationCircleIcon className="h-5 w-5" />
     </span>
@@ -2053,11 +2198,27 @@ function LabelListEditor({
   disabled: boolean
   onChange: (labels: LabelMap) => void
 }) {
-  const { t } = useTranslation(['entityBuilder'])
-  const languageOptions = labelLanguageOptions.map((option) => ({
-    label: t(option.labelKey, option.fallback),
-    value: option.value
-  }))
+  const { t, i18n } = useTranslation(['entityBuilder'])
+  const languageOptions = useMemo(() => {
+    const uiLanguage = (i18n.resolvedLanguage ?? i18n.language ?? 'en')
+      .toLowerCase()
+      .split('-')[0]
+    const DisplayNames = (Intl as unknown as {
+      DisplayNames?: new (
+        locales: string[],
+        options: { type: 'language' }
+      ) => { of: (code: string) => string | undefined }
+    }).DisplayNames
+    const displayNames = DisplayNames
+      ? new DisplayNames([uiLanguage], { type: 'language' })
+      : null
+
+    return ISO_639_1_LANGUAGE_CODES.map((code) => {
+      const displayName = displayNames?.of(code) ?? code.toUpperCase()
+      const label = displayName.charAt(0).toUpperCase() + displayName.slice(1)
+      return { label, value: code }
+    }).sort((a, b) => a.label.localeCompare(b.label))
+  }, [i18n.language, i18n.resolvedLanguage])
   const entries = Object.entries(
     labels.en === undefined ? { en: '', ...labels } : labels
   )
@@ -2093,16 +2254,9 @@ function LabelListEditor({
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-100">
-          {t('attributeLabels', 'Attribute labels')}
-        </span>
-        <PrimaryOutlinedButton
-          label={t('addLabel', 'Add label')}
-          onClick={addLabel}
-          disabled={disabled || entries.length >= languageOptions.length}
-        />
-      </div>
+      <span className="text-sm font-semibold text-gray-700 dark:text-gray-100">
+        {t('attributeLabels', 'Attribute labels')}
+      </span>
       {entries.length === 0 ? (
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
           {t(
@@ -2168,6 +2322,18 @@ function LabelListEditor({
           ))}
         </div>
       )}
+      <div className="mt-4 flex justify-center">
+        <PrimaryOutlinedButton
+          label={
+            <span className="inline-flex items-center gap-2">
+              <PlusIcon className="h-4 w-4" />
+              {t('addLabel', 'Add label')}
+            </span>
+          }
+          onClick={addLabel}
+          disabled={disabled || entries.length >= languageOptions.length}
+        />
+      </div>
     </div>
   )
 }

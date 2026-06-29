@@ -298,5 +298,6 @@
   "labelTextPlaceholder": "Lesbare Bezeichnung eingeben",
   "englishLabelRequired": "Die englische Bezeichnung ist erforderlich",
   "basicSettings": "Grundeinstellungen",
-  "confirmDeleteTitle": "Löschen bestätigen"
+  "confirmDeleteTitle": "Löschen bestätigen",
+  "baseTypeAttributeLocked": "Basistyp-Attribut"
 }

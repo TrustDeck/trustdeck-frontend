@@ -30,6 +30,29 @@ interface SidebarProps {
 
 const XL_BREAKPOINT = 1280
 
+function rolesFromAccessToken(accessToken?: string) {
+  if (!accessToken) return []
+  try {
+    const payload = accessToken.split('.')[1]
+    if (!payload) return []
+    const decodedPayload = JSON.parse(
+      window.atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+    )
+    const realmRoles = decodedPayload?.realm_access?.roles
+    const resourceRoles = Object.values(decodedPayload?.resource_access ?? {})
+      .flatMap((client: any) => client?.roles ?? [])
+      .filter((role): role is string => typeof role === 'string')
+    return Array.from(
+      new Set([
+        ...(Array.isArray(realmRoles) ? realmRoles : []),
+        ...resourceRoles
+      ])
+    )
+  } catch {
+    return []
+  }
+}
+
 export default function Sidebar({ projectName }: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
   const { t, i18n } = useTranslation(['layout', 'common'])
@@ -130,28 +153,42 @@ export default function Sidebar({ projectName }: SidebarProps) {
     }
   }, [auth.user?.access_token])
 
+  const tokenRoles = useMemo(
+    () => rolesFromAccessToken(auth.user?.access_token),
+    [auth.user?.access_token]
+  )
+
   const accessForSidebar = useMemo<CachedUserAccess | null>(() => {
-    if (permissionAccess) return permissionAccess
+    const mergedRoles = Array.from(
+      new Set([...(roles ?? []), ...tokenRoles, ...(permissionAccess?.roles ?? [])])
+    )
+    if (permissionAccess) return { ...permissionAccess, roles: mergedRoles }
     return {
       userId: 'current-user',
-      roles: roles ?? [],
+      roles: mergedRoles,
       effectivePermissions: [],
       loadedAt: Date.now()
     }
-  }, [permissionAccess, roles])
+  }, [permissionAccess, roles, tokenRoles])
 
   const sidebarRoutes = useMemo(() => {
     return routes
       .filter(({ isSidebar, requiresBaseTypeAccess }) => {
         if (!isSidebar) return false
-        if (requiresBaseTypeAccess) return canAccessBaseTypes(accessForSidebar)
-        return true
+        if (!requiresBaseTypeAccess) return true
+
+        // The sidebar should not hide Global Settings while the permission cache
+        // is still loading or temporarily unavailable. The page itself still
+        // relies on the backend for the actual allowed operations.
+        if (!permissionAccess && auth.isAuthenticated) return true
+
+        return canAccessBaseTypes(accessForSidebar)
       })
       .sort(
         (a, b) =>
           (a.sideboardOrder ?? Infinity) - (b.sideboardOrder ?? Infinity)
       )
-  }, [accessForSidebar])
+  }, [accessForSidebar, auth.isAuthenticated, permissionAccess])
 
   const projectScopedRoutes = sidebarRoutes.filter(
     (route) => !route.isNonProject
@@ -173,31 +210,33 @@ export default function Sidebar({ projectName }: SidebarProps) {
     const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en')
       .toLowerCase()
       .split('-')[0]
+    const normalizedKey = titleKey.startsWith('layout:')
+      ? titleKey.slice('layout:'.length)
+      : titleKey
     const fixedSidebarTitles: Record<string, Record<string, string>> = {
-      'layout:menu.entityManagement': {
+      'menu.entityManagement': {
         en: 'Entity Management',
         de: 'Entitätenverwaltung'
       },
-      'layout:menu.globalSettings': {
+      'menu.globalSettings': {
         en: 'Global Settings',
         de: 'Globale Einstellungen'
       },
-      'layout:menu.permissionManagement': {
+      'menu.permissionManagement': {
         en: 'Permission Management',
         de: 'Berechtigungsverwaltung'
       }
     }
 
-    if (fixedSidebarTitles[titleKey]) {
-      return (
-        fixedSidebarTitles[titleKey][lang] ?? fixedSidebarTitles[titleKey].en
-      )
-    }
+    const fixedTitle = fixedSidebarTitles[normalizedKey]
+    if (fixedTitle) return fixedTitle[lang] ?? fixedTitle.en
 
-    if (titleKey.startsWith('layout:')) {
-      return t(titleKey.slice('layout:'.length), { ns: 'layout' })
-    }
-    return t(titleKey)
+    const translated = titleKey.startsWith('layout:')
+      ? t(normalizedKey, { ns: 'layout' })
+      : t(titleKey)
+    return translated === titleKey || translated === normalizedKey
+      ? (fixedSidebarTitles[normalizedKey]?.[lang] ?? translated)
+      : translated
   }
 
   const renderNavLinks = (items: RouteConfig[], collapsed = false) =>

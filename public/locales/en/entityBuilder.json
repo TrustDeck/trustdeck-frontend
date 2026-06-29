@@ -298,5 +298,6 @@
   "labelTextPlaceholder": "Enter a readable label",
   "englishLabelRequired": "English label is required",
   "basicSettings": "Basic settings",
-  "confirmDeleteTitle": "Confirm deletion"
+  "confirmDeleteTitle": "Confirm deletion",
+  "baseTypeAttributeLocked": "Base type attribute"
 }

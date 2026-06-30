@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from 'react-oidc-context'
 import {
   ArrowPathIcon,
   CheckIcon,
@@ -24,6 +25,11 @@ import TrustDeck, { EntityTypePayload } from '../../core/services/TrustDeck'
 import DynamicEntity from '../search/components/DynamicEntity'
 import { pickSchemaData } from '../search/utils/schemaData'
 import type { Attribute } from '../../core/stores/ProjectStore'
+import {
+  CachedUserAccess,
+  canUseProjectAction,
+  getCurrentUserAccess
+} from '../../core/services/PermissionCache'
 
 type ModalMode = 'view' | 'create' | 'edit'
 
@@ -166,8 +172,152 @@ function buildInitialEntityData(attributes: Attribute[] = []): Record<string, an
   return data
 }
 
+
+function isEmptyValue(value: unknown) {
+  return value === undefined || value === null || String(value).trim() === ''
+}
+
+function normalizeValueForType(attr: Attribute, value: unknown) {
+  if (isEmptyValue(value)) return value
+  if (attr.type === 'integer') return Number.parseInt(String(value), 10)
+  if (attr.type === 'number') return Number(value)
+  return value
+}
+
+function validateLeafAttribute(
+  attr: Attribute,
+  value: unknown,
+  label: string,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  const errors: string[] = []
+  if (attr.required && isEmptyValue(value)) {
+    errors.push(t('identity:crud.requiredFieldError', { field: label }))
+    return errors
+  }
+
+  if (isEmptyValue(value)) return errors
+
+  if (attr.type === 'integer') {
+    const numberValue = Number(value)
+    if (!Number.isInteger(numberValue)) {
+      errors.push(t('identity:crud.integerFieldError', { field: label }))
+    }
+  }
+
+  if (attr.type === 'number') {
+    const numberValue = Number(value)
+    if (Number.isNaN(numberValue)) {
+      errors.push(t('identity:crud.numberFieldError', { field: label }))
+    }
+  }
+
+  if (attr.type === 'date' || attr.type === 'datetime') {
+    const parsed = new Date(String(value))
+    if (Number.isNaN(parsed.getTime())) {
+      errors.push(t('identity:crud.dateFieldError', { field: label }))
+    }
+  }
+
+  if (attr.type === 'boolean' && typeof value !== 'boolean') {
+    errors.push(t('identity:crud.booleanFieldError', { field: label }))
+  }
+
+  const minimum = (attr as any).minimum
+  const maximum = (attr as any).maximum
+  if ((attr.type === 'integer' || attr.type === 'number') && !Number.isNaN(Number(value))) {
+    const numberValue = Number(value)
+    if (typeof minimum === 'number' && numberValue < minimum) {
+      errors.push(t('identity:crud.minimumFieldError', { field: label, minimum }))
+    }
+    if (typeof maximum === 'number' && numberValue > maximum) {
+      errors.push(t('identity:crud.maximumFieldError', { field: label, maximum }))
+    }
+  }
+
+  const minLength = (attr as any).minLength
+  const maxLength = (attr as any).maxLength
+  if (typeof value === 'string') {
+    if (typeof minLength === 'number' && value.length < minLength) {
+      errors.push(t('identity:crud.minLengthFieldError', { field: label, minLength }))
+    }
+    if (typeof maxLength === 'number' && value.length > maxLength) {
+      errors.push(t('identity:crud.maxLengthFieldError', { field: label, maxLength }))
+    }
+  }
+
+  const enumValues = (attr as any).values ?? attr.enum ?? []
+  if (Array.isArray(enumValues) && enumValues.length > 0 && !enumValues.includes(value as any)) {
+    errors.push(t('identity:crud.enumFieldError', { field: label }))
+  }
+
+  return errors
+}
+
+function validateEntityData(
+  attributes: Attribute[] = [],
+  data: Record<string, any>,
+  language: string,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  const errors: string[] = []
+
+  const walk = (attrs: Attribute[], context: any) => {
+    attrs.forEach((attr) => {
+      if (attr.layout === 'row' && Array.isArray(attr.attributes)) {
+        walk(attr.attributes, context)
+        return
+      }
+
+      if (Array.isArray(attr.attributes)) {
+        const groupValue = attr.name ? context?.[attr.name] : context
+        const entries = Array.isArray(groupValue) ? groupValue : [groupValue ?? {}]
+        entries.forEach((entry) => walk(attr.attributes ?? [], entry ?? {}))
+        return
+      }
+
+      if (!attr.name) return
+      const label = resolveLabel(attr, language)
+      errors.push(...validateLeafAttribute(attr, context?.[attr.name], label, t))
+    })
+  }
+
+  walk(attributes, data)
+  return errors
+}
+
+function coerceEntityDataTypes(
+  attributes: Attribute[] = [],
+  data: Record<string, any>
+): Record<string, any> {
+  const next = structuredClone(data ?? {})
+
+  const walk = (attrs: Attribute[], context: any) => {
+    attrs.forEach((attr) => {
+      if (attr.layout === 'row' && Array.isArray(attr.attributes)) {
+        walk(attr.attributes, context)
+        return
+      }
+
+      if (Array.isArray(attr.attributes)) {
+        const groupValue = attr.name ? context?.[attr.name] : context
+        const entries = Array.isArray(groupValue) ? groupValue : [groupValue ?? {}]
+        entries.forEach((entry) => walk(attr.attributes ?? [], entry ?? {}))
+        return
+      }
+
+      if (!attr.name || !(attr.name in context)) return
+      context[attr.name] = normalizeValueForType(attr, context[attr.name])
+    })
+  }
+
+  walk(attributes, next)
+  return next
+}
+
 export default function PreReg() {
   const navigate = useNavigate()
+  const auth = useAuth()
   const { t, i18n } = useTranslation(['identity', 'entityBuilder', 'search'])
   const showToast = useToastStore((state) => state.show)
   const {
@@ -181,7 +331,10 @@ export default function PreReg() {
   const [loadingTypes, setLoadingTypes] = useState(true)
   const [loadingInstances, setLoadingInstances] = useState(false)
   const [instances, setInstances] = useState<EntityInstance[]>([])
-  const [query, setQuery] = useState('*')
+  const [query, setQuery] = useState('')
+  const [resultLimit, setResultLimit] = useState(10)
+  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [permissionsReady, setPermissionsReady] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('view')
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -204,6 +357,70 @@ export default function PreReg() {
     () => flattenLeafAttributes(selectedSchemaAttributes).slice(0, 4),
     [selectedSchemaAttributes]
   )
+
+  useEffect(() => {
+    let active = true
+    if (!auth.user?.access_token) {
+      setPermissionAccess(null)
+      setPermissionsReady(false)
+      return () => {
+        active = false
+      }
+    }
+
+    setPermissionsReady(false)
+    TrustDeck.instance().setToken(auth.user.access_token)
+    getCurrentUserAccess(false)
+      .then((access) => {
+        if (active) setPermissionAccess(access)
+      })
+      .catch((error) => {
+        console.warn('Could not load entity instance permissions', error)
+        if (active) setPermissionAccess(null)
+      })
+      .finally(() => {
+        if (active) setPermissionsReady(true)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [auth.user?.access_token])
+
+  const selectedProjectAbbreviation = selectedProject?.abbreviation
+  const canSearchInstances = canUseProjectAction(
+    permissionAccess,
+    selectedProjectAbbreviation,
+    'instance:search'
+  )
+  const canCreateInstances = canUseProjectAction(
+    permissionAccess,
+    selectedProjectAbbreviation,
+    'instance:create'
+  )
+  const canReadInstances = canUseProjectAction(
+    permissionAccess,
+    selectedProjectAbbreviation,
+    'instance:read'
+  ) || canSearchInstances
+  const canUpdateInstances = canUseProjectAction(
+    permissionAccess,
+    selectedProjectAbbreviation,
+    'instance:update'
+  )
+  const canDeleteInstances = canUseProjectAction(
+    permissionAccess,
+    selectedProjectAbbreviation,
+    'instance:delete'
+  )
+  const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
+
+  const visibleInstances = useMemo(
+    () => instances.slice(0, resultLimit),
+    [instances, resultLimit]
+  )
+
+  const resultLimitOptions = [10, 20, 50, 100]
 
   const fetchTypes = useCallback(async () => {
     if (!selectedProject?.abbreviation) {
@@ -259,11 +476,24 @@ export default function PreReg() {
 
   const searchInstances = useCallback(async (typeName = selectedTypeName, searchQuery = query) => {
     if (!typeName) return
+    if (!canSearchInstances) {
+      if (permissionsReady) {
+        showToast({
+          severity: 'warn',
+          summary: t('identity:crud.search'),
+          detail: t('identity:crud.noSearchPermission'),
+          life: 4000
+        })
+      }
+      return
+    }
+
     setLoadingInstances(true)
     try {
+      const normalizedQuery = searchQuery?.trim()
       const result = await TrustDeck.instance().searchEntities(
         typeName,
-        searchQuery?.trim() || '*'
+        normalizedQuery || '*'
       )
       setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
     } catch (error) {
@@ -282,7 +512,7 @@ export default function PreReg() {
     } finally {
       setLoadingInstances(false)
     }
-  }, [normalizeInstance, query, selectedTypeName, showToast, t])
+  }, [canSearchInstances, normalizeInstance, permissionsReady, query, selectedTypeName, showToast, t])
 
   useEffect(() => {
     fetchTypes()
@@ -291,14 +521,23 @@ export default function PreReg() {
   useEffect(() => {
     setInstances([])
     setSelectedInstance(null)
-    setQuery('*')
-    if (selectedTypeName) {
+    setQuery('')
+    if (selectedTypeName && permissionsReady && canSearchInstances) {
       searchInstances(selectedTypeName, '*')
     }
-  }, [selectedTypeName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canSearchInstances, permissionsReady, selectedTypeName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openCreateModal = () => {
     if (!selectedType) return
+    if (!canCreateInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.create'),
+        detail: t('identity:crud.noCreatePermission'),
+        life: 4000
+      })
+      return
+    }
     setModalMode('create')
     setSelectedInstance(null)
     setFormData(buildInitialEntityData(selectedSchemaAttributes))
@@ -306,6 +545,15 @@ export default function PreReg() {
   }
 
   const openViewModal = (instance: EntityInstance) => {
+    if (!canReadInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.view'),
+        detail: t('identity:crud.noReadPermission'),
+        life: 4000
+      })
+      return
+    }
     setModalMode('view')
     setSelectedInstance(instance)
     setFormData(instance.data ?? {})
@@ -313,6 +561,15 @@ export default function PreReg() {
   }
 
   const openEditModal = (instance: EntityInstance) => {
+    if (!canUpdateInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.edit'),
+        detail: t('identity:crud.noUpdatePermission'),
+        life: 4000
+      })
+      return
+    }
     setModalMode('edit')
     setSelectedInstance(instance)
     setFormData(
@@ -334,11 +591,52 @@ export default function PreReg() {
 
   const handleSave = async () => {
     if (!selectedTypeName) return
+
+    if (modalMode === 'create' && !canCreateInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.create'),
+        detail: t('identity:crud.noCreatePermission'),
+        life: 4000
+      })
+      return
+    }
+
+    if (modalMode === 'edit' && !canUpdateInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.update'),
+        detail: t('identity:crud.noUpdatePermission'),
+        life: 4000
+      })
+      return
+    }
+
+    const pickedData = selectedSchemaAttributes.length
+      ? pickSchemaData(selectedSchemaAttributes, formData)
+      : formData
+    const validationErrors = validateEntityData(
+      selectedSchemaAttributes,
+      pickedData,
+      i18n.language,
+      t
+    )
+
+    if (validationErrors.length > 0) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.validationFailed'),
+        detail: validationErrors.slice(0, 3).join(' '),
+        life: 6000
+      })
+      return
+    }
+
     setSaving(true)
     try {
       const dataToSave = selectedSchemaAttributes.length
-        ? pickSchemaData(selectedSchemaAttributes, formData)
-        : formData
+        ? coerceEntityDataTypes(selectedSchemaAttributes, pickedData)
+        : pickedData
 
       if (modalMode === 'create') {
         const created = await TrustDeck.instance().postEntity(selectedTypeName, {
@@ -387,6 +685,17 @@ export default function PreReg() {
 
   const handleDelete = async () => {
     if (!selectedTypeName || !selectedInstance) return
+    if (!canDeleteInstances) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.delete'),
+        detail: t('identity:crud.noDeletePermission'),
+        life: 4000
+      })
+      setDeleteConfirmOpen(false)
+      return
+    }
+
     setDeleting(true)
     try {
       const identifier = entityId(selectedInstance)
@@ -427,6 +736,23 @@ export default function PreReg() {
       : modalMode === 'edit'
         ? t('identity:crud.editEntity', { type: selectedTypeName })
         : t('identity:crud.viewEntity', { type: selectedTypeName })
+
+  const handleSearchClick = () => {
+    if (!query.trim()) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.search'),
+        detail: t('identity:crud.enterSearchTerm'),
+        life: 3500
+      })
+      return
+    }
+    searchInstances(selectedTypeName, query)
+  }
+
+  const handleListAllClick = () => {
+    searchInstances(selectedTypeName, '*')
+  }
 
   return (
     <div className="w-full">
@@ -517,24 +843,43 @@ export default function PreReg() {
                   placeholder={t('identity:crud.searchPlaceholder')}
                 />
                 <div className="flex flex-wrap justify-end gap-2">
-                  <PrimaryOutlinedButton
-                    label={t('identity:crud.refresh')}
-                    onClick={() => searchInstances(selectedType.name, '*')}
-                    icon={<ArrowPathIcon className="h-5 w-5 mr-1" />}
-                    disabled={loadingInstances}
-                  />
-                  <PrimaryOutlinedButton
+                  <PrimaryButton
                     label={t('identity:crud.search')}
-                    onClick={() => searchInstances()}
+                    onClick={handleSearchClick}
                     icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
                     loading={loadingInstances}
+                    disabled={permissionLoadingOrDenied}
+                    tooltip={permissionLoadingOrDenied ? t('identity:crud.noSearchPermission') : undefined}
                   />
-                  <PrimaryButton
-                    label={t('identity:crud.addEntity')}
-                    onClick={openCreateModal}
-                    icon={<PlusIcon className="h-5 w-5 mr-1" />}
+                  <PrimaryOutlinedButton
+                    label={t('identity:crud.listAll')}
+                    onClick={handleListAllClick}
+                    icon={<ArrowPathIcon className="h-5 w-5 mr-1" />}
+                    disabled={loadingInstances || permissionLoadingOrDenied}
+                    tooltip={permissionLoadingOrDenied ? t('identity:crud.noSearchPermission') : undefined}
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
+                <span className="text-gray-600 dark:text-gray-300">
+                  {t('identity:crud.resultSummary', {
+                    shown: Math.min(instances.length, resultLimit),
+                    total: instances.length
+                  })}
+                </span>
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <span>{t('identity:crud.resultsLimit')}</span>
+                  <select
+                    value={resultLimit}
+                    onChange={(event) => setResultLimit(Number(event.target.value))}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                  >
+                    {resultLimitOptions.map((limit) => (
+                      <option key={limit} value={limit}>{limit}</option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               <Divider />
@@ -568,7 +913,7 @@ export default function PreReg() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                      {instances.map((instance, index) => {
+                      {visibleInstances.map((instance, index) => {
                         const id = entityId(instance) || `${selectedType.name}-${index}`
                         return (
                           <tr key={id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
@@ -589,11 +934,15 @@ export default function PreReg() {
                                   label={t('identity:crud.view')}
                                   onClick={() => openViewModal(instance)}
                                   icon={<EyeIcon className="h-5 w-5 mr-1" />}
+                                  disabled={!canReadInstances}
+                                  tooltip={!canReadInstances ? t('identity:crud.noReadPermission') : undefined}
                                 />
                                 <PrimaryOutlinedButton
                                   label={t('identity:crud.edit')}
                                   onClick={() => openEditModal(instance)}
                                   icon={<PencilIcon className="h-5 w-5 mr-1" />}
+                                  disabled={!canUpdateInstances}
+                                  tooltip={!canUpdateInstances ? t('identity:crud.noUpdatePermission') : undefined}
                                 />
                                 <SecondaryOutlinedButton
                                   label={t('identity:crud.delete')}
@@ -602,6 +951,8 @@ export default function PreReg() {
                                     setDeleteConfirmOpen(true)
                                   }}
                                   icon={<TrashIcon className="h-5 w-5 mr-1" />}
+                                  disabled={!canDeleteInstances}
+                                  tooltip={!canDeleteInstances ? t('identity:crud.noDeletePermission') : undefined}
                                 />
                               </div>
                             </td>
@@ -612,6 +963,16 @@ export default function PreReg() {
                   </table>
                 </div>
               )}
+
+              <div className="flex justify-center pt-2">
+                <PrimaryButton
+                  label={t('identity:crud.addEntityInstance')}
+                  onClick={openCreateModal}
+                  icon={<PlusIcon className="h-5 w-5 mr-1" />}
+                  disabled={!canCreateInstances}
+                  tooltip={!canCreateInstances ? t('identity:crud.noCreatePermission') : undefined}
+                />
+              </div>
             </div>
           </Panel>
         )}
@@ -640,6 +1001,7 @@ export default function PreReg() {
               editMode={modalMode !== 'view'}
               formData={formData}
               onFieldChange={handleFieldChange}
+              showIdentifierPanel={modalMode !== 'create'}
             />
           ) : (
             <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
@@ -658,6 +1020,8 @@ export default function PreReg() {
               <PrimaryButton
                 label={t('identity:crud.edit')}
                 onClick={() => openEditModal(selectedInstance)}
+                disabled={!canUpdateInstances}
+                tooltip={!canUpdateInstances ? t('identity:crud.noUpdatePermission') : undefined}
                 icon={<PencilIcon className="h-5 w-5 mr-1" />}
               />
             )}
@@ -666,7 +1030,12 @@ export default function PreReg() {
                 label={modalMode === 'create' ? t('identity:crud.create') : t('identity:crud.save')}
                 onClick={handleSave}
                 loading={saving}
-                disabled={!selectedTypeName || selectedSchemaAttributes.length === 0}
+                disabled={
+                  !selectedTypeName ||
+                  selectedSchemaAttributes.length === 0 ||
+                  (modalMode === 'create' && !canCreateInstances) ||
+                  (modalMode === 'edit' && !canUpdateInstances)
+                }
                 icon={<CheckIcon className="h-5 w-5 mr-1" />}
               />
             )}

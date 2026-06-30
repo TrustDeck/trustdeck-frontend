@@ -11,6 +11,7 @@ export type Attribute = {
   required?: boolean
   linkage?: boolean
   minimum?: number
+  maximum?: number
   minLength?: number
   maxLength?: number
   enum?: string[]

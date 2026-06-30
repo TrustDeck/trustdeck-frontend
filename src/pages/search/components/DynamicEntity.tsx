@@ -15,6 +15,7 @@ type Props = {
   editMode: boolean
   formData: Record<string, any>
   onFieldChange: (path: Array<string | number>, value: any) => void
+  showIdentifierPanel?: boolean
 }
 
 function formatValue(value: unknown): string {
@@ -44,7 +45,8 @@ export default function DynamicEntity({
   schemaAttributes,
   editMode,
   formData,
-  onFieldChange
+  onFieldChange,
+  showIdentifierPanel = true
 }: Props) {
   const { t, i18n } = useTranslation()
 
@@ -63,6 +65,7 @@ export default function DynamicEntity({
   ) => {
     const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
     const displayLabel = resolveLabel(attr)
+    const requiredDisplayLabel = attr.required ? `${displayLabel} *` : displayLabel
     const enumValues = attr.values ?? attr.enum ?? []
 
     if (editMode && attr.name && attr.type === 'enum') {
@@ -73,32 +76,64 @@ export default function DynamicEntity({
           value={rawValue ?? ''}
           options={enumValues.map((option: string) => ({ label: option, value: option }))}
           onChange={(e) => onFieldChange(path, e.value)}
-          placeholder={displayLabel}
+          placeholder={requiredDisplayLabel}
+          required={attr.required}
         />
       )
     }
 
-    if (editMode && attr.name && attr.type === 'date') {
+    if (editMode && attr.name && (attr.type === 'date' || attr.type === 'datetime')) {
       return (
         <CustomCalendar
           key={key}
           id={key}
           value={parseDateValue(rawValue)}
           onChange={(e) => onFieldChange(path, e.value ? e.value.toISOString() : '')}
-          placeholder={displayLabel}
+          placeholder={requiredDisplayLabel}
+          required={attr.required}
+          showTime={attr.type === 'datetime'}
         />
       )
     }
 
-    if (editMode && attr.name && attr.type === 'integer') {
+    if (editMode && attr.name && (attr.type === 'integer' || attr.type === 'number')) {
       return (
         <CustomInputNumber
           key={key}
           id={key}
-          value={typeof rawValue === 'number' ? rawValue : rawValue ? Number(rawValue) : null}
+          value={typeof rawValue === 'number' ? rawValue : rawValue !== '' && rawValue !== undefined && rawValue !== null ? Number(rawValue) : null}
           onChange={(e) => onFieldChange(path, e.value ?? '')}
-          placeholder={displayLabel}
+          placeholder={requiredDisplayLabel}
+          min={attr.minimum}
+          max={attr.maximum}
+          step={attr.type === 'integer' ? 1 : 0.01}
+          validate={(value) => {
+            if (attr.required && (value === null || value === undefined)) return false
+            if (value === null || value === undefined) return true
+            if (attr.type === 'integer' && !Number.isInteger(value)) return false
+            if (typeof attr.minimum === 'number' && value < attr.minimum) return false
+            if (typeof attr.maximum === 'number' && value > attr.maximum) return false
+            return true
+          }}
+          errorMessage={t('identity:crud.invalidField')}
         />
+      )
+    }
+
+    if (editMode && attr.name && attr.type === 'boolean') {
+      return (
+        <label
+          key={key}
+          className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray px-3 text-xl font-font-text text-gray-700 dark:text-gray-200"
+        >
+          <input
+            type="checkbox"
+            checked={Boolean(rawValue)}
+            onChange={(e) => onFieldChange(path, e.target.checked)}
+            className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+          />
+          <span>{requiredDisplayLabel}</span>
+        </label>
       )
     }
 
@@ -108,7 +143,8 @@ export default function DynamicEntity({
         id={key}
         readOnly={!editMode || !attr.name}
         value={formatValue(rawValue)}
-        placeholder={displayLabel}
+        placeholder={requiredDisplayLabel}
+        required={attr.required}
         onChange={attr.name ? (e) => onFieldChange(path, e.target.value) : undefined}
       />
     )
@@ -224,7 +260,8 @@ export default function DynamicEntity({
         })}
       </Panel>
 
-      <div className="w-full xl:w-2/5 flex flex-col gap-4">
+      {showIdentifierPanel && (
+        <div className="w-full xl:w-2/5 flex flex-col gap-4">
         <Panel className="h-fit">
           <Divider text={t('search:identifier')} />
           <div className="flex flex-col gap-4">
@@ -248,6 +285,7 @@ export default function DynamicEntity({
           <LinksTable entity={{ id: entity.id || entity.trustdeckID, links: entity.links || [] } as Entity} />
         </Panel>
       </div>
+      )}
     </div>
   )
 }

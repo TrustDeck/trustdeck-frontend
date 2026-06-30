@@ -87,7 +87,7 @@ const Settings: React.FC = () => {
     }
     setPermissionsReady(false)
     TrustDeck.instance().setToken(auth.user.access_token)
-    getCurrentUserAccess(false)
+    getCurrentUserAccess(true)
       .then((access) => {
         if (active) setPermissionAccess(access)
       })

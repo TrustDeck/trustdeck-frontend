@@ -460,6 +460,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
                 editMode
                 formData={createFormData}
                 onFieldChange={handleCreateFieldChange}
+                showIdentifierPanel={false}
               />
             ) : (
               <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600">

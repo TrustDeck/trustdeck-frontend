@@ -150,43 +150,28 @@ export async function getCurrentUserAccess(
   return pending
 }
 
-function tokenRoleAllowsProjectOperation(
-  roles: string[],
-  operation: 'create' | 'update' | 'delete'
-) {
-  const exactAction = `project:${operation}`
-  return roles.some((role) => {
-    const r = normalize(role)
-    if (r === exactAction) return true
-    if (
-      operation === 'delete' &&
-      (r === 'project:manage-permissions' || r === 'project:*')
-    )
-      return true
-    if (
-      operation === 'update' &&
-      (r === 'project:manage-permissions' || r === 'project:*')
-    )
-      return true
-    return false
-  })
-}
-
-function hasPrivilegedRole(roles: string[]) {
+function projectAdminRoleAllows(roles: string[]) {
   return roles.some((role) => {
     const r = normalize(role)
     const parts = normalizedParts(role)
     const joined = parts.join('-')
-    const hasProject =
+    const mentionsProject =
       parts.includes('project') ||
       parts.includes('projects') ||
       r.includes('trustdeck')
     const hasCrud =
       parts.includes('crud') || r.includes('create-read-update-delete')
-    const hasManage =
-      parts.includes('manage') ||
+    const hasAdmin =
+      parts.includes('admin') ||
+      parts.includes('administrator') ||
       parts.includes('manager') ||
-      parts.includes('admin')
+      r === 'admin' ||
+      r === 'administrator' ||
+      r === 'realm-admin' ||
+      r === 'trustdeck-admin' ||
+      r === 'trustdeck_admin' ||
+      r === 'backend-admin' ||
+      r === 'project-admin'
 
     return (
       r === 'admin' ||
@@ -199,61 +184,50 @@ function hasPrivilegedRole(roles: string[]) {
       r === 'project-crud' ||
       r === 'projects-crud' ||
       r === 'all-projects-crud' ||
-      r === 'permission-manager' ||
       joined.includes('all-project') ||
-      (hasProject && (hasCrud || hasManage)) ||
-      r.includes('admin') ||
-      r.includes('permission-manager')
+      (mentionsProject && (hasCrud || hasAdmin)) ||
+      (r.includes('admin') && !r.includes('permission-manager'))
     )
   })
 }
 
-function operationAliases(operation: 'create' | 'update' | 'delete') {
-  if (operation === 'create')
-    return [
-      'create',
-      'add',
-      'write',
-      'save',
-      'crud',
-      'manage',
-      'admin',
-      '*',
-      'all'
-    ]
-  if (operation === 'update')
-    return [
-      'update',
-      'edit',
-      'write',
-      'modify',
-      'crud',
-      'manage',
-      'admin',
-      '*',
-      'all'
-    ]
-  return ['delete', 'remove', 'write', 'crud', 'manage', 'admin', '*', 'all']
+function hasPrivilegedRole(roles: string[]) {
+  return roles.some((role) => {
+    const r = normalize(role)
+    return (
+      r === 'admin' ||
+      r === 'administrator' ||
+      r === 'realm-admin' ||
+      r === 'trustdeck-admin' ||
+      r === 'trustdeck_admin' ||
+      r === 'backend-admin' ||
+      r.includes('trustdeck-admin') ||
+      (r.includes('admin') && !r.includes('permission-manager'))
+    )
+  })
 }
 
-function actionAllows(
-  actionValue: unknown,
-  operation: 'create' | 'update' | 'delete'
+function actionPatternAllows(
+  grantedAction: unknown,
+  requestedAction: string
 ) {
-  const action = normalize(actionValue)
-  if (!action) return false
-  const aliases = operationAliases(operation)
-  if (aliases.includes(action)) return true
+  const granted = normalize(grantedAction)
+  const requested = normalize(requestedAction)
+  if (!granted || !requested) return false
+  if (granted === requested) return true
+  if (granted === '*' || granted === 'all') return true
 
-  const parts = normalizedParts(action)
-  if (parts.some((part) => aliases.includes(part))) return true
+  const [requestedScope] = requested.split(':')
+  return (
+    granted === `${requestedScope}:*` ||
+    granted === `${requestedScope}:all` ||
+    granted === `${requestedScope}:crud`
+  )
+}
 
-  // Backend actions are often namespaced, e.g. PROJECT_UPDATE, UPDATE_PROJECT, project:update.
-  const mentionsProject =
-    parts.includes('project') ||
-    parts.includes('projects') ||
-    action.includes('project')
-  return mentionsProject && parts.some((part) => aliases.includes(part))
+function tokenRoleAllowsProjectAction(roles: string[], requestedAction: string) {
+  if (projectAdminRoleAllows(roles)) return true
+  return roles.some((role) => actionPatternAllows(role, requestedAction))
 }
 
 function permissionAction(permission: CachedEffectivePermission) {
@@ -296,44 +270,58 @@ function permissionDecisionAllows(permission: CachedEffectivePermission) {
   )
 }
 
+function permissionAllowsProjectAction(
+  permission: CachedEffectivePermission,
+  projectAbbreviation: string | undefined,
+  requestedAction: string
+) {
+  if (!permissionDecisionAllows(permission)) return false
+  if (!actionPatternAllows(permissionAction(permission), requestedAction)) {
+    return false
+  }
+
+  const resourceType = normalize(permissionResourceType(permission))
+  const resourceName = normalize(permissionResourceName(permission))
+  const project = normalize(projectAbbreviation)
+
+  if (
+    !resourceType ||
+    resourceType === 'global' ||
+    resourceType === '*' ||
+    resourceType === 'all'
+  ) {
+    return true
+  }
+
+  if (resourceType !== 'project' && resourceType !== 'projects') return false
+  if (!project) return true
+
+  return (
+    !resourceName ||
+    resourceName === project ||
+    resourceName === '*' ||
+    resourceName === 'all'
+  )
+}
+
+export function canUseProjectAction(
+  access: CachedUserAccess | null | undefined,
+  projectAbbreviation: string | undefined,
+  action: string
+) {
+  if (!access) return false
+  if (tokenRoleAllowsProjectAction(access.roles, action)) return true
+  return access.effectivePermissions.some((permission) =>
+    permissionAllowsProjectAction(permission, projectAbbreviation, action)
+  )
+}
+
 export function canManageProject(
   access: CachedUserAccess | null | undefined,
   projectAbbreviation: string | undefined,
   operation: 'create' | 'update' | 'delete'
 ) {
-  if (!access) return false
-  if (
-    hasPrivilegedRole(access.roles) ||
-    tokenRoleAllowsProjectOperation(access.roles, operation)
-  )
-    return true
-
-  return access.effectivePermissions.some((permission) => {
-    if (!permissionDecisionAllows(permission)) return false
-
-    const resourceType = normalize(permissionResourceType(permission))
-    const resourceName = normalize(permissionResourceName(permission))
-    const project = normalize(projectAbbreviation)
-    const action = permissionAction(permission)
-
-    if (!actionAllows(action, operation)) return false
-
-    if (
-      !resourceType ||
-      resourceType === 'global' ||
-      resourceType === '*' ||
-      resourceType === 'all'
-    )
-      return true
-    if (resourceType !== 'project' && resourceType !== 'projects') return false
-    if (!project) return true
-    return (
-      !resourceName ||
-      resourceName === project ||
-      resourceName === '*' ||
-      resourceName === 'all'
-    )
-  })
+  return canUseProjectAction(access, projectAbbreviation, `project:${operation}`)
 }
 
 function tokenRoleAllowsBaseType(roles: string[]) {

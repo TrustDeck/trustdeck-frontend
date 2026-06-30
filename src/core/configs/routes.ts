@@ -108,8 +108,7 @@ export const routes: RouteConfig[] = [
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 7,
-    isNonProject: true,
-    requiresBaseTypeAccess: true
+    isNonProject: true
   },
   {
     path: '/projects/global-permissions',

@@ -207,7 +207,7 @@
     "phonetic": "Uses a phonetic encoding as the blocking key.",
     "year": "Uses the year part as a blocking key.",
     "yearMonth": "Uses year and month as a blocking key.",
-    "domainExact": "Uses a domain-specific exact blocking key."
+    "domainExact": "Uses a group-specific exact blocking key."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
   "addMoreAttributesHint": "Add more attributes or sections to the definition.",
@@ -217,7 +217,7 @@
   "baseAttributeLocked": "Base type attribute",
   "searchingGroups": "Searching readable groups...",
   "noMatchingGroups": "No readable groups match this search.",
-  "associatedGroupNameHelp": "The associated group/domain controls where pseudonyms for entities of this type are created and which domain permissions apply. Only groups you are allowed to read are offered in the search results.",
+  "associatedGroupNameHelp": "The associated group controls where pseudonyms for entities of this type are created and which group permissions apply. Only groups you are allowed to read are offered in the search results.",
   "projectTypesTitle": "Project entity types",
   "baseTypesTitle": "Global settings",
   "addType": "Add type",
@@ -291,7 +291,7 @@
     "phonetic": "Phonetic value",
     "year": "Year",
     "yearMonth": "Year and month",
-    "domainExact": "Domain-specific exact value"
+    "domainExact": "Group-specific exact value"
   },
   "systemAttributeIdentifierPlaceholder": "e.g. familyName",
   "labelTextRequired": "Label text *",
@@ -303,7 +303,7 @@
   "groupCreate": {
     "openButton": "Create new group",
     "title": "Create new group",
-    "description": "Create a new group/domain and assign it to this entity type. The group settings define how pseudonyms are generated in this domain.",
+    "description": "Create a new group and assign it to this entity type. The group settings define how pseudonyms are generated.",
     "name": "Group name",
     "parentGroup": "Parent group",
     "noParent": "No parent group",
@@ -318,9 +318,23 @@
     "groupDescription": "Description",
     "createButton": "Create and assign group",
     "validationSummary": "Missing group settings",
-    "validationDetail": "Enter a group name and a pseudonym length of at least 4.",
+    "validationDetail": "Enter a group name, a pseudonym prefix, and a pseudonym length of at least 4.",
     "createdSummary": "Group created",
     "createdDetail": "The new group was created and assigned to this entity type.",
-    "failedSummary": "Group creation failed"
+    "failedSummary": "Group creation failed",
+    "openButtonShort": "New group",
+    "advancedShow": "Show advanced configuration",
+    "advancedHide": "Hide advanced configuration"
+  },
+  "groupCreateHelp": {
+    "parentGroup": "Optional parent group. Leave empty to create a top-level group.",
+    "pseudonymLength": "Total length of generated pseudonym values, excluding the prefix.",
+    "algorithm": "Algorithm used to generate pseudonym values for this group.",
+    "alphabet": "Character set used for generated pseudonyms when the selected algorithm allows configurable alphabets.",
+    "randomAlgorithmDesiredSize": "Expected maximum number of pseudonyms for random generation. This helps evaluate collision risk.",
+    "paddingCharacter": "Single character used to pad shorter generated values up to the configured pseudonym length.",
+    "multiplePsnAllowed": "Allows the same identifier to receive more than one pseudonym in this group.",
+    "addCheckDigit": "Adds a final check digit that can help detect typing or transcription errors.",
+    "groupDescription": "Optional description for administrators to document the purpose of this group."
   }
 }

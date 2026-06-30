@@ -5,7 +5,7 @@ import { useTreeStateStore } from '../stores/TreeStateStore'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
 import { AlphabetKey, alphabetOptions, characters, CUSTOM_ALPHABET_VALUE } from '../utils/alphabetOptions.ts'
-import { algorithmOptions } from '../utils/algorithmOptions.ts'
+import { algorithmOptions, defaultAlphabetForAlgorithm } from '../utils/algorithmOptions.ts'
 import { getAlgorithmOutputLength, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
@@ -358,9 +358,11 @@ export default function GroupForm() {
           onChange={(e) => {
             const newAlgorithm = e.value
             updateNodeAttribute(selectedNodeKey, 'algorithm', newAlgorithm)
-            if (isHashAlgorithm(newAlgorithm)) {
-              updateNodeAttribute(selectedNodeKey, 'alphabet', 'HEXADECIMAL_ALPHABET')
-            }
+            updateNodeAttribute(
+              selectedNodeKey,
+              'alphabet',
+              defaultAlphabetForAlgorithm(newAlgorithm)
+            )
           }}
           options={algorithmOptions}
           disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}

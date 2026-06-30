@@ -20,7 +20,10 @@ import TrustDeck from '../../core/services/TrustDeck'
 import useToastStore from '../../core/stores/ToastStore'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { LABEL_ALPHA2_CODE_OPTIONS } from './labelAlpha2CodeOptions'
-import { algorithmOptions } from '../groups/utils/algorithmOptions'
+import {
+  algorithmOptions,
+  defaultAlphabetForAlgorithm
+} from '../groups/utils/algorithmOptions'
 import { alphabetOptions, characters } from '../groups/utils/alphabetOptions'
 
 type LayoutValue = 'row' | 'col' | 'group'
@@ -693,6 +696,7 @@ export default function Builder({
     Record<string, boolean>
   >({})
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [showGroupAdvanced, setShowGroupAdvanced] = useState(false)
   const [newGroupDraft, setNewGroupDraft] = useState<NewGroupDraft>(
     defaultNewGroupDraft
   )
@@ -806,6 +810,7 @@ export default function Builder({
 
   const openCreateGroupModal = async () => {
     const typedName = associatedGroupName.trim()
+    setShowGroupAdvanced(false)
     setNewGroupDraft({
       ...defaultNewGroupDraft(),
       name: typedName,
@@ -827,13 +832,18 @@ export default function Builder({
       newGroupDraft.randomAlgorithmDesiredSize
     )
 
-    if (!name || !Number.isFinite(pseudonymLength) || pseudonymLength < 4) {
+    if (
+      !name ||
+      !newGroupDraft.prefix.trim() ||
+      !Number.isFinite(pseudonymLength) ||
+      pseudonymLength < 4
+    ) {
       showToast({
         severity: 'error',
         summary: t('groupCreate.validationSummary', 'Missing group settings'),
         detail: t(
           'groupCreate.validationDetail',
-          'Enter a group name and a pseudonym length of at least 4.'
+          'Enter a group name, a pseudonym prefix, and a pseudonym length of at least 4.'
         ),
         life: 4000
       })
@@ -849,10 +859,10 @@ export default function Builder({
         ...(newGroupDraft.parentGroupName
           ? { superDomainName: newGroupDraft.parentGroupName }
           : {}),
-        prefix: newGroupDraft.prefix,
+        prefix: newGroupDraft.prefix.trim(),
         description: newGroupDraft.description,
         multiplePsnAllowed: newGroupDraft.multiplePsnAllowed,
-        paddingCharacter: newGroupDraft.paddingCharacter,
+        paddingCharacter: newGroupDraft.paddingCharacter.slice(0, 1),
         pseudonymLength,
         randomAlgorithmDesiredSize: Number.isFinite(randomAlgorithmDesiredSize)
           ? randomAlgorithmDesiredSize
@@ -1758,7 +1768,7 @@ export default function Builder({
                 placeholder={t('associatedGroupNamePlaceholder')}
                 info={t(
                   'associatedGroupNameHelp',
-                  'The associated group/domain controls where pseudonyms for entities of this type are created and which domain permissions apply. Only groups you are allowed to read are offered in the search results.'
+                  'The associated group controls where pseudonyms for entities of this type are created and which group permissions apply. Only groups you are allowed to read are offered in the search results.'
                 )}
                 options={groupOptions}
                 loading={groupSearchLoading}
@@ -1766,19 +1776,6 @@ export default function Builder({
                 onChange={setAssociatedGroupName}
                 onCreateGroup={openCreateGroupModal}
               />
-              {!readOnly && (
-                <div className="mt-3 flex justify-start">
-                  <PrimaryOutlinedButton
-                    label={
-                      <span className="inline-flex items-center gap-2">
-                        <PlusIcon className="h-4 w-4" />
-                        {t('groupCreate.openButton', 'Create new group')}
-                      </span>
-                    }
-                    onClick={openCreateGroupModal}
-                  />
-                </div>
-              )}
               {baseTypeLoading && (
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
                   {t('loadingBaseType')}
@@ -1847,7 +1844,10 @@ export default function Builder({
       {!readOnly && (
         <Dialog
           visible={showCreateGroupModal}
-          onHide={() => setShowCreateGroupModal(false)}
+          onHide={() => {
+            setShowCreateGroupModal(false)
+            setShowGroupAdvanced(false)
+          }}
           header={t('groupCreate.title', 'Create new group')}
           modal
           className="w-full md:w-3/4 xl:w-1/2"
@@ -1873,7 +1873,7 @@ export default function Builder({
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {t(
                 'groupCreate.description',
-                'Create a new group/domain and assign it to this entity type. The group settings define how pseudonyms are generated in this domain.'
+                'Create a new group and assign it to this entity type. The group settings define how pseudonyms are generated.'
               )}
             </p>
             <div className="grid gap-4 md:grid-cols-2">
@@ -1886,25 +1886,6 @@ export default function Builder({
                 }
                 required
               />
-              <CustomDropdown
-                id="newGroupParent"
-                value={newGroupDraft.parentGroupName}
-                options={[
-                  {
-                    label: t('groupCreate.noParent', 'No parent group'),
-                    value: ''
-                  },
-                  ...newGroupParentOptions.filter(
-                    (option) =>
-                      option.value !== newGroupDraft.name.trim() &&
-                      option.value !== ''
-                  )
-                ]}
-                placeholder={t('groupCreate.parentGroup', 'Parent group')}
-                onChange={(event) =>
-                  updateNewGroupDraft({ parentGroupName: event.value })
-                }
-              />
               <CustomFloatLabel
                 id="newGroupPrefix"
                 value={newGroupDraft.prefix}
@@ -1912,87 +1893,176 @@ export default function Builder({
                 onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                   updateNewGroupDraft({ prefix: event.target.value })
                 }
-              />
-              <CustomFloatLabel
-                id="newGroupLength"
-                value={newGroupDraft.pseudonymLength}
-                placeholder={t('groupCreate.pseudonymLength', 'Pseudonym length')}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  updateNewGroupDraft({ pseudonymLength: event.target.value })
-                }
                 required
               />
-              <CustomDropdown
-                id="newGroupAlgorithm"
-                value={newGroupDraft.algorithm}
-                options={algorithmOptions}
-                placeholder={t('groupCreate.algorithm', 'Algorithm')}
-                onChange={(event) =>
-                  updateNewGroupDraft({ algorithm: event.value })
-                }
-              />
-              <CustomDropdown
-                id="newGroupAlphabet"
-                value={newGroupDraft.alphabet}
-                options={alphabetOptions}
-                placeholder={t('groupCreate.alphabet', 'Alphabet')}
-                onChange={(event) =>
-                  updateNewGroupDraft({ alphabet: event.value })
-                }
-              />
-              <CustomFloatLabel
-                id="newGroupDesiredSize"
-                value={newGroupDraft.randomAlgorithmDesiredSize}
-                placeholder={t(
-                  'groupCreate.randomAlgorithmDesiredSize',
-                  'Desired pseudonym pool size'
-                )}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  updateNewGroupDraft({
-                    randomAlgorithmDesiredSize: event.target.value
-                  })
-                }
-              />
-              <CustomFloatLabel
-                id="newGroupPadding"
-                value={newGroupDraft.paddingCharacter}
-                placeholder={t('groupCreate.paddingCharacter', 'Padding character')}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                  updateNewGroupDraft({ paddingCharacter: event.target.value })
-                }
-              />
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                <input
-                  type="checkbox"
-                  checked={newGroupDraft.multiplePsnAllowed}
-                  onChange={(event) =>
-                    updateNewGroupDraft({
-                      multiplePsnAllowed: event.target.checked
-                    })
-                  }
-                />
-                {t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
-              </label>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                <input
-                  type="checkbox"
-                  checked={newGroupDraft.addCheckDigit}
-                  onChange={(event) =>
-                    updateNewGroupDraft({ addCheckDigit: event.target.checked })
-                  }
-                />
-                {t('groupCreate.addCheckDigit', 'Add check digit')}
-              </label>
               <div className="md:col-span-2">
-                <textarea
-                  className="min-h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-                  value={newGroupDraft.description}
-                  placeholder={t('groupCreate.groupDescription', 'Description')}
-                  onChange={(event) =>
-                    updateNewGroupDraft({ description: event.target.value })
-                  }
-                />
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:text-gray-300 dark:hover:border-blue-300 dark:hover:text-blue-200"
+                  onClick={() => setShowGroupAdvanced((current) => !current)}
+                >
+                  {showGroupAdvanced ? (
+                    <ChevronDownIcon className="h-4 w-4" />
+                  ) : (
+                    <ChevronRightIcon className="h-4 w-4" />
+                  )}
+                  {showGroupAdvanced
+                    ? t('groupCreate.advancedHide', 'Hide advanced configuration')
+                    : t('groupCreate.advancedShow', 'Show advanced configuration')}
+                </button>
               </div>
+              {showGroupAdvanced && (
+                <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
+                  <DropdownWithInfo
+                    id="newGroupParent"
+                    value={newGroupDraft.parentGroupName}
+                    options={[
+                      {
+                        label: t('groupCreate.noParent', 'No parent group'),
+                        value: ''
+                      },
+                      ...newGroupParentOptions.filter(
+                        (option) =>
+                          option.value !== newGroupDraft.name.trim() &&
+                          option.value !== ''
+                      )
+                    ]}
+                    label={t('groupCreate.parentGroup', 'Parent group')}
+                    info={t(
+                      'groupCreateHelp.parentGroup',
+                      'Optional parent group. Leave empty to create a top-level group.'
+                    )}
+                    onChange={(value) =>
+                      updateNewGroupDraft({ parentGroupName: value })
+                    }
+                  />
+                  <InputWithInfo
+                    id="newGroupLength"
+                    value={newGroupDraft.pseudonymLength}
+                    label={t('groupCreate.pseudonymLength', 'Pseudonym length')}
+                    info={t(
+                      'groupCreateHelp.pseudonymLength',
+                      'Total length of generated pseudonym values, excluding the prefix.'
+                    )}
+                    type="number"
+                    onChange={(value) =>
+                      updateNewGroupDraft({ pseudonymLength: value })
+                    }
+                  />
+                  <DropdownWithInfo
+                    id="newGroupAlgorithm"
+                    value={newGroupDraft.algorithm}
+                    options={algorithmOptions}
+                    label={t('groupCreate.algorithm', 'Algorithm')}
+                    info={t(
+                      'groupCreateHelp.algorithm',
+                      'Algorithm used to generate pseudonym values for this group.'
+                    )}
+                    onChange={(value) =>
+                      updateNewGroupDraft({
+                        algorithm: value,
+                        alphabet: defaultAlphabetForAlgorithm(value)
+                      })
+                    }
+                  />
+                  <DropdownWithInfo
+                    id="newGroupAlphabet"
+                    value={newGroupDraft.alphabet}
+                    options={alphabetOptions}
+                    label={t('groupCreate.alphabet', 'Alphabet')}
+                    info={t(
+                      'groupCreateHelp.alphabet',
+                      'Character set used for generated pseudonyms when the selected algorithm allows configurable alphabets.'
+                    )}
+                    onChange={(value) =>
+                      updateNewGroupDraft({ alphabet: value })
+                    }
+                  />
+                  <InputWithInfo
+                    id="newGroupDesiredSize"
+                    value={newGroupDraft.randomAlgorithmDesiredSize}
+                    label={t(
+                      'groupCreate.randomAlgorithmDesiredSize',
+                      'Desired pseudonym pool size'
+                    )}
+                    info={t(
+                      'groupCreateHelp.randomAlgorithmDesiredSize',
+                      'Expected maximum number of pseudonyms for random generation. This helps evaluate collision risk.'
+                    )}
+                    type="number"
+                    onChange={(value) =>
+                      updateNewGroupDraft({
+                        randomAlgorithmDesiredSize: value
+                      })
+                    }
+                  />
+                  <InputWithInfo
+                    id="newGroupPadding"
+                    value={newGroupDraft.paddingCharacter}
+                    label={t('groupCreate.paddingCharacter', 'Padding character')}
+                    info={t(
+                      'groupCreateHelp.paddingCharacter',
+                      'Single character used to pad shorter generated values up to the configured pseudonym length.'
+                    )}
+                    maxLength={1}
+                    onChange={(value) =>
+                      updateNewGroupDraft({ paddingCharacter: value.slice(0, 1) })
+                    }
+                  />
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={newGroupDraft.multiplePsnAllowed}
+                      onChange={(event) =>
+                        updateNewGroupDraft({
+                          multiplePsnAllowed: event.target.checked
+                        })
+                      }
+                    />
+                    {t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
+                    <InfoIcon
+                      title={t(
+                        'groupCreateHelp.multiplePsnAllowed',
+                        'Allows the same identifier to receive more than one pseudonym in this group.'
+                      )}
+                    />
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={newGroupDraft.addCheckDigit}
+                      onChange={(event) =>
+                        updateNewGroupDraft({ addCheckDigit: event.target.checked })
+                      }
+                    />
+                    {t('groupCreate.addCheckDigit', 'Add check digit')}
+                    <InfoIcon
+                      title={t(
+                        'groupCreateHelp.addCheckDigit',
+                        'Adds a final check digit that can help detect typing or transcription errors.'
+                      )}
+                    />
+                  </label>
+                  <div className="md:col-span-2">
+                    <div className="relative">
+                      <textarea
+                        className="min-h-24 w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                        value={newGroupDraft.description}
+                        placeholder={t('groupCreate.groupDescription', 'Description')}
+                        onChange={(event) =>
+                          updateNewGroupDraft({ description: event.target.value })
+                        }
+                      />
+                      <FieldInfo
+                        title={t(
+                          'groupCreateHelp.groupDescription',
+                          'Optional description for administrators to document the purpose of this group.'
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </Dialog>
@@ -2116,7 +2186,8 @@ function InputWithInfo({
   placeholder,
   type = 'text',
   step,
-  disabled = false
+  disabled = false,
+  maxLength
 }: {
   id: string
   label: string
@@ -2127,6 +2198,7 @@ function InputWithInfo({
   type?: string
   step?: string
   disabled?: boolean
+  maxLength?: number
 }) {
   return (
     <div className="relative">
@@ -2136,6 +2208,7 @@ function InputWithInfo({
         disabled={disabled}
         type={type}
         step={step}
+        maxLength={maxLength}
         value={value}
         placeholder={placeholder ?? ''}
         onChange={(event) => onChange(event.target.value)}
@@ -2219,10 +2292,10 @@ function GroupSearchInput({
 
   return (
     <div className="relative">
-      <div className="relative">
+      <div className="relative flex h-[44px] w-full items-center rounded-lg border border-gray-300 bg-white text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400">
         <input
           id={id}
-          className={`h-[44px] w-full rounded-lg border border-gray-300 px-3 ${info ? 'pr-10' : ''} text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400`}
+          className="h-full min-w-0 flex-1 rounded-lg bg-transparent px-3 text-base outline-none disabled:cursor-not-allowed disabled:text-gray-500 dark:text-gray-100 dark:disabled:text-gray-400"
           value={value}
           placeholder={placeholder}
           disabled={disabled}
@@ -2233,13 +2306,37 @@ function GroupSearchInput({
             setOpen(!disabled)
           }}
         />
+        {info && (
+          <span
+            title={info}
+            role="img"
+            aria-label={info}
+            className="flex-none cursor-help px-2 text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+          >
+            <InformationCircleIcon className="h-5 w-5" />
+          </span>
+        )}
+        {onCreateGroup && !disabled && (
+          <button
+            type="button"
+            title={t('groupCreate.openButton', 'Create new group')}
+            className="inline-flex h-full flex-none items-center gap-1.5 rounded-r-lg border-l border-gray-300 px-3 text-sm font-semibold text-color-blue hover:bg-blue-50 dark:border-slate-700 dark:text-blue-200 dark:hover:bg-blue-950/40"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setOpen(false)
+              onCreateGroup()
+            }}
+          >
+            <PlusIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('groupCreate.openButtonShort', 'New group')}</span>
+          </button>
+        )}
         <label
           htmlFor={id}
           className="absolute -top-2 left-3 bg-white px-1 text-sm text-gray-500 dark:bg-slate-950 dark:text-gray-300"
         >
           {label}
         </label>
-        {info && <FieldInfo title={info} />}
       </div>
       {shouldShowMenu && (
         <div className="absolute z-30 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
@@ -2542,7 +2639,7 @@ function readableOptionLabel(value: string) {
     phonetic: 'Phonetic key',
     year: 'Year',
     yearMonth: 'Year and month',
-    domainExact: 'Exact domain value'
+    domainExact: 'Exact group value'
   }
   return labels[value] ?? value
 }

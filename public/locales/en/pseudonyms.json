@@ -14,6 +14,6 @@
   "selectGroup": "Select groups",
   "standalone": {
     "description": "You can also generate a pseudonym that is not linked to an existing entity. TrustDeck will create an internal standalone identifier for this pseudonym.",
-    "selected": "Standalone pseudonym mode is active. Select the group/domain in which the pseudonym should be saved."
+    "selected": "Standalone pseudonym mode is active. Select the group in which the pseudonym should be saved."
   }
 }

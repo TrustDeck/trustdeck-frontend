@@ -15,6 +15,6 @@
   "selectGroup": "Gruppen auswählen",
   "standalone": {
     "description": "Sie können auch ein Pseudonym erzeugen, das nicht mit einer bestehenden Entität verknüpft ist. TrustDeck erstellt dafür eine interne eigenständige Kennung.",
-    "selected": "Der Modus für ein eigenständiges Pseudonym ist aktiv. Wählen Sie die Gruppe/Domäne aus, in der das Pseudonym gespeichert werden soll."
+    "selected": "Der Modus für ein eigenständiges Pseudonym ist aktiv. Wählen Sie die Gruppe aus, in der das Pseudonym gespeichert werden soll."
   }
 }

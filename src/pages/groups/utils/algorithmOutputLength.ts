@@ -8,7 +8,7 @@ const HASH_OUTPUT_LENGTHS: Record<string, number> = {
   SHA2: 128,
   SHA3: 128,
   BLAKE3: 64,
-  xxHash: 16
+  XXHASH: 16
 }
 
 /**

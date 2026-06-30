@@ -207,7 +207,7 @@
     "phonetic": "Verwendet eine phonetische Kodierung als Blocking-Schlüssel.",
     "year": "Verwendet den Jahresanteil als Blocking-Schlüssel.",
     "yearMonth": "Verwendet Jahr und Monat als Blocking-Schlüssel.",
-    "domainExact": "Verwendet einen domänenspezifischen exakten Blocking-Schlüssel."
+    "domainExact": "Verwendet einen gruppenspezifischen exakten Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
   "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu.",
@@ -217,7 +217,7 @@
   "baseAttributeLocked": "Basistyp-Attribut",
   "searchingGroups": "Lesbare Gruppen werden gesucht...",
   "noMatchingGroups": "Keine lesbaren Gruppen passen zu dieser Suche.",
-  "associatedGroupNameHelp": "Die zugeordnete Gruppe/Domäne steuert, wo Pseudonyme für Entitäten dieses Typs erzeugt werden und welche Domänenberechtigungen gelten. In der Suche werden nur Gruppen angezeigt, die Sie lesen dürfen.",
+  "associatedGroupNameHelp": "Die zugeordnete Gruppe steuert, wo Pseudonyme für Entitäten dieses Typs erzeugt werden und welche Gruppenberechtigungen gelten. In der Suche werden nur Gruppen angezeigt, die Sie lesen dürfen.",
   "projectTypesTitle": "Projekt-Entitätstypen",
   "baseTypesTitle": "Globale Einstellungen",
   "addType": "Typ hinzufügen",
@@ -291,7 +291,7 @@
     "phonetic": "Phonetischer Wert",
     "year": "Jahr",
     "yearMonth": "Jahr und Monat",
-    "domainExact": "Domänenspezifischer exakter Wert"
+    "domainExact": "Gruppenspezifischer exakter Wert"
   },
   "systemAttributeIdentifierPlaceholder": "z. B. familyName",
   "labelTextRequired": "Bezeichnung *",
@@ -303,7 +303,7 @@
   "groupCreate": {
     "openButton": "Neue Gruppe erstellen",
     "title": "Neue Gruppe erstellen",
-    "description": "Erstellen Sie eine neue Gruppe/Domäne und weisen Sie sie diesem Entitätstyp zu. Die Gruppeneinstellungen definieren, wie Pseudonyme in dieser Domäne erzeugt werden.",
+    "description": "Erstellen Sie eine neue Gruppe und weisen Sie sie diesem Entitätstyp zu. Die Gruppeneinstellungen definieren, wie Pseudonyme erzeugt werden.",
     "name": "Gruppenname",
     "parentGroup": "Übergeordnete Gruppe",
     "noParent": "Keine übergeordnete Gruppe",
@@ -318,9 +318,23 @@
     "groupDescription": "Beschreibung",
     "createButton": "Gruppe erstellen und zuweisen",
     "validationSummary": "Gruppeneinstellungen fehlen",
-    "validationDetail": "Geben Sie einen Gruppennamen und eine Pseudonymlänge von mindestens 4 ein.",
+    "validationDetail": "Geben Sie einen Gruppennamen, ein Pseudonym-Präfix und eine Pseudonymlänge von mindestens 4 ein.",
     "createdSummary": "Gruppe erstellt",
     "createdDetail": "Die neue Gruppe wurde erstellt und diesem Entitätstyp zugewiesen.",
-    "failedSummary": "Gruppenerstellung fehlgeschlagen"
+    "failedSummary": "Gruppenerstellung fehlgeschlagen",
+    "openButtonShort": "Neue Gruppe",
+    "advancedShow": "Erweiterte Konfiguration anzeigen",
+    "advancedHide": "Erweiterte Konfiguration ausblenden"
+  },
+  "groupCreateHelp": {
+    "parentGroup": "Optionale übergeordnete Gruppe. Leer lassen, um eine Gruppe auf oberster Ebene zu erstellen.",
+    "pseudonymLength": "Gesamtlänge der generierten Pseudonymwerte ohne Präfix.",
+    "algorithm": "Algorithmus, mit dem Pseudonymwerte für diese Gruppe generiert werden.",
+    "alphabet": "Zeichensatz für generierte Pseudonyme, sofern der gewählte Algorithmus konfigurierbare Alphabete erlaubt.",
+    "randomAlgorithmDesiredSize": "Erwartete maximale Anzahl von Pseudonymen bei zufälliger Generierung. Dies hilft bei der Einschätzung des Kollisionsrisikos.",
+    "paddingCharacter": "Einzelnes Zeichen, mit dem kürzere generierte Werte auf die konfigurierte Pseudonymlänge aufgefüllt werden.",
+    "multiplePsnAllowed": "Erlaubt, dass derselbe Identifier in dieser Gruppe mehr als ein Pseudonym erhält.",
+    "addCheckDigit": "Fügt eine abschließende Prüfziffer hinzu, um Tipp- oder Übertragungsfehler besser zu erkennen.",
+    "groupDescription": "Optionale Beschreibung, mit der Administratoren den Zweck dieser Gruppe dokumentieren können."
   }
 }

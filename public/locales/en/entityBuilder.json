@@ -299,5 +299,28 @@
   "englishLabelRequired": "English label is required",
   "basicSettings": "Basic settings",
   "confirmDeleteTitle": "Confirm deletion",
-  "baseTypeAttributeLocked": "Base type attribute"
+  "baseTypeAttributeLocked": "Base type attribute",
+  "groupCreate": {
+    "openButton": "Create new group",
+    "title": "Create new group",
+    "description": "Create a new group/domain and assign it to this entity type. The group settings define how pseudonyms are generated in this domain.",
+    "name": "Group name",
+    "parentGroup": "Parent group",
+    "noParent": "No parent group",
+    "prefix": "Pseudonym prefix",
+    "pseudonymLength": "Pseudonym length",
+    "algorithm": "Algorithm",
+    "alphabet": "Alphabet",
+    "randomAlgorithmDesiredSize": "Desired pseudonym pool size",
+    "paddingCharacter": "Padding character",
+    "multiplePsnAllowed": "Allow multiple pseudonyms",
+    "addCheckDigit": "Add check digit",
+    "groupDescription": "Description",
+    "createButton": "Create and assign group",
+    "validationSummary": "Missing group settings",
+    "validationDetail": "Enter a group name and a pseudonym length of at least 4.",
+    "createdSummary": "Group created",
+    "createdDetail": "The new group was created and assigned to this entity type.",
+    "failedSummary": "Group creation failed"
+  }
 }

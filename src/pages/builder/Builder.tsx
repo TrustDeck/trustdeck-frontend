@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -10,6 +10,7 @@ import {
   PlusIcon,
   TrashIcon
 } from '@heroicons/react/24/outline'
+import { Dialog } from 'primereact/dialog'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '../../core/components/form/CustomDropdown'
@@ -18,6 +19,9 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import TrustDeck from '../../core/services/TrustDeck'
 import useToastStore from '../../core/stores/ToastStore'
 import useProjectStore from '../../core/stores/ProjectStore'
+import { LABEL_ALPHA2_CODE_OPTIONS } from './labelAlpha2CodeOptions'
+import { algorithmOptions } from '../groups/utils/algorithmOptions'
+import { alphabetOptions, characters } from '../groups/utils/alphabetOptions'
 
 type LayoutValue = 'row' | 'col' | 'group'
 type PrivacyMode = 'plain' | 'pprl'
@@ -29,194 +33,35 @@ type DropIndicator = {
 
 type LabelMap = Record<string, string>
 
-const SYSTEM_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/
+type NewGroupDraft = {
+  name: string
+  parentGroupName: string
+  prefix: string
+  pseudonymLength: string
+  algorithm: string
+  alphabet: string
+  randomAlgorithmDesiredSize: string
+  paddingCharacter: string
+  multiplePsnAllowed: boolean
+  addCheckDigit: boolean
+  description: string
+}
 
-const ISO_639_1_LANGUAGE_CODES = [
-  'aa',
-  'ab',
-  'ae',
-  'af',
-  'ak',
-  'am',
-  'an',
-  'ar',
-  'as',
-  'av',
-  'ay',
-  'az',
-  'ba',
-  'be',
-  'bg',
-  'bh',
-  'bi',
-  'bm',
-  'bn',
-  'bo',
-  'br',
-  'bs',
-  'ca',
-  'ce',
-  'ch',
-  'co',
-  'cr',
-  'cs',
-  'cu',
-  'cv',
-  'cy',
-  'da',
-  'de',
-  'dv',
-  'dz',
-  'ee',
-  'el',
-  'en',
-  'eo',
-  'es',
-  'et',
-  'eu',
-  'fa',
-  'ff',
-  'fi',
-  'fj',
-  'fo',
-  'fr',
-  'fy',
-  'ga',
-  'gd',
-  'gl',
-  'gn',
-  'gu',
-  'gv',
-  'ha',
-  'he',
-  'hi',
-  'ho',
-  'hr',
-  'ht',
-  'hu',
-  'hy',
-  'hz',
-  'ia',
-  'id',
-  'ie',
-  'ig',
-  'ii',
-  'ik',
-  'io',
-  'is',
-  'it',
-  'iu',
-  'ja',
-  'jv',
-  'ka',
-  'kg',
-  'ki',
-  'kj',
-  'kk',
-  'kl',
-  'km',
-  'kn',
-  'ko',
-  'kr',
-  'ks',
-  'ku',
-  'kv',
-  'kw',
-  'ky',
-  'la',
-  'lb',
-  'lg',
-  'li',
-  'ln',
-  'lo',
-  'lt',
-  'lu',
-  'lv',
-  'mg',
-  'mh',
-  'mi',
-  'mk',
-  'ml',
-  'mn',
-  'mr',
-  'ms',
-  'mt',
-  'my',
-  'na',
-  'nb',
-  'nd',
-  'ne',
-  'ng',
-  'nl',
-  'nn',
-  'no',
-  'nr',
-  'nv',
-  'ny',
-  'oc',
-  'oj',
-  'om',
-  'or',
-  'os',
-  'pa',
-  'pi',
-  'pl',
-  'ps',
-  'pt',
-  'qu',
-  'rm',
-  'rn',
-  'ro',
-  'ru',
-  'rw',
-  'sa',
-  'sc',
-  'sd',
-  'se',
-  'sg',
-  'si',
-  'sk',
-  'sl',
-  'sm',
-  'sn',
-  'so',
-  'sq',
-  'sr',
-  'ss',
-  'st',
-  'su',
-  'sv',
-  'sw',
-  'ta',
-  'te',
-  'tg',
-  'th',
-  'ti',
-  'tk',
-  'tl',
-  'tn',
-  'to',
-  'tr',
-  'ts',
-  'tt',
-  'tw',
-  'ty',
-  'ug',
-  'uk',
-  'ur',
-  'uz',
-  've',
-  'vi',
-  'vo',
-  'wa',
-  'wo',
-  'xh',
-  'yi',
-  'yo',
-  'za',
-  'zh',
-  'zu'
-]
+const defaultNewGroupDraft = (): NewGroupDraft => ({
+  name: '',
+  parentGroupName: '',
+  prefix: '',
+  pseudonymLength: '8',
+  algorithm: 'RANDOM_LET',
+  alphabet: 'LETTERS_AND_NUMBERS_ALPHABET',
+  randomAlgorithmDesiredSize: '1000000',
+  paddingCharacter: '0',
+  multiplePsnAllowed: false,
+  addCheckDigit: false,
+  description: ''
+})
+
+const SYSTEM_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/
 
 type LinkageConfig = {
   privacyMode?: PrivacyMode
@@ -832,6 +677,10 @@ export default function Builder({
   >([])
   const [groupSearchLoading, setGroupSearchLoading] = useState(false)
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
+  const attributeElementRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [pendingScrollAttributeKey, setPendingScrollAttributeKey] = useState<
+    string | null
+  >(null)
   const [saving, setSaving] = useState(false)
   const [draggedAttributeKey, setDraggedAttributeKey] = useState<string | null>(
     null
@@ -843,6 +692,14 @@ export default function Builder({
   const [advancedOptionKeys, setAdvancedOptionKeys] = useState<
     Record<string, boolean>
   >({})
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [newGroupDraft, setNewGroupDraft] = useState<NewGroupDraft>(
+    defaultNewGroupDraft
+  )
+  const [newGroupParentOptions, setNewGroupParentOptions] = useState<
+    { label: string; value: string }[]
+  >([])
+  const [creatingGroup, setCreatingGroup] = useState(false)
 
   useEffect(() => {
     setSaveTarget(scope)
@@ -863,6 +720,21 @@ export default function Builder({
     setCollapsedLinkageKeys({})
     setAdvancedOptionKeys({})
   }, [initialType, scope])
+
+  useEffect(() => {
+    if (!pendingScrollAttributeKey) return
+    const handle = window.setTimeout(() => {
+      const element = attributeElementRefs.current[pendingScrollAttributeKey]
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const input = element?.querySelector<HTMLInputElement>(
+        `#attribute-name-${pendingScrollAttributeKey}`
+      )
+      input?.focus()
+      setPendingScrollAttributeKey(null)
+    }, 50)
+
+    return () => window.clearTimeout(handle)
+  }, [attributes, pendingScrollAttributeKey])
 
   useEffect(() => {
     let active = true
@@ -927,6 +799,100 @@ export default function Builder({
       window.clearTimeout(handle)
     }
   }, [associatedGroupName, saveTarget])
+
+  const updateNewGroupDraft = (patch: Partial<NewGroupDraft>) => {
+    setNewGroupDraft((current) => ({ ...current, ...patch }))
+  }
+
+  const openCreateGroupModal = async () => {
+    const typedName = associatedGroupName.trim()
+    setNewGroupDraft({
+      ...defaultNewGroupDraft(),
+      name: typedName,
+      prefix: typedName ? `${typedName.toUpperCase().slice(0, 8)}-` : ''
+    })
+    setShowCreateGroupModal(true)
+    try {
+      const domains = await TrustDeck.instance().searchReadableDomains('*')
+      setNewGroupParentOptions(flattenDomainsForOptions(domains ?? []))
+    } catch {
+      setNewGroupParentOptions(groupOptions)
+    }
+  }
+
+  const createNewGroup = async () => {
+    const name = newGroupDraft.name.trim()
+    const pseudonymLength = Number(newGroupDraft.pseudonymLength)
+    const randomAlgorithmDesiredSize = Number(
+      newGroupDraft.randomAlgorithmDesiredSize
+    )
+
+    if (!name || !Number.isFinite(pseudonymLength) || pseudonymLength < 4) {
+      showToast({
+        severity: 'error',
+        summary: t('groupCreate.validationSummary', 'Missing group settings'),
+        detail: t(
+          'groupCreate.validationDetail',
+          'Enter a group name and a pseudonym length of at least 4.'
+        ),
+        life: 4000
+      })
+      return
+    }
+
+    setCreatingGroup(true)
+    try {
+      const selectedAlphabet =
+        characters[newGroupDraft.alphabet] ?? newGroupDraft.alphabet
+      await TrustDeck.instance().createGroupComplete({
+        name,
+        ...(newGroupDraft.parentGroupName
+          ? { superDomainName: newGroupDraft.parentGroupName }
+          : {}),
+        prefix: newGroupDraft.prefix,
+        description: newGroupDraft.description,
+        multiplePsnAllowed: newGroupDraft.multiplePsnAllowed,
+        paddingCharacter: newGroupDraft.paddingCharacter,
+        pseudonymLength,
+        randomAlgorithmDesiredSize: Number.isFinite(randomAlgorithmDesiredSize)
+          ? randomAlgorithmDesiredSize
+          : 1000000,
+        addCheckDigit: newGroupDraft.addCheckDigit,
+        validFrom: null,
+        validTo: null,
+        algorithm: newGroupDraft.algorithm,
+        alphabet: selectedAlphabet
+      })
+      setAssociatedGroupName(name)
+      setGroupOptions((current) =>
+        current.some((option) => option.value === name)
+          ? current
+          : [...current, { label: name, value: name }].sort((a, b) =>
+              a.label.localeCompare(b.label)
+            )
+      )
+      setShowCreateGroupModal(false)
+      showToast({
+        severity: 'success',
+        summary: t('groupCreate.createdSummary', 'Group created'),
+        detail: t(
+          'groupCreate.createdDetail',
+          'The new group was created and assigned to this entity type.'
+        ),
+        life: 3500
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      showToast({
+        severity: 'error',
+        summary: t('groupCreate.failedSummary', 'Group creation failed'),
+        detail: message,
+        life: 7000
+      })
+    } finally {
+      setCreatingGroup(false)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -1021,9 +987,14 @@ export default function Builder({
     locked: source?.locked ?? false
   })
 
-  const addAttribute = (source?: Partial<BuilderAttribute>) => {
+  const addAttribute = (
+    source?: Partial<BuilderAttribute>,
+    scrollToNewAttribute = false
+  ) => {
     if (readOnly) return
-    setAttributes((current) => [...current, newLeafAttribute(source)])
+    const attribute = newLeafAttribute(source)
+    if (scrollToNewAttribute) setPendingScrollAttributeKey(attribute.key)
+    setAttributes((current) => [...current, attribute])
   }
 
   const updateAttribute = (key: string, patch: Partial<BuilderAttribute>) => {
@@ -1473,7 +1444,13 @@ export default function Builder({
     const locked = Boolean(attribute.locked)
 
     return (
-      <div key={attribute.key} className="space-y-2">
+      <div
+        key={attribute.key}
+        ref={(element) => {
+          attributeElementRefs.current[attribute.key] = element
+        }}
+        className="space-y-2"
+      >
         {showBeforeDropLine && (
           <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
         )}
@@ -1591,7 +1568,7 @@ export default function Builder({
             <div className="md:col-span-2">
               <LabelListEditor
                 labels={attribute.labels ?? {}}
-                disabled={locked}
+                disabled={readOnly}
                 onChange={(labels) =>
                   updateAttribute(attribute.key, {
                     labels,
@@ -1787,7 +1764,21 @@ export default function Builder({
                 loading={groupSearchLoading}
                 disabled={readOnly}
                 onChange={setAssociatedGroupName}
+                onCreateGroup={openCreateGroupModal}
               />
+              {!readOnly && (
+                <div className="mt-3 flex justify-start">
+                  <PrimaryOutlinedButton
+                    label={
+                      <span className="inline-flex items-center gap-2">
+                        <PlusIcon className="h-4 w-4" />
+                        {t('groupCreate.openButton', 'Create new group')}
+                      </span>
+                    }
+                    onClick={openCreateGroupModal}
+                  />
+                </div>
+              )}
               {baseTypeLoading && (
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
                   {t('loadingBaseType')}
@@ -1809,7 +1800,7 @@ export default function Builder({
         noMaxWidth
       >
         {!readOnly && (
-          <div className="mt-7 mb-4 flex flex-wrap gap-2">
+          <div className="mt-7 mb-4 flex flex-wrap justify-center gap-2">
             <PrimaryOutlinedButton
               label={
                 <span className="inline-flex items-center gap-2">
@@ -1817,7 +1808,7 @@ export default function Builder({
                   {t('addCustomAttribute')}
                 </span>
               }
-              onClick={() => addAttribute()}
+              onClick={() => addAttribute(undefined, true)}
             />
           </div>
         )}
@@ -1852,6 +1843,160 @@ export default function Builder({
           </>
         )}
       </Panel>
+
+      {!readOnly && (
+        <Dialog
+          visible={showCreateGroupModal}
+          onHide={() => setShowCreateGroupModal(false)}
+          header={t('groupCreate.title', 'Create new group')}
+          modal
+          className="w-full md:w-3/4 xl:w-1/2"
+          footer={
+            <div className="flex justify-end gap-2">
+              <PrimaryOutlinedButton
+                label={t('common:cancel', 'Cancel')}
+                onClick={() => setShowCreateGroupModal(false)}
+              />
+              <PrimaryButton
+                label={
+                  creatingGroup
+                    ? t('common:loading', 'Loading...')
+                    : t('groupCreate.createButton', 'Create and assign group')
+                }
+                loading={creatingGroup}
+                onClick={createNewGroup}
+              />
+            </div>
+          }
+        >
+          <div className="mt-2 space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {t(
+                'groupCreate.description',
+                'Create a new group/domain and assign it to this entity type. The group settings define how pseudonyms are generated in this domain.'
+              )}
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <CustomFloatLabel
+                id="newGroupName"
+                value={newGroupDraft.name}
+                placeholder={t('groupCreate.name', 'Group name')}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  updateNewGroupDraft({ name: event.target.value })
+                }
+                required
+              />
+              <CustomDropdown
+                id="newGroupParent"
+                value={newGroupDraft.parentGroupName}
+                options={[
+                  {
+                    label: t('groupCreate.noParent', 'No parent group'),
+                    value: ''
+                  },
+                  ...newGroupParentOptions.filter(
+                    (option) =>
+                      option.value !== newGroupDraft.name.trim() &&
+                      option.value !== ''
+                  )
+                ]}
+                placeholder={t('groupCreate.parentGroup', 'Parent group')}
+                onChange={(event) =>
+                  updateNewGroupDraft({ parentGroupName: event.value })
+                }
+              />
+              <CustomFloatLabel
+                id="newGroupPrefix"
+                value={newGroupDraft.prefix}
+                placeholder={t('groupCreate.prefix', 'Pseudonym prefix')}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  updateNewGroupDraft({ prefix: event.target.value })
+                }
+              />
+              <CustomFloatLabel
+                id="newGroupLength"
+                value={newGroupDraft.pseudonymLength}
+                placeholder={t('groupCreate.pseudonymLength', 'Pseudonym length')}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  updateNewGroupDraft({ pseudonymLength: event.target.value })
+                }
+                required
+              />
+              <CustomDropdown
+                id="newGroupAlgorithm"
+                value={newGroupDraft.algorithm}
+                options={algorithmOptions}
+                placeholder={t('groupCreate.algorithm', 'Algorithm')}
+                onChange={(event) =>
+                  updateNewGroupDraft({ algorithm: event.value })
+                }
+              />
+              <CustomDropdown
+                id="newGroupAlphabet"
+                value={newGroupDraft.alphabet}
+                options={alphabetOptions}
+                placeholder={t('groupCreate.alphabet', 'Alphabet')}
+                onChange={(event) =>
+                  updateNewGroupDraft({ alphabet: event.value })
+                }
+              />
+              <CustomFloatLabel
+                id="newGroupDesiredSize"
+                value={newGroupDraft.randomAlgorithmDesiredSize}
+                placeholder={t(
+                  'groupCreate.randomAlgorithmDesiredSize',
+                  'Desired pseudonym pool size'
+                )}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  updateNewGroupDraft({
+                    randomAlgorithmDesiredSize: event.target.value
+                  })
+                }
+              />
+              <CustomFloatLabel
+                id="newGroupPadding"
+                value={newGroupDraft.paddingCharacter}
+                placeholder={t('groupCreate.paddingCharacter', 'Padding character')}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  updateNewGroupDraft({ paddingCharacter: event.target.value })
+                }
+              />
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                <input
+                  type="checkbox"
+                  checked={newGroupDraft.multiplePsnAllowed}
+                  onChange={(event) =>
+                    updateNewGroupDraft({
+                      multiplePsnAllowed: event.target.checked
+                    })
+                  }
+                />
+                {t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+                <input
+                  type="checkbox"
+                  checked={newGroupDraft.addCheckDigit}
+                  onChange={(event) =>
+                    updateNewGroupDraft({ addCheckDigit: event.target.checked })
+                  }
+                />
+                {t('groupCreate.addCheckDigit', 'Add check digit')}
+              </label>
+              <div className="md:col-span-2">
+                <textarea
+                  className="min-h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                  value={newGroupDraft.description}
+                  placeholder={t('groupCreate.groupDescription', 'Description')}
+                  onChange={(event) =>
+                    updateNewGroupDraft({ description: event.target.value })
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </Dialog>
+      )}
 
       {!readOnly && (
         <div className="flex w-full flex-wrap justify-center gap-2">
@@ -2052,6 +2197,7 @@ function GroupSearchInput({
   options,
   loading = false,
   onChange,
+  onCreateGroup,
   disabled = false
 }: {
   id: string
@@ -2062,6 +2208,7 @@ function GroupSearchInput({
   options: { label: string; value: string }[]
   loading?: boolean
   onChange: (value: string) => void
+  onCreateGroup?: () => void
   disabled?: boolean
 }) {
   const { t } = useTranslation(['entityBuilder'])
@@ -2117,7 +2264,21 @@ function GroupSearchInput({
             ))
           ) : (
             <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-300">
-              {t('noMatchingGroups')}
+              <p>{t('noMatchingGroups')}</p>
+              {onCreateGroup && !disabled && (
+                <button
+                  type="button"
+                  className="mt-2 inline-flex items-center gap-2 rounded-md border border-color-blue px-3 py-1.5 text-color-blue hover:bg-blue-50 dark:border-blue-300 dark:text-blue-200 dark:hover:bg-blue-950/40"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setOpen(false)
+                    onCreateGroup()
+                  }}
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  {t('groupCreate.openButton', 'Create new group')}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -2198,33 +2359,18 @@ function LabelListEditor({
   disabled: boolean
   onChange: (labels: LabelMap) => void
 }) {
-  const { t, i18n } = useTranslation(['entityBuilder'])
-  const languageOptions = useMemo(() => {
-    const uiLanguage = (i18n.resolvedLanguage ?? i18n.language ?? 'en')
-      .toLowerCase()
-      .split('-')[0]
-    const DisplayNames = (Intl as unknown as {
-      DisplayNames?: new (
-        locales: string[],
-        options: { type: 'language' }
-      ) => { of: (code: string) => string | undefined }
-    }).DisplayNames
-    const displayNames = DisplayNames
-      ? new DisplayNames([uiLanguage], { type: 'language' })
-      : null
-
-    return ISO_639_1_LANGUAGE_CODES.map((code) => {
-      const displayName = displayNames?.of(code) ?? code.toUpperCase()
-      const label = displayName.charAt(0).toUpperCase() + displayName.slice(1)
-      return { label, value: code }
-    }).sort((a, b) => a.label.localeCompare(b.label))
-  }, [i18n.language, i18n.resolvedLanguage])
+  const { t } = useTranslation(['entityBuilder'])
+  const languageOptions = LABEL_ALPHA2_CODE_OPTIONS
+  const selectableLanguageOptions = languageOptions.filter(
+    (option): option is { type: 'option'; label: string; value: string } =>
+      option.type === 'option'
+  )
   const entries = Object.entries(
     labels.en === undefined ? { en: '', ...labels } : labels
   )
   const firstAvailableLanguage =
-    languageOptions.find((option) => !labels[option.value])?.value ??
-    languageOptions[0]?.value ??
+    selectableLanguageOptions.find((option) => !labels[option.value])?.value ??
+    selectableLanguageOptions[0]?.value ??
     'en'
 
   const updateCode = (oldCode: string, newCode: string) => {
@@ -2277,17 +2423,27 @@ function LabelListEditor({
                 disabled={disabled || code === 'en'}
                 onChange={(event) => updateCode(code, event.target.value)}
               >
-                {languageOptions.map((option) => (
-                  <option
-                    key={option.value}
-                    value={option.value}
-                    disabled={
-                      option.value !== code && Boolean(labels[option.value])
-                    }
-                  >
-                    {option.label} ({option.value.toUpperCase()})
-                  </option>
-                ))}
+                {languageOptions.map((option, index) =>
+                  option.type === 'separator' ? (
+                    <option
+                      key={`separator-${index}`}
+                      disabled
+                      value={`separator-${index}`}
+                    >
+                      {option.label}
+                    </option>
+                  ) : (
+                    <option
+                      key={option.value}
+                      value={option.value}
+                      disabled={
+                        option.value !== code && Boolean(labels[option.value])
+                      }
+                    >
+                      {option.label} ({option.value.toUpperCase()})
+                    </option>
+                  )
+                )}
               </select>
               <FloatingTextInput
                 id={`label-${code}`}
@@ -2331,7 +2487,9 @@ function LabelListEditor({
             </span>
           }
           onClick={addLabel}
-          disabled={disabled || entries.length >= languageOptions.length}
+          disabled={
+            disabled || entries.length >= selectableLanguageOptions.length
+          }
         />
       </div>
     </div>

@@ -299,5 +299,28 @@
   "englishLabelRequired": "Die englische Bezeichnung ist erforderlich",
   "basicSettings": "Grundeinstellungen",
   "confirmDeleteTitle": "Löschen bestätigen",
-  "baseTypeAttributeLocked": "Basistyp-Attribut"
+  "baseTypeAttributeLocked": "Basistyp-Attribut",
+  "groupCreate": {
+    "openButton": "Neue Gruppe erstellen",
+    "title": "Neue Gruppe erstellen",
+    "description": "Erstellen Sie eine neue Gruppe/Domäne und weisen Sie sie diesem Entitätstyp zu. Die Gruppeneinstellungen definieren, wie Pseudonyme in dieser Domäne erzeugt werden.",
+    "name": "Gruppenname",
+    "parentGroup": "Übergeordnete Gruppe",
+    "noParent": "Keine übergeordnete Gruppe",
+    "prefix": "Pseudonym-Präfix",
+    "pseudonymLength": "Pseudonymlänge",
+    "algorithm": "Algorithmus",
+    "alphabet": "Alphabet",
+    "randomAlgorithmDesiredSize": "Gewünschte Größe des Pseudonym-Pools",
+    "paddingCharacter": "Füllzeichen",
+    "multiplePsnAllowed": "Mehrere Pseudonyme erlauben",
+    "addCheckDigit": "Prüfziffer hinzufügen",
+    "groupDescription": "Beschreibung",
+    "createButton": "Gruppe erstellen und zuweisen",
+    "validationSummary": "Gruppeneinstellungen fehlen",
+    "validationDetail": "Geben Sie einen Gruppennamen und eine Pseudonymlänge von mindestens 4 ein.",
+    "createdSummary": "Gruppe erstellt",
+    "createdDetail": "Die neue Gruppe wurde erstellt und diesem Entitätstyp zugewiesen.",
+    "failedSummary": "Gruppenerstellung fehlgeschlagen"
+  }
 }

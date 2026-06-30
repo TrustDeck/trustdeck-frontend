@@ -32,7 +32,9 @@ export function defaultAlphabetForAlgorithm(algorithm: string): string {
     case 'RANDOM_SYM_BIOS':
       return 'LETTERS_AND_NUMBERS_WITHOUT_BIOS_ALPHABET'
     case 'RANDOM_SYM':
+      return 'LETTERS_AND_NUMBERS_ALPHABET'
     case 'RANDOM':
+      return 'CUSTOM_ALPHABET'
     default:
       return 'LETTERS_AND_NUMBERS_ALPHABET'
   }

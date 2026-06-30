@@ -1,11 +1,17 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { FormEvent, useEffect, useMemo, useState } from 'react'
 import useSearchStore from '../stores/SearchStore'
 import useSearchResultsStore from '../stores/SearchResultsStore'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Divider from '../../../core/components/common/Divider'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
+import {
+  CheckIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
 import { Dialog } from 'primereact/dialog'
 import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
@@ -14,6 +20,10 @@ import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
 import PersonService from '../services/PersonService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import ProjectService from '../../projects/services/ProjectService'
+import useToastStore from '../../../core/stores/ToastStore'
+import TrustDeck from '../../../core/services/TrustDeck'
+import DynamicEntity from './DynamicEntity'
+import { pickSchemaData } from '../utils/schemaData'
 
 /**
  * EntityMask Component
@@ -29,10 +39,82 @@ interface EntityMaskProps {
   psn?: boolean
 }
 
+const setValueAtPath = (
+  source: Record<string, any>,
+  path: Array<string | number>,
+  value: any
+): Record<string, any> => {
+  if (!path.length) return source
+  const next = structuredClone(source ?? {})
+  let cursor: any = next
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const current = path[i]
+    const following = path[i + 1]
+
+    if (typeof current === 'number') {
+      if (!Array.isArray(cursor)) break
+      if (cursor[current] === undefined) {
+        cursor[current] = typeof following === 'number' ? [] : {}
+      }
+      cursor = cursor[current]
+    } else {
+      if (cursor[current] === undefined || cursor[current] === null) {
+        cursor[current] = typeof following === 'number' ? [] : {}
+      }
+      cursor = cursor[current]
+    }
+  }
+
+  const leaf = path[path.length - 1]
+  if (typeof leaf === 'number' && Array.isArray(cursor)) {
+    cursor[leaf] = value
+  } else if (typeof leaf === 'string') {
+    cursor[leaf] = value
+  }
+
+  return next
+}
+
+const initialValueForAttribute = (attr: any): any => {
+  if (attr.type === 'boolean') return false
+  if (attr.type === 'integer' || attr.type === 'number') return ''
+  return ''
+}
+
+const buildInitialEntityData = (attributes: any[] = []): Record<string, any> => {
+  const data: Record<string, any> = {}
+
+  attributes.forEach((attr) => {
+    if (attr.layout === 'row' && Array.isArray(attr.attributes)) {
+      Object.assign(data, buildInitialEntityData(attr.attributes))
+      return
+    }
+
+    if (Array.isArray(attr.attributes)) {
+      const nested = buildInitialEntityData(attr.attributes)
+      if (attr.name) {
+        data[attr.name] = attr.repeatable ? [nested] : nested
+      } else {
+        Object.assign(data, nested)
+      }
+      return
+    }
+
+    if (attr.name) data[attr.name] = initialValueForAttribute(attr)
+  })
+
+  return data
+}
+
 const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   const { t } = useTranslation() // Use multiple namespaces
+  const showToast = useToastStore((state) => state.show)
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [creatingEntity, setCreatingEntity] = useState(false)
+  const [createFormData, setCreateFormData] = useState<Record<string, any>>({})
   const {
     entities,
     entityAttributes,
@@ -54,6 +136,20 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   const { quick, setQuick } = useSearchStore()
 
   const { setResults } = useSearchResultsStore()
+
+  const selectedSchema = useMemo(
+    () =>
+      entityAttributes.find(
+        (definition) =>
+          definition.name?.toLowerCase() === selectedType?.toLowerCase()
+      ),
+    [entityAttributes, selectedType]
+  )
+
+  const selectedSchemaAttributes = useMemo(
+    () => selectedSchema?.typeDefinition?.attributes ?? [],
+    [selectedSchema]
+  )
 
   const normalizeEntityResult = (result: any) => {
     if (!result || !result.data) return result
@@ -85,8 +181,10 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       if (!selectedProject?.abbreviation) return
       try {
         const fetched = await ProjectService.getProjectEntities()
+        const attributes = await ProjectService.getEntityAttributes()
         if (!active) return
         setEntities(fetched)
+        setEntityAttributes(attributes)
       } catch (error) {
         console.error('Failed to refresh project entities', error)
       }
@@ -95,7 +193,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     return () => {
       active = false
     }
-  }, [selectedProject?.abbreviation, setEntities])
+  }, [selectedProject?.abbreviation, setEntities, setEntityAttributes])
 
   useEffect(() => {
     if (!entities.length) return
@@ -103,6 +201,11 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       setSelectedType(entities[0])
     }
   }, [entities, selectedType])
+
+  useEffect(() => {
+    if (!createModalOpen) return
+    setCreateFormData(buildInitialEntityData(selectedSchemaAttributes))
+  }, [createModalOpen, selectedSchemaAttributes])
 
   useEffect(() => {
     const hasRowLayout = (attrs: any[] | undefined): boolean => {
@@ -158,6 +261,60 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       setShowModal(true)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleCreateFieldChange = (
+    path: Array<string | number>,
+    value: any
+  ) => {
+    setCreateFormData((prev) => setValueAtPath(prev, path, value))
+  }
+
+  const openCreateEntityModal = () => {
+    setCreateFormData(buildInitialEntityData(selectedSchemaAttributes))
+    setCreateModalOpen(true)
+  }
+
+  const closeCreateEntityModal = () => {
+    if (creatingEntity) return
+    setCreateModalOpen(false)
+  }
+
+  const handleCreateEntity = async () => {
+    if (!selectedType) return
+    setCreatingEntity(true)
+    try {
+      const dataToSave = selectedSchemaAttributes.length
+        ? pickSchemaData(selectedSchemaAttributes, createFormData)
+        : createFormData
+      const created = await TrustDeck.instance().postEntity(selectedType, {
+        data: dataToSave
+      })
+      const normalized = normalizeEntityResult(created)
+      setResults([normalized])
+      setCreateModalOpen(false)
+      showToast({
+        severity: 'success',
+        summary: t('search:createEntity', 'Create entity'),
+        detail: t('search:createSuccess', 'Entity created successfully.'),
+        life: 3000
+      })
+      const createdId = normalized?.trustdeckID ?? normalized?.id
+      if (createdId && !psn) navigate(`/search/${createdId}`)
+    } catch (error) {
+      console.error('Failed to create entity', error)
+      showToast({
+        severity: 'error',
+        summary: t('search:createEntity', 'Create entity'),
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('search:createFailed', 'Failed to create entity.'),
+        life: 5000
+      })
+    } finally {
+      setCreatingEntity(false)
     }
   }
 
@@ -231,7 +388,16 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
         )}
 
         <Divider /> */}
-        <div className="flex justify-end mt-4">
+        <div className="flex flex-wrap justify-end gap-2 mt-4">
+          {!psn && (
+            <PrimaryOutlinedButton
+              label={t('search:createEntity', 'Create entity')}
+              type="button"
+              onClick={openCreateEntityModal}
+              icon={<PlusIcon className="h-5 w-5 mr-1" />}
+              disabled={!selectedType}
+            />
+          )}
           <PrimaryButton
             label={t('search:submit')}
             type="submit"
@@ -254,6 +420,69 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
               <SecondaryButton
                 label={t('search:research')}
                 onClick={() => setShowModal(false)}
+              />
+            </div>
+          </div>
+        </Dialog>
+        <Dialog
+          visible={createModalOpen}
+          onHide={closeCreateEntityModal}
+          header={t('search:createEntity', 'Create entity')}
+          closable
+          dismissableMask={!creatingEntity}
+          style={{ width: '1100px', maxWidth: '95vw' }}
+          className="mx-auto"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <p className="text-base font-medium">
+                {t('search:entity.entityType.title')}
+              </p>
+              <div className="flex-1 min-w-0">
+                <CustomDropdown
+                  id="create-selected-type"
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.value)}
+                  options={entityDropdownOptions}
+                />
+              </div>
+            </div>
+
+            {selectedSchemaAttributes.length > 0 ? (
+              <DynamicEntity
+                entity={{
+                  data: createFormData,
+                  entityTypeName: selectedType,
+                  type: selectedType,
+                  trustdeckID: ''
+                }}
+                schemaAttributes={selectedSchemaAttributes}
+                editMode
+                formData={createFormData}
+                onFieldChange={handleCreateFieldChange}
+              />
+            ) : (
+              <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600">
+                {t(
+                  'search:noEntitySchema',
+                  'No type definition is available for the selected entity type.'
+                )}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <PrimaryOutlinedButton
+                label={t('search:cancel')}
+                onClick={closeCreateEntityModal}
+                icon={<XMarkIcon className="h-5 w-5 mr-1" />}
+                disabled={creatingEntity}
+              />
+              <PrimaryButton
+                label={t('search:create', 'Create')}
+                onClick={handleCreateEntity}
+                loading={creatingEntity}
+                disabled={!selectedType || selectedSchemaAttributes.length === 0}
+                icon={<CheckIcon className="h-5 w-5 mr-1" />}
               />
             </div>
           </div>

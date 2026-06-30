@@ -5,8 +5,8 @@
   "edit": "Edit",
   "cancel": "Cancel",
   "save": "Save",
-  "editSuccess": "Person updated successfully.",
-  "editFailed": "Failed to update person.",
+  "editSuccess": "Entity updated successfully.",
+  "editFailed": "Failed to update entity.",
   "select": "Select",
   "research": "Search again",
   "results": "Search results",
@@ -165,5 +165,16 @@
   },
   "entityLabel": "Entity",
   "identifier": "Identifier",
-  "links": "Links"
+  "links": "Links",
+  "create": "Create",
+  "createEntity": "Create entity",
+  "createSuccess": "Entity created successfully.",
+  "createFailed": "Failed to create entity.",
+  "delete": "Delete",
+  "deleteEntity": "Delete entity",
+  "deleteSuccess": "Entity deleted successfully.",
+  "deleteFailed": "Failed to delete entity.",
+  "confirmDeleteTitle": "Confirm deletion",
+  "confirmDeleteEntity": "Do you really want to delete this entity? This action cannot be undone.",
+  "noEntitySchema": "No type definition is available for the selected entity type."
 }

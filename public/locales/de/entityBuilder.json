@@ -324,7 +324,22 @@
     "failedSummary": "Gruppenerstellung fehlgeschlagen",
     "openButtonShort": "Neue Gruppe",
     "advancedShow": "Erweiterte Konfiguration anzeigen",
-    "advancedHide": "Erweiterte Konfiguration ausblenden"
+    "advancedHide": "Erweiterte Konfiguration ausblenden",
+    "customAlphabetCharacters": "Erlaubte Zeichen",
+    "customAlphabetCharactersPlaceholder": "abcdefghijklmno1234,.-*+",
+    "randomAlgorithmDesiredSuccessProbability": "Gewünschte Erfolgswahrscheinlichkeit",
+    "consecutiveValueCounter": "Startwert für fortlaufende Nummern",
+    "validFrom": "Gültig ab",
+    "validTo": "Gültig bis",
+    "validityTime": "Gültigkeitsdauer",
+    "salt": "Salt",
+    "saltLength": "Salt-Länge",
+    "lengthIncludesCheckDigit": "Länge enthält Prüfziffer",
+    "enforceStartDateValidity": "Startdatum-Gültigkeit erzwingen",
+    "enforceEndDateValidity": "Enddatum-Gültigkeit erzwingen",
+    "customAlphabetRequired": "Geben Sie die Zeichen ein, die im benutzerdefinierten Alphabet erlaubt sind.",
+    "customAlphabetNoSemicolon": "Das Alphabet darf kein Semikolon enthalten.",
+    "checkDigitAlphabetEven": "Wenn Prüfziffern aktiviert sind, muss das Alphabet eine gerade Anzahl von Zeichen enthalten."
   },
   "groupCreateHelp": {
     "parentGroup": "Optionale übergeordnete Gruppe. Leer lassen, um eine Gruppe auf oberster Ebene zu erstellen.",
@@ -335,6 +350,17 @@
     "paddingCharacter": "Einzelnes Zeichen, mit dem kürzere generierte Werte auf die konfigurierte Pseudonymlänge aufgefüllt werden.",
     "multiplePsnAllowed": "Erlaubt, dass derselbe Identifier in dieser Gruppe mehr als ein Pseudonym erhält.",
     "addCheckDigit": "Fügt eine abschließende Prüfziffer hinzu, um Tipp- oder Übertragungsfehler besser zu erkennen.",
-    "groupDescription": "Optionale Beschreibung, mit der Administratoren den Zweck dieser Gruppe dokumentieren können."
+    "groupDescription": "Optionale Beschreibung, mit der Administratoren den Zweck dieser Gruppe dokumentieren können.",
+    "customAlphabetCharacters": "Geben Sie jedes Zeichen ein, das in erzeugten Pseudonymen vorkommen darf. Dies ist eine wörtliche Zeichenliste und kein regulärer Ausdruck, zum Beispiel abcdefghijklmno1234,.-*+.",
+    "randomAlgorithmDesiredSuccessProbability": "Zielwahrscheinlichkeit dafür, dass ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999.",
+    "consecutiveValueCounter": "Startwert, der beim Algorithmus für fortlaufende Nummern verwendet wird.",
+    "validFrom": "Optionales Startdatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um den Backend-Standard oder die Einstellung der übergeordneten Gruppe zu verwenden.",
+    "validTo": "Optionales Enddatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um die Gültigkeitsdauer oder die Einstellung der übergeordneten Gruppe zu verwenden.",
+    "validityTime": "Optionale Backend-Gültigkeitsdauer, mit der das Enddatum berechnet wird, wenn kein explizites Gültig-bis-Datum eingetragen ist.",
+    "salt": "Optionaler expliziter Salt für die Pseudonymerzeugung. Leer lassen, damit das Backend einen Salt erzeugt.",
+    "saltLength": "Optionale Länge für einen generierten Salt. Leer lassen, um den Backend-Standard zu verwenden.",
+    "lengthIncludesCheckDigit": "Wenn aktiviert, zählt die Prüfziffer zur konfigurierten Pseudonymlänge, statt zusätzlich angehängt zu werden.",
+    "enforceStartDateValidity": "Erfordert, dass erstellte Werte nicht früher beginnen, als diese Gruppe erlaubt.",
+    "enforceEndDateValidity": "Erfordert, dass erstellte Werte nicht später enden, als diese Gruppe erlaubt."
   }
 }

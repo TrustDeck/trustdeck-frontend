@@ -24,7 +24,11 @@ import {
   algorithmOptions,
   defaultAlphabetForAlgorithm
 } from '../groups/utils/algorithmOptions'
-import { alphabetOptions, characters } from '../groups/utils/alphabetOptions'
+import {
+  alphabetOptions,
+  characters,
+  CUSTOM_ALPHABET_VALUE
+} from '../groups/utils/alphabetOptions'
 
 type LayoutValue = 'row' | 'col' | 'group'
 type PrivacyMode = 'plain' | 'pprl'
@@ -43,10 +47,21 @@ type NewGroupDraft = {
   pseudonymLength: string
   algorithm: string
   alphabet: string
+  customAlphabetCharacters: string
   randomAlgorithmDesiredSize: string
+  randomAlgorithmDesiredSuccessProbability: string
+  consecutiveValueCounter: string
   paddingCharacter: string
   multiplePsnAllowed: boolean
   addCheckDigit: boolean
+  lengthIncludesCheckDigit: boolean
+  validFrom: string
+  validTo: string
+  validityTime: string
+  enforceStartDateValidity: boolean
+  enforceEndDateValidity: boolean
+  salt: string
+  saltLength: string
   description: string
 }
 
@@ -56,11 +71,22 @@ const defaultNewGroupDraft = (): NewGroupDraft => ({
   prefix: '',
   pseudonymLength: '8',
   algorithm: 'RANDOM_LET',
-  alphabet: 'LETTERS_AND_NUMBERS_ALPHABET',
+  alphabet: 'LETTERS_ONLY_ALPHABET',
+  customAlphabetCharacters: '',
   randomAlgorithmDesiredSize: '1000000',
+  randomAlgorithmDesiredSuccessProbability: '0.999',
+  consecutiveValueCounter: '1',
   paddingCharacter: '0',
   multiplePsnAllowed: false,
   addCheckDigit: false,
+  lengthIncludesCheckDigit: false,
+  validFrom: '',
+  validTo: '',
+  validityTime: '',
+  enforceStartDateValidity: false,
+  enforceEndDateValidity: false,
+  salt: '',
+  saltLength: '',
   description: ''
 })
 
@@ -181,6 +207,19 @@ function buildDefaultTag(entityTypeName: string, attributeName: string) {
 
 function isValidSystemIdentifier(value: string) {
   return SYSTEM_IDENTIFIER_PATTERN.test(value.trim())
+}
+
+function nextMajorEntityTypeVersion(version?: string) {
+  const fallbackVersion = 'v1.0'
+  const raw = version?.trim() || fallbackVersion
+  const match = /^([vV]?)(\d+)(?:\.\d+)?(?:.*)?$/.exec(raw)
+  if (!match) return 'v2.0'
+
+  const prefix = match[1] || 'v'
+  const currentMajor = Number.parseInt(match[2], 10)
+  if (Number.isNaN(currentMajor)) return 'v2.0'
+
+  return `${prefix}${currentMajor + 1}.0`
 }
 
 function labelKeyToCode(key: string) {
@@ -827,14 +866,24 @@ export default function Builder({
 
   const createNewGroup = async () => {
     const name = newGroupDraft.name.trim()
+    const prefix = newGroupDraft.prefix.trim()
     const pseudonymLength = Number(newGroupDraft.pseudonymLength)
     const randomAlgorithmDesiredSize = Number(
       newGroupDraft.randomAlgorithmDesiredSize
     )
+    const randomAlgorithmDesiredSuccessProbability = Number(
+      newGroupDraft.randomAlgorithmDesiredSuccessProbability
+    )
+    const consecutiveValueCounter = Number(newGroupDraft.consecutiveValueCounter)
+    const saltLength = Number(newGroupDraft.saltLength)
+    const isCustomAlphabet = newGroupDraft.alphabet === CUSTOM_ALPHABET_VALUE
+    const selectedAlphabet = isCustomAlphabet
+      ? newGroupDraft.customAlphabetCharacters.trim()
+      : characters[newGroupDraft.alphabet] ?? newGroupDraft.alphabet
 
     if (
       !name ||
-      !newGroupDraft.prefix.trim() ||
+      !prefix ||
       !Number.isFinite(pseudonymLength) ||
       pseudonymLength < 4
     ) {
@@ -850,26 +899,78 @@ export default function Builder({
       return
     }
 
+    if (isCustomAlphabet && !selectedAlphabet) {
+      showToast({
+        severity: 'error',
+        summary: t('groupCreate.validationSummary', 'Missing group settings'),
+        detail: t(
+          'groupCreate.customAlphabetRequired',
+          'Enter the characters that are allowed in the custom alphabet.'
+        ),
+        life: 4000
+      })
+      return
+    }
+
+    if (selectedAlphabet.includes(';')) {
+      showToast({
+        severity: 'error',
+        summary: t('groupCreate.validationSummary', 'Missing group settings'),
+        detail: t(
+          'groupCreate.customAlphabetNoSemicolon',
+          'The alphabet must not contain a semicolon.'
+        ),
+        life: 4000
+      })
+      return
+    }
+
+    if (newGroupDraft.addCheckDigit && selectedAlphabet.length % 2 !== 0) {
+      showToast({
+        severity: 'error',
+        summary: t('groupCreate.validationSummary', 'Missing group settings'),
+        detail: t(
+          'groupCreate.checkDigitAlphabetEven',
+          'When check digits are enabled, the alphabet must contain an even number of characters.'
+        ),
+        life: 4000
+      })
+      return
+    }
+
+    const optionalString = (value: string) => {
+      const trimmed = value.trim()
+      return trimmed ? trimmed : undefined
+    }
+    const optionalNumber = (value: number) =>
+      Number.isFinite(value) ? value : undefined
+
     setCreatingGroup(true)
     try {
-      const selectedAlphabet =
-        characters[newGroupDraft.alphabet] ?? newGroupDraft.alphabet
       await TrustDeck.instance().createGroupComplete({
         name,
         ...(newGroupDraft.parentGroupName
           ? { superDomainName: newGroupDraft.parentGroupName }
           : {}),
-        prefix: newGroupDraft.prefix.trim(),
+        prefix,
         description: newGroupDraft.description,
         multiplePsnAllowed: newGroupDraft.multiplePsnAllowed,
         paddingCharacter: newGroupDraft.paddingCharacter.slice(0, 1),
         pseudonymLength,
-        randomAlgorithmDesiredSize: Number.isFinite(randomAlgorithmDesiredSize)
-          ? randomAlgorithmDesiredSize
-          : 1000000,
+        randomAlgorithmDesiredSize: optionalNumber(randomAlgorithmDesiredSize),
+        randomAlgorithmDesiredSuccessProbability: optionalNumber(
+          randomAlgorithmDesiredSuccessProbability
+        ),
+        consecutiveValueCounter: optionalNumber(consecutiveValueCounter),
         addCheckDigit: newGroupDraft.addCheckDigit,
-        validFrom: null,
-        validTo: null,
+        lengthIncludesCheckDigit: newGroupDraft.lengthIncludesCheckDigit,
+        validFrom: optionalString(newGroupDraft.validFrom),
+        validTo: optionalString(newGroupDraft.validTo),
+        validityTime: optionalString(newGroupDraft.validityTime),
+        enforceStartDateValidity: newGroupDraft.enforceStartDateValidity,
+        enforceEndDateValidity: newGroupDraft.enforceEndDateValidity,
+        salt: optionalString(newGroupDraft.salt),
+        saltLength: optionalNumber(saltLength),
         algorithm: newGroupDraft.algorithm,
         alphabet: selectedAlphabet
       })
@@ -1150,34 +1251,45 @@ export default function Builder({
       return
     }
 
+    const versionForSave =
+      mode === 'edit'
+        ? nextMajorEntityTypeVersion(
+            initialType?.version ?? initialType?.typeDefinition?.version
+          )
+        : (finalPayload.version ?? 'v1.0')
+    const payloadWithVersion = {
+      ...finalPayload,
+      version: versionForSave,
+      typeDefinition: {
+        ...finalPayload.typeDefinition,
+        version: versionForSave
+      }
+    } as EntityTypePayload & { version: string }
+
     setSaving(true)
     try {
       const savedType =
         saveTarget === 'base'
           ? mode === 'edit' && initialType?.name
             ? await TrustDeck.instance().updateBaseType(initialType.name, {
-                ...finalPayload,
-                version: finalPayload.version ?? 'v1.0',
+                ...payloadWithVersion,
                 isBaseType: true,
                 baseTypeName: undefined,
                 associatedDomainName: undefined
               })
             : await TrustDeck.instance().createBaseType({
-                ...finalPayload,
-                version: finalPayload.version ?? 'v1.0',
+                ...payloadWithVersion,
                 isBaseType: true,
                 baseTypeName: undefined,
                 associatedDomainName: undefined
               })
           : mode === 'edit' && initialType?.name
             ? await TrustDeck.instance().updateEntityConfig(initialType.name, {
-                ...finalPayload,
-                version: finalPayload.version ?? 'v1.0',
+                ...payloadWithVersion,
                 isBaseType: false
               })
             : await TrustDeck.instance().createEntityConfig({
-                ...finalPayload,
-                version: finalPayload.version ?? 'v1.0',
+                ...payloadWithVersion,
                 isBaseType: false
               })
       if (saveTarget === 'project') await refreshProjectEntities()
@@ -1942,7 +2054,7 @@ export default function Builder({
                     label={t('groupCreate.pseudonymLength', 'Pseudonym length')}
                     info={t(
                       'groupCreateHelp.pseudonymLength',
-                      'Total length of generated pseudonym values, excluding the prefix.'
+                      'Total length of generated pseudonym values, excluding the prefix unless check digit inclusion is enabled.'
                     )}
                     type="number"
                     onChange={(value) =>
@@ -1978,6 +2090,29 @@ export default function Builder({
                       updateNewGroupDraft({ alphabet: value })
                     }
                   />
+                  {newGroupDraft.alphabet === CUSTOM_ALPHABET_VALUE && (
+                    <div className="md:col-span-2">
+                      <InputWithInfo
+                        id="newGroupCustomAlphabet"
+                        value={newGroupDraft.customAlphabetCharacters}
+                        label={t(
+                          'groupCreate.customAlphabetCharacters',
+                          'Allowed characters'
+                        )}
+                        info={t(
+                          'groupCreateHelp.customAlphabetCharacters',
+                          'Enter every character that may appear in generated pseudonyms. This is a literal character list, not a regular expression, for example abcdefghijklmno1234,.-*+.'
+                        )}
+                        placeholder={t(
+                          'groupCreate.customAlphabetCharactersPlaceholder',
+                          'abcdefghijklmno1234,.-*+'
+                        )}
+                        onChange={(value) =>
+                          updateNewGroupDraft({ customAlphabetCharacters: value })
+                        }
+                      />
+                    </div>
+                  )}
                   <InputWithInfo
                     id="newGroupDesiredSize"
                     value={newGroupDraft.randomAlgorithmDesiredSize}
@@ -1997,6 +2132,41 @@ export default function Builder({
                     }
                   />
                   <InputWithInfo
+                    id="newGroupDesiredSuccessProbability"
+                    value={newGroupDraft.randomAlgorithmDesiredSuccessProbability}
+                    label={t(
+                      'groupCreate.randomAlgorithmDesiredSuccessProbability',
+                      'Desired generation success probability'
+                    )}
+                    info={t(
+                      'groupCreateHelp.randomAlgorithmDesiredSuccessProbability',
+                      'Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999.'
+                    )}
+                    type="number"
+                    step="0.001"
+                    onChange={(value) =>
+                      updateNewGroupDraft({
+                        randomAlgorithmDesiredSuccessProbability: value
+                      })
+                    }
+                  />
+                  <InputWithInfo
+                    id="newGroupConsecutiveCounter"
+                    value={newGroupDraft.consecutiveValueCounter}
+                    label={t(
+                      'groupCreate.consecutiveValueCounter',
+                      'Consecutive start counter'
+                    )}
+                    info={t(
+                      'groupCreateHelp.consecutiveValueCounter',
+                      'Starting counter used when the consecutive-number algorithm is selected.'
+                    )}
+                    type="number"
+                    onChange={(value) =>
+                      updateNewGroupDraft({ consecutiveValueCounter: value })
+                    }
+                  />
+                  <InputWithInfo
                     id="newGroupPadding"
                     value={newGroupDraft.paddingCharacter}
                     label={t('groupCreate.paddingCharacter', 'Padding character')}
@@ -2009,40 +2179,132 @@ export default function Builder({
                       updateNewGroupDraft({ paddingCharacter: value.slice(0, 1) })
                     }
                   />
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                    <input
-                      type="checkbox"
-                      checked={newGroupDraft.multiplePsnAllowed}
-                      onChange={(event) =>
-                        updateNewGroupDraft({
-                          multiplePsnAllowed: event.target.checked
-                        })
-                      }
+                  <InputWithInfo
+                    id="newGroupValidFrom"
+                    value={newGroupDraft.validFrom}
+                    label={t('groupCreate.validFrom', 'Valid from')}
+                    info={t(
+                      'groupCreateHelp.validFrom',
+                      'Optional start date and time for values created in this group. Leave empty to use the backend default or the parent group setting.'
+                    )}
+                    type="datetime-local"
+                    onChange={(value) => updateNewGroupDraft({ validFrom: value })}
+                  />
+                  <InputWithInfo
+                    id="newGroupValidTo"
+                    value={newGroupDraft.validTo}
+                    label={t('groupCreate.validTo', 'Valid to')}
+                    info={t(
+                      'groupCreateHelp.validTo',
+                      'Optional end date and time for values created in this group. Leave empty to use the validity period or the parent group setting.'
+                    )}
+                    type="datetime-local"
+                    onChange={(value) => updateNewGroupDraft({ validTo: value })}
+                  />
+                  <InputWithInfo
+                    id="newGroupValidityTime"
+                    value={newGroupDraft.validityTime}
+                    label={t('groupCreate.validityTime', 'Validity period')}
+                    info={t(
+                      'groupCreateHelp.validityTime',
+                      'Optional backend validity period used to calculate the end date when no explicit valid-to date is entered.'
+                    )}
+                    onChange={(value) => updateNewGroupDraft({ validityTime: value })}
+                  />
+                  <InputWithInfo
+                    id="newGroupSaltLength"
+                    value={newGroupDraft.saltLength}
+                    label={t('groupCreate.saltLength', 'Salt length')}
+                    info={t(
+                      'groupCreateHelp.saltLength',
+                      'Optional length for a generated salt. Leave empty to use the backend default.'
+                    )}
+                    type="number"
+                    onChange={(value) => updateNewGroupDraft({ saltLength: value })}
+                  />
+                  <div className="md:col-span-2">
+                    <InputWithInfo
+                      id="newGroupSalt"
+                      value={newGroupDraft.salt}
+                      label={t('groupCreate.salt', 'Salt')}
+                      info={t(
+                        'groupCreateHelp.salt',
+                        'Optional explicit salt used for pseudonym generation. Leave empty so the backend generates a salt.'
+                      )}
+                      onChange={(value) => updateNewGroupDraft({ salt: value })}
                     />
-                    {t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
-                    <InfoIcon
-                      title={t(
+                  </div>
+                  <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
+                    <CheckboxWithInfo
+                      id="newGroupMultiplePsn"
+                      checked={newGroupDraft.multiplePsnAllowed}
+                      label={t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
+                      info={t(
                         'groupCreateHelp.multiplePsnAllowed',
                         'Allows the same identifier to receive more than one pseudonym in this group.'
                       )}
-                    />
-                  </label>
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-                    <input
-                      type="checkbox"
-                      checked={newGroupDraft.addCheckDigit}
-                      onChange={(event) =>
-                        updateNewGroupDraft({ addCheckDigit: event.target.checked })
+                      onChange={(checked) =>
+                        updateNewGroupDraft({ multiplePsnAllowed: checked })
                       }
                     />
-                    {t('groupCreate.addCheckDigit', 'Add check digit')}
-                    <InfoIcon
-                      title={t(
+                    <CheckboxWithInfo
+                      id="newGroupCheckDigit"
+                      checked={newGroupDraft.addCheckDigit}
+                      label={t('groupCreate.addCheckDigit', 'Add check digit')}
+                      info={t(
                         'groupCreateHelp.addCheckDigit',
                         'Adds a final check digit that can help detect typing or transcription errors.'
                       )}
+                      onChange={(checked) =>
+                        updateNewGroupDraft({ addCheckDigit: checked })
+                      }
                     />
-                  </label>
+                    <CheckboxWithInfo
+                      id="newGroupLengthIncludesCheckDigit"
+                      checked={newGroupDraft.lengthIncludesCheckDigit}
+                      label={t(
+                        'groupCreate.lengthIncludesCheckDigit',
+                        'Length includes check digit'
+                      )}
+                      info={t(
+                        'groupCreateHelp.lengthIncludesCheckDigit',
+                        'When enabled, the check digit counts as part of the configured pseudonym length instead of being added on top.'
+                      )}
+                      onChange={(checked) =>
+                        updateNewGroupDraft({ lengthIncludesCheckDigit: checked })
+                      }
+                    />
+                    <CheckboxWithInfo
+                      id="newGroupEnforceStartDate"
+                      checked={newGroupDraft.enforceStartDateValidity}
+                      label={t(
+                        'groupCreate.enforceStartDateValidity',
+                        'Enforce start-date validity'
+                      )}
+                      info={t(
+                        'groupCreateHelp.enforceStartDateValidity',
+                        'Requires created values to start no earlier than this group allows.'
+                      )}
+                      onChange={(checked) =>
+                        updateNewGroupDraft({ enforceStartDateValidity: checked })
+                      }
+                    />
+                    <CheckboxWithInfo
+                      id="newGroupEnforceEndDate"
+                      checked={newGroupDraft.enforceEndDateValidity}
+                      label={t(
+                        'groupCreate.enforceEndDateValidity',
+                        'Enforce end-date validity'
+                      )}
+                      info={t(
+                        'groupCreateHelp.enforceEndDateValidity',
+                        'Requires created values to end no later than this group allows.'
+                      )}
+                      onChange={(checked) =>
+                        updateNewGroupDraft({ enforceEndDateValidity: checked })
+                      }
+                    />
+                  </div>
                   <div className="md:col-span-2">
                     <div className="relative">
                       <textarea
@@ -2258,6 +2520,40 @@ function DropdownWithInfo({
         <InformationCircleIcon className="h-5 w-5" />
       </span>
     </div>
+  )
+}
+
+
+function CheckboxWithInfo({
+  id,
+  checked,
+  label,
+  info,
+  onChange,
+  disabled = false
+}: {
+  id: string
+  checked: boolean
+  label: string
+  info: string
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span>{label}</span>
+      <InfoIcon title={info} />
+    </label>
   )
 }
 

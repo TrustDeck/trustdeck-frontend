@@ -5,8 +5,8 @@
   "edit": "Bearbeiten",
   "cancel": "Abbrechen",
   "save": "Speichern",
-  "editSuccess": "Person wurde erfolgreich aktualisiert.",
-  "editFailed": "Person konnte nicht aktualisiert werden.",
+  "editSuccess": "Entität wurde erfolgreich aktualisiert.",
+  "editFailed": "Entität konnte nicht aktualisiert werden.",
   "select": "Auswählen",
   "research": "Nochmal suchen",
   "results": "Suchergebnisse",
@@ -167,5 +167,16 @@
   "entityView": "Entitätsdetails",
   "entityLabel": "Entität",
   "identifier": "Identifikator",
-  "links": "Verknüpfungen"
+  "links": "Verknüpfungen",
+  "create": "Erstellen",
+  "createEntity": "Entität erstellen",
+  "createSuccess": "Entität wurde erfolgreich erstellt.",
+  "createFailed": "Entität konnte nicht erstellt werden.",
+  "delete": "Löschen",
+  "deleteEntity": "Entität löschen",
+  "deleteSuccess": "Entität wurde erfolgreich gelöscht.",
+  "deleteFailed": "Entität konnte nicht gelöscht werden.",
+  "confirmDeleteTitle": "Löschen bestätigen",
+  "confirmDeleteEntity": "Möchten Sie diese Entität wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+  "noEntitySchema": "Für den ausgewählten Entitätstyp ist keine Typdefinition verfügbar."
 }

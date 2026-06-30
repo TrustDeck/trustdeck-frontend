@@ -1,62 +1,68 @@
-## Create Entity
+## Entity CRUD
 
 ### Overview
 
-The Create Entity page shows all entities that are available within a project. From here, users can view existing entities and create new ones.
+The entity pages follow a standard CRUD interaction pattern for project-scoped entity instances:
 
-Entities represent structured data objects within the system (for example, a person or other research-relevant object).
+- **Create** a new entity instance from the search page by selecting an entity type and clicking **Create entity**.
+- **Read** existing entity instances by searching and opening a result.
+- **Update** an existing entity instance from the entity details page by clicking **Edit**, changing the fields, and clicking **Save**.
+- **Delete** an existing entity instance from the entity details page by clicking **Delete** and confirming the deletion.
 
----
-
-### Entity List
-
-At the top of the page, all existing entities for the selected project are displayed.
-
-From this list, you can:
-- View existing entities  
-- Create a new entity  
+Entities represent structured data objects within a project, for example a person, biosample, visit, or other project-specific object.
 
 ---
 
-### Creating a New Entity
+### Selecting an entity type
 
-To create a new entity:
-
-1. Click on **Add Entity**  
-2. Enter the **name of the entity**  
-3. Define the structure of the entity using blocks and sections  
+The search and create forms first ask for the entity type. The available types are loaded from the selected project. The selected type determines which fields are shown in the create/edit form.
 
 ---
 
-### Entity Structure
+### Creating a new entity
 
-Entities comprise fields. An example of a field would be something like: “First name” or “Date of birth”  
+To create a new entity instance:
 
-When building an entity, you can organize the fields using two building blocks:
+1. Open the entity search page.
+2. Select the entity type.
+3. Click **Create entity**.
+4. Fill out the fields generated from the type definition.
+5. Click **Create**.
 
-#### Blocks
+The form uses the entity type definition, so attribute names, labels, enum values, dates, numbers, and nested groups are rendered consistently with the same structure that is used for viewing and editing.
 
-A **Block** is a simple, one line field. 
-
-#### Section (Group of Fields)
-
-A **Section** is used to group related fields together into a structured block within the form.
-
-- Helps organize complex entities  
-- Improves readability and logical structure  
-- Can contain multiple fields  
-- For each section, a choice of layout must be made: one, two, or three columns per row
 ---
 
-### Example: Person Entity
+### Reading/searching entities
 
-A typical example is a **Person** entity.
+To read an existing entity:
 
-This could include a section such as:
+1. Select the entity type.
+2. Enter a search term.
+3. Click **Search**.
+4. Open one of the results to see the entity details.
 
-#### Personal Data (Core Information)
+---
 
-- First name  
-- Last name  
-- Date of birth  
-- Gender  
+### Updating an entity
+
+To update an entity:
+
+1. Open the entity details page.
+2. Click **Edit**.
+3. Change the fields.
+4. Click **Save**.
+
+Only the data fields from the active type definition are submitted back to the backend.
+
+---
+
+### Deleting an entity
+
+To delete an entity:
+
+1. Open the entity details page.
+2. Click **Delete**.
+3. Confirm the deletion in the confirmation dialog.
+
+Deleting an entity uses the backend delete endpoint for the selected project and entity type.

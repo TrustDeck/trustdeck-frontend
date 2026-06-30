@@ -8,14 +8,17 @@ import {
   ArrowLeftIcon,
   PencilIcon,
   XMarkIcon,
-  CheckIcon
+  CheckIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline'
+import { Dialog } from 'primereact/dialog'
 import useProjectStore from '../../core/stores/ProjectStore'
 import useLayoutStore from '../../core/stores/LayoutStore'
 import useToastStore from '../../core/stores/ToastStore'
 import TrustDeck from '../../core/services/TrustDeck'
 import DynamicEntity from './components/DynamicEntity'
 import { pickSchemaData } from './utils/schemaData'
+import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 
 const EntityDetails: React.FC = () => {
   const { results, setResults } = useSearchResultsStore()
@@ -26,6 +29,8 @@ const EntityDetails: React.FC = () => {
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const entity = useMemo(
     () => results.find((e) => e.trustdeckID === entityId),
@@ -151,6 +156,50 @@ const EntityDetails: React.FC = () => {
     }
   }
 
+  const handleDelete = async () => {
+    const entityType = entity.entityTypeName || entity.type
+    const identifier = entity.trustdeckID || entity.id
+    if (!entityType || !identifier) {
+      showToast({
+        severity: 'error',
+        summary: t('search:deleteEntity'),
+        detail: t('search:deleteFailed'),
+        life: 4000
+      })
+      return
+    }
+
+    setDeleting(true)
+    try {
+      await TrustDeck.instance().deleteEntity(entityType, String(identifier))
+      setResults(
+        results.filter(
+          (entry) =>
+            entry.trustdeckID !== entity.trustdeckID && entry.id !== entity.id
+        )
+      )
+      setDeleteConfirmOpen(false)
+      setEditMode(false)
+      showToast({
+        severity: 'success',
+        summary: t('search:deleteEntity'),
+        detail: t('search:deleteSuccess'),
+        life: 3000
+      })
+      navigate('/search/results')
+    } catch (error) {
+      console.error(error)
+      showToast({
+        severity: 'error',
+        summary: t('search:deleteEntity'),
+        detail: error instanceof Error ? error.message : t('search:deleteFailed'),
+        life: 5000
+      })
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -172,11 +221,19 @@ const EntityDetails: React.FC = () => {
         {/* Right buttons */}
         <div className="flex gap-2 flex-shrink-0">
           {!editMode ? (
-            <PrimaryButton
-              label={<span className="hidden sm:inline">{t('search:edit')}</span>}
-              onClick={() => setEditMode(true)}
-              icon={<PencilIcon className="h-5 w-5 mr-1" />}
-            />
+            <>
+              <PrimaryButton
+                label={<span className="hidden sm:inline">{t('search:edit')}</span>}
+                onClick={() => setEditMode(true)}
+                icon={<PencilIcon className="h-5 w-5 mr-1" />}
+              />
+              <SecondaryOutlinedButton
+                label={<span className="hidden sm:inline">{t('search:delete')}</span>}
+                onClick={() => setDeleteConfirmOpen(true)}
+                icon={<TrashIcon className="h-5 w-5 mr-1" />}
+                loading={deleting}
+              />
+            </>
           ) : (
             <>
               <PrimaryOutlinedButton
@@ -200,6 +257,31 @@ const EntityDetails: React.FC = () => {
         formData={formData}
         onFieldChange={handleFieldChange}
       />
+
+      <Dialog
+        visible={deleteConfirmOpen}
+        onHide={() => setDeleteConfirmOpen(false)}
+        header={t('search:confirmDeleteTitle')}
+        closable
+        dismissableMask={!deleting}
+        style={{ width: '520px', maxWidth: '95vw' }}
+      >
+        <div className="flex flex-col gap-4">
+          <p>{t('search:confirmDeleteEntity')}</p>
+          <div className="flex justify-end gap-2">
+            <PrimaryOutlinedButton
+              label={t('search:cancel')}
+              onClick={() => setDeleteConfirmOpen(false)}
+              disabled={deleting}
+            />
+            <SecondaryOutlinedButton
+              label={t('search:delete')}
+              onClick={handleDelete}
+              loading={deleting}
+            />
+          </div>
+        </div>
+      </Dialog>
     </div>
   )
 }

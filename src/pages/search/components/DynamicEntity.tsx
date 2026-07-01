@@ -40,6 +40,17 @@ function parseDateValue(value: unknown): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+function formatDateOnly(value: Date): string {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isNamedDataGroup(attr: any): boolean {
+  return attr?.layout === 'group' && Boolean(attr?.name)
+}
+
 export default function DynamicEntity({
   entity,
   schemaAttributes,
@@ -65,7 +76,6 @@ export default function DynamicEntity({
   ) => {
     const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
     const displayLabel = resolveLabel(attr)
-    const requiredDisplayLabel = attr.required ? `${displayLabel} *` : displayLabel
     const enumValues = attr.values ?? attr.enum ?? []
 
     if (editMode && attr.name && attr.type === 'enum') {
@@ -76,7 +86,7 @@ export default function DynamicEntity({
           value={rawValue ?? ''}
           options={enumValues.map((option: string) => ({ label: option, value: option }))}
           onChange={(e) => onFieldChange(path, e.value)}
-          placeholder={requiredDisplayLabel}
+          placeholder={displayLabel}
           required={attr.required}
         />
       )
@@ -88,8 +98,14 @@ export default function DynamicEntity({
           key={key}
           id={key}
           value={parseDateValue(rawValue)}
-          onChange={(e) => onFieldChange(path, e.value ? e.value.toISOString() : '')}
-          placeholder={requiredDisplayLabel}
+          onChange={(e) => {
+            if (!e.value) {
+              onFieldChange(path, '')
+              return
+            }
+            onFieldChange(path, attr.type === 'date' ? formatDateOnly(e.value) : e.value.toISOString())
+          }}
+          placeholder={displayLabel}
           required={attr.required}
           showTime={attr.type === 'datetime'}
         />
@@ -103,7 +119,7 @@ export default function DynamicEntity({
           id={key}
           value={typeof rawValue === 'number' ? rawValue : rawValue !== '' && rawValue !== undefined && rawValue !== null ? Number(rawValue) : null}
           onChange={(e) => onFieldChange(path, e.value ?? '')}
-          placeholder={requiredDisplayLabel}
+          placeholder={attr.required ? `${displayLabel} *` : displayLabel}
           min={attr.minimum}
           max={attr.maximum}
           step={attr.type === 'integer' ? 1 : 0.01}
@@ -132,7 +148,7 @@ export default function DynamicEntity({
             onChange={(e) => onFieldChange(path, e.target.checked)}
             className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
           />
-          <span>{requiredDisplayLabel}</span>
+          <span>{attr.required ? `${displayLabel} *` : displayLabel}</span>
         </label>
       )
     }
@@ -143,7 +159,7 @@ export default function DynamicEntity({
         id={key}
         readOnly={!editMode || !attr.name}
         value={formatValue(rawValue)}
-        placeholder={requiredDisplayLabel}
+        placeholder={displayLabel}
         required={attr.required}
         onChange={attr.name ? (e) => onFieldChange(path, e.target.value) : undefined}
       />
@@ -175,10 +191,11 @@ export default function DynamicEntity({
       }
 
       if (Array.isArray(attr.attributes)) {
-        const groupContext = attr.name ? context?.[attr.name] : context
+        const namedDataGroup = isNamedDataGroup(attr)
+        const groupContext = namedDataGroup && attr.name ? context?.[attr.name] : context
         const entries = Array.isArray(groupContext)
           ? groupContext
-          : [groupContext ?? context]
+          : [groupContext ?? context ?? {}]
 
         return (
           <div key={key} className="space-y-3">
@@ -194,8 +211,8 @@ export default function DynamicEntity({
                   `${key}-nested-${entryIndex}`,
                   [
                     ...pathPrefix,
-                    ...(attr.name ? [attr.name] : []),
-                    ...(Array.isArray(groupContext) ? [entryIndex] : [])
+                    ...(namedDataGroup && attr.name ? [attr.name] : []),
+                    ...(namedDataGroup && Array.isArray(groupContext) ? [entryIndex] : [])
                   ]
                 )}
               </div>
@@ -207,57 +224,19 @@ export default function DynamicEntity({
       return renderLeaf(attr, context, key, [...pathPrefix, attr.name])
     })
 
-  const topLevelGroups =
-    schemaAttributes.filter(
-      (attr) => attr.layout === 'group' || attr.group === true || Array.isArray(attr.attributes)
-    ) || []
-
-  const sections =
-    topLevelGroups.length > 0
-      ? topLevelGroups
-      : [
-          {
-            name: '__root__',
-            label_en: t('search:entityLabel'),
-            label_de: t('search:entityLabel'),
-            attributes: schemaAttributes
-          } as unknown as Attribute
-        ]
-
   return (
-    <div className="w-full 2xl:w-4/5 2xl:mx-auto flex flex-col xl:flex-row gap-4">
-      <Panel className="w-full xl:w-3/5">
-        {sections.map((section, sectionIndex) => {
-          const sectionKey = section.name || section.key || `section-${sectionIndex}`
-          const isRootSection = section.name === '__root__'
-          const sectionContext = isRootSection
-            ? formData
-            : section.name
-              ? formData?.[section.name]
-              : formData
-          const sectionEntries = Array.isArray(sectionContext)
-            ? sectionContext
-            : [sectionContext ?? formData ?? {}]
-
-          return (
-            <div key={sectionKey} className="space-y-3">
-              <Divider text={resolveLabel(section)} />
-              {sectionEntries.map((entry, entryIndex) => (
-                <div key={`${sectionKey}-entry-${entryIndex}`} className="space-y-3">
-                  {renderAttributes(
-                    section.attributes ?? [section],
-                    entry ?? formData ?? {},
-                    `${sectionKey}-${entryIndex}`,
-                    [
-                      ...(!isRootSection && section.name ? [section.name] : []),
-                      ...(Array.isArray(sectionContext) ? [entryIndex] : [])
-                    ]
-                  )}
-                </div>
-              ))}
-            </div>
-          )
-        })}
+    <div
+      className={
+        showIdentifierPanel
+          ? 'w-full 2xl:w-4/5 2xl:mx-auto flex flex-col xl:flex-row gap-4'
+          : 'flex w-full justify-center'
+      }
+    >
+      <Panel className={showIdentifierPanel ? 'w-full xl:w-3/5' : 'w-full max-w-3xl'}>
+        <div className="space-y-3">
+          <Divider text={t('search:entityLabel')} />
+          {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
+        </div>
       </Panel>
 
       {showIdentifierPanel && (

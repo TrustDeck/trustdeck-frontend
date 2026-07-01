@@ -1,5 +1,9 @@
 import type { Attribute } from '../../../core/stores/ProjectStore'
 
+function isNamedDataGroup(attr: Attribute): boolean {
+  return (attr as any).layout === 'group' && Boolean(attr.name)
+}
+
 export function pickSchemaData(
   attributes: Attribute[],
   source: Record<string, any>
@@ -13,11 +17,12 @@ export function pickSchemaData(
     }
 
     if (Array.isArray(attr.attributes)) {
-      if (!attr.name) {
+      if (!isNamedDataGroup(attr)) {
         Object.assign(picked, pickSchemaData(attr.attributes, source))
         return
       }
 
+      if (!attr.name) return
       const groupSource = source?.[attr.name]
       if (groupSource === undefined) return
 

@@ -35,6 +35,16 @@ type ModalMode = 'view' | 'create' | 'edit'
 
 type EntityInstance = Record<string, any>
 
+function parseTypeDefinition(typeDefinition: unknown): any {
+  if (typeof typeDefinition !== 'string') return typeDefinition ?? { attributes: [] }
+
+  try {
+    return JSON.parse(typeDefinition)
+  } catch {
+    return { attributes: [] }
+  }
+}
+
 function asTypeDefinition(entry: EntityTypePayload | string): EntityTypePayload {
   if (typeof entry === 'string') {
     return {
@@ -43,7 +53,10 @@ function asTypeDefinition(entry: EntityTypePayload | string): EntityTypePayload 
       typeDefinition: { attributes: [] }
     }
   }
-  return entry
+  return {
+    ...entry,
+    typeDefinition: parseTypeDefinition(entry.typeDefinition)
+  }
 }
 
 function entityId(entity: EntityInstance | null | undefined) {
@@ -88,6 +101,10 @@ function flattenLeafAttributes(attributes: Attribute[] = []): Attribute[] {
     if (Array.isArray(attr.attributes)) return flattenLeafAttributes(attr.attributes)
     return attr.name ? [attr] : []
   })
+}
+
+function isNamedDataGroup(attr: Attribute): boolean {
+  return (attr as any).layout === 'group' && Boolean(attr.name)
 }
 
 function formatValue(value: unknown): string {
@@ -158,7 +175,7 @@ function buildInitialEntityData(attributes: Attribute[] = []): Record<string, an
 
     if (Array.isArray(attr.attributes)) {
       const nested = buildInitialEntityData(attr.attributes)
-      if (attr.name) {
+      if (isNamedDataGroup(attr) && attr.name) {
         data[attr.name] = attr.repeatable ? [nested] : nested
       } else {
         Object.assign(data, nested)
@@ -270,7 +287,8 @@ function validateEntityData(
       }
 
       if (Array.isArray(attr.attributes)) {
-        const groupValue = attr.name ? context?.[attr.name] : context
+        const dataGroup = isNamedDataGroup(attr)
+        const groupValue = dataGroup && attr.name ? context?.[attr.name] : context
         const entries = Array.isArray(groupValue) ? groupValue : [groupValue ?? {}]
         entries.forEach((entry) => walk(attr.attributes ?? [], entry ?? {}))
         return
@@ -300,7 +318,8 @@ function coerceEntityDataTypes(
       }
 
       if (Array.isArray(attr.attributes)) {
-        const groupValue = attr.name ? context?.[attr.name] : context
+        const dataGroup = isNamedDataGroup(attr)
+        const groupValue = dataGroup && attr.name ? context?.[attr.name] : context
         const entries = Array.isArray(groupValue) ? groupValue : [groupValue ?? {}]
         entries.forEach((entry) => walk(attr.attributes ?? [], entry ?? {}))
         return
@@ -348,10 +367,10 @@ export default function PreReg() {
     [selectedTypeName, typeDefinitions]
   )
 
-  const selectedSchemaAttributes = useMemo(
-    () => (selectedType?.typeDefinition as any)?.attributes ?? [],
-    [selectedType]
-  )
+  const selectedSchemaAttributes = useMemo(() => {
+    const definition = parseTypeDefinition(selectedType?.typeDefinition)
+    return Array.isArray(definition?.attributes) ? definition.attributes : []
+  }, [selectedType])
 
   const displayAttributes = useMemo(
     () => flattenLeafAttributes(selectedSchemaAttributes).slice(0, 4),
@@ -640,6 +659,8 @@ export default function PreReg() {
 
       if (modalMode === 'create') {
         const created = await TrustDeck.instance().postEntity(selectedTypeName, {
+          projectName: selectedProject?.abbreviation,
+          entityTypeName: selectedTypeName,
           data: dataToSave
         })
         const normalized = normalizeInstance(created)
@@ -655,7 +676,15 @@ export default function PreReg() {
         })
       } else if (modalMode === 'edit' && selectedInstance) {
         const identifier = entityId(selectedInstance)
-        await TrustDeck.instance().putEntity(selectedTypeName, { data: dataToSave }, identifier)
+        await TrustDeck.instance().putEntity(
+          selectedTypeName,
+          {
+            projectName: selectedProject?.abbreviation,
+            entityTypeName: selectedTypeName,
+            data: dataToSave
+          },
+          identifier
+        )
         const updated = { ...selectedInstance, data: dataToSave }
         setInstances((current) =>
           current.map((entry) => (entityId(entry) === identifier ? updated : entry))
@@ -764,7 +793,7 @@ export default function PreReg() {
           </p>
         </div>
 
-        <Panel noMaxWidth title={t('identity:crud.availableTypes')}>
+        <Panel noMaxWidth className="mx-auto" title={t('identity:crud.availableTypes')}>
           {loadingTypes ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
               {t('entityBuilder:loadingEntityTypes')}
@@ -832,6 +861,7 @@ export default function PreReg() {
         {selectedType && (
           <Panel
             noMaxWidth
+            className="mx-auto"
             title={t('identity:crud.instancesTitle', { type: selectedType.name })}
           >
             <div className="flex flex-col gap-4">
@@ -984,7 +1014,7 @@ export default function PreReg() {
         header={modalTitle}
         closable
         dismissableMask={!saving}
-        style={{ width: '1180px', maxWidth: '95vw' }}
+        style={{ width: modalMode === 'create' ? '760px' : '980px', maxWidth: '95vw' }}
         className="mx-auto"
       >
         <div className="flex flex-col gap-4">
@@ -1010,12 +1040,6 @@ export default function PreReg() {
           )}
 
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
-              label={modalMode === 'view' ? t('identity:crud.close') : t('identity:crud.cancel')}
-              onClick={closeModal}
-              icon={<XMarkIcon className="h-5 w-5 mr-1" />}
-              disabled={saving}
-            />
             {modalMode === 'view' && selectedInstance && (
               <PrimaryButton
                 label={t('identity:crud.edit')}
@@ -1039,6 +1063,12 @@ export default function PreReg() {
                 icon={<CheckIcon className="h-5 w-5 mr-1" />}
               />
             )}
+            <PrimaryOutlinedButton
+              label={modalMode === 'view' ? t('identity:crud.close') : t('identity:crud.cancel')}
+              onClick={closeModal}
+              icon={<XMarkIcon className="h-5 w-5 mr-1" />}
+              disabled={saving}
+            />
           </div>
         </div>
       </Dialog>

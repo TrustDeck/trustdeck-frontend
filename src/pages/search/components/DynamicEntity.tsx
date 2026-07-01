@@ -51,6 +51,17 @@ function isNamedDataGroup(attr: any): boolean {
   return attr?.layout === 'group' && Boolean(attr?.name)
 }
 
+function resolveTrustDeckId(entity: any): string {
+  return String(
+    entity?.trustdeckID ??
+      entity?.trustdeckId ??
+      entity?.trustDeckId ??
+      entity?.data?.trustdeckID ??
+      entity?.data?.trustdeckId ??
+      ''
+  )
+}
+
 export default function DynamicEntity({
   entity,
   schemaAttributes,
@@ -228,11 +239,11 @@ export default function DynamicEntity({
     <div
       className={
         showIdentifierPanel
-          ? 'w-full 2xl:w-4/5 2xl:mx-auto flex flex-col xl:flex-row gap-4'
+          ? 'w-full 2xl:w-11/12 2xl:mx-auto flex flex-col xl:flex-row gap-4'
           : 'flex w-full justify-center'
       }
     >
-      <Panel className={showIdentifierPanel ? 'w-full xl:w-3/5' : 'w-full max-w-3xl'}>
+      <Panel className={showIdentifierPanel ? 'w-full xl:w-1/2' : 'w-full max-w-3xl'}>
         <div className="space-y-3">
           <Divider text={t('search:entityLabel')} />
           {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
@@ -240,16 +251,16 @@ export default function DynamicEntity({
       </Panel>
 
       {showIdentifierPanel && (
-        <div className="w-full xl:w-2/5 flex flex-col gap-4">
+        <div className="w-full xl:w-1/2 flex flex-col gap-4">
         <Panel className="h-fit">
           <Divider text={t('search:identifier')} />
           <div className="flex flex-col gap-4">
-            <CustomFloatLabel
-              id="entity-identifier"
-              readOnly
-              value={entity.trustdeckID || entity.id || ''}
-              placeholder="trustdeckID"
-            />
+            <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
+              <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">trustdeckID</div>
+              <div className="break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+                {resolveTrustDeckId(entity) || '-'}
+              </div>
+            </div>
             <CustomFloatLabel
               id="entity-type"
               readOnly
@@ -261,7 +272,7 @@ export default function DynamicEntity({
 
         <Panel className="h-fit">
           <Divider text={t('search:links')} />
-          <LinksTable entity={{ id: entity.id || entity.trustdeckID, links: entity.links || [] } as Entity} />
+          <LinksTable entity={{ id: resolveTrustDeckId(entity), links: entity.links || [] } as Entity} />
         </Panel>
       </div>
       )}

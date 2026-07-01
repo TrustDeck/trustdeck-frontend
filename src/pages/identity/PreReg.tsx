@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +35,42 @@ import {
 type ModalMode = 'view' | 'create' | 'edit'
 
 type EntityInstance = Record<string, any>
+
+const LIST_ALL_INSTANCE_SEARCH_QUERY = '2'
+
+type IconActionButtonProps = {
+  title: string
+  onClick: () => void
+  disabled?: boolean
+  children: ReactNode
+  variant?: 'primary' | 'danger'
+}
+
+function IconActionButton({
+  title,
+  onClick,
+  disabled = false,
+  children,
+  variant = 'primary'
+}: IconActionButtonProps) {
+  const colorClasses =
+    variant === 'danger'
+      ? 'border-color-coral text-color-coral hover:bg-red-50 dark:hover:bg-red-950'
+      : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
+
+  return (
+    <button
+      type="button"
+      aria-label={title}
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 ${colorClasses}`}
+    >
+      {children}
+    </button>
+  )
+}
 
 function parseTypeDefinition(typeDefinition: unknown): any {
   if (typeof typeDefinition !== 'string') return typeDefinition ?? { attributes: [] }
@@ -512,7 +549,7 @@ export default function PreReg() {
       const normalizedQuery = searchQuery?.trim()
       const result = await TrustDeck.instance().searchEntities(
         typeName,
-        normalizedQuery || '*'
+        normalizedQuery || LIST_ALL_INSTANCE_SEARCH_QUERY
       )
       setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
     } catch (error) {
@@ -541,10 +578,7 @@ export default function PreReg() {
     setInstances([])
     setSelectedInstance(null)
     setQuery('')
-    if (selectedTypeName && permissionsReady && canSearchInstances) {
-      searchInstances(selectedTypeName, '*')
-    }
-  }, [canSearchInstances, permissionsReady, selectedTypeName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedTypeName])
 
   const openCreateModal = () => {
     if (!selectedType) return
@@ -780,7 +814,7 @@ export default function PreReg() {
   }
 
   const handleListAllClick = () => {
-    searchInstances(selectedTypeName, '*')
+    searchInstances(selectedTypeName, LIST_ALL_INSTANCE_SEARCH_QUERY)
   }
 
   return (
@@ -914,7 +948,15 @@ export default function PreReg() {
 
               <Divider />
 
-              {loadingInstances ? (
+              {!permissionsReady ? (
+                <div className="py-10 text-center text-gray-500 dark:text-gray-300">
+                  {t('identity:crud.checkingPermissions')}
+                </div>
+              ) : !canSearchInstances ? (
+                <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50 p-8 text-center text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                  {t('identity:crud.noSearchPermission')}
+                </div>
+              ) : loadingInstances ? (
                 <div className="py-10 text-center text-gray-500 dark:text-gray-300">
                   {t('identity:crud.loadingInstances')}
                 </div>
@@ -932,14 +974,14 @@ export default function PreReg() {
                   <table className="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-900">
                       <tr className="text-gray-600 dark:text-gray-300">
-                        <th className="px-4 py-3 font-semibold">{t('identity:crud.identifier')}</th>
+                        <th className="min-w-[18rem] px-4 py-3 font-semibold">{t('identity:crud.identifier')}</th>
                         <th className="px-4 py-3 font-semibold">{t('identity:crud.summary')}</th>
                         {displayAttributes.map((attr) => (
                           <th key={attr.name} className="px-4 py-3 font-semibold">
                             {resolveLabel(attr, i18n.language)}
                           </th>
                         ))}
-                        <th className="px-4 py-3 text-right font-semibold">{t('identity:crud.actions')}</th>
+                        <th className="w-36 px-4 py-3 text-right font-semibold">{t('identity:crud.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
@@ -947,8 +989,8 @@ export default function PreReg() {
                         const id = entityId(instance) || `${selectedType.name}-${index}`
                         return (
                           <tr key={id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
-                            <td className="px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
-                              {id || '-'}
+                            <td className="min-w-[18rem] px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
+                              <span className="block break-all">{id || '-'}</span>
                             </td>
                             <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                               {instanceSummary(instance)}
@@ -960,30 +1002,31 @@ export default function PreReg() {
                             ))}
                             <td className="px-4 py-3">
                               <div className="flex justify-end gap-2">
-                                <PrimaryOutlinedButton
-                                  label={t('identity:crud.view')}
+                                <IconActionButton
+                                  title={canReadInstances ? t('identity:crud.view') : t('identity:crud.noReadPermission')}
                                   onClick={() => openViewModal(instance)}
-                                  icon={<EyeIcon className="h-5 w-5 mr-1" />}
                                   disabled={!canReadInstances}
-                                  tooltip={!canReadInstances ? t('identity:crud.noReadPermission') : undefined}
-                                />
-                                <PrimaryOutlinedButton
-                                  label={t('identity:crud.edit')}
+                                >
+                                  <EyeIcon className="h-5 w-5" />
+                                </IconActionButton>
+                                <IconActionButton
+                                  title={canUpdateInstances ? t('identity:crud.edit') : t('identity:crud.noUpdatePermission')}
                                   onClick={() => openEditModal(instance)}
-                                  icon={<PencilIcon className="h-5 w-5 mr-1" />}
                                   disabled={!canUpdateInstances}
-                                  tooltip={!canUpdateInstances ? t('identity:crud.noUpdatePermission') : undefined}
-                                />
-                                <SecondaryOutlinedButton
-                                  label={t('identity:crud.delete')}
+                                >
+                                  <PencilIcon className="h-5 w-5" />
+                                </IconActionButton>
+                                <IconActionButton
+                                  title={canDeleteInstances ? t('identity:crud.delete') : t('identity:crud.noDeletePermission')}
                                   onClick={() => {
                                     setSelectedInstance(instance)
                                     setDeleteConfirmOpen(true)
                                   }}
-                                  icon={<TrashIcon className="h-5 w-5 mr-1" />}
                                   disabled={!canDeleteInstances}
-                                  tooltip={!canDeleteInstances ? t('identity:crud.noDeletePermission') : undefined}
-                                />
+                                  variant="danger"
+                                >
+                                  <TrashIcon className="h-5 w-5" />
+                                </IconActionButton>
                               </div>
                             </td>
                           </tr>

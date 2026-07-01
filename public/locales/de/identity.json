@@ -120,7 +120,8 @@
     "noReadPermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu lesen.",
     "noCreatePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu erstellen.",
     "noUpdatePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu bearbeiten.",
-    "noDeletePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu löschen."
+    "noDeletePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu löschen.",
+    "checkingPermissions": "Berechtigungen werden geprüft, bevor Entitätsinstanzen geladen werden..."
   },
   "status": {
     "active": "Aktiv",

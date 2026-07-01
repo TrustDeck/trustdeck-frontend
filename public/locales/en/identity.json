@@ -120,7 +120,8 @@
     "noReadPermission": "You do not have permission to read entity instances in this project.",
     "noCreatePermission": "You do not have permission to create entity instances in this project.",
     "noUpdatePermission": "You do not have permission to update entity instances in this project.",
-    "noDeletePermission": "You do not have permission to delete entity instances in this project."
+    "noDeletePermission": "You do not have permission to delete entity instances in this project.",
+    "checkingPermissions": "Checking permissions before loading entity instances..."
   },
   "status": {
     "active": "Active",

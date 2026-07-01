@@ -15,6 +15,7 @@ export type CachedEffectivePermission = {
 
 export type CachedUserAccess = {
   userId: string
+  subjectId?: string
   roles: string[]
   effectivePermissions: CachedEffectivePermission[]
   loadedAt: number
@@ -119,6 +120,7 @@ export async function getCurrentUserAccess(
 
   pending = (async () => {
     let effectivePermissions: CachedEffectivePermission[] = []
+    let subjectId: string | undefined
     const queries = currentUserQueries()
 
     for (const query of queries) {
@@ -127,6 +129,16 @@ export async function getCurrentUserAccess(
         const matchingOperator =
           operators.find(isCurrentOperator) ?? operators[0]
         const extracted = extractEffectivePermissions(matchingOperator)
+        if (matchingOperator && typeof matchingOperator === 'object') {
+          const candidate = matchingOperator as {
+            userId?: string
+            username?: string
+            id?: string
+            sub?: string
+          }
+          subjectId =
+            candidate.userId ?? candidate.id ?? candidate.sub ?? candidate.username
+        }
         if (matchingOperator || extracted.length) {
           effectivePermissions = extracted
           break
@@ -139,6 +151,7 @@ export async function getCurrentUserAccess(
 
     cache = {
       userId,
+      subjectId,
       roles: user.roles ?? [],
       effectivePermissions,
       loadedAt: Date.now()
@@ -207,21 +220,67 @@ function hasPrivilegedRole(roles: string[]) {
   })
 }
 
+const ACTION_SCOPES = [
+  'base-type',
+  'instance',
+  'project',
+  'pseudonym',
+  'domain',
+  'record',
+  'person',
+  'image',
+  'roles',
+  'type'
+]
+
+function normalizeAction(value: unknown) {
+  const raw = normalize(value)
+    .replace(/[_.]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+
+  if (!raw) return ''
+  if (raw === '*' || raw === 'all') return raw
+
+  // Preserve the backend's scope:operation shape, but also accept role names
+  // written as scope-operation, scope_operation, or with a product prefix.
+  const colon = normalize(value).replace(/[_.]/g, '-').replace(/\s+/g, '-').replace(/-+/g, '-').replace(':', ':')
+  if (colon.includes(':')) {
+    const [scope, ...rest] = colon.split(':')
+    return `${scope}:${rest.join(':').replace(/:/g, '-')}`
+  }
+
+  for (const scope of ACTION_SCOPES) {
+    const prefix = `${scope}-`
+    if (raw.startsWith(prefix)) return `${scope}:${raw.slice(prefix.length)}`
+    const embedded = `-${scope}-`
+    const embeddedIndex = raw.indexOf(embedded)
+    if (embeddedIndex >= 0) return `${scope}:${raw.slice(embeddedIndex + embedded.length)}`
+  }
+
+  return raw
+}
+
 function actionPatternAllows(
   grantedAction: unknown,
   requestedAction: string
 ) {
-  const granted = normalize(grantedAction)
-  const requested = normalize(requestedAction)
+  const granted = normalizeAction(grantedAction)
+  const requested = normalizeAction(requestedAction)
   if (!granted || !requested) return false
   if (granted === requested) return true
   if (granted === '*' || granted === 'all') return true
 
   const [requestedScope] = requested.split(':')
+  const grantedAsRoleSuffix = granted.replace(':', '-')
+  const requestedAsRoleSuffix = requested.replace(':', '-')
+
   return (
     granted === `${requestedScope}:*` ||
     granted === `${requestedScope}:all` ||
-    granted === `${requestedScope}:crud`
+    granted === `${requestedScope}:crud` ||
+    granted.endsWith(`:${requested}`) ||
+    grantedAsRoleSuffix.endsWith(`-${requestedAsRoleSuffix}`)
   )
 }
 

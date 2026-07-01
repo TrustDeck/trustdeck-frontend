@@ -22,7 +22,7 @@ import CustomFloatLabel from '../../core/components/form/CustomFloatLabel'
 import Divider from '../../core/components/common/Divider'
 import useProjectStore from '../../core/stores/ProjectStore'
 import useToastStore from '../../core/stores/ToastStore'
-import TrustDeck, { EntityTypePayload } from '../../core/services/TrustDeck'
+import TrustDeck, { EntityTypePayload, TrustDeckHttpError } from '../../core/services/TrustDeck'
 import DynamicEntity from '../search/components/DynamicEntity'
 import { pickSchemaData } from '../search/utils/schemaData'
 import type { Attribute } from '../../core/stores/ProjectStore'
@@ -123,6 +123,50 @@ function statusClasses(type: EntityTypePayload) {
     return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300'
   }
   return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'
+}
+
+function permissionActionValue(permission: Record<string, any>) {
+  return String(
+    permission.action ??
+      permission.operation ??
+      permission.permission ??
+      permission.name ??
+      ''
+  ).toLowerCase()
+}
+
+function hasInstancePermissionEvidence(access: CachedUserAccess | null | undefined) {
+  if (!access) return false
+
+  const hasRelevantRole = (access.roles ?? []).some((role) => {
+    const normalized = String(role).toLowerCase()
+    return (
+      normalized.includes('instance') ||
+      normalized.includes('trustdeck-admin') ||
+      normalized.includes('project-admin') ||
+      normalized === 'admin' ||
+      normalized === 'administrator' ||
+      normalized === 'realm-admin' ||
+      normalized === 'backend-admin'
+    )
+  })
+
+  if (hasRelevantRole) return true
+
+  return (access.effectivePermissions ?? []).some((permission) => {
+    const action = permissionActionValue(permission as Record<string, any>)
+    const resourceType = String(
+      permission.resourceType ?? permission.resource ?? permission.scope ?? permission.type ?? ''
+    ).toLowerCase()
+    return (
+      action.includes('instance') ||
+      action === '*' ||
+      action === 'all' ||
+      action.includes('crud') ||
+      resourceType === 'project' ||
+      resourceType === 'global'
+    )
+  })
 }
 
 function resolveLabel(attr: Attribute, language: string) {
@@ -390,7 +434,9 @@ export default function PreReg() {
   const [query, setQuery] = useState('')
   const [resultLimit, setResultLimit] = useState(10)
   const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [directProjectPermissions, setDirectProjectPermissions] = useState<Record<string, any>[]>([])
   const [permissionsReady, setPermissionsReady] = useState(false)
+  const [backendDeniedActions, setBackendDeniedActions] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('view')
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -444,31 +490,109 @@ export default function PreReg() {
   }, [auth.user?.access_token])
 
   const selectedProjectAbbreviation = selectedProject?.abbreviation
-  const canSearchInstances = canUseProjectAction(
-    permissionAccess,
+
+  useEffect(() => {
+    let active = true
+    setDirectProjectPermissions([])
+
+    if (!permissionsReady || !selectedProjectAbbreviation || !permissionAccess) {
+      return () => {
+        active = false
+      }
+    }
+
+    const userId = permissionAccess.subjectId ?? permissionAccess.userId
+    if (!userId) {
+      return () => {
+        active = false
+      }
+    }
+
+    TrustDeck.instance()
+      .getProjectPermissions(selectedProjectAbbreviation, userId)
+      .then((permissions) => {
+        if (active) setDirectProjectPermissions((permissions ?? []) as Record<string, any>[])
+      })
+      .catch((error) => {
+        // This endpoint can require permission-management rights. The identity page
+        // must not become unusable only because the optional frontend permission
+        // lookup is unavailable; the backend still enforces every CRUD request.
+        console.warn('Could not load direct project permissions for identity management', error)
+        if (active) setDirectProjectPermissions([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [permissionAccess, permissionsReady, selectedProjectAbbreviation])
+
+  useEffect(() => {
+    setBackendDeniedActions([])
+  }, [selectedProjectAbbreviation, auth.user?.access_token])
+
+  const effectivePermissionAccess = useMemo<CachedUserAccess | null>(() => {
+    if (!permissionAccess) return null
+    return {
+      ...permissionAccess,
+      effectivePermissions: [
+        ...(permissionAccess.effectivePermissions ?? []),
+        ...directProjectPermissions
+      ]
+    }
+  }, [directProjectPermissions, permissionAccess])
+
+  const markBackendDenied = useCallback((action: string) => {
+    setBackendDeniedActions((current) =>
+      current.includes(action) ? current : [...current, action]
+    )
+  }, [])
+
+  const isBackendDenied = useCallback(
+    (action: string) => backendDeniedActions.includes(action),
+    [backendDeniedActions]
+  )
+
+  const permissionEvidenceAvailable = hasInstancePermissionEvidence(effectivePermissionAccess)
+  const canSearchByPermission = canUseProjectAction(
+    effectivePermissionAccess,
     selectedProjectAbbreviation,
     'instance:search'
   )
-  const canCreateInstances = canUseProjectAction(
-    permissionAccess,
+  const canSearchInstances = permissionsReady &&
+    !isBackendDenied('instance:search') &&
+    (canSearchByPermission || !permissionEvidenceAvailable)
+  const canCreateByPermission = canUseProjectAction(
+    effectivePermissionAccess,
     selectedProjectAbbreviation,
     'instance:create'
   )
-  const canReadInstances = canUseProjectAction(
-    permissionAccess,
+  const canCreateInstances = permissionsReady &&
+    !isBackendDenied('instance:create') &&
+    (canCreateByPermission || !permissionEvidenceAvailable)
+  const canReadByPermission = canUseProjectAction(
+    effectivePermissionAccess,
     selectedProjectAbbreviation,
     'instance:read'
-  ) || canSearchInstances
-  const canUpdateInstances = canUseProjectAction(
-    permissionAccess,
+  )
+  const canReadInstances = permissionsReady &&
+    !isBackendDenied('instance:read') &&
+    (canReadByPermission || canSearchInstances || !permissionEvidenceAvailable)
+  const canUpdateByPermission = canUseProjectAction(
+    effectivePermissionAccess,
     selectedProjectAbbreviation,
     'instance:update'
   )
-  const canDeleteInstances = canUseProjectAction(
-    permissionAccess,
+  const canUpdateInstances = permissionsReady &&
+    !isBackendDenied('instance:update') &&
+    (canUpdateByPermission || !permissionEvidenceAvailable)
+  const canDeleteByPermission = canUseProjectAction(
+    effectivePermissionAccess,
     selectedProjectAbbreviation,
     'instance:delete'
   )
+  const canDeleteInstances = permissionsReady &&
+    !isBackendDenied('instance:delete') &&
+    (canDeleteByPermission || !permissionEvidenceAvailable)
   const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
 
   const visibleInstances = useMemo(
@@ -553,6 +677,18 @@ export default function PreReg() {
       )
       setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
     } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 403) {
+        markBackendDenied('instance:search')
+        setInstances([])
+        showToast({
+          severity: 'warn',
+          summary: t('identity:crud.search'),
+          detail: t('identity:crud.noSearchPermission'),
+          life: 5000
+        })
+        return
+      }
+
       const message = error instanceof Error ? error.message : String(error)
       if (message.includes('404')) {
         setInstances([])
@@ -568,7 +704,7 @@ export default function PreReg() {
     } finally {
       setLoadingInstances(false)
     }
-  }, [canSearchInstances, normalizeInstance, permissionsReady, query, selectedTypeName, showToast, t])
+  }, [canSearchInstances, markBackendDenied, normalizeInstance, permissionsReady, query, selectedTypeName, showToast, t])
 
   useEffect(() => {
     fetchTypes()
@@ -734,6 +870,19 @@ export default function PreReg() {
         })
       }
     } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 403) {
+        markBackendDenied(modalMode === 'create' ? 'instance:create' : 'instance:update')
+        showToast({
+          severity: 'warn',
+          summary: t('identity:crud.save'),
+          detail: modalMode === 'create'
+            ? t('identity:crud.noCreatePermission')
+            : t('identity:crud.noUpdatePermission'),
+          life: 5000
+        })
+        return
+      }
+
       console.error('Failed to save entity instance', error)
       showToast({
         severity: 'error',
@@ -774,6 +923,17 @@ export default function PreReg() {
         life: 3000
       })
     } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 403) {
+        markBackendDenied('instance:delete')
+        showToast({
+          severity: 'warn',
+          summary: t('identity:crud.delete'),
+          detail: t('identity:crud.noDeletePermission'),
+          life: 5000
+        })
+        return
+      }
+
       console.error('Failed to delete entity instance', error)
       showToast({
         severity: 'error',

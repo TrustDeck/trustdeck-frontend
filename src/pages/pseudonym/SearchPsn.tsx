@@ -23,7 +23,8 @@ import { ArrowUpIcon } from '@heroicons/react/24/outline'
 
 export default function SearchPsn() {
   const { results, clearResults } = useSearchResultsStore()
-  const { stepperRef, setStepperRef, previousStep, setCurrentStep } = useStepperControlStore()
+  const { stepperRef, setStepperRef, previousStep, setCurrentStep } =
+    useStepperControlStore()
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
   const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
@@ -50,19 +51,16 @@ export default function SearchPsn() {
     const idType = selectedEntityId.identifierType || 'standalone-pseudonym'
     const payload = {
       identifierItem: {
-        "identifier": identifier.toString(),
-        "idType": idType
+        identifier: identifier.toString(),
+        idType: idType
       }
     }
     try {
-      // run all pseudonym creations in parallel
-      console.log(payload)
       const responses = await Promise.all(
         selectedGroupNames.map((groupName) =>
           PseudonymService.createPseudonym(payload, groupName)
         )
       )
-      console.log(responses)
 
       // Each response should be an array; extract pseudonyms
       const pseudonyms = responses
@@ -70,15 +68,18 @@ export default function SearchPsn() {
         .map((res: any) => res.psn)
         .filter(Boolean)
 
-      console.log('Created pseudonyms:', pseudonyms)
-
       // Fetch full pseudonym details in the domain where it was created, set store, then navigate
       if (pseudonyms.length > 0 && selectedGroupNames.length > 0) {
         const firstPsn = pseudonyms[0]
         const firstGroup = selectedGroupNames[0]
-        const pseudonymData = await SearchPseudonymService.searchPseudonym(firstPsn, firstGroup)
+        const pseudonymData = await SearchPseudonymService.searchPseudonym(
+          firstPsn,
+          firstGroup
+        )
         if (pseudonymData) setPseudonymValue(pseudonymData)
-        navigate(`/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`)
+        navigate(
+          `/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`
+        )
       } else if (pseudonyms.length > 0) {
         navigate(`/search/pseudonym/${pseudonyms[0]}`)
       }
@@ -124,15 +125,15 @@ export default function SearchPsn() {
 
           {/* Step 2 - Results */}
           <StepperPanel header={t('pseudonyms:headers.steptwo')}>
-              {results.map((result) => (
-                <div
-                  key={result.trustdeckID}
-                  className="my-4 flex justify-center"
-                >
-                  <SearchResult pseudonymization result={result} />
-                </div>
-              ))}
-              <PrimaryOutlinedButton
+            {results.map((result) => (
+              <div
+                key={result.trustdeckID}
+                className="my-4 flex justify-center"
+              >
+                <SearchResult pseudonymization result={result} />
+              </div>
+            ))}
+            <PrimaryOutlinedButton
               label={
                 <span className="flex items-center gap-2">
                   {t('identity:buttons.back')}
@@ -145,10 +146,36 @@ export default function SearchPsn() {
 
           {/* Step 3 - Group selection */}
           <StepperPanel header={t('pseudonyms:headers.stepthree')}>
-            {selectedEntityId.identifierType === 'standalone-pseudonym' && (
+            {selectedEntityId.identifierType === 'standalone-pseudonym' ? (
               <p className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-color-blue dark:bg-blue-950/40 dark:text-blue-100">
                 {t('pseudonyms:standalone.selected')}
               </p>
+            ) : (
+              <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-color-blue dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                <div className="font-semibold">
+                  {t('pseudonyms:selectedEntity.title')}
+                </div>
+                <div className="mt-1 break-all">
+                  {selectedEntityId.displayName ||
+                    selectedEntityId.identifier ||
+                    '-'}
+                </div>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <span>
+                    {t('pseudonyms:selectedEntity.identifierType')}:{' '}
+                    <strong>
+                      {selectedEntityId.identifierType || 'TrustDeckID'}
+                    </strong>
+                  </span>
+                  <span className="break-all">
+                    {t('pseudonyms:selectedEntity.identifier')}:{' '}
+                    <strong>{selectedEntityId.identifier || '-'}</strong>
+                  </span>
+                </div>
+                <p className="mt-2 text-xs">
+                  {t('pseudonyms:selectedEntity.trustDeckIdHint')}
+                </p>
+              </div>
             )}
             <CustomTreeSelect
               id="group"
@@ -159,15 +186,15 @@ export default function SearchPsn() {
               selectionMode="single"
             />
             <div className="flex justify-between mt-6">
-            <PrimaryOutlinedButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.back')}
-                  <ArrowUpIcon className="h-5 w-5" />
-                </span>
-              }
-              onClick={() => previousStep()}
-            />
+              <PrimaryOutlinedButton
+                label={
+                  <span className="flex items-center gap-2">
+                    {t('identity:buttons.back')}
+                    <ArrowUpIcon className="h-5 w-5" />
+                  </span>
+                }
+                onClick={() => previousStep()}
+              />
               <SecondaryButton
                 label={t('pseudonyms:buttons.generate')}
                 onClick={() => handleClick()}

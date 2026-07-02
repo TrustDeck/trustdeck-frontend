@@ -15,5 +15,11 @@
   "standalone": {
     "description": "You can also generate a pseudonym that is not linked to an existing entity. TrustDeck will create an internal standalone identifier for this pseudonym.",
     "selected": "Standalone pseudonym mode is active. Select the group in which the pseudonym should be saved."
+  },
+  "selectedEntity": {
+    "title": "Selected entity identifier",
+    "identifierType": "Identifier type",
+    "identifier": "Identifier",
+    "trustDeckIdHint": "Entity-based pseudonyms use the entity TrustDeckID with identifier type TrustDeckID, so the pseudonym can be listed as a link of the entity instance later."
   }
 }

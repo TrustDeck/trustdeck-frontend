@@ -16,5 +16,11 @@
   "standalone": {
     "description": "Sie können auch ein Pseudonym erzeugen, das nicht mit einer bestehenden Entität verknüpft ist. TrustDeck erstellt dafür eine interne eigenständige Kennung.",
     "selected": "Der Modus für ein eigenständiges Pseudonym ist aktiv. Wählen Sie die Gruppe aus, in der das Pseudonym gespeichert werden soll."
+  },
+  "selectedEntity": {
+    "title": "Ausgewählte Entitätskennung",
+    "identifierType": "Kennungstyp",
+    "identifier": "Kennung",
+    "trustDeckIdHint": "Entitätsbezogene Pseudonyme verwenden die TrustDeckID der Entität mit dem Kennungstyp TrustDeckID, damit das Pseudonym später als Verknüpfung der Entitätsinstanz angezeigt werden kann."
   }
 }

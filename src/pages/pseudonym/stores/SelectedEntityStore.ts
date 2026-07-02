@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 
-
 type EntityId = {
   identifier: string
   identifierType: string
+  entityTypeName?: string
+  displayName?: string
 }
 
 type SelectedEntityStore = {
@@ -13,7 +14,7 @@ type SelectedEntityStore = {
 
 const useSelectedEntityStore = create<SelectedEntityStore>((set) => ({
   selectedEntityId: { identifier: '', identifierType: '' },
-  setSelectedEntityId: (entity) => set({ selectedEntityId: entity }),
+  setSelectedEntityId: (entity) => set({ selectedEntityId: entity })
 }))
 
 export default useSelectedEntityStore

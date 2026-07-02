@@ -492,38 +492,12 @@ export default function PreReg() {
   const selectedProjectAbbreviation = selectedProject?.abbreviation
 
   useEffect(() => {
-    let active = true
+    // Do not call the permission-management endpoint from Identity Management.
+    // That endpoint is not available to all users and can return 404/403 even
+    // when the user is allowed to work with entity instances. Token roles and
+    // cached effective permissions are used for optimistic UI hints; the backend
+    // remains the source of truth for every instance CRUD request.
     setDirectProjectPermissions([])
-
-    if (!permissionsReady || !selectedProjectAbbreviation || !permissionAccess) {
-      return () => {
-        active = false
-      }
-    }
-
-    const userId = permissionAccess.subjectId ?? permissionAccess.userId
-    if (!userId) {
-      return () => {
-        active = false
-      }
-    }
-
-    TrustDeck.instance()
-      .getProjectPermissions(selectedProjectAbbreviation, userId)
-      .then((permissions) => {
-        if (active) setDirectProjectPermissions((permissions ?? []) as Record<string, any>[])
-      })
-      .catch((error) => {
-        // This endpoint can require permission-management rights. The identity page
-        // must not become unusable only because the optional frontend permission
-        // lookup is unavailable; the backend still enforces every CRUD request.
-        console.warn('Could not load direct project permissions for identity management', error)
-        if (active) setDirectProjectPermissions([])
-      })
-
-    return () => {
-      active = false
-    }
   }, [permissionAccess, permissionsReady, selectedProjectAbbreviation])
 
   useEffect(() => {
@@ -946,13 +920,6 @@ export default function PreReg() {
     }
   }
 
-  const instanceSummary = (instance: EntityInstance) => {
-    const data = instance.data ?? {}
-    const firstDisplayAttribute = displayAttributes.find((attr) => attr.name && valueAtPath(data, attr.name) !== undefined)
-    const value = firstDisplayAttribute?.name ? valueAtPath(data, firstDisplayAttribute.name) : undefined
-    return formatValue(value === undefined ? entityId(instance) : value)
-  }
-
   const modalTitle =
     modalMode === 'create'
       ? t('identity:crud.createEntity', { type: selectedTypeName })
@@ -1135,7 +1102,6 @@ export default function PreReg() {
                     <thead className="bg-gray-50 dark:bg-slate-900">
                       <tr className="text-gray-600 dark:text-gray-300">
                         <th className="min-w-[18rem] px-4 py-3 font-semibold">{t('identity:crud.identifier')}</th>
-                        <th className="px-4 py-3 font-semibold">{t('identity:crud.summary')}</th>
                         {displayAttributes.map((attr) => (
                           <th key={attr.name} className="px-4 py-3 font-semibold">
                             {resolveLabel(attr, i18n.language)}
@@ -1151,9 +1117,6 @@ export default function PreReg() {
                           <tr key={id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                             <td className="min-w-[18rem] px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
                               <span className="block break-all">{id || '-'}</span>
-                            </td>
-                            <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                              {instanceSummary(instance)}
                             </td>
                             {displayAttributes.map((attr) => (
                               <td key={`${id}-${attr.name}`} className="px-4 py-3 text-gray-700 dark:text-gray-300">

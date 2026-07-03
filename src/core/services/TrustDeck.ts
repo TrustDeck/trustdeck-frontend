@@ -199,9 +199,9 @@ class TrustDeck {
     this.requireAccessToken()
     const url = this.buildUrl(path, params)
     const headers: HeadersInit = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${this.token}`
     }
-    if (this.token) headers.Authorization = `Bearer ${this.token}`
 
     const res = await fetch(url.toString(), {
       method,
@@ -227,8 +227,7 @@ class TrustDeck {
     formData: FormData
   ): Promise<T> {
     this.requireAccessToken()
-    const headers: HeadersInit = {}
-    if (this.token) headers.Authorization = `Bearer ${this.token}`
+    const headers: HeadersInit = { Authorization: `Bearer ${this.token}` }
 
     const res = await fetch(this.buildUrl(path).toString(), {
       method,
@@ -246,6 +245,12 @@ class TrustDeck {
     }
 
     return this.parseResponse<T>(res)
+  }
+
+  public async uploadFiles(files: File[]) {
+    const formData = new FormData()
+    files.forEach((file) => formData.append('files[]', file))
+    return this.multipartRequest<unknown>('POST', '/upload', formData)
   }
 
   // API health and maintenance
@@ -347,8 +352,7 @@ class TrustDeck {
   public async getImage(projectAbbreviation?: string): Promise<Blob> {
     this.requireAccessToken()
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    const headers: HeadersInit = {}
-    if (this.token) headers.Authorization = `Bearer ${this.token}`
+    const headers: HeadersInit = { Authorization: `Bearer ${this.token}` }
 
     const res = await fetch(
       this.buildUrl(

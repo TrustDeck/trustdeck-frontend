@@ -47,7 +47,10 @@
   },
   "bulk": {
     "dragAndDrop": "CSV Datei hier hinziehen und ablegen",
-    "selectFile": "Dateien durchsuchen"
+    "selectFile": "Dateien durchsuchen",
+    "upload": "Upload",
+    "uploadComplete": "Upload abgeschlossen.",
+    "uploadFailed": "Upload fehlgeschlagen."
   },
   "duplicate": {
     "header": "Mögliche Dublette gefunden",
@@ -121,7 +124,9 @@
     "noCreatePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu erstellen.",
     "noUpdatePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu bearbeiten.",
     "noDeletePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu löschen.",
-    "checkingPermissions": "Berechtigungen werden geprüft, bevor Entitätsinstanzen geladen werden..."
+    "checkingPermissions": "Berechtigungen werden geprüft, bevor Entitätsinstanzen geladen werden...",
+    "addValue": "Wert hinzufügen",
+    "removeValue": "Wert entfernen"
   },
   "status": {
     "active": "Aktiv",

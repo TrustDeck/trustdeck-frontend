@@ -16,7 +16,6 @@ export default function DuplicateResults() {
   const { duplicates, newEntry } = useDuplicatesStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  console.log(newEntry)
   // const {
   //   firstname,
   //   lastname,

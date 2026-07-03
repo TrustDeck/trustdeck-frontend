@@ -47,7 +47,10 @@
   },
   "bulk": {
     "dragAndDrop": "Drag and drop the CSV file here",
-    "selectFile": "Select file"
+    "selectFile": "Select file",
+    "upload": "Upload",
+    "uploadComplete": "Upload complete.",
+    "uploadFailed": "Upload failed."
   },
   "duplicate": {
     "header": "Possible Duplicate Detected",
@@ -121,7 +124,9 @@
     "noCreatePermission": "You do not have permission to create entity instances in this project.",
     "noUpdatePermission": "You do not have permission to update entity instances in this project.",
     "noDeletePermission": "You do not have permission to delete entity instances in this project.",
-    "checkingPermissions": "Checking permissions before loading entity instances..."
+    "checkingPermissions": "Checking permissions before loading entity instances...",
+    "addValue": "Add value",
+    "removeValue": "Remove value"
   },
   "status": {
     "active": "Active",

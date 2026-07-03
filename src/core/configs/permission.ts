@@ -209,8 +209,7 @@ export class PermissionsService {
     let areaConfig: Field
     try {
       areaConfig = this.getFieldByArea(expectedArea)
-    } catch (error) {
-      console.log(error)
+    } catch {
       // Area not found, return default no-access
       return {
         name: expectedArea,

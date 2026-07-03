@@ -33,7 +33,6 @@ const GroupMask: React.FC<GroupMaskProps> = ({ psn }) => {
 
     const result = await GroupService.searchGroup(group)
     setResults(result)
-    console.log(result)
     setLoading(false)
   }
 

@@ -131,7 +131,6 @@ const EntityDetails: React.FC = () => {
           ? pickSchemaData(schemaAttributes, formData)
           : formData
       const payload = { data: dataToSave }
-      console.log('Entity details save payload:', payload)
       await TrustDeck.instance().putEntity(entityType, payload, identifier)
       setResults(
         results.map((entry) =>

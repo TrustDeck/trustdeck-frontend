@@ -162,9 +162,7 @@ export default function DynamicForm({ entityName, variant = 'registration' }: Pr
     }
     try {
       setRegistering(true)
-      console.log('[DynamicForm] register payload', payload)
-      const result = await TrustDeck.instance().postEntity(entityName, payload)
-      console.log('[DynamicForm] register success', result)
+      await TrustDeck.instance().postEntity(entityName, payload)
       showToast({
         severity: 'success',
         summary: t('identity:buttons.register'),

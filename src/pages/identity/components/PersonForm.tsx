@@ -88,7 +88,6 @@ export default function PersonForm() {
     }
 
     try {
-      console.log(payload)
       const recordLinkage = await PersonRecordLinkage.recordLinkage(payload)
 
       if (recordLinkage.length > 0) {
@@ -166,7 +165,6 @@ export default function PersonForm() {
   const relationshipOptions = useRelationshipOptions()
 
   // function handleSearchPatient() {
-  //   console.log('search for patient in KIS happens here')
   // }
 
   function isStepValid(step: number): boolean {

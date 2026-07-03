@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Panel from '../../../core/components/common/Panel'
 import Divider from '../../../core/components/common/Divider'
 import LinksTable from './LinksTable'
@@ -79,13 +80,21 @@ export default function DynamicEntity({
       : attr.label_en || attr.labelEn || attr.label_de || attr.labelDe || attr.name
   }
 
-  const renderLeaf = (
+  const isEmptyValue = (value: unknown) =>
+    value === undefined || value === null || String(value).trim() === ''
+
+  const toRepeatableValues = (value: unknown): any[] => {
+    if (Array.isArray(value)) return value.length > 0 ? value : ['']
+    if (isEmptyValue(value)) return ['']
+    return [value]
+  }
+
+  const renderScalarLeaf = (
     attr: any,
-    context: Record<string, any>,
+    rawValue: any,
     key: string,
-    path: Array<string | number>
+    setValue: (value: any) => void
   ) => {
-    const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
     const displayLabel = resolveLabel(attr)
     const enumValues = attr.values ?? attr.enum ?? []
 
@@ -96,7 +105,7 @@ export default function DynamicEntity({
           id={key}
           value={rawValue ?? ''}
           options={enumValues.map((option: string) => ({ label: option, value: option }))}
-          onChange={(e) => onFieldChange(path, e.value)}
+          onChange={(e) => setValue(e.value)}
           placeholder={displayLabel}
           required={attr.required}
         />
@@ -111,10 +120,10 @@ export default function DynamicEntity({
           value={parseDateValue(rawValue)}
           onChange={(e) => {
             if (!e.value) {
-              onFieldChange(path, '')
+              setValue('')
               return
             }
-            onFieldChange(path, attr.type === 'date' ? formatDateOnly(e.value) : e.value.toISOString())
+            setValue(attr.type === 'date' ? formatDateOnly(e.value) : e.value.toISOString())
           }}
           placeholder={displayLabel}
           required={attr.required}
@@ -129,7 +138,7 @@ export default function DynamicEntity({
           key={key}
           id={key}
           value={typeof rawValue === 'number' ? rawValue : rawValue !== '' && rawValue !== undefined && rawValue !== null ? Number(rawValue) : null}
-          onChange={(e) => onFieldChange(path, e.value ?? '')}
+          onChange={(e) => setValue(e.value ?? '')}
           placeholder={attr.required ? `${displayLabel} *` : displayLabel}
           min={attr.minimum}
           max={attr.maximum}
@@ -156,7 +165,7 @@ export default function DynamicEntity({
           <input
             type="checkbox"
             checked={Boolean(rawValue)}
-            onChange={(e) => onFieldChange(path, e.target.checked)}
+            onChange={(e) => setValue(e.target.checked)}
             className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
           />
           <span>{attr.required ? `${displayLabel} *` : displayLabel}</span>
@@ -172,9 +181,71 @@ export default function DynamicEntity({
         value={formatValue(rawValue)}
         placeholder={displayLabel}
         required={attr.required}
-        onChange={attr.name ? (e) => onFieldChange(path, e.target.value) : undefined}
+        onChange={attr.name ? (e) => setValue(e.target.value) : undefined}
       />
     )
+  }
+
+  const renderLeaf = (
+    attr: any,
+    context: Record<string, any>,
+    key: string,
+    path: Array<string | number>
+  ) => {
+    const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
+
+    if (editMode && attr.name && attr.repeatable) {
+      const values = toRepeatableValues(rawValue)
+      const setRepeatableValue = (index: number, value: any) => {
+        const nextValues = [...values]
+        nextValues[index] = value
+        onFieldChange(path, nextValues)
+      }
+      const removeRepeatableValue = (index: number) => {
+        const nextValues = values.filter((_, currentIndex) => currentIndex !== index)
+        onFieldChange(path, nextValues.length > 0 ? nextValues : [''])
+      }
+
+      return (
+        <div key={key} className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-slate-700">
+          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            {resolveLabel(attr)}
+          </div>
+          {values.map((value, index) => (
+            <div key={`${key}-value-${index}`} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                {renderScalarLeaf(
+                  { ...attr, repeatable: false, required: attr.required && index === 0 },
+                  value,
+                  `${key}-input-${index}`,
+                  (nextValue) => setRepeatableValue(index, nextValue)
+                )}
+              </div>
+              <button
+                type="button"
+                title={t('identity:crud.removeValue')}
+                aria-label={t('identity:crud.removeValue')}
+                onClick={() => removeRepeatableValue(index)}
+                disabled={values.length === 1 && attr.required}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-coral text-color-coral transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onFieldChange(path, [...values, ''])}
+            className="inline-flex items-center gap-2 rounded-lg border border-color-blue px-3 py-2 text-sm font-medium text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t('identity:crud.addValue')}
+          </button>
+        </div>
+      )
+    }
+
+    return renderScalarLeaf(attr, rawValue, key, (value) => onFieldChange(path, value))
   }
 
   const renderAttributes = (

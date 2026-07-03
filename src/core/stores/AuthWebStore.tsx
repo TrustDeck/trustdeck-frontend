@@ -75,8 +75,7 @@ export class AuthWebStorage implements Storage {
       // Update cached _data even when no token found
       this._data = currentData
       return null
-    } catch (error) {
-      console.log(error)
+    } catch {
       return null
     }
   }
@@ -91,8 +90,7 @@ export class AuthWebStorage implements Storage {
         useUserStore.getState().setFromAccessToken(accessToken)
         TrustDeck.instance().setToken(accessToken)
       }
-    } catch (error) {
-      console.log(error)
+    } catch {
       useUserStore.getState().clear()
     }
   }

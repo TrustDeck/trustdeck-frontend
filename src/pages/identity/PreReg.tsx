@@ -282,7 +282,11 @@ function buildInitialEntityData(
       return
     }
 
-    if (attr.name) data[attr.name] = initialValueForAttribute(attr)
+    if (attr.name) {
+      data[attr.name] = isRepeatableLeaf(attr)
+        ? [initialValueForAttribute(attr)]
+        : initialValueForAttribute(attr)
+    }
   })
 
   return data
@@ -299,14 +303,25 @@ function normalizeValueForType(attr: Attribute, value: unknown) {
   return value
 }
 
-function validateLeafAttribute(
+function asRepeatableValues(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value
+  if (isEmptyValue(value)) return []
+  return [value]
+}
+
+function isRepeatableLeaf(attr: Attribute) {
+  return Boolean(attr.repeatable && !Array.isArray(attr.attributes))
+}
+
+function validateSingleLeafValue(
   attr: Attribute,
   value: unknown,
   label: string,
-  t: ReturnType<typeof useTranslation>['t']
+  t: ReturnType<typeof useTranslation>['t'],
+  required = Boolean(attr.required)
 ) {
   const errors: string[] = []
-  if (attr.required && isEmptyValue(value)) {
+  if (required && isEmptyValue(value)) {
     errors.push(t('identity:crud.requiredFieldError', { field: label }))
     return errors
   }
@@ -384,6 +399,32 @@ function validateLeafAttribute(
   return errors
 }
 
+function validateLeafAttribute(
+  attr: Attribute,
+  value: unknown,
+  label: string,
+  t: ReturnType<typeof useTranslation>['t']
+) {
+  if (!isRepeatableLeaf(attr)) {
+    return validateSingleLeafValue(attr, value, label, t)
+  }
+
+  const values = asRepeatableValues(value).filter((entry) => !isEmptyValue(entry))
+  if (attr.required && values.length === 0) {
+    return [t('identity:crud.requiredFieldError', { field: label })]
+  }
+
+  return values.flatMap((entry, index) =>
+    validateSingleLeafValue(
+      { ...attr, repeatable: false },
+      entry,
+      `${label} ${index + 1}`,
+      t,
+      false
+    )
+  )
+}
+
 function validateEntityData(
   attributes: Attribute[] = [],
   data: Record<string, any>,
@@ -447,7 +488,14 @@ function coerceEntityDataTypes(
       }
 
       if (!attr.name || !(attr.name in context)) return
-      context[attr.name] = normalizeValueForType(attr, context[attr.name])
+      const value = context[attr.name]
+      if (isRepeatableLeaf(attr)) {
+        context[attr.name] = asRepeatableValues(value)
+          .filter((entry) => !isEmptyValue(entry))
+          .map((entry) => normalizeValueForType({ ...attr, repeatable: false }, entry))
+        return
+      }
+      context[attr.name] = normalizeValueForType(attr, value)
     })
   }
 
@@ -519,6 +567,12 @@ function pruneEmptyOptionalEntityData(
       )
         return
       const value = context[attr.name]
+      if (isRepeatableLeaf(attr)) {
+        const values = asRepeatableValues(value).filter((entry) => !isEmptyValue(entry))
+        if (values.length === 0 && !shouldKeepOptionalEmpty(attr)) return
+        result[attr.name] = values
+        return
+      }
       if (isEmptyValue(value) && !shouldKeepOptionalEmpty(attr)) return
       result[attr.name] = value
     })

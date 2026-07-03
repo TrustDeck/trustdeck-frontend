@@ -67,15 +67,12 @@ const LoggedOut: React.FC = () => {
           Object.keys(authData).length > 0 &&
           isTabActive
         ) {
-          console.log('call logout')
           auth
             .signoutSilent()
             .then(async () => {
-              console.log('signoutSilent')
               await logout_helper()
             })
-            .catch(async (error) => {
-              console.log('Error during signoutSilent process', error)
+            .catch(async () => {
               await logout_helper()
             })
         } else {

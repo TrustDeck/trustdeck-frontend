@@ -64,7 +64,6 @@ export default function Duplicate() {
       return
     }
     const createdPerson = await PersonService.create(newEntry)
-    console.log('Person created:', createdPerson)
     navigate(`/person/${createdPerson.identifiers?.[0].identifier}`)
   }
 

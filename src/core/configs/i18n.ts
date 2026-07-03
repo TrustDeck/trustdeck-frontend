@@ -33,7 +33,6 @@ i18n
 
 // Function to update the language
 const updateLanguage = (language: string) => {
-  //console.log('Changing language to:', language);
   i18n.changeLanguage(language)
 }
 

@@ -46,8 +46,7 @@ export default function BioprobeForm() {
     }
 
     try {
-      const createdSample = await BioSampleService.create(payload)
-      console.log(createdSample)
+      await BioSampleService.create(payload)
     } catch (error) {
       console.error('Failed to register Biosample' + error)
     }

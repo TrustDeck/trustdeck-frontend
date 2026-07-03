@@ -384,10 +384,10 @@ class TrustDeck {
   // Domains/groups
   public async getDomain(name?: string) {
     const domainName = name ?? this.getSelectedProjectName()
-    const response = await this.request<unknown>('GET', '/domains', undefined, {
-      name: domainName
-    })
-    return this.asArray<Domain>(response)
+    return this.request<Domain>(
+      'GET',
+      `/domains/${encodeURIComponent(domainName)}`
+    )
   }
 
   public async getDomainAttribute(domainName: string, attribute: string) {
@@ -399,13 +399,13 @@ class TrustDeck {
 
   public async getDomainsHierarchy() {
     const response = await this.request<unknown>('GET', '/domains/hierarchy')
-    return this.asArray<Domain>(response)
+    return this.asArray<unknown>(response)
   }
 
   public async searchReadableDomains(query = '*') {
     const response = await this.request<unknown>(
       'GET',
-      '/domains/search',
+      '/domains',
       undefined,
       { query }
     )
@@ -1030,43 +1030,16 @@ class TrustDeck {
   }
 
   public async getFlatRootDomainTree(rootDomainName: string) {
-    const domainHierarchy = await this.getDomainsHierarchy()
-    const root = domainHierarchy.find((d) => d.name === rootDomainName)
+    const domains = await this.searchReadableDomains('*')
+    const root = domains.find((d) => d.name === rootDomainName)
     if (!root) return []
 
     function collect(node: Domain): Domain[] {
-      const children = domainHierarchy.filter(
-        (d) => d.superDomainName === node.name
-      )
+      const children = domains.filter((d) => d.superDomainName === node.name)
       return [node, ...children.flatMap(collect)]
     }
 
-    const allDomainsUnderRoot = collect(root)
-    const domainMap = new Map<string | undefined, Domain[]>()
-    allDomainsUnderRoot.forEach((domain) => {
-      const key = domain.superDomainName
-      if (!domainMap.has(key)) domainMap.set(key, [])
-      domainMap.get(key)!.push(domain)
-    })
-
-    const result: Domain[] = []
-    const queue: Domain[] = []
-    const rootDomain = allDomainsUnderRoot.find(
-      (d) =>
-        !d.superDomainName ||
-        d.superDomainName === null ||
-        d.name === rootDomainName
-    )
-    if (rootDomain) queue.push(rootDomain)
-
-    while (queue.length > 0) {
-      const current = queue.shift()
-      if (!current) continue
-      result.push(current)
-      const children = domainMap.get(current.name) || []
-      queue.push(...children)
-    }
-    return result
+    return collect(root)
   }
 }
 

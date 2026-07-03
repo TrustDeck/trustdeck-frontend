@@ -7,7 +7,11 @@ import {
   AutoCompleteChangeEvent,
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
-import { ChevronDownIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
 import PrimaryButton from '@component/form/buttons/PrimaryButton.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
 import TrustDeck from '../../core/services/TrustDeck'
@@ -24,8 +28,6 @@ import type {
   DomainPermissionUpdate
 } from '../project/types'
 import {
-  buildAllPermissionRows,
-  filterEffectivePermissions,
   groupPermissionsByScope,
   permissionKey
 } from '../project/utils/permissionRows'
@@ -34,12 +36,18 @@ import { collectDomainNames } from '../project/utils/domainTree'
 type PersonSuggestion = Operator & {
   name: string
   effectivePermissions?: EffectivePermission[]
+  roles?: string[]
+  realmRoles?: string[]
+  clientRoles?: string[]
+  groups?: string[]
 }
 
 type PermissionApiState = 'idle' | 'loading' | 'ready' | 'forbidden' | 'error'
 
 function uniquePermissions(permissions: EffectivePermission[]) {
-  return Array.from(new Map(permissions.map((p) => [permissionKey(p), p])).values())
+  return Array.from(
+    new Map(permissions.map((p) => [permissionKey(p), p])).values()
+  )
 }
 
 function permissionErrorState(error: unknown): PermissionApiState {
@@ -47,6 +55,28 @@ function permissionErrorState(error: unknown): PermissionApiState {
   return message.includes('403') ? 'forbidden' : 'error'
 }
 
+function rolesForPerson(person: PersonSuggestion | null): string[] {
+  if (!person) return []
+  const candidate = person as PersonSuggestion & Record<string, unknown>
+  const rawValues = [
+    candidate.roles,
+    candidate.realmRoles,
+    candidate.clientRoles,
+    candidate.groups,
+    candidate.roleNames,
+    candidate.authorities
+  ]
+  return Array.from(
+    new Set(
+      rawValues
+        .flatMap((value) => (Array.isArray(value) ? value : []))
+        .filter(
+          (value): value is string =>
+            typeof value === 'string' && value.trim().length > 0
+        )
+    )
+  ).sort((a, b) => a.localeCompare(b))
+}
 
 function formatPermissionAction(action: string) {
   return action
@@ -73,14 +103,21 @@ function PermissionScopeCard({
   t,
   defaultOpen = false
 }: PermissionScopeCardProps) {
-  const granted = rows.filter((row) => Boolean(permissionState[permissionKey(row)]))
+  const granted = rows.filter((row) =>
+    Boolean(permissionState[permissionKey(row)])
+  )
   const missing = rows.filter((row) => !permissionState[permissionKey(row)])
 
-  const renderRows = (items: EffectivePermission[], grantedSection: boolean) => {
+  const renderRows = (
+    items: EffectivePermission[],
+    grantedSection: boolean
+  ) => {
     if (!items.length) {
       return (
         <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-          {grantedSection ? t('empty.noGrantedInScope') : t('empty.noMissingInScope')}
+          {grantedSection
+            ? t('empty.noGrantedInScope')
+            : t('empty.noMissingInScope')}
         </p>
       )
     }
@@ -102,7 +139,9 @@ function PermissionScopeCard({
                 type="checkbox"
                 className="h-4 w-4 rounded border-slate-300 text-color-blue focus:ring-color-blue"
                 checked={Boolean(permissionState[key])}
-                onChange={(event) => onPermissionChange(key, event.target.checked)}
+                onChange={(event) =>
+                  onPermissionChange(key, event.target.checked)
+                }
               />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -138,9 +177,15 @@ function PermissionScopeCard({
           <div className="flex items-center gap-2">
             <ChevronRightIcon className="h-4 w-4 text-gray-500 transition group-open:hidden" />
             <ChevronDownIcon className="hidden h-4 w-4 text-gray-500 transition group-open:block" />
-            <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">{title}</h4>
+            <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">
+              {title}
+            </h4>
           </div>
-          {subtitle && <p className="mt-1 truncate pl-6 text-sm text-gray-500 dark:text-gray-300">{subtitle}</p>}
+          {subtitle && (
+            <p className="mt-1 truncate pl-6 text-sm text-gray-500 dark:text-gray-300">
+              {subtitle}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-2 text-xs font-bold">
           <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100">
@@ -169,12 +214,18 @@ function PermissionScopeCard({
   )
 }
 
-function scopeTitleForPermissionGroup(group: string, t: ReturnType<typeof useTranslation>['t']) {
+function scopeTitleForPermissionGroup(
+  group: string,
+  t: ReturnType<typeof useTranslation>['t']
+) {
   const [resourceType, resourceName = '*'] = group.split(' / ')
   if (resourceType === 'GLOBAL') return t('scope.global')
-  if (resourceType === 'PROJECT') return `${t('scope.project')}: ${resourceName}`
+  if (resourceType === 'PROJECT')
+    return `${t('scope.project')}: ${resourceName}`
   if (resourceType === 'DOMAIN') return `${t('scope.group')}: ${resourceName}`
-  return resourceName === '*' ? resourceType : `${resourceType}: ${resourceName}`
+  return resourceName === '*'
+    ? resourceType
+    : `${resourceType}: ${resourceName}`
 }
 
 function buildReadOnlyRowsForCurrentAccess(
@@ -209,7 +260,6 @@ function buildReadOnlyRowsForCurrentAccess(
   })
 }
 
-
 function ReadOnlyPermissionSummary({
   permissions,
   definedPermissions,
@@ -227,11 +277,21 @@ function ReadOnlyPermissionSummary({
     )
   }
 
-  const grantedKeys = new Set(uniquePermissions(permissions).map((permission) => permissionKey(permission)))
-  const groupedRows = buildReadOnlyRowsForCurrentAccess(permissions, definedPermissions)
+  const grantedKeys = new Set(
+    uniquePermissions(permissions).map((permission) =>
+      permissionKey(permission)
+    )
+  )
+  const groupedRows = buildReadOnlyRowsForCurrentAccess(
+    permissions,
+    definedPermissions
+  )
   const canShowMissing = definedPermissions.length > 0
 
-  const renderPermissionRows = (items: EffectivePermission[], granted: boolean) => {
+  const renderPermissionRows = (
+    items: EffectivePermission[],
+    granted: boolean
+  ) => {
     if (!items.length) {
       return (
         <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
@@ -280,8 +340,12 @@ function ReadOnlyPermissionSummary({
       )}
 
       {groupedRows.map(([group, rows]) => {
-        const granted = rows.filter((row) => grantedKeys.has(permissionKey(row)))
-        const missing = canShowMissing ? rows.filter((row) => !grantedKeys.has(permissionKey(row))) : []
+        const granted = rows.filter((row) =>
+          grantedKeys.has(permissionKey(row))
+        )
+        const missing = canShowMissing
+          ? rows.filter((row) => !grantedKeys.has(permissionKey(row)))
+          : []
 
         return (
           <details
@@ -306,7 +370,9 @@ function ReadOnlyPermissionSummary({
                   {t('grantedCount', { count: granted.length })}
                 </span>
                 <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  {canShowMissing ? t('missingCount', { count: missing.length }) : t('missingCount', { count: 0 })}
+                  {canShowMissing
+                    ? t('missingCount', { count: missing.length })
+                    : t('missingCount', { count: 0 })}
                 </span>
               </div>
             </summary>
@@ -325,7 +391,9 @@ function ReadOnlyPermissionSummary({
                   <span>{t('sections.missingRights')}</span>
                   <span>{canShowMissing ? missing.length : '—'}</span>
                 </div>
-                {canShowMissing ? renderPermissionRows(missing, false) : (
+                {canShowMissing ? (
+                  renderPermissionRows(missing, false)
+                ) : (
                   <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
                     {t('empty.missingRightsUnavailableShort')}
                   </p>
@@ -339,7 +407,6 @@ function ReadOnlyPermissionSummary({
   )
 }
 
-
 export default function GlobalPermissions() {
   const { t } = useTranslation(['permission', 'common', 'search'])
   const auth = useAuth()
@@ -350,52 +417,85 @@ export default function GlobalPermissions() {
   const selectedProject = useProjectStore((state) => state.selectedProject)
 
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
-  const [selectedPerson, setSelectedPerson] = useState<PersonSuggestion | null>(null)
+  const [selectedPerson, setSelectedPerson] = useState<PersonSuggestion | null>(
+    null
+  )
   const [personValue, setPersonValue] = useState<string>('')
-  const [personSuggestions, setPersonSuggestions] = useState<PersonSuggestion[]>([])
-  const [permissionState, setPermissionState] = useState<Record<string, boolean>>({})
-  const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
+  const [personSuggestions, setPersonSuggestions] = useState<
+    PersonSuggestion[]
+  >([])
+  const [permissionState, setPermissionState] = useState<
+    Record<string, boolean>
+  >({})
+  const [definedPermissions, setDefinedPermissions] = useState<
+    DefinedPermission[]
+  >([])
   const definedPermissionsRef = useRef<DefinedPermission[] | null>(null)
-  const [projectDomainNames, setProjectDomainNames] = useState<Set<string>>(new Set())
-  const [currentEffectivePermissions, setCurrentEffectivePermissions] = useState<EffectivePermission[]>([])
-  const [permissionApiState, setPermissionApiState] = useState<PermissionApiState>('idle')
-  const [currentAccessState, setCurrentAccessState] = useState<PermissionApiState>('idle')
+  const [projectDomainNames, setProjectDomainNames] = useState<Set<string>>(
+    new Set()
+  )
+  const [allProjectNames, setAllProjectNames] = useState<Set<string>>(new Set())
+  const [projectDisplayNames, setProjectDisplayNames] = useState<
+    Record<string, string>
+  >({})
+  const [currentEffectivePermissions, setCurrentEffectivePermissions] =
+    useState<EffectivePermission[]>([])
+  const [permissionApiState, setPermissionApiState] =
+    useState<PermissionApiState>('idle')
+  const [currentAccessState, setCurrentAccessState] =
+    useState<PermissionApiState>('idle')
   const [loading, setLoading] = useState(false)
   const [retryingDefinitions, setRetryingDefinitions] = useState(false)
 
-  const currentUserLabel = currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
+  const currentUserLabel =
+    currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
+  const selectedPersonRoles = useMemo(
+    () => rolesForPerson(selectedPerson),
+    [selectedPerson]
+  )
 
-  const loadDefinedPermissions = useCallback(async (force = false): Promise<DefinedPermission[]> => {
-    if (!force && definedPermissionsRef.current) return definedPermissionsRef.current
+  const loadDefinedPermissions = useCallback(
+    async (force = false): Promise<DefinedPermission[]> => {
+      if (!force && definedPermissionsRef.current)
+        return definedPermissionsRef.current
 
-    setPermissionApiState('loading')
-    try {
+      setPermissionApiState('loading')
+      try {
+        await refreshAccessTokenForNavigation(auth)
+        const perms = await TrustDeck.instance().getDefinedPermissions()
+        const resolved = perms ?? []
+        definedPermissionsRef.current = resolved
+        setDefinedPermissions(resolved)
+        setPermissionApiState('ready')
+        return resolved
+      } catch (error) {
+        console.warn('Could not load defined permissions', error)
+        definedPermissionsRef.current = null
+        setDefinedPermissions([])
+        setPermissionApiState(permissionErrorState(error))
+        return []
+      }
+    },
+    [auth]
+  )
+
+  const fetchPersons = useCallback(
+    async (query: string): Promise<PersonSuggestion[]> => {
       await refreshAccessTokenForNavigation(auth)
-      const perms = await TrustDeck.instance().getDefinedPermissions()
-      const resolved = perms ?? []
-      definedPermissionsRef.current = resolved
-      setDefinedPermissions(resolved)
-      setPermissionApiState('ready')
-      return resolved
-    } catch (error) {
-      console.warn('Could not load defined permissions', error)
-      definedPermissionsRef.current = null
-      setDefinedPermissions([])
-      setPermissionApiState(permissionErrorState(error))
-      return []
-    }
-  }, [auth])
+      const fetchedOperators = await TrustDeck.instance().searchOperators(query)
+      return fetchedOperators.map((operator) => ({
+        ...operator,
+        name:
+          `${operator.firstName ?? ''} ${operator.lastName ?? ''}`.trim() ||
+          operator.username
+      }))
+    },
+    [auth]
+  )
 
-  const fetchPersons = useCallback(async (query: string): Promise<PersonSuggestion[]> => {
-    await refreshAccessTokenForNavigation(auth)
-    const fetchedOperators = await TrustDeck.instance().searchOperators(query)
-    return fetchedOperators.map((operator) => ({
-      ...operator,
-      name: `${operator.firstName ?? ''} ${operator.lastName ?? ''}`.trim() || operator.username
-    }))
-  }, [auth])
-
-  const findCurrentUserSuggestion = useCallback(async (): Promise<PersonSuggestion | undefined> => {
+  const findCurrentUserSuggestion = useCallback(async (): Promise<
+    PersonSuggestion | undefined
+  > => {
     const queries = [currentUserId, currentUserEmail].filter(
       (value): value is string => Boolean(value && value.trim())
     )
@@ -416,26 +516,73 @@ export default function GlobalPermissions() {
 
   useEffect(() => {
     let active = true
-    async function loadProjectDomains() {
-      if (!selectedProject?.abbreviation) {
-        if (active) setProjectDomainNames(new Set())
+
+    async function loadPermissionScopes() {
+      const nextProjectNames = new Set<string>()
+      const nextProjectLabels: Record<string, string> = {}
+      const nextDomainNames = new Set<string>()
+
+      if (selectedProject?.abbreviation) {
+        nextProjectNames.add(selectedProject.abbreviation)
+        nextProjectLabels[selectedProject.abbreviation] =
+          selectedProject.name ?? selectedProject.abbreviation
+      }
+
+      const accessToken = auth.user?.access_token
+      if (accessToken) TrustDeck.instance().setToken(accessToken)
+
+      if (!auth.isAuthenticated || auth.isLoading || !accessToken) {
+        if (active) {
+          setAllProjectNames(nextProjectNames)
+          setProjectDisplayNames(nextProjectLabels)
+          setProjectDomainNames(nextDomainNames)
+        }
         return
       }
+
       try {
-        const subtree = await TrustDeck.instance().getGroups()
-        const names = new Set<string>()
-        collectDomainNames(subtree, names)
-        if (active) setProjectDomainNames(names)
+        const projects = await TrustDeck.instance().getProjects()
+        projects.forEach((project: any) => {
+          const abbreviation = String(project?.abbreviation ?? '').trim()
+          if (!abbreviation) return
+          nextProjectNames.add(abbreviation)
+          nextProjectLabels[abbreviation] = String(
+            project?.name ?? abbreviation
+          )
+        })
       } catch (error) {
-        console.warn('Could not load project groups for permission management', error)
-        if (active) setProjectDomainNames(new Set())
+        console.warn('Could not load projects for permission management', error)
+      }
+
+      try {
+        const hierarchy = await TrustDeck.instance().getDomainsHierarchy()
+        hierarchy.forEach((entry: any) => {
+          const name = typeof entry?.name === 'string' ? entry.name : undefined
+          if (name) nextDomainNames.add(name)
+          collectDomainNames(entry, nextDomainNames)
+        })
+      } catch (error) {
+        console.warn('Could not load groups for permission management', error)
+      }
+
+      if (active) {
+        setAllProjectNames(nextProjectNames)
+        setProjectDisplayNames(nextProjectLabels)
+        setProjectDomainNames(nextDomainNames)
       }
     }
-    void loadProjectDomains()
+
+    void loadPermissionScopes()
     return () => {
       active = false
     }
-  }, [selectedProject?.abbreviation])
+  }, [
+    auth.isAuthenticated,
+    auth.isLoading,
+    auth.user?.access_token,
+    selectedProject?.abbreviation,
+    selectedProject?.name
+  ])
 
   useEffect(() => {
     let active = true
@@ -471,7 +618,15 @@ export default function GlobalPermissions() {
     return () => {
       active = false
     }
-  }, [auth, auth.isAuthenticated, auth.isLoading, currentUserEmail, currentUserId, findCurrentUserSuggestion, loadDefinedPermissions])
+  }, [
+    auth,
+    auth.isAuthenticated,
+    auth.isLoading,
+    currentUserEmail,
+    currentUserId,
+    findCurrentUserSuggestion,
+    loadDefinedPermissions
+  ])
 
   const globalPermissionRows = useMemo(() => {
     const rows: EffectivePermission[] = definedPermissions
@@ -479,35 +634,80 @@ export default function GlobalPermissions() {
       .map((p) => ({ resourceType: 'GLOBAL', action: p.action }))
 
     rows.push(
-      ...(selectedPerson?.effectivePermissions ?? []).filter((p) => p.resourceType === 'GLOBAL')
+      ...(selectedPerson?.effectivePermissions ?? []).filter(
+        (p) => p.resourceType === 'GLOBAL'
+      )
     )
 
     return uniquePermissions(rows)
   }, [definedPermissions, selectedPerson?.effectivePermissions])
 
   const projectPermissionRows = useMemo(() => {
-    const filteredEffective = filterEffectivePermissions(
-      selectedPerson?.effectivePermissions,
-      selectedProject?.abbreviation,
-      projectDomainNames,
-      false
+    const effectivePermissions = selectedPerson?.effectivePermissions ?? []
+    const projectActions = definedPermissions
+      .filter((p) => p.resourceType === 'PROJECT')
+      .map((p) => p.action)
+    const groupActions = definedPermissions
+      .filter((p) => p.resourceType === 'DOMAIN')
+      .map((p) => p.action)
+
+    const projectNames = new Set<string>(allProjectNames)
+    const groupNames = new Set<string>(projectDomainNames)
+
+    effectivePermissions.forEach((permission) => {
+      if (permission.resourceType === 'PROJECT' && permission.resourceName) {
+        projectNames.add(permission.resourceName)
+      }
+      if (permission.resourceType === 'DOMAIN' && permission.resourceName) {
+        groupNames.add(permission.resourceName)
+      }
+    })
+
+    const rows: EffectivePermission[] = []
+    Array.from(projectNames)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((projectName) => {
+        projectActions.forEach((action) => {
+          rows.push({
+            resourceType: 'PROJECT',
+            resourceName: projectName,
+            action
+          })
+        })
+      })
+
+    Array.from(groupNames)
+      .sort((a, b) => a.localeCompare(b))
+      .forEach((groupName) => {
+        groupActions.forEach((action) => {
+          rows.push({ resourceType: 'DOMAIN', resourceName: groupName, action })
+        })
+      })
+
+    rows.push(
+      ...effectivePermissions.filter((p) => p.resourceType !== 'GLOBAL')
     )
-    return buildAllPermissionRows(
-      definedPermissions,
-      selectedProject?.abbreviation,
-      projectDomainNames,
-      filteredEffective,
-      false
-    )
-  }, [definedPermissions, projectDomainNames, selectedPerson?.effectivePermissions, selectedProject?.abbreviation])
+    return uniquePermissions(rows)
+  }, [
+    allProjectNames,
+    definedPermissions,
+    projectDomainNames,
+    selectedPerson?.effectivePermissions
+  ])
 
   const allSelectableRows = useMemo(
-    () => uniquePermissions([...globalPermissionRows, ...projectPermissionRows]),
+    () =>
+      uniquePermissions([...globalPermissionRows, ...projectPermissionRows]),
     [globalPermissionRows, projectPermissionRows]
   )
 
-  const buildStateForPerson = (person: PersonSuggestion, rows: EffectivePermission[]) => {
-    const selectedKeys = new Set((person.effectivePermissions ?? []).map((p) => permissionKey(p)))
+  const buildStateForPerson = (
+    person: PersonSuggestion,
+    rows: EffectivePermission[]
+  ) => {
+    const selectedKeys = new Set(
+      (person.effectivePermissions ?? []).map((p) => permissionKey(p))
+    )
     const nextState: Record<string, boolean> = {}
     rows.forEach((p) => {
       nextState[permissionKey(p)] = selectedKeys.has(permissionKey(p))
@@ -515,7 +715,15 @@ export default function GlobalPermissions() {
     return nextState
   }
 
-  const refreshSelectedPerson = async (userId: string, usernameFallback: string): Promise<void> => {
+  useEffect(() => {
+    if (!selectedPerson) return
+    setPermissionState(buildStateForPerson(selectedPerson, allSelectableRows))
+  }, [allSelectableRows, selectedPerson])
+
+  const refreshSelectedPerson = async (
+    userId: string,
+    usernameFallback: string
+  ): Promise<void> => {
     const latestMatches = await fetchPersons(usernameFallback)
     const refreshed = latestMatches.find((u) => u.userId === userId)
     if (!refreshed) return
@@ -530,7 +738,9 @@ export default function GlobalPermissions() {
       const permissions = await loadDefinedPermissions(true)
       showToast({
         severity: permissions.length ? 'success' : 'warn',
-        summary: permissions.length ? t('toast.permissionsRefreshed') : t('toast.noDefinitionsLoaded'),
+        summary: permissions.length
+          ? t('toast.permissionsRefreshed')
+          : t('toast.noDefinitionsLoaded'),
         detail: permissions.length
           ? t('toast.permissionsRefreshedDetail')
           : t('toast.noDefinitionsLoadedDetail'),
@@ -586,7 +796,9 @@ export default function GlobalPermissions() {
       )
       setSelectedPersonId(personSuggestion.userId ?? null)
       setSelectedPerson(personSuggestion)
-      setPermissionState(buildStateForPerson(personSuggestion, allSelectableRows))
+      setPermissionState(
+        buildStateForPerson(personSuggestion, allSelectableRows)
+      )
       return
     }
 
@@ -612,67 +824,91 @@ export default function GlobalPermissions() {
       await loadDefinedPermissions(false)
 
       const globalPermissions = globalPermissionRows.filter(
-        (p) => p.resourceType === 'GLOBAL' && Boolean(permissionState[permissionKey(p)])
+        (p) =>
+          p.resourceType === 'GLOBAL' &&
+          Boolean(permissionState[permissionKey(p)])
       )
-      const globalPayload: GlobalPermissionUpdate[] = globalPermissions.map((p) => ({
-        subjectId: selectedPersonId,
-        resourceType: 'GLOBAL',
-        action: p.action,
-        decision: 'ALLOW'
-      }))
-
-      const updateCalls: Promise<unknown>[] = [
-        TrustDeck.instance().updateGlobalPermissions(selectedPersonId, globalPayload)
-      ]
-
-      if (selectedProject?.abbreviation) {
-        const checkedProjectRows = projectPermissionRows.filter(
-          (p) => p.resourceType === 'PROJECT' && Boolean(permissionState[permissionKey(p)])
-        )
-        const projectPayload: ProjectPermissionUpdate[] = checkedProjectRows.map((p) => ({
+      const globalPayload: GlobalPermissionUpdate[] = globalPermissions.map(
+        (p) => ({
           subjectId: selectedPersonId,
-          resourceType: 'PROJECT',
-          projectAbbreviation: selectedProject.abbreviation,
+          resourceType: 'GLOBAL',
           action: p.action,
           decision: 'ALLOW'
-        }))
+        })
+      )
+
+      const updateCalls: Promise<unknown>[] = [
+        TrustDeck.instance().updateGlobalPermissions(
+          selectedPersonId,
+          globalPayload
+        )
+      ]
+
+      const projectNamesToUpdate = new Set(
+        projectPermissionRows
+          .filter((p) => p.resourceType === 'PROJECT' && p.resourceName)
+          .map((p) => p.resourceName!)
+      )
+      projectNamesToUpdate.forEach((projectName) => {
+        const projectPayload: ProjectPermissionUpdate[] = projectPermissionRows
+          .filter(
+            (p) =>
+              p.resourceType === 'PROJECT' &&
+              p.resourceName === projectName &&
+              Boolean(permissionState[permissionKey(p)])
+          )
+          .map((p) => ({
+            subjectId: selectedPersonId,
+            resourceType: 'PROJECT',
+            projectAbbreviation: projectName,
+            action: p.action,
+            decision: 'ALLOW'
+          }))
         updateCalls.push(
           TrustDeck.instance().updateProjectPermissionGrants(
-            selectedProject.abbreviation,
+            projectName,
             selectedPersonId,
             projectPayload as never
           )
         )
+      })
 
-        Array.from(projectDomainNames).forEach((domainName) => {
-          const domainPayload: DomainPermissionUpdate[] = projectPermissionRows
-            .filter(
-              (p) =>
-                p.resourceType === 'DOMAIN' &&
-                p.resourceName === domainName &&
-                Boolean(permissionState[permissionKey(p)])
-            )
-            .map((p) => ({
-              subjectId: selectedPersonId,
-              resourceType: 'DOMAIN',
-              domainName,
-              action: p.action,
-              decision: 'ALLOW'
-            }))
-          updateCalls.push(
-            TrustDeck.instance().updateDomainPermissionGrants(
-              domainName,
-              selectedPersonId,
-              domainPayload as never
-            )
+      const groupNamesToUpdate = new Set(
+        projectPermissionRows
+          .filter((p) => p.resourceType === 'DOMAIN' && p.resourceName)
+          .map((p) => p.resourceName!)
+      )
+      groupNamesToUpdate.forEach((groupName) => {
+        const domainPayload: DomainPermissionUpdate[] = projectPermissionRows
+          .filter(
+            (p) =>
+              p.resourceType === 'DOMAIN' &&
+              p.resourceName === groupName &&
+              Boolean(permissionState[permissionKey(p)])
           )
-        })
-      }
+          .map((p) => ({
+            subjectId: selectedPersonId,
+            resourceType: 'DOMAIN',
+            domainName: groupName,
+            action: p.action,
+            decision: 'ALLOW'
+          }))
+        updateCalls.push(
+          TrustDeck.instance().updateDomainPermissionGrants(
+            groupName,
+            selectedPersonId,
+            domainPayload as never
+          )
+        )
+      })
 
       await Promise.all(updateCalls)
       await refreshSelectedPerson(
         selectedPersonId,
-        selectedPerson.name || selectedPerson.email || selectedPerson.username || selectedPersonId
+        selectedPerson.name ||
+          selectedPerson.email ||
+          selectedPerson.username ||
+          selectedPersonId
       )
       showToast({
         severity: 'success',
@@ -696,12 +932,17 @@ export default function GlobalPermissions() {
   const personItemTemplate = (item: PersonSuggestion) => (
     <div>
       <span className="font-semibold">{item.name}</span>
-      {item.email && <span className="ml-2 text-sm text-gray-500">{item.email}</span>}
-      {item.federation && <span className="ml-2 text-sm text-gray-400">({item.federation})</span>}
+      {item.email && (
+        <span className="ml-2 text-sm text-gray-500">{item.email}</span>
+      )}
+      {item.federation && (
+        <span className="ml-2 text-sm text-gray-400">({item.federation})</span>
+      )}
     </div>
   )
 
-  const permissionManagementUnavailable = permissionApiState === 'forbidden' || permissionApiState === 'error'
+  const permissionManagementUnavailable =
+    permissionApiState === 'forbidden' || permissionApiState === 'error'
 
   const projectScopeCards = useMemo(() => {
     const grouped = new Map<string, EffectivePermission[]>()
@@ -715,18 +956,17 @@ export default function GlobalPermissions() {
     return Array.from(grouped.entries()).map(([key, rows]) => {
       const [resourceType, resourceName = '*'] = key.split(':')
       const isProject = resourceType === 'PROJECT'
+      const projectLabel = projectDisplayNames[resourceName] ?? resourceName
       return {
         key,
         rows,
         title: isProject
-          ? `${t('scope.project')}: ${selectedProject?.name ?? resourceName}`
+          ? `${t('scope.project')}: ${projectLabel}`
           : `${t('scope.group')}: ${resourceName}`,
-        subtitle: isProject
-          ? selectedProject?.abbreviation
-          : undefined
+        subtitle: isProject ? resourceName : undefined
       }
     })
-  }, [projectPermissionRows, selectedProject?.abbreviation, selectedProject?.name, t])
+  }, [projectDisplayNames, projectPermissionRows, t])
 
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 text-base sm:px-8">
@@ -737,7 +977,9 @@ export default function GlobalPermissions() {
           </p>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">{t('currentAccess')}</h2>
+            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">
+              {t('currentAccess')}
+            </h2>
             <div className="mb-5 text-base text-gray-600 dark:text-gray-300">
               <div>{currentUserLabel}</div>
               {currentUserEmail && <div>{currentUserEmail}</div>}
@@ -746,8 +988,11 @@ export default function GlobalPermissions() {
               <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
                 {t('effectivePermissions')}
               </h3>
-              {currentAccessState === 'loading' || currentAccessState === 'idle' ? (
-                <p className="text-base text-gray-500 dark:text-gray-300">{t('loading.effectivePermissions')}</p>
+              {currentAccessState === 'loading' ||
+              currentAccessState === 'idle' ? (
+                <p className="text-base text-gray-500 dark:text-gray-300">
+                  {t('loading.effectivePermissions')}
+                </p>
               ) : currentAccessState === 'forbidden' ? (
                 <p className="text-base text-amber-700 dark:text-amber-300">
                   {t('errors.effectiveForbidden')}
@@ -757,7 +1002,11 @@ export default function GlobalPermissions() {
                   {t('errors.effectiveError')}
                 </p>
               ) : (
-                <ReadOnlyPermissionSummary permissions={currentEffectivePermissions} definedPermissions={definedPermissions} t={t} />
+                <ReadOnlyPermissionSummary
+                  permissions={currentEffectivePermissions}
+                  definedPermissions={definedPermissions}
+                  t={t}
+                />
               )}
             </div>
           </div>
@@ -765,7 +1014,9 @@ export default function GlobalPermissions() {
 
         <Panel title={t('grantOrRevoke')} className="w-full mx-auto">
           {permissionApiState === 'loading' || permissionApiState === 'idle' ? (
-            <p className="text-base text-gray-500 dark:text-gray-300">{t('loading.permissionDefinitions')}</p>
+            <p className="text-base text-gray-500 dark:text-gray-300">
+              {t('loading.permissionDefinitions')}
+            </p>
           ) : null}
 
           {permissionApiState === 'forbidden' && (
@@ -777,57 +1028,90 @@ export default function GlobalPermissions() {
           {permissionApiState === 'error' && (
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
               <p>{t('errors.definitionsError')}</p>
-              <SecondaryOutlinedButton label={retryingDefinitions ? t('actions.retrying') : t('actions.retry')} loading={retryingDefinitions} onClick={handleRetry} />
+              <SecondaryOutlinedButton
+                label={
+                  retryingDefinitions
+                    ? t('actions.retrying')
+                    : t('actions.retry')
+                }
+                loading={retryingDefinitions}
+                onClick={handleRetry}
+              />
             </div>
           )}
 
-          {!permissionManagementUnavailable && permissionApiState === 'ready' && (
-            <>
-              <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
-                {t('searchHelp')}
-              </p>
-              <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
-                <AutoComplete
-                  value={personValue}
-                  suggestions={personSuggestions}
-                  completeMethod={handlePersonSearch}
-                  onChange={handlePersonChange}
-                  field="name"
-                  itemTemplate={personItemTemplate}
-                  forceSelection
-                  placeholder={t('search:searchFor')}
-                  className="flex-1 min-w-0 w-full"
-                  inputClassName="w-full min-w-0 text-base"
-                />
-                {personValue && (
-                  <button
-                    type="button"
-                    onClick={clearPersonSelection}
-                    className="flex-shrink-0 flex px-4 py-2 bg-blue-500 text-white rounded"
-                    tabIndex={-1}
-                    aria-label="Clear"
-                  >
-                    <XMarkIcon className="h-7 w-7" />
-                  </button>
-                )}
-              </div>
-
-              {selectedPersonId && (
-                <div className="mt-6 space-y-6">
-                  <PermissionScopeCard
-                    title={t('globalPermissions')}
-                    rows={globalPermissionRows}
-                    permissionState={permissionState}
-                    onPermissionChange={(key, checked) =>
-                      setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                    }
-                    t={t}
+          {!permissionManagementUnavailable &&
+            permissionApiState === 'ready' && (
+              <>
+                <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
+                  {t('searchHelp')}
+                </p>
+                <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
+                  <AutoComplete
+                    value={personValue}
+                    suggestions={personSuggestions}
+                    completeMethod={handlePersonSearch}
+                    onChange={handlePersonChange}
+                    field="name"
+                    itemTemplate={personItemTemplate}
+                    forceSelection
+                    placeholder={t('search:searchFor')}
+                    className="flex-1 min-w-0 w-full"
+                    inputClassName="w-full min-w-0 text-base"
                   />
+                  {personValue && (
+                    <button
+                      type="button"
+                      onClick={clearPersonSelection}
+                      className="flex-shrink-0 flex px-4 py-2 bg-blue-500 text-white rounded"
+                      tabIndex={-1}
+                      aria-label="Clear"
+                    >
+                      <XMarkIcon className="h-7 w-7" />
+                    </button>
+                  )}
+                </div>
 
-                  {selectedProject?.abbreviation ? (
+                {selectedPersonId && (
+                  <div className="mt-6 space-y-6">
+                    <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                      <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-100">
+                        {t('selectedUserRoles')}
+                      </h3>
+                      {selectedPersonRoles.length ? (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedPersonRoles.map((role) => (
+                            <span
+                              key={role}
+                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                            >
+                              {role}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-300">
+                          {t('empty.noTokenRoles')}
+                        </p>
+                      )}
+                    </div>
+
+                    <PermissionScopeCard
+                      title={t('globalPermissions')}
+                      rows={globalPermissionRows}
+                      permissionState={permissionState}
+                      onPermissionChange={(key, checked) =>
+                        setPermissionState((prev) => ({
+                          ...prev,
+                          [key]: checked
+                        }))
+                      }
+                      t={t}
+                    />
+
                     <div className="space-y-3">
                       <h3 className="text-xl font-semibold dark:text-gray-100">
-                        {t('projectAndGroupPermissionsFor', { project: selectedProject.name })}
+                        {t('allProjectAndGroupPermissions')}
                       </h3>
                       {projectScopeCards.length ? (
                         projectScopeCards.map((card) => (
@@ -838,34 +1122,36 @@ export default function GlobalPermissions() {
                             rows={card.rows}
                             permissionState={permissionState}
                             onPermissionChange={(key, checked) =>
-                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
+                              setPermissionState((prev) => ({
+                                ...prev,
+                                [key]: checked
+                              }))
                             }
                             t={t}
                           />
                         ))
                       ) : (
                         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                          {t('empty.noProjectOrGroupRows')}
+                          {t('empty.noProjectOrGroupRowsAll')}
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                      {t('selectProjectFirst')}
-                    </div>
-                  )}
 
-                  <div className="mt-4 flex justify-end">
-                    <PrimaryButton
-                      label={loading ? t('actions.saving') : t('actions.savePermissions')}
-                      onClick={handleSave}
-                      loading={loading}
-                    />
+                    <div className="mt-4 flex justify-end">
+                      <PrimaryButton
+                        label={
+                          loading
+                            ? t('actions.saving')
+                            : t('actions.savePermissions')
+                        }
+                        onClick={handleSave}
+                        loading={loading}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            )}
         </Panel>
       </div>
     </div>

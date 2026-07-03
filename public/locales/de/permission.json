@@ -12,7 +12,7 @@
   "keycloakRoles": "Keycloak-Rollen im Token",
   "effectivePermissions": "Effektive TrustDeck-Berechtigungen",
   "grantOrRevoke": "Berechtigungen vergeben oder entziehen",
-  "searchHelp": "Suchen Sie nach einem Benutzer und passen Sie globale Berechtigungen an. Wenn ein Projekt ausgewählt ist, werden darunter auch Projekt- und Gruppenberechtigungen angezeigt.",
+  "searchHelp": "Suchen Sie nach einem Benutzer und passen Sie dessen globale, Projekt- und Gruppenberechtigungen über alle verwaltbaren Bereiche hinweg an.",
   "globalPermissions": "Globale Berechtigungen",
   "projectAndGroupPermissionsFor": "Projekt- und Gruppenberechtigungen für {{project}}",
   "selectProjectFirst": "Wählen Sie zuerst ein Projekt aus, um hier Projekt- und Gruppenberechtigungen zu verwalten.",
@@ -36,7 +36,8 @@
     "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben.",
     "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
     "missingRightsUnavailable": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Daher können nur vergebene Rechte angezeigt werden; nicht vergebene Rechte können noch nicht berechnet werden.",
-    "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind."
+    "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind.",
+    "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",
@@ -85,5 +86,7 @@
   "sections": {
     "grantedRights": "Vergebene Rechte",
     "missingRights": "Nicht vergebene Rechte"
-  }
+  },
+  "allProjectAndGroupPermissions": "Alle Projekt- und Gruppenberechtigungen",
+  "selectedUserRoles": "Rollen des ausgewählten Benutzers"
 }

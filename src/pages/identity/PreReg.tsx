@@ -115,25 +115,6 @@ function entityId(entity: EntityInstance | null | undefined) {
   )
 }
 
-function statusLabel(
-  type: EntityTypePayload,
-  t: ReturnType<typeof useTranslation>['t']
-) {
-  if ((type as any).isDeleted) return t('identity:status.deleted')
-  if (type.isDeprecated) return t('identity:status.deprecated')
-  return t('identity:status.active')
-}
-
-function statusClasses(type: EntityTypePayload) {
-  if ((type as any).isDeleted) {
-    return 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300'
-  }
-  if (type.isDeprecated) {
-    return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300'
-  }
-  return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'
-}
-
 function permissionActionValue(permission: Record<string, any>) {
   return String(
     permission.action ??
@@ -646,7 +627,10 @@ export default function PreReg() {
   }, [selectedType])
 
   const displayAttributes = useMemo(
-    () => flattenLeafAttributes(selectedSchemaAttributes).slice(0, 4),
+    () =>
+      flattenLeafAttributes(selectedSchemaAttributes)
+        .filter((attr) => Boolean(attr.required))
+        .slice(0, 3),
     [selectedSchemaAttributes]
   )
 
@@ -1257,7 +1241,7 @@ export default function PreReg() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-slate-700">
+              <table className="min-w-full divide-y divide-gray-200 text-left text-base dark:divide-slate-700">
                 <thead>
                   <tr className="text-gray-600 dark:text-gray-300">
                     <th className="px-4 py-3 font-semibold">
@@ -1268,9 +1252,6 @@ export default function PreReg() {
                     </th>
                     <th className="px-4 py-3 font-semibold">
                       {t('identity:crud.associatedGroup')}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
-                      {t('identity:crud.status')}
                     </th>
                   </tr>
                 </thead>
@@ -1293,13 +1274,6 @@ export default function PreReg() {
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                           {type.associatedDomainName || '-'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-flex rounded-full border px-2 py-1 text-xs font-semibold ${statusClasses(type)}`}
-                          >
-                            {statusLabel(type, t)}
-                          </span>
                         </td>
                       </tr>
                     )
@@ -1353,31 +1327,6 @@ export default function PreReg() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm dark:border-slate-700 dark:bg-slate-900">
-                <span className="text-gray-600 dark:text-gray-300">
-                  {t('identity:crud.resultSummary', {
-                    shown: Math.min(instances.length, resultLimit),
-                    total: instances.length
-                  })}
-                </span>
-                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                  <span>{t('identity:crud.resultsLimit')}</span>
-                  <select
-                    value={resultLimit}
-                    onChange={(event) =>
-                      setResultLimit(Number(event.target.value))
-                    }
-                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-                  >
-                    {resultLimitOptions.map((limit) => (
-                      <option key={limit} value={limit}>
-                        {limit}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
               <Divider />
 
               {!permissionsReady ? (
@@ -1403,7 +1352,7 @@ export default function PreReg() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-700">
-                  <table className="min-w-full divide-y divide-gray-200 text-left text-sm dark:divide-slate-700">
+                  <table className="min-w-full divide-y divide-gray-200 text-left text-base dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-900">
                       <tr className="text-gray-600 dark:text-gray-300">
                         <th className="min-w-[18rem] px-4 py-3 font-semibold">
@@ -1431,7 +1380,7 @@ export default function PreReg() {
                             key={id}
                             className="hover:bg-gray-50 dark:hover:bg-slate-800"
                           >
-                            <td className="min-w-[18rem] px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">
+                            <td className="min-w-[18rem] px-4 py-3 font-mono text-sm text-gray-700 dark:text-gray-300">
                               <span className="block break-all">
                                 {id || '-'}
                               </span>
@@ -1494,6 +1443,27 @@ export default function PreReg() {
                       })}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {instances.length > 0 && (
+                <div className="flex justify-end pt-2">
+                  <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                    <span>{t('identity:crud.resultsLimit')}</span>
+                    <select
+                      value={resultLimit}
+                      onChange={(event) =>
+                        setResultLimit(Number(event.target.value))
+                      }
+                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                    >
+                      {resultLimitOptions.map((limit) => (
+                        <option key={limit} value={limit}>
+                          {limit}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               )}
 

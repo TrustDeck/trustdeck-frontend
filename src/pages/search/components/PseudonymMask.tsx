@@ -10,7 +10,6 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import validation from '../../../core/utils/validation'
 import { Dialog } from 'primereact/dialog'
-import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import GroupService from '../../groups/service/GroupService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 
@@ -129,8 +128,8 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
           <div className="flex flex-col gap-4">
             <p className="text-base">{t('search:noResults')}</p>
             <div className="flex justify-end">
-              <SecondaryButton
-                label={t('search:research')}
+              <PrimaryButton
+                label={t('search:ok', 'Ok')}
                 onClick={() => setShowModal(false)}
               />
             </div>

@@ -189,22 +189,20 @@ export default function EntityManager() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                  <div className="grid grid-cols-[1.4fr_0.7fr_1fr_0.7fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
+                  <div className="grid grid-cols-[1.4fr_0.7fr_1fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-base font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
                     <span>{t('entityName')}</span>
                     <span>{t('version', 'Version')}</span>
                     <span>{t('associatedGroupName')}</span>
-                    <span>{t('status', 'Status')}</span>
                   </div>
                   <div className="divide-y divide-gray-200 dark:divide-slate-700">
                     {entityDefinitions.map((definition) => {
                       const selected = selectedType?.name === definition.name
-                      const status = statusLabel(definition)
                       return (
                         <button
                           key={`${definition.name}-${definition.version ?? ''}`}
                           type="button"
                           onClick={() => setSelectedTypeName(definition.name)}
-                          className={`grid w-full grid-cols-[1.4fr_0.7fr_1fr_0.7fr] gap-3 px-4 py-3 text-left text-sm transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
+                          className={`grid w-full grid-cols-[1.4fr_0.7fr_1fr] gap-3 px-4 py-3 text-left text-base transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
                         >
                           <span className="min-w-0 truncate font-semibold">
                             {definition.name}
@@ -214,13 +212,6 @@ export default function EntityManager() {
                           </span>
                           <span className="min-w-0 truncate text-gray-600 dark:text-gray-300">
                             {definition.associatedDomainName ?? '-'}
-                          </span>
-                          <span>
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'}`}
-                            >
-                              {t(`typeStatus.${status}`, statusText(status))}
-                            </span>
                           </span>
                         </button>
                       )

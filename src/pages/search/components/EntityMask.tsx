@@ -5,9 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Divider from '../../../core/components/common/Divider'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import {
-  ListBulletIcon,
   MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import { Dialog } from 'primereact/dialog'
@@ -171,10 +169,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     await runEntitySearch(quick)
   }
 
-  const handleListAll = async () => {
-    setQuick('*')
-    await runEntitySearch('*')
-  }
 
   // Dropdown options for selecting entity type
   const entityDropdownOptions = entities.map((entity) => ({
@@ -247,15 +241,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
 
         <Divider /> */}
         <div className="flex flex-wrap justify-end gap-2 mt-4">
-          {!psn && (
-            <PrimaryOutlinedButton
-              label={t('search:listAll', 'List all')}
-              type="button"
-              onClick={handleListAll}
-              icon={<ListBulletIcon className="h-5 w-5 mr-1" />}
-              disabled={!selectedType || loading}
-            />
-          )}
           <PrimaryButton
             label={t('search:submit')}
             type="submit"

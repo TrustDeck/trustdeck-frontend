@@ -42,7 +42,8 @@
     },
     "customAlphabetChars": {
       "label": "Benutzerdefinierte Alphabetzeichen",
-      "placeholder": "Alle Zeichen eingeben (z. B. ABC123)"
+      "placeholder": "z. B. abcdefghijklmno1234,.-*+",
+      "help": "Geben Sie jedes Zeichen ein, das in generierten Pseudonymen vorkommen darf. Dies ist eine konkrete Zeichenliste und kein regulärer Ausdruck."
     },
     "startdate": {
       "label": "Startdatum"
@@ -76,7 +77,31 @@
       "label": "Prüfziffer"
     },
     "inheritFromParent": "Von Elterngruppe übernehmen",
-    "psnexampleNew": "Das Pseudonym sieht so aus:"
+    "psnexampleNew": "Das Pseudonym sieht so aus:",
+    "validityTime": {
+      "label": "Gültigkeitsdauer",
+      "placeholder": "z. B. P30D, P6M oder P1Y",
+      "help": "Optionale Backend-Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: P30D für 30 Tage, P6M für 6 Monate, P1Y für 1 Jahr."
+    },
+    "randomAlgorithmDesiredSuccessProbability": {
+      "label": "Gewünschte Erfolgswahrscheinlichkeit",
+      "help": "Zielwahrscheinlichkeit, mit der ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999."
+    },
+    "consecutiveValueCounter": {
+      "label": "Startzähler für fortlaufende Nummern",
+      "help": "Startzähler, der nur beim Algorithmus für fortlaufende Nummern verwendet wird. Andere Algorithmen verwenden intern 1."
+    },
+    "saltLength": {
+      "label": "Salt-Länge",
+      "help": "Der Backend-Standardwert ist 32. Erhöhen Sie den Wert nur, wenn ein längerer generierter Salt benötigt wird."
+    },
+    "salt": {
+      "label": "Salt",
+      "help": "Optionaler expliziter Salt für die Pseudonymgenerierung. Lassen Sie das Feld leer, damit das Backend einen Salt generiert oder die Standardbehandlung nutzt."
+    },
+    "lengthIncludesCheckDigit": {
+      "label": "Länge enthält Prüfziffer"
+    }
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",

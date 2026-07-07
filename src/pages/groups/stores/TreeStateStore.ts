@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { CustomTreeNode } from '../types/CustomTreeNode'
-import i18n from '../../../core/configs/i18n'
 
 type GroupOption = 'default' | 'edit' | 'registration'
 
@@ -349,13 +348,18 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             validTo: validTo,
             prefix: prefix,
             psnlength: psnlength,
-            alphabet: 'onlyUpper',
+            alphabet: 'LETTERS_ONLY_ALPHABET',
             customAlphabetCharacters: '',
-            algorithm: 'SHA3',
-            maxnumpsn: (1000000).toLocaleString(i18n.language),
+            algorithm: 'RANDOM_LET',
+            maxnumpsn: '1000000',
+            randomAlgorithmDesiredSuccessProbability: '0.999',
+            consecutiveValueCounter: '1',
+            saltLength: '32',
+            validityTime: '',
             multiplepsn: false,
             paddingchar: '',
             checkdigit: true,
+            lengthIncludesCheckDigit: false,
             description: '',
             validFromInherited: false,
             validToInherited: false,

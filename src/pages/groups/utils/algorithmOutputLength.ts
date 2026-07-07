@@ -35,3 +35,11 @@ export function isRandomnessAlgorithm(algorithm: string | undefined): boolean {
 export function isHashAlgorithm(algorithm: string | undefined): boolean {
   return getAlgorithmOutputLength(algorithm) !== null
 }
+
+
+/**
+ * Whether the algorithm is the consecutive-number counter.
+ */
+export function isConsecutiveAlgorithm(algorithm: string | undefined): boolean {
+  return algorithm?.trim().toUpperCase() === 'CONSECUTIVE'
+}

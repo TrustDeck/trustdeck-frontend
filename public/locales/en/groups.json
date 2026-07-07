@@ -43,7 +43,8 @@
     },
     "customAlphabetChars": {
       "label": "Custom alphabet characters",
-      "placeholder": "Enter all characters (e.g. ABC123)"
+      "placeholder": "e.g. abcdefghijklmno1234,.-*+",
+      "help": "Enter every character that may appear in generated pseudonyms. This is a literal character list, not a regular expression."
     },
     "startdate": {
       "label": "Start date"
@@ -76,7 +77,31 @@
     "checkdigit": {
       "label": "Check digit"
     },
-    "inheritFromParent": "Inherit from parent"
+    "inheritFromParent": "Inherit from parent",
+    "validityTime": {
+      "label": "Validity period",
+      "placeholder": "e.g. P30D, P6M, or P1Y",
+      "help": "Optional backend validity period used to calculate the end date when no explicit end date is entered. Examples: P30D for 30 days, P6M for 6 months, P1Y for 1 year."
+    },
+    "randomAlgorithmDesiredSuccessProbability": {
+      "label": "Desired success probability",
+      "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999."
+    },
+    "consecutiveValueCounter": {
+      "label": "Consecutive start counter",
+      "help": "Starting counter used only when the consecutive-number algorithm is selected. Other algorithms internally use 1."
+    },
+    "saltLength": {
+      "label": "Salt length",
+      "help": "Backend default is 32. Increase this only when you need a longer generated salt."
+    },
+    "salt": {
+      "label": "Salt",
+      "help": "Optional explicit salt used for pseudonym generation. Leave empty so the backend can generate or use its default salt handling."
+    },
+    "lengthIncludesCheckDigit": {
+      "label": "Length includes check digit"
+    }
   },
   "savingGroup": "New group is being created...",
   "groupCreated": "Your group has been created.",

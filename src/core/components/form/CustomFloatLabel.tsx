@@ -9,6 +9,7 @@ type CustomFloatLabelProps = {
   value: string | number
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   placeholder: string
+  inputPlaceholder?: string
   helpText?: string
   errorMessage?: string
   onBlur?: () => void
@@ -24,6 +25,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   value,
   onChange,
   placeholder,
+  inputPlaceholder,
   helpText,
   errorMessage = '',
   validate,
@@ -60,6 +62,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         value={String(value)}
         onChange={onChange}
         onFocus={handleFocus}
+        placeholder={inputPlaceholder}
         onBlur={handleBlur}
         readOnly={readOnly}
         disabled={disabled}

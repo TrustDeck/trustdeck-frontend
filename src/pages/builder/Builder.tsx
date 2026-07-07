@@ -86,11 +86,17 @@ const defaultNewGroupDraft = (): NewGroupDraft => ({
   enforceStartDateValidity: false,
   enforceEndDateValidity: false,
   salt: '',
-  saltLength: '',
+  saltLength: BACKEND_DEFAULT_SALT_LENGTH,
   description: ''
 })
 
 const SYSTEM_IDENTIFIER_PATTERN = /^[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)*$/
+const BACKEND_DEFAULT_SALT_LENGTH = '32'
+
+function isConsecutiveAlgorithm(algorithm?: string) {
+  return algorithm?.trim().toUpperCase() === 'CONSECUTIVE'
+}
+
 
 type LinkageConfig = {
   privacyMode?: PrivacyMode
@@ -435,6 +441,41 @@ function flattenDomainsForOptions(
   return out.sort((a, b) => a.label.localeCompare(b.label))
 }
 
+function mergeOptionLists(
+  ...lists: Array<{ label: string; value: string }[]>
+): { label: string; value: string }[] {
+  const seen = new Set<string>()
+  const merged: { label: string; value: string }[] = []
+  lists.flat().forEach((option) => {
+    if (!option.value || seen.has(option.value)) return
+    seen.add(option.value)
+    merged.push(option)
+  })
+  return merged.sort((a, b) => a.label.localeCompare(b.label))
+}
+
+async function loadAllGroupOptions(
+  fallback: { label: string; value: string }[] = []
+): Promise<{ label: string; value: string }[]> {
+  const loaded: Array<{ label: string; value: string }[]> = []
+
+  try {
+    const domains = await TrustDeck.instance().searchReadableDomains('*')
+    loaded.push(flattenDomainsForOptions(domains ?? []))
+  } catch {
+    // Search access may be restricted. Fall back to hierarchy and existing options.
+  }
+
+  try {
+    const hierarchy = await TrustDeck.instance().getDomainsHierarchy()
+    loaded.push(flattenDomainsForOptions(hierarchy ?? []))
+  } catch {
+    // Hierarchy access may be restricted as well. Existing options are still useful.
+  }
+
+  return mergeOptionLists(...loaded, fallback)
+}
+
 function cleanLinkageConfig(config: LinkageConfig): LinkageConfig {
   const cleaned: LinkageConfig = {}
   if (config.privacyMode) cleaned.privacyMode = config.privacyMode
@@ -743,6 +784,11 @@ export default function Builder({
     { label: string; value: string }[]
   >([])
   const [creatingGroup, setCreatingGroup] = useState(false)
+  const desiredPoolSizePlaceholder = useMemo(
+    () => new Intl.NumberFormat(i18n.language || undefined).format(1000000),
+    [i18n.language]
+  )
+
 
   useEffect(() => {
     setSaveTarget(scope)
@@ -856,12 +902,7 @@ export default function Builder({
       prefix: typedName ? `${typedName.toUpperCase().slice(0, 8)}-` : ''
     })
     setShowCreateGroupModal(true)
-    try {
-      const domains = await TrustDeck.instance().searchReadableDomains('*')
-      setNewGroupParentOptions(flattenDomainsForOptions(domains ?? []))
-    } catch {
-      setNewGroupParentOptions(groupOptions)
-    }
+    setNewGroupParentOptions(await loadAllGroupOptions(groupOptions))
   }
 
   const createNewGroup = async () => {
@@ -869,13 +910,15 @@ export default function Builder({
     const prefix = newGroupDraft.prefix.trim()
     const pseudonymLength = Number(newGroupDraft.pseudonymLength)
     const randomAlgorithmDesiredSize = Number(
-      newGroupDraft.randomAlgorithmDesiredSize
+      newGroupDraft.randomAlgorithmDesiredSize.replace(/[^0-9]/g, '')
     )
     const randomAlgorithmDesiredSuccessProbability = Number(
       newGroupDraft.randomAlgorithmDesiredSuccessProbability
     )
-    const consecutiveValueCounter = Number(newGroupDraft.consecutiveValueCounter)
-    const saltLength = Number(newGroupDraft.saltLength)
+    const consecutiveValueCounter = isConsecutiveAlgorithm(newGroupDraft.algorithm)
+      ? Number(newGroupDraft.consecutiveValueCounter)
+      : 1
+    const saltLength = Number(newGroupDraft.saltLength || BACKEND_DEFAULT_SALT_LENGTH)
     const isCustomAlphabet = newGroupDraft.alphabet === CUSTOM_ALPHABET_VALUE
     const selectedAlphabet = isCustomAlphabet
       ? newGroupDraft.customAlphabetCharacters.trim()
@@ -2073,7 +2116,10 @@ export default function Builder({
                     onChange={(value) =>
                       updateNewGroupDraft({
                         algorithm: value,
-                        alphabet: defaultAlphabetForAlgorithm(value)
+                        alphabet: defaultAlphabetForAlgorithm(value),
+                        consecutiveValueCounter: isConsecutiveAlgorithm(value)
+                          ? newGroupDraft.consecutiveValueCounter || '1'
+                          : '1'
                       })
                     }
                   />
@@ -2105,7 +2151,7 @@ export default function Builder({
                         )}
                         placeholder={t(
                           'groupCreate.customAlphabetCharactersPlaceholder',
-                          'abcdefghijklmno1234,.-*+'
+                          'e.g. abcdefghijklmno1234,.-*+'
                         )}
                         onChange={(value) =>
                           updateNewGroupDraft({ customAlphabetCharacters: value })
@@ -2124,10 +2170,10 @@ export default function Builder({
                       'groupCreateHelp.randomAlgorithmDesiredSize',
                       'Expected maximum number of pseudonyms for random generation. This helps evaluate collision risk.'
                     )}
-                    type="number"
+                    placeholder={desiredPoolSizePlaceholder}
                     onChange={(value) =>
                       updateNewGroupDraft({
-                        randomAlgorithmDesiredSize: value
+                        randomAlgorithmDesiredSize: value.replace(/[^0-9]/g, '')
                       })
                     }
                   />
@@ -2150,22 +2196,24 @@ export default function Builder({
                       })
                     }
                   />
-                  <InputWithInfo
-                    id="newGroupConsecutiveCounter"
-                    value={newGroupDraft.consecutiveValueCounter}
-                    label={t(
-                      'groupCreate.consecutiveValueCounter',
-                      'Consecutive start counter'
-                    )}
-                    info={t(
-                      'groupCreateHelp.consecutiveValueCounter',
-                      'Starting counter used when the consecutive-number algorithm is selected.'
-                    )}
-                    type="number"
-                    onChange={(value) =>
-                      updateNewGroupDraft({ consecutiveValueCounter: value })
-                    }
-                  />
+                  {isConsecutiveAlgorithm(newGroupDraft.algorithm) && (
+                    <InputWithInfo
+                      id="newGroupConsecutiveCounter"
+                      value={newGroupDraft.consecutiveValueCounter}
+                      label={t(
+                        'groupCreate.consecutiveValueCounter',
+                        'Consecutive start counter'
+                      )}
+                      info={t(
+                        'groupCreateHelp.consecutiveValueCounter',
+                        'Starting counter used when the consecutive-number algorithm is selected.'
+                      )}
+                      type="number"
+                      onChange={(value) =>
+                        updateNewGroupDraft({ consecutiveValueCounter: value })
+                      }
+                    />
+                  )}
                   <InputWithInfo
                     id="newGroupPadding"
                     value={newGroupDraft.paddingCharacter}
@@ -2207,7 +2255,7 @@ export default function Builder({
                     label={t('groupCreate.validityTime', 'Validity period')}
                     info={t(
                       'groupCreateHelp.validityTime',
-                      'Optional backend validity period used to calculate the end date when no explicit valid-to date is entered.'
+                      'Optional backend validity period used to calculate the end date when no explicit valid-to date is entered. Examples: P30D for 30 days, P6M for 6 months, P1Y for 1 year.'
                     )}
                     onChange={(value) => updateNewGroupDraft({ validityTime: value })}
                   />
@@ -2217,8 +2265,9 @@ export default function Builder({
                     label={t('groupCreate.saltLength', 'Salt length')}
                     info={t(
                       'groupCreateHelp.saltLength',
-                      'Optional length for a generated salt. Leave empty to use the backend default.'
+                      'Backend default is 32. Increase this only when you need a longer generated salt.'
                     )}
+                    placeholder={BACKEND_DEFAULT_SALT_LENGTH}
                     type="number"
                     onChange={(value) => updateNewGroupDraft({ saltLength: value })}
                   />

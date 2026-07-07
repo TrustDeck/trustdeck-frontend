@@ -5,6 +5,7 @@ export interface GroupStoredAttributes {
   label?: string
   validFrom?: string
   validTo?: string
+  validityTime?: string
   prefix?: string
   psnlength?: string
   alphabet?: string

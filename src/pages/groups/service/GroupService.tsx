@@ -37,6 +37,7 @@ const normalizeDomain = (
     validFrom: formatDate(g.validFrom),
     validFromInherited: g.validFromInherited,
     validTo: formatDate(g.validTo),
+    validityTime: g.validityTime,
     validToInherited: g.validToInherited,
     prefix: g.prefix ?? '',
     psnlength: numberToString(g.pseudonymLength),
@@ -129,7 +130,10 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
     randomAlgorithmDesiredSuccessProbability: toNumberOrNull(
       payload.randomAlgorithmDesiredSuccessProbability
     ),
-    consecutiveValueCounter: toNumberOrNull(payload.consecutiveValueCounter),
+    consecutiveValueCounter:
+      String(payload.algorithm ?? '').trim().toUpperCase() === 'CONSECUTIVE'
+        ? toNumberOrNull(payload.consecutiveValueCounter)
+        : 1,
     salt: payload.salt || undefined,
     saltLength: toNumberOrNull(payload.saltLength),
     addCheckDigit: payload.checkdigit ?? false,
@@ -138,6 +142,7 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
     enforceEndDateValidity: payload.enforceEndDateValidity ?? false,
     validFrom: toLocalDateTime(payload.validFrom),
     validTo: toLocalDateTime(payload.validTo),
+    validityTime: payload.validityTime,
     algorithm: payload.algorithm,
     alphabet
   }

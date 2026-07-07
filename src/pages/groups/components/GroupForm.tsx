@@ -6,7 +6,7 @@ import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
 import { AlphabetKey, alphabetOptions, characters, CUSTOM_ALPHABET_VALUE } from '../utils/alphabetOptions.ts'
 import { algorithmOptions, defaultAlphabetForAlgorithm } from '../utils/algorithmOptions.ts'
-import { getAlgorithmOutputLength, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
+import { getAlgorithmOutputLength, isConsecutiveAlgorithm, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
@@ -15,6 +15,8 @@ import CustomCalendar from '@component/form/CustomCalendar'
 import useToastStore from '../../../core/stores/ToastStore.ts'
 import { Checkbox } from 'primereact/checkbox'
 
+const BACKEND_DEFAULT_SALT_LENGTH = '32'
+
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState<string>('')
   const [parentGroupData, setParentGroupData] = useState<GroupStoredAttributes | null>(null)
@@ -22,7 +24,8 @@ export default function GroupForm() {
 
   const { tree, selectedNodeKey, updateNodeAttribute, moveNode } =
     useTreeStateStore()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const desiredPoolSizePlaceholder = new Intl.NumberFormat(i18n.language || undefined).format(1000000)
 
   // Keep parentGroupData in sync with selected parent (from tree)
   const currentParentGroup = findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup
@@ -340,6 +343,16 @@ export default function GroupForm() {
         </div>
         )}
         <CustomFloatLabel
+          id="validityTime"
+          placeholder={t('groups:inputs.validityTime.label')}
+          inputPlaceholder={t('groups:inputs.validityTime.placeholder')}
+          helpText={t('groups:inputs.validityTime.help')}
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.validityTime ?? ''}
+          onChange={(e) =>
+            updateNodeAttribute(selectedNodeKey, 'validityTime', e.target.value)
+          }
+        />
+        <CustomFloatLabel
           id="description"
           placeholder={t('groups:inputs.description.label')}
           value={
@@ -363,6 +376,9 @@ export default function GroupForm() {
               'alphabet',
               defaultAlphabetForAlgorithm(newAlgorithm)
             )
+            if (!isConsecutiveAlgorithm(newAlgorithm)) {
+              updateNodeAttribute(selectedNodeKey, 'consecutiveValueCounter', '1')
+            }
           }}
           options={algorithmOptions}
           disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
@@ -406,6 +422,14 @@ export default function GroupForm() {
           <CustomFloatLabel
             id="customAlphabetCharacters"
             placeholder={t('groups:inputs.customAlphabetChars.label')}
+            inputPlaceholder={t(
+              'groups:inputs.customAlphabetChars.placeholder',
+              'e.g. abcdefghijklmno1234,.-*+'
+            )}
+            helpText={t(
+              'groups:inputs.customAlphabetChars.help',
+              'Enter every character that may appear in generated pseudonyms. This is a literal character list, not a regular expression.'
+            )}
             value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.customAlphabetCharacters ?? ''}
             onChange={(e) =>
               updateNodeAttribute(selectedNodeKey, 'customAlphabetCharacters', e.target.value)
@@ -418,7 +442,7 @@ export default function GroupForm() {
             const raw = findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn
             if (raw == null || raw === '') return ''
             const num = typeof raw === 'number' ? raw : Number(String(raw).replace(/\D/g, ''))
-            return Number.isNaN(num) ? String(raw) : num.toLocaleString()
+            return Number.isNaN(num) ? String(raw) : num.toLocaleString(i18n.language || undefined)
           })()}
           onChange={(e) => {
             const filtered = e.target.value.replace(/\D/g, '')
@@ -429,8 +453,53 @@ export default function GroupForm() {
             )
           }}
           placeholder={t('groups:inputs.maxnumpsn.label')}
+          inputPlaceholder={desiredPoolSizePlaceholder}
           errorMessage={t('groups:inputs.maxnumpsn.error')}
+          helpText={t('groups:inputs.maxnumpsn.help')}
           validate={validation.isValidRegistrationMaxNumPsn}
+        />
+        <CustomFloatLabel
+          id="randomAlgorithmDesiredSuccessProbability"
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.randomAlgorithmDesiredSuccessProbability ?? ''}
+          onChange={(e) =>
+            updateNodeAttribute(
+              selectedNodeKey,
+              'randomAlgorithmDesiredSuccessProbability',
+              e.target.value
+            )
+          }
+          placeholder={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.label')}
+          inputPlaceholder="0.999"
+          helpText={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.help')}
+        />
+        {isConsecutiveAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
+          <CustomFloatLabel
+            id="consecutiveValueCounter"
+            value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.consecutiveValueCounter ?? '1'}
+            onChange={(e) =>
+              updateNodeAttribute(selectedNodeKey, 'consecutiveValueCounter', e.target.value)
+            }
+            placeholder={t('groups:inputs.consecutiveValueCounter.label')}
+            inputPlaceholder="1"
+            helpText={t('groups:inputs.consecutiveValueCounter.help')}
+          />
+        )}
+        <CustomFloatLabel
+          id="saltLength"
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.saltLength ?? BACKEND_DEFAULT_SALT_LENGTH}
+          onChange={(e) =>
+            updateNodeAttribute(selectedNodeKey, 'saltLength', e.target.value)
+          }
+          placeholder={t('groups:inputs.saltLength.label')}
+          inputPlaceholder={BACKEND_DEFAULT_SALT_LENGTH}
+          helpText={t('groups:inputs.saltLength.help')}
+        />
+        <CustomFloatLabel
+          id="salt"
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.salt ?? ''}
+          onChange={(e) => updateNodeAttribute(selectedNodeKey, 'salt', e.target.value)}
+          placeholder={t('groups:inputs.salt.label')}
+          helpText={t('groups:inputs.salt.help')}
         />
         {!isRandomnessAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
           <>
@@ -483,6 +552,13 @@ export default function GroupForm() {
           value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.checkdigit}
           onChange={(val) =>
             updateNodeAttribute(selectedNodeKey, 'checkdigit', val)
+          }
+        />
+        <RockerToggle
+          label={t('groups:inputs.lengthIncludesCheckDigit.label')}
+          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.lengthIncludesCheckDigit}
+          onChange={(val) =>
+            updateNodeAttribute(selectedNodeKey, 'lengthIncludesCheckDigit', val)
           }
         />
       </form>

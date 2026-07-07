@@ -17,6 +17,38 @@ import { Checkbox } from 'primereact/checkbox'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 
+const formatIntegerForLocale = (locale: string | undefined, value: number) =>
+  new Intl.NumberFormat(locale || undefined, { maximumFractionDigits: 0 }).format(value)
+
+const formatDecimalForLocale = (locale: string | undefined, value: number) =>
+  new Intl.NumberFormat(locale || undefined, {
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3
+  }).format(value)
+
+const INHERITABLE_GROUP_FIELDS: Array<keyof GroupStoredAttributes> = [
+  'prefix',
+  'psnlength',
+  'validFrom',
+  'validTo',
+  'validityTime',
+  'algorithm',
+  'alphabet',
+  'customAlphabetCharacters',
+  'maxnumpsn',
+  'randomAlgorithmDesiredSuccessProbability',
+  'multiplepsn',
+  'paddingchar',
+  'checkdigit',
+  'lengthIncludesCheckDigit',
+  'enforceStartDateValidity',
+  'enforceEndDateValidity',
+  'consecutiveValueCounter',
+  'salt',
+  'saltLength',
+  'description'
+]
+
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState<string>('')
   const [parentGroupData, setParentGroupData] = useState<GroupStoredAttributes | null>(null)
@@ -25,7 +57,8 @@ export default function GroupForm() {
   const { tree, selectedNodeKey, updateNodeAttribute, moveNode } =
     useTreeStateStore()
   const { t, i18n } = useTranslation()
-  const desiredPoolSizePlaceholder = new Intl.NumberFormat(i18n.language || undefined).format(1000000)
+  const desiredPoolSizePlaceholder = formatIntegerForLocale(i18n.language, 1000000)
+  const desiredSuccessProbabilityPlaceholder = formatDecimalForLocale(i18n.language, 0.999)
 
   // Keep parentGroupData in sync with selected parent (from tree)
   const currentParentGroup = findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup
@@ -37,6 +70,49 @@ export default function GroupForm() {
     const parentNode = findNodeByLabel(tree, currentParentGroup)
     setParentGroupData(parentNode?.data?.stored ?? null)
   }, [tree, currentParentGroup])
+
+  const markFieldOverridden = (flag: keyof GroupStoredAttributes) => {
+    updateNodeAttribute(selectedNodeKey, flag, false)
+  }
+
+  const applyParentDefaults = (parent: GroupStoredAttributes | null) => {
+    if (!parent) return
+    INHERITABLE_GROUP_FIELDS.forEach((field) => {
+      const value = parent[field]
+      if (value !== undefined && value !== null && value !== '') {
+        updateNodeAttribute(selectedNodeKey, field, value as any)
+      }
+    })
+    updateNodeAttribute(selectedNodeKey, 'validFromInherited', Boolean(parent.validFrom))
+    updateNodeAttribute(selectedNodeKey, 'validToInherited', Boolean(parent.validTo))
+    updateNodeAttribute(selectedNodeKey, 'pseudonymLengthInherited', Boolean(parent.psnlength))
+    updateNodeAttribute(selectedNodeKey, 'algorithmInherited', Boolean(parent.algorithm))
+    updateNodeAttribute(selectedNodeKey, 'alphabetInherited', Boolean(parent.alphabet))
+    updateNodeAttribute(selectedNodeKey, 'randomAlgorithmDesiredSizeInherited', Boolean(parent.maxnumpsn))
+    updateNodeAttribute(
+      selectedNodeKey,
+      'randomAlgorithmDesiredSuccessProbabilityInherited',
+      Boolean(parent.randomAlgorithmDesiredSuccessProbability)
+    )
+    updateNodeAttribute(selectedNodeKey, 'multiplePsnAllowedInherited', parent.multiplepsn !== undefined)
+    updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', Boolean(parent.paddingchar))
+    updateNodeAttribute(selectedNodeKey, 'addCheckDigitInherited', parent.checkdigit !== undefined)
+    updateNodeAttribute(
+      selectedNodeKey,
+      'lengthIncludesCheckDigitInherited',
+      parent.lengthIncludesCheckDigit !== undefined
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'enforceStartDateValidityInherited',
+      parent.enforceStartDateValidity !== undefined
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'enforceEndDateValidityInherited',
+      parent.enforceEndDateValidity !== undefined
+    )
+  }
 
   // Hash algorithms require hex alphabet; normalize when algorithm is hash but alphabet is not
   const node = findNodeByKey(tree, selectedNodeKey)
@@ -212,13 +288,20 @@ export default function GroupForm() {
             moveNode(selectedNodeKey, parentName)
             if (parentName) {
               const parentNode = findNodeByLabel(tree, parentName)
-              setParentGroupData(parentNode?.data?.stored ?? null)
+              const parentData = parentNode?.data?.stored ?? null
+              setParentGroupData(parentData)
+              applyParentDefaults(parentData)
             } else {
               setParentGroupData(null)
             }
           }}
           options={parentGroupOptions}
         />
+        {parentGroupData && (
+          <p className="-mt-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
+            {t('groups:inputs.inheritedEditable')}
+          </p>
+        )}
         <div className="form-grid">
           <CustomFloatLabel
             id="prefix"
@@ -238,9 +321,9 @@ export default function GroupForm() {
             }
             onChange={(e) => {
               updateNodeAttribute(selectedNodeKey, 'psnlength', e.value)
+              markFieldOverridden('pseudonymLengthInherited')
             }}
             options={psnLengthOptions}
-            disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.pseudonymLengthInherited)}
           />
         </div>
         {parentGroupData && (
@@ -273,16 +356,16 @@ export default function GroupForm() {
             value={parseDate(
               findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFrom
             )}
-            onChange={(e) =>
+            onChange={(e) => {
               updateNodeAttribute(
                 selectedNodeKey,
                 'validFrom',
                 formatDate(e.value ?? null)
               )
-            }
+              markFieldOverridden('validFromInherited')
+            }}
             placeholder={t('groups:inputs.startdate.label')}
             className="w-full"
-            readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFromInherited)}
           />
           <CustomCalendar
             id="enddate"
@@ -290,16 +373,16 @@ export default function GroupForm() {
             value={parseDate(
               findNodeByKey(tree, selectedNodeKey)?.data.temporal.validTo
             )}
-            onChange={(e) =>
+            onChange={(e) => {
               updateNodeAttribute(
                 selectedNodeKey,
                 'validTo',
                 formatDate(e.value ?? null)
               )
-            }
+              markFieldOverridden('validToInherited')
+            }}
             placeholder={t('groups:inputs.enddate.label')}
             className="w-full"
-            readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validToInherited)}
           />
         </div>
         {parentGroupData && (
@@ -379,9 +462,9 @@ export default function GroupForm() {
             if (!isConsecutiveAlgorithm(newAlgorithm)) {
               updateNodeAttribute(selectedNodeKey, 'consecutiveValueCounter', '1')
             }
+            markFieldOverridden('algorithmInherited')
           }}
           options={algorithmOptions}
-          disabled={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
         />
         {parentGroupData && (
         <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
@@ -411,9 +494,10 @@ export default function GroupForm() {
               ? 'HEXADECIMAL_ALPHABET'
               : findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet
           }
-          onChange={(e) =>
+          onChange={(e) => {
             updateNodeAttribute(selectedNodeKey, 'alphabet', e.value)
-          }
+            markFieldOverridden('alphabetInherited')
+          }}
           options={alphabetOptions}
           helpText={t('groups:inputs.alphabet.help')}
           disabled={isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)}
@@ -469,7 +553,7 @@ export default function GroupForm() {
             )
           }
           placeholder={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.label')}
-          inputPlaceholder="0.999"
+          inputPlaceholder={desiredSuccessProbabilityPlaceholder}
           helpText={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.help')}
         />
         {isConsecutiveAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
@@ -513,8 +597,8 @@ export default function GroupForm() {
               onChange={(e) => {
                 const val = (e.target.value ?? '').slice(0, 1)
                 updateNodeAttribute(selectedNodeKey, 'paddingchar', val)
+                markFieldOverridden('paddingCharacterInherited')
               }}
-              readOnly={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
             />
             {parentGroupData && (
             <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
@@ -543,23 +627,26 @@ export default function GroupForm() {
           value={
             findNodeByKey(tree, selectedNodeKey)?.data.temporal.multiplepsn
           }
-          onChange={(val) =>
+          onChange={(val) => {
             updateNodeAttribute(selectedNodeKey, 'multiplepsn', val)
-          }
+            markFieldOverridden('multiplePsnAllowedInherited')
+          }}
         />
         <RockerToggle
           label={t('groups:inputs.checkdigit.label')}
           value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.checkdigit}
-          onChange={(val) =>
+          onChange={(val) => {
             updateNodeAttribute(selectedNodeKey, 'checkdigit', val)
-          }
+            markFieldOverridden('addCheckDigitInherited')
+          }}
         />
         <RockerToggle
           label={t('groups:inputs.lengthIncludesCheckDigit.label')}
           value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.lengthIncludesCheckDigit}
-          onChange={(val) =>
+          onChange={(val) => {
             updateNodeAttribute(selectedNodeKey, 'lengthIncludesCheckDigit', val)
-          }
+            markFieldOverridden('lengthIncludesCheckDigitInherited')
+          }}
         />
       </form>
     </>

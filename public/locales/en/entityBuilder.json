@@ -339,7 +339,8 @@
     "enforceEndDateValidity": "Enforce end-date validity",
     "customAlphabetRequired": "Enter the characters that are allowed in the custom alphabet.",
     "customAlphabetNoSemicolon": "The alphabet must not contain a semicolon.",
-    "checkDigitAlphabetEven": "When check digits are enabled, the alphabet must contain an even number of characters."
+    "checkDigitAlphabetEven": "When check digits are enabled, the alphabet must contain an even number of characters.",
+    "inheritedEditable": "Inherited from parent group; you can override it."
   },
   "groupCreateHelp": {
     "parentGroup": "Optional parent group. Leave empty to create a top-level group.",
@@ -352,11 +353,11 @@
     "addCheckDigit": "Adds a final check digit that can help detect typing or transcription errors.",
     "groupDescription": "Optional description for administrators to document the purpose of this group.",
     "customAlphabetCharacters": "Enter every character that may appear in generated pseudonyms. This is a literal character list, not a regular expression, for example abcdefghijklmno1234,.-*+.",
-    "randomAlgorithmDesiredSuccessProbability": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999.",
+    "randomAlgorithmDesiredSuccessProbability": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999 in English or 0,999 in German.",
     "consecutiveValueCounter": "Starting counter used when the consecutive-number algorithm is selected.",
     "validFrom": "Optional start date and time for values created in this group. Leave empty to use the backend default or the parent group setting.",
     "validTo": "Optional end date and time for values created in this group. Leave empty to use the validity period or the parent group setting.",
-    "validityTime": "Optional backend validity period used to calculate the end date when no explicit valid-to date is entered. Examples: P30D for 30 days, P6M for 6 months, P1Y for 1 year.",
+    "validityTime": "Optional validity period used to calculate the end date when no explicit valid-to date is entered. Examples: 3days, 1 day, 50 day, 7w, or 5 y. Supported units include years, months, weeks, days, hours, minutes, seconds, milliseconds, and nanoseconds. If a valid-to date is provided, the validity period is ignored.",
     "salt": "Optional explicit salt used for pseudonym generation. Leave empty so the backend generates a salt.",
     "saltLength": "Backend default is 32. Increase this only when you need a longer generated salt.",
     "lengthIncludesCheckDigit": "When enabled, the check digit counts as part of the configured pseudonym length instead of being added on top.",

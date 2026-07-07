@@ -80,12 +80,12 @@
     "inheritFromParent": "Inherit from parent",
     "validityTime": {
       "label": "Validity period",
-      "placeholder": "e.g. P30D, P6M, or P1Y",
-      "help": "Optional backend validity period used to calculate the end date when no explicit end date is entered. Examples: P30D for 30 days, P6M for 6 months, P1Y for 1 year."
+      "placeholder": "e.g. 3days, 1 day, 50 day, 7w, or 5 y",
+      "help": "Optional validity period used to calculate the end date when no explicit end date is entered. Examples: 3days, 1 day, 50 day, 7w, or 5 y. Supported units include years, months, weeks, days, hours, minutes, seconds, milliseconds, and nanoseconds. If an end date is provided, the validity period is ignored."
     },
     "randomAlgorithmDesiredSuccessProbability": {
       "label": "Desired success probability",
-      "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999."
+      "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999 in English or 0,999 in German."
     },
     "consecutiveValueCounter": {
       "label": "Consecutive start counter",
@@ -101,7 +101,8 @@
     },
     "lengthIncludesCheckDigit": {
       "label": "Length includes check digit"
-    }
+    },
+    "inheritedEditable": "Inherited from parent group; you can override it."
   },
   "savingGroup": "New group is being created...",
   "groupCreated": "Your group has been created.",

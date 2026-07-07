@@ -339,7 +339,8 @@
     "enforceEndDateValidity": "Enddatum-Gültigkeit erzwingen",
     "customAlphabetRequired": "Geben Sie die Zeichen ein, die im benutzerdefinierten Alphabet erlaubt sind.",
     "customAlphabetNoSemicolon": "Das Alphabet darf kein Semikolon enthalten.",
-    "checkDigitAlphabetEven": "Wenn Prüfziffern aktiviert sind, muss das Alphabet eine gerade Anzahl von Zeichen enthalten."
+    "checkDigitAlphabetEven": "Wenn Prüfziffern aktiviert sind, muss das Alphabet eine gerade Anzahl von Zeichen enthalten.",
+    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden."
   },
   "groupCreateHelp": {
     "parentGroup": "Optionale übergeordnete Gruppe. Leer lassen, um eine Gruppe auf oberster Ebene zu erstellen.",
@@ -352,11 +353,11 @@
     "addCheckDigit": "Fügt eine abschließende Prüfziffer hinzu, um Tipp- oder Übertragungsfehler besser zu erkennen.",
     "groupDescription": "Optionale Beschreibung, mit der Administratoren den Zweck dieser Gruppe dokumentieren können.",
     "customAlphabetCharacters": "Geben Sie jedes Zeichen ein, das in erzeugten Pseudonymen vorkommen darf. Dies ist eine wörtliche Zeichenliste und kein regulärer Ausdruck, zum Beispiel abcdefghijklmno1234,.-*+.",
-    "randomAlgorithmDesiredSuccessProbability": "Zielwahrscheinlichkeit dafür, dass ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999.",
+    "randomAlgorithmDesiredSuccessProbability": "Zielwahrscheinlichkeit dafür, dass ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999 auf Englisch oder 0,999 auf Deutsch.",
     "consecutiveValueCounter": "Startwert, der beim Algorithmus für fortlaufende Nummern verwendet wird.",
     "validFrom": "Optionales Startdatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um den Backend-Standard oder die Einstellung der übergeordneten Gruppe zu verwenden.",
     "validTo": "Optionales Enddatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um die Gültigkeitsdauer oder die Einstellung der übergeordneten Gruppe zu verwenden.",
-    "validityTime": "Optionale Backend-Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: P30D für 30 Tage, P6M für 6 Monate, P1Y für 1 Jahr.",
+    "validityTime": "Optionale Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: 3days, 1 day, 50 day, 7w oder 5 y. Unterstützte Einheiten sind Jahre, Monate, Wochen, Tage, Stunden, Minuten, Sekunden, Millisekunden und Nanosekunden. Wenn ein Enddatum angegeben ist, wird die Gültigkeitsdauer ignoriert.",
     "salt": "Optionaler expliziter Salt für die Pseudonymerzeugung. Leer lassen, damit das Backend einen Salt erzeugt.",
     "saltLength": "Der Backend-Standardwert ist 32. Erhöhen Sie den Wert nur, wenn ein längerer generierter Salt benötigt wird.",
     "lengthIncludesCheckDigit": "Wenn aktiviert, zählt die Prüfziffer zur konfigurierten Pseudonymlänge, statt zusätzlich angehängt zu werden.",

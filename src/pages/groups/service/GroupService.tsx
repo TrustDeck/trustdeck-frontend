@@ -105,7 +105,14 @@ const toLocalDateTime = (input?: string | null): string | null => {
 const toNumberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number') return Number.isNaN(value) ? null : value
-  const normalized = String(value).replace(/\s/g, '').replace(/,/g, '')
+  const raw = String(value).trim().replace(/\s/g, '')
+  if (!raw) return null
+
+  // Accept both locale-formatted integers (1,000,000 / 1.000.000) and
+  // locale-formatted decimals (0.999 / 0,999).
+  const normalized = raw
+    .replace(/(?<=\d)[.,](?=\d{3}(?:\D|$))/g, '')
+    .replace(',', '.')
   const parsed = Number(normalized)
   return Number.isNaN(parsed) ? null : parsed
 }

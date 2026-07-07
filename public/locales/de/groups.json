@@ -80,12 +80,12 @@
     "psnexampleNew": "Das Pseudonym sieht so aus:",
     "validityTime": {
       "label": "Gültigkeitsdauer",
-      "placeholder": "z. B. P30D, P6M oder P1Y",
-      "help": "Optionale Backend-Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: P30D für 30 Tage, P6M für 6 Monate, P1Y für 1 Jahr."
+      "placeholder": "z. B. 3days, 1 day, 50 day, 7w oder 5 y",
+      "help": "Optionale Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: 3days, 1 day, 50 day, 7w oder 5 y. Unterstützte Einheiten sind Jahre, Monate, Wochen, Tage, Stunden, Minuten, Sekunden, Millisekunden und Nanosekunden. Wenn ein Enddatum angegeben ist, wird die Gültigkeitsdauer ignoriert."
     },
     "randomAlgorithmDesiredSuccessProbability": {
       "label": "Gewünschte Erfolgswahrscheinlichkeit",
-      "help": "Zielwahrscheinlichkeit, mit der ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999."
+      "help": "Zielwahrscheinlichkeit, mit der ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999 auf Englisch oder 0,999 auf Deutsch."
     },
     "consecutiveValueCounter": {
       "label": "Startzähler für fortlaufende Nummern",
@@ -101,7 +101,8 @@
     },
     "lengthIncludesCheckDigit": {
       "label": "Länge enthält Prüfziffer"
-    }
+    },
+    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden."
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",

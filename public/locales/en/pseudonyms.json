@@ -14,7 +14,29 @@
   "selectGroup": "Select groups",
   "standalone": {
     "description": "You can also generate a pseudonym that is not linked to an existing entity. TrustDeck will create an internal standalone identifier for this pseudonym.",
-    "selected": "Standalone pseudonym mode is active. Select the group in which the pseudonym should be saved."
+    "selected": "Standalone pseudonym mode is active. Select the group in which the pseudonym should be saved.",
+    "modalTitle": "Generate pseudonym without entity",
+    "modalDescription": "Select the group and provide the identifier data. Additional pseudonym attributes are available under advanced options.",
+    "advanced": {
+      "show": "Show advanced options",
+      "hide": "Hide advanced options"
+    },
+    "fields": {
+      "group": "Group",
+      "groupSearch": "Search groups",
+      "identifier": "Identifier",
+      "idType": "ID Type",
+      "pseudonym": "Pseudonym",
+      "validFrom": "Valid from",
+      "validTo": "Valid to",
+      "validityTime": "Validity period",
+      "validityTimeHelp": "Examples: 3days, 1 day, 50 day, 7w, or 5 y. If a valid-to date is provided, the validity period is ignored.",
+      "omitPrefix": "Omit group prefix"
+    },
+    "validation": {
+      "required": "Please select a group and provide both identifier and ID Type.",
+      "createFailed": "The pseudonym could not be created."
+    }
   },
   "selectedEntity": {
     "title": "Selected entity identifier",

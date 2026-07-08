@@ -19,7 +19,10 @@ interface CustomTreeSelectProps {
   required?: boolean
   /** 'single' = one node only, no parent/child cascade; 'checkbox' = multiple with cascade */
   selectionMode?: 'single' | 'multiple' | 'checkbox'
+  filter?: boolean
+  filterPlaceholder?: string
 }
+
 
 const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   id,

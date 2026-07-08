@@ -77,7 +77,7 @@
     "addEntity": "Entitätsinstanz hinzufügen",
     "loadingInstances": "Entitätsinstanzen werden geladen...",
     "noInstances": "Keine Entitätsinstanzen gefunden",
-    "noInstancesHint": "Nutzen Sie das Suchfeld oben oder erstellen Sie eine neue Entitätsinstanz.",
+    "noInstancesHint": "Für Ihre Suche wurden keine passenden Entitätsinstanzen gefunden.",
     "identifier": "Kennung",
     "summary": "Zusammenfassung",
     "actions": "Aktionen",
@@ -106,7 +106,7 @@
     "addEntityInstance": "Entitätsinstanz hinzufügen",
     "resultsLimit": "Angezeigte Ergebnisse",
     "resultSummary": "{{shown}} von {{total}} geladenen Ergebnis(sen) werden angezeigt.",
-    "enterSearchTerm": "Geben Sie einen Suchbegriff ein oder nutzen Sie *, um alle Entitäten des ausgewählten Typs zu suchen.",
+    "enterSearchTerm": "Geben Sie einen Suchbegriff ein.",
     "validationFailed": "Bitte prüfen Sie das Formular",
     "invalidField": "Ungültiger Wert",
     "requiredFieldError": "{{field}} ist ein Pflichtfeld.",
@@ -128,8 +128,9 @@
     "addValue": "Wert hinzufügen",
     "removeValue": "Wert entfernen",
     "selectedBadge": "Ausgewählt",
-    "searchingType": "Suche im Entitätstyp",
-    "searchAllHint": "Geben Sie * ein, um alle Entitäten dieses Typs zu suchen."
+    "searchInputPlaceholder": "Name, Kennung oder Feldwert",
+    "searchFirst": "Suchen Sie zuerst nach Entitätsinstanzen",
+    "searchFirstHint": "Wählen Sie einen Entitätstyp aus und geben Sie einen Suchbegriff ein, um passende Entitätsinstanzen zu laden."
   },
   "status": {
     "active": "Aktiv",

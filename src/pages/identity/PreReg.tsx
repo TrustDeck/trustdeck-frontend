@@ -7,7 +7,6 @@ import { useAuth } from 'react-oidc-context'
 import {
   CheckIcon,
   EyeIcon,
-  MagnifyingGlassIcon,
   PencilIcon,
   PlusIcon,
   TrashIcon,
@@ -595,6 +594,7 @@ export default function PreReg() {
   const [loadingTypes, setLoadingTypes] = useState(true)
   const [loadingInstances, setLoadingInstances] = useState(false)
   const [instances, setInstances] = useState<EntityInstance[]>([])
+  const [hasSearchedInstances, setHasSearchedInstances] = useState(false)
   const [query, setQuery] = useState('')
   const [resultLimit, setResultLimit] = useState(10)
   const [permissionAccess, setPermissionAccess] =
@@ -868,6 +868,7 @@ export default function PreReg() {
       }
 
       setLoadingInstances(true)
+      setHasSearchedInstances(true)
       try {
         const normalizedQuery = searchQuery?.trim() || '*'
         const result = await TrustDeck.instance().searchEntities(
@@ -925,6 +926,7 @@ export default function PreReg() {
 
   useEffect(() => {
     setInstances([])
+    setHasSearchedInstances(false)
     setSelectedInstance(null)
     setQuery('')
   }, [selectedTypeName])
@@ -1057,6 +1059,7 @@ export default function PreReg() {
           normalizeInstance(created)
         )
         setInstances((current) => [normalized, ...current])
+        setHasSearchedInstances(true)
         setSelectedInstance(normalized)
         setModalMode('view')
         setFormData(normalized.data ?? dataToSave)
@@ -1299,41 +1302,18 @@ export default function PreReg() {
             })}
           >
             <div className="flex flex-col gap-4">
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
-                <span className="block text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
-                  {t('identity:crud.searchingType')}
-                </span>
-                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className="text-lg font-semibold">{selectedType.name}</span>
-                  {selectedType.version && (
-                    <span className="text-sm">
-                      {t('identity:crud.version')}: {selectedType.version}
-                    </span>
-                  )}
-                  {selectedType.associatedDomainName && (
-                    <span className="text-sm">
-                      {t('identity:crud.associatedGroup')}: {selectedType.associatedDomainName}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
-                  {t('identity:crud.searchAllHint')}
-                </p>
-              </div>
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
                 <CustomFloatLabel
                   id="identity-entity-instance-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={t('identity:crud.searchPlaceholder')}
-                  inputPlaceholder="*"
-                  helpText={t('identity:crud.searchAllHint')}
+                  inputPlaceholder={t('identity:crud.searchInputPlaceholder')}
                 />
                 <div className="flex flex-wrap justify-end gap-2">
                   <PrimaryButton
                     label={t('identity:crud.search')}
                     onClick={handleSearchClick}
-                    icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
                     loading={loadingInstances}
                     disabled={permissionLoadingOrDenied}
                     tooltip={
@@ -1358,6 +1338,15 @@ export default function PreReg() {
               ) : loadingInstances ? (
                 <div className="py-10 text-center text-gray-500 dark:text-gray-300">
                   {t('identity:crud.loadingInstances')}
+                </div>
+              ) : !hasSearchedInstances && instances.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {t('identity:crud.searchFirst')}
+                  </h3>
+                  <p className="mt-2 text-gray-600 dark:text-gray-300">
+                    {t('identity:crud.searchFirstHint')}
+                  </p>
                 </div>
               ) : instances.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">

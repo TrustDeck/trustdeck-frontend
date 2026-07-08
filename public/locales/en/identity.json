@@ -77,7 +77,7 @@
     "addEntity": "Add entity instance",
     "loadingInstances": "Loading entity instances...",
     "noInstances": "No entity instances found",
-    "noInstancesHint": "Use the search field above or create a new entity instance.",
+    "noInstancesHint": "No matching entity instances were found for your search.",
     "identifier": "Identifier",
     "summary": "Summary",
     "actions": "Actions",
@@ -106,7 +106,7 @@
     "addEntityInstance": "Add entity instance",
     "resultsLimit": "Results shown",
     "resultSummary": "Showing {{shown}} of {{total}} loaded result(s).",
-    "enterSearchTerm": "Enter a search term, or enter * to search all entities of the selected type.",
+    "enterSearchTerm": "Enter a search term.",
     "validationFailed": "Please check the form",
     "invalidField": "Invalid value",
     "requiredFieldError": "{{field}} is required.",
@@ -128,8 +128,9 @@
     "addValue": "Add value",
     "removeValue": "Remove value",
     "selectedBadge": "Selected",
-    "searchingType": "Searching in entity type",
-    "searchAllHint": "Enter * to search all entities of this type."
+    "searchInputPlaceholder": "Name, identifier, or field value",
+    "searchFirst": "Search for entity instances first",
+    "searchFirstHint": "Select an entity type and enter a search term to load matching entity instances."
   },
   "status": {
     "active": "Active",

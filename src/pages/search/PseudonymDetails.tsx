@@ -366,7 +366,7 @@ const PseudonymDetails: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <div className="relative mb-4 flex w-full items-center 2xl:mx-auto 2xl:w-4/5">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
@@ -394,9 +394,9 @@ const PseudonymDetails: React.FC = () => {
       )}
 
       {!loading && currentPseudonym && (
-        <div className="mx-auto flex w-full max-w-[1040px] justify-center px-4">
-          <div className="grid w-full grid-cols-1 items-start justify-center gap-5 xl:grid-cols-[minmax(0,560px)_minmax(0,440px)]">
-            <section className="w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex w-full justify-center px-4">
+          <div className="flex w-full max-w-[1040px] flex-col items-start justify-center gap-6 xl:flex-row">
+            <section className="w-full max-w-[560px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-3xl font-semibold">
@@ -455,7 +455,7 @@ const PseudonymDetails: React.FC = () => {
               </div>
             </section>
 
-            <section className="h-fit w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+            <section className="h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
               <h2 className="text-3xl font-semibold">
                 {t('search:pseudonym.linkedPseudonyms')}
               </h2>

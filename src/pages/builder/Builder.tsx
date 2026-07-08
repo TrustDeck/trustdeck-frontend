@@ -104,6 +104,36 @@ function formatIntegerForLocale(locale: string | undefined, value: number) {
   return new Intl.NumberFormat(locale || undefined, { maximumFractionDigits: 0 }).format(value)
 }
 
+function formatIntegerInputForLocale(locale: string | undefined, value: string) {
+  const digits = value.replace(/[^0-9]/g, '')
+  if (!digits) return ''
+
+  try {
+    return new Intl.NumberFormat(locale || undefined, {
+      maximumFractionDigits: 0,
+      useGrouping: true
+    }).format(BigInt(digits))
+  } catch {
+    return new Intl.NumberFormat(locale || undefined, {
+      maximumFractionDigits: 0,
+      useGrouping: true
+    }).format(Number(digits))
+  }
+}
+
+function filterGroupOptions(
+  options: { label: string; value: string }[],
+  query: string
+) {
+  const needle = query.trim().toLowerCase()
+  if (!needle || needle === '*') return options
+  return options.filter(
+    (option) =>
+      option.label.toLowerCase().includes(needle) ||
+      option.value.toLowerCase().includes(needle)
+  )
+}
+
 function formatDecimalForLocale(locale: string | undefined, value: number) {
   return new Intl.NumberFormat(locale || undefined, {
     minimumFractionDigits: 8,
@@ -789,6 +819,9 @@ export default function Builder({
   const [groupOptions, setGroupOptions] = useState<
     { label: string; value: string }[]
   >([])
+  const [allGroupOptions, setAllGroupOptions] = useState<
+    { label: string; value: string }[]
+  >([])
   const [groupSearchLoading, setGroupSearchLoading] = useState(false)
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
   const attributeElementRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -900,20 +933,50 @@ export default function Builder({
 
   useEffect(() => {
     if (saveTarget !== 'project') {
+      setAllGroupOptions([])
       setGroupOptions([])
       setGroupSearchLoading(false)
       return
     }
 
     let active = true
+    setGroupSearchLoading(true)
+    loadAllGroupOptions()
+      .then((options) => {
+        if (!active) return
+        setAllGroupOptions(options)
+        setGroupOptions(filterGroupOptions(options, associatedGroupName))
+      })
+      .catch(() => {
+        if (!active) return
+        setAllGroupOptions([])
+        setGroupOptions([])
+      })
+      .finally(() => {
+        if (active) setGroupSearchLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [saveTarget])
+
+  useEffect(() => {
+    if (saveTarget !== 'project') return
+
+    let active = true
     const handle = window.setTimeout(async () => {
       setGroupSearchLoading(true)
+      const localMatches = filterGroupOptions(allGroupOptions, associatedGroupName)
       try {
         const query = associatedGroupName.trim() || '*'
         const domains = await TrustDeck.instance().searchReadableDomains(query)
-        if (active) setGroupOptions(flattenDomainsForOptions(domains ?? []))
+        const backendMatches = flattenDomainsForOptions(domains ?? [])
+        if (active) {
+          setGroupOptions(mergeOptionLists(backendMatches, localMatches))
+        }
       } catch {
-        if (active) setGroupOptions([])
+        if (active) setGroupOptions(localMatches)
       } finally {
         if (active) setGroupSearchLoading(false)
       }
@@ -923,7 +986,21 @@ export default function Builder({
       active = false
       window.clearTimeout(handle)
     }
-  }, [associatedGroupName, saveTarget])
+  }, [allGroupOptions, associatedGroupName, saveTarget])
+
+  useEffect(() => {
+    setNewGroupDraft((current) => {
+      const formattedDesiredSize = formatIntegerInputForLocale(
+        i18n.language,
+        current.randomAlgorithmDesiredSize
+      )
+      if (formattedDesiredSize === current.randomAlgorithmDesiredSize) return current
+      return {
+        ...current,
+        randomAlgorithmDesiredSize: formattedDesiredSize
+      }
+    })
+  }, [i18n.language])
 
   const updateNewGroupDraft = (patch: Partial<NewGroupDraft>) => {
     setNewGroupDraft((current) => ({ ...current, ...patch }))
@@ -956,7 +1033,10 @@ export default function Builder({
         customAlphabetCharacters: alphabetKey === null ? parent.alphabet ?? '' : '',
         randomAlgorithmDesiredSize:
           parent.randomAlgorithmDesiredSize !== undefined && parent.randomAlgorithmDesiredSize !== null
-            ? String(parent.randomAlgorithmDesiredSize)
+            ? formatIntegerInputForLocale(
+                i18n.language,
+                String(parent.randomAlgorithmDesiredSize)
+              )
             : '',
         randomAlgorithmDesiredSuccessProbability:
           parent.randomAlgorithmDesiredSuccessProbability !== undefined && parent.randomAlgorithmDesiredSuccessProbability !== null
@@ -2302,9 +2382,13 @@ export default function Builder({
                       'Expected maximum number of pseudonyms for random generation. This helps evaluate collision risk.'
                     )}
                     placeholder={desiredPoolSizePlaceholder}
+                    inputMode="numeric"
                     onChange={(value) =>
                       updateNewGroupDraft({
-                        randomAlgorithmDesiredSize: value.replace(/[^0-9]/g, '')
+                        randomAlgorithmDesiredSize: formatIntegerInputForLocale(
+                          i18n.language,
+                          value
+                        )
                       })
                     }
                   />
@@ -2838,7 +2922,7 @@ function GroupSearchInput({
 }) {
   const { t } = useTranslation(['entityBuilder'])
   const [open, setOpen] = useState(false)
-  const visibleOptions = options.slice(0, 12)
+  const visibleOptions = filterGroupOptions(options, value).slice(0, 20)
   const shouldShowMenu =
     open && (loading || visibleOptions.length > 0 || Boolean(value.trim()))
 

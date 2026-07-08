@@ -106,7 +106,7 @@
     "addEntityInstance": "Add entity instance",
     "resultsLimit": "Results shown",
     "resultSummary": "Showing {{shown}} of {{total}} loaded result(s).",
-    "enterSearchTerm": "Enter a search term or use “List all”.",
+    "enterSearchTerm": "Enter a search term, or enter * to search all entities of the selected type.",
     "validationFailed": "Please check the form",
     "invalidField": "Invalid value",
     "requiredFieldError": "{{field}} is required.",
@@ -126,7 +126,10 @@
     "noDeletePermission": "You do not have permission to delete entity instances in this project.",
     "checkingPermissions": "Checking permissions before loading entity instances...",
     "addValue": "Add value",
-    "removeValue": "Remove value"
+    "removeValue": "Remove value",
+    "selectedBadge": "Selected",
+    "searchingType": "Searching in entity type",
+    "searchAllHint": "Enter * to search all entities of this type."
   },
   "status": {
     "active": "Active",

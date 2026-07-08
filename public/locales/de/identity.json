@@ -106,7 +106,7 @@
     "addEntityInstance": "Entitätsinstanz hinzufügen",
     "resultsLimit": "Angezeigte Ergebnisse",
     "resultSummary": "{{shown}} von {{total}} geladenen Ergebnis(sen) werden angezeigt.",
-    "enterSearchTerm": "Geben Sie einen Suchbegriff ein oder nutzen Sie „Alle auflisten“.",
+    "enterSearchTerm": "Geben Sie einen Suchbegriff ein oder nutzen Sie *, um alle Entitäten des ausgewählten Typs zu suchen.",
     "validationFailed": "Bitte prüfen Sie das Formular",
     "invalidField": "Ungültiger Wert",
     "requiredFieldError": "{{field}} ist ein Pflichtfeld.",
@@ -126,7 +126,10 @@
     "noDeletePermission": "Sie haben keine Berechtigung, Entitätsinstanzen in diesem Projekt zu löschen.",
     "checkingPermissions": "Berechtigungen werden geprüft, bevor Entitätsinstanzen geladen werden...",
     "addValue": "Wert hinzufügen",
-    "removeValue": "Wert entfernen"
+    "removeValue": "Wert entfernen",
+    "selectedBadge": "Ausgewählt",
+    "searchingType": "Suche im Entitätstyp",
+    "searchAllHint": "Geben Sie * ein, um alle Entitäten dieses Typs zu suchen."
   },
   "status": {
     "active": "Aktiv",

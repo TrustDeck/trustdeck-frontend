@@ -5,7 +5,6 @@ import { Dialog } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from 'react-oidc-context'
 import {
-  ArrowPathIcon,
   CheckIcon,
   EyeIcon,
   MagnifyingGlassIcon,
@@ -39,7 +38,6 @@ type ModalMode = 'view' | 'create' | 'edit'
 
 type EntityInstance = Record<string, any>
 
-const LIST_ALL_INSTANCE_SEARCH_QUERY = '2'
 
 type IconActionButtonProps = {
   title: string
@@ -871,10 +869,10 @@ export default function PreReg() {
 
       setLoadingInstances(true)
       try {
-        const normalizedQuery = searchQuery?.trim()
+        const normalizedQuery = searchQuery?.trim() || '*'
         const result = await TrustDeck.instance().searchEntities(
           typeName,
-          normalizedQuery || LIST_ALL_INSTANCE_SEARCH_QUERY
+          normalizedQuery
         )
         setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
       } catch (error) {
@@ -1189,7 +1187,8 @@ export default function PreReg() {
         : t('identity:crud.viewEntity', { type: selectedTypeName })
 
   const handleSearchClick = () => {
-    if (!query.trim()) {
+    const normalizedQuery = query.trim()
+    if (!normalizedQuery) {
       showToast({
         severity: 'warn',
         summary: t('identity:crud.search'),
@@ -1198,11 +1197,7 @@ export default function PreReg() {
       })
       return
     }
-    searchInstances(selectedTypeName, query)
-  }
-
-  const handleListAllClick = () => {
-    searchInstances(selectedTypeName, LIST_ALL_INSTANCE_SEARCH_QUERY)
+    searchInstances(selectedTypeName, normalizedQuery)
   }
 
   return (
@@ -1261,13 +1256,24 @@ export default function PreReg() {
                     return (
                       <tr
                         key={`${type.name}-${type.version}`}
-                        className={`cursor-pointer transition hover:bg-gray-50 dark:hover:bg-slate-800 ${
-                          selected ? 'bg-blue-50 dark:bg-slate-800' : ''
+                        aria-selected={selected}
+                        className={`cursor-pointer border-l-4 transition hover:bg-gray-50 dark:hover:bg-slate-800 ${
+                          selected
+                            ? 'border-color-blue bg-blue-50 dark:bg-slate-800'
+                            : 'border-transparent'
                         }`}
                         onClick={() => setSelectedTypeName(type.name)}
                       >
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                          {type.name}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{type.name}</span>
+                            {selected && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+                                <CheckIcon className="h-3.5 w-3.5" />
+                                {t('identity:crud.selectedBadge')}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                           {type.version || '-'}
@@ -1293,12 +1299,35 @@ export default function PreReg() {
             })}
           >
             <div className="flex flex-col gap-4">
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                <span className="block text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                  {t('identity:crud.searchingType')}
+                </span>
+                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  <span className="text-lg font-semibold">{selectedType.name}</span>
+                  {selectedType.version && (
+                    <span className="text-sm">
+                      {t('identity:crud.version')}: {selectedType.version}
+                    </span>
+                  )}
+                  {selectedType.associatedDomainName && (
+                    <span className="text-sm">
+                      {t('identity:crud.associatedGroup')}: {selectedType.associatedDomainName}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-blue-800 dark:text-blue-200">
+                  {t('identity:crud.searchAllHint')}
+                </p>
+              </div>
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
                 <CustomFloatLabel
                   id="identity-entity-instance-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={t('identity:crud.searchPlaceholder')}
+                  inputPlaceholder="*"
+                  helpText={t('identity:crud.searchAllHint')}
                 />
                 <div className="flex flex-wrap justify-end gap-2">
                   <PrimaryButton
@@ -1307,17 +1336,6 @@ export default function PreReg() {
                     icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
                     loading={loadingInstances}
                     disabled={permissionLoadingOrDenied}
-                    tooltip={
-                      permissionLoadingOrDenied
-                        ? t('identity:crud.noSearchPermission')
-                        : undefined
-                    }
-                  />
-                  <PrimaryOutlinedButton
-                    label={t('identity:crud.listAll')}
-                    onClick={handleListAllClick}
-                    icon={<ArrowPathIcon className="h-5 w-5 mr-1" />}
-                    disabled={loadingInstances || permissionLoadingOrDenied}
                     tooltip={
                       permissionLoadingOrDenied
                         ? t('identity:crud.noSearchPermission')

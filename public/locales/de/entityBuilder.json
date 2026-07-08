@@ -340,7 +340,7 @@
     "customAlphabetRequired": "Geben Sie die Zeichen ein, die im benutzerdefinierten Alphabet erlaubt sind.",
     "customAlphabetNoSemicolon": "Das Alphabet darf kein Semikolon enthalten.",
     "checkDigitAlphabetEven": "Wenn Prüfziffern aktiviert sind, muss das Alphabet eine gerade Anzahl von Zeichen enthalten.",
-    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden."
+    "inheritedEditable": "Von der Elterngruppe übernommen; zum Überschreiben bearbeiten."
   },
   "groupCreateHelp": {
     "parentGroup": "Optionale übergeordnete Gruppe. Leer lassen, um eine Gruppe auf oberster Ebene zu erstellen.",
@@ -353,7 +353,7 @@
     "addCheckDigit": "Fügt eine abschließende Prüfziffer hinzu, um Tipp- oder Übertragungsfehler besser zu erkennen.",
     "groupDescription": "Optionale Beschreibung, mit der Administratoren den Zweck dieser Gruppe dokumentieren können.",
     "customAlphabetCharacters": "Geben Sie jedes Zeichen ein, das in erzeugten Pseudonymen vorkommen darf. Dies ist eine wörtliche Zeichenliste und kein regulärer Ausdruck, zum Beispiel abcdefghijklmno1234,.-*+.",
-    "randomAlgorithmDesiredSuccessProbability": "Zielwahrscheinlichkeit dafür, dass ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999 auf Englisch oder 0,999 auf Deutsch.",
+    "randomAlgorithmDesiredSuccessProbability": "Zielwahrscheinlichkeit dafür, dass ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.99999998 auf Englisch oder 0,99999998 auf Deutsch.",
     "consecutiveValueCounter": "Startwert, der beim Algorithmus für fortlaufende Nummern verwendet wird.",
     "validFrom": "Optionales Startdatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um den Backend-Standard oder die Einstellung der übergeordneten Gruppe zu verwenden.",
     "validTo": "Optionales Enddatum mit Uhrzeit für Werte, die in dieser Gruppe erstellt werden. Leer lassen, um die Gültigkeitsdauer oder die Einstellung der übergeordneten Gruppe zu verwenden.",

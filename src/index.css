@@ -248,6 +248,10 @@
   right: 2.5rem !important;
 }
 
+.td-custom-dropdown--inherited .p-dropdown-label {
+  padding-right: 6rem !important;
+}
+
 .td-dropdown-with-info__icon,
 .td-custom-dropdown__help {
   right: 0.75rem;

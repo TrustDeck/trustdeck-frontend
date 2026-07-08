@@ -227,21 +227,53 @@ const PseudonymDetails: React.FC = () => {
   const handleSave = async () => {
     if (!currentPseudonym || !requestDomain) return
 
+    const identifierChanged = formData.identifier !== originalForm.identifier
+    const idTypeChanged = formData.idType !== originalForm.idType
+    const psnChanged = formData.psn !== originalForm.psn
+    const validFromChanged =
+      formData.validFrom !== originalForm.validFrom ||
+      formData.validFromInherited !== originalForm.validFromInherited
+    const validToChanged =
+      formData.validTo !== originalForm.validTo ||
+      formData.validToInherited !== originalForm.validToInherited
+
+    if (
+      !identifierChanged &&
+      !idTypeChanged &&
+      !psnChanged &&
+      !validFromChanged &&
+      !validToChanged
+    ) {
+      setEditMode(false)
+      return
+    }
+
     setSaving(true)
     try {
       const payload: PseudonymUpdatePayload = {
         oldIdentifierItem: currentPseudonym.identifierItem,
-        oldPsn: currentPseudonym.psn,
-        newIdentifierItem: {
+        oldPsn: currentPseudonym.psn
+      }
+
+      if (identifierChanged || idTypeChanged) {
+        payload.newIdentifierItem = {
           identifier: formData.identifier,
           idType: formData.idType
-        },
-        newPsn: formData.psn,
-        validFrom: formData.validFrom,
-        validFromInherited: formData.validFromInherited,
-        validTo: formData.validTo,
-        validToInherited: formData.validToInherited,
-        newDomainName: formData.domainName
+        }
+      }
+
+      if (psnChanged) {
+        payload.newPsn = formData.psn
+      }
+
+      if (validFromChanged) {
+        payload.validFrom = formData.validFrom
+        payload.validFromInherited = formData.validFromInherited
+      }
+
+      if (validToChanged) {
+        payload.validTo = formData.validTo
+        payload.validToInherited = formData.validToInherited
       }
 
       const updated = await TrustDeck.instance().updatePseudonymComplete(
@@ -249,7 +281,7 @@ const PseudonymDetails: React.FC = () => {
         payload
       )
       setPseudonymValue(updated)
-      setFormData(asFormValue(updated, formData.domainName))
+      setFormData(asFormValue(updated, requestDomain))
       setEditMode(false)
       showToast({
         severity: 'success',
@@ -258,7 +290,7 @@ const PseudonymDetails: React.FC = () => {
         life: 3000
       })
 
-      const updatedDomain = updated.domainName || formData.domainName
+      const updatedDomain = updated.domainName || requestDomain
       if (updatedDomain && updated.psn) {
         navigate(
           `/search/pseudonym/${encodeURIComponent(updatedDomain)}/${encodeURIComponent(updated.psn)}`,
@@ -320,12 +352,13 @@ const PseudonymDetails: React.FC = () => {
   const renderField = (
     id: PseudonymTextField,
     label: string,
-    inheritedField?: PseudonymInheritanceField
+    inheritedField?: PseudonymInheritanceField,
+    readOnly = false
   ) => {
     const value = formData[id]
     const inherited = inheritedField ? Boolean(formData[inheritedField]) : false
 
-    if (!editMode) {
+    if (!editMode || readOnly) {
       return (
         <FieldCard
           label={label}
@@ -437,7 +470,12 @@ const PseudonymDetails: React.FC = () => {
                 <Divider />
 
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {renderField('domainName', t('search:pseudonym.group'))}
+                  {renderField(
+                    'domainName',
+                    t('search:pseudonym.group'),
+                    undefined,
+                    true
+                  )}
                   {renderField('psn', t('search:pseudonym.value'))}
                   {renderField('identifier', t('search:pseudonym.id'))}
                   {renderField('idType', t('search:pseudonym.idType'))}

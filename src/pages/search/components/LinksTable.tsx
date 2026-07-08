@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Entity } from '../types/Entity'
@@ -15,6 +15,7 @@ export default function LinksTable({ entity }: LinksTableProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([])
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (entity && entity.links) {
@@ -38,7 +39,7 @@ export default function LinksTable({ entity }: LinksTableProps) {
 
   const groupTemplate = (node: TreeNode) => (
     <span
-      className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left"
+      className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left text-base"
       title={node.data.group}
     >
       {node.data.group || '-'}
@@ -48,7 +49,7 @@ export default function LinksTable({ entity }: LinksTableProps) {
   const pseudonymTemplate = (node: TreeNode) => {
     if (!node.data.pseudonym) {
       return (
-        <span className="inline-flex min-h-[2.75rem] items-center">-</span>
+        <span className="inline-flex min-h-[2.75rem] items-center text-base">-</span>
       )
     }
 
@@ -59,8 +60,14 @@ export default function LinksTable({ entity }: LinksTableProps) {
     return (
       <button
         type="button"
-        onClick={() => navigate(target)}
-        className="inline-flex min-h-[2.75rem] items-center break-all text-left text-blue-500 hover:underline"
+        onClick={() =>
+          navigate(target, {
+            state: {
+              returnTo: `${location.pathname}${location.search}`
+            }
+          })
+        }
+        className="inline-flex min-h-[2.75rem] items-center break-all text-left text-base text-blue-500 hover:underline"
       >
         {node.data.pseudonym}
       </button>

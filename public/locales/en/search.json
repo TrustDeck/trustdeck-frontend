@@ -141,7 +141,7 @@
     "placeholder": "Pseudonym",
     "help": "Enter a pseudonym",
     "error": "Invalid pseudonym",
-    "data": "Data",
+    "data": "Pseudonym",
     "value": "Pseudonym",
     "id": "Identifier",
     "idType": "ID Type",
@@ -161,7 +161,9 @@
     "deleteSuccess": "Pseudonym deleted successfully.",
     "deleteFailed": "Failed to delete pseudonym.",
     "confirmDeleteText": "This will delete the selected pseudonym. This action cannot be undone.",
-    "inheritedTooltip": "Inherited from the group configuration."
+    "inheritedTooltip": "Inherited from the group configuration.",
+    "inherited": "Inherited",
+    "noLinkedPseudonyms": "No linked pseudonyms available."
   },
   "group": {
     "title": "Group",

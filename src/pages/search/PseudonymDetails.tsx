@@ -7,9 +7,10 @@ import {
   TrashIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Dialog } from 'primereact/dialog'
+import { ProgressSpinner } from 'primereact/progressspinner'
 import PseudonymService from './services/PseudonymService'
 import usePseudonymStore from './stores/PseudonymSearchResults'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
@@ -18,7 +19,6 @@ import SecondaryOutlinedButton from '../../core/components/form/buttons/Secondar
 import Panel from '../../core/components/common/Panel'
 import Divider from '../../core/components/common/Divider'
 import PseudonymTable from './components/PseudonymTable'
-import { ProgressSpinner } from 'primereact/progressspinner'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import TrustDeck, { PseudonymUpdatePayload } from '../../core/services/TrustDeck'
 import type { Pseudonym } from '../../core/types/Pseudonym'
@@ -35,7 +35,24 @@ type PseudonymForm = {
   validToInherited: boolean
 }
 
-function asFormValue(pseudonym: Pseudonym | null | undefined, fallbackDomain = ''): PseudonymForm {
+type PseudonymTextField = Exclude<
+  keyof PseudonymForm,
+  'validFromInherited' | 'validToInherited'
+>
+
+type PseudonymInheritanceField = Extract<
+  keyof PseudonymForm,
+  'validFromInherited' | 'validToInherited'
+>
+
+type PseudonymLocationState = {
+  returnTo?: string
+} | null
+
+function asFormValue(
+  pseudonym: Pseudonym | null | undefined,
+  fallbackDomain = ''
+): PseudonymForm {
   return {
     domainName: pseudonym?.domainName ?? fallbackDomain,
     psn: pseudonym?.psn ?? '',
@@ -51,38 +68,13 @@ function asFormValue(pseudonym: Pseudonym | null | undefined, fallbackDomain = '
 function FieldCard({
   label,
   value,
-  mono = false
+  inherited = false,
+  inheritedTooltip
 }: {
   label: string
   value: string
-  mono?: boolean
-}) {
-  return (
-    <div className="rounded-lg border border-color-light-gray bg-white px-4 py-3 dark:bg-slate-950">
-      <div className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
-        {label}
-      </div>
-      <div
-        className={`break-all text-lg text-gray-900 dark:text-gray-100 ${mono ? 'font-mono text-base' : ''}`}
-      >
-        {value || '-'}
-      </div>
-    </div>
-  )
-}
-
-function InheritanceCard({
-  label,
-  inherited,
-  yesLabel,
-  noLabel,
-  tooltip
-}: {
-  label: string
-  inherited: boolean
-  yesLabel: string
-  noLabel: string
-  tooltip: string
+  inherited?: boolean
+  inheritedTooltip?: string
 }) {
   return (
     <div
@@ -93,19 +85,21 @@ function InheritanceCard({
       }`}
     >
       <div
-        className={`mb-1 flex items-center gap-1 text-sm font-medium ${
-          inherited ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'
+        className={`mb-1 flex items-center gap-1 text-base font-semibold ${
+          inherited
+            ? 'text-blue-700 dark:text-blue-300'
+            : 'text-gray-600 dark:text-gray-300'
         }`}
       >
         <span>{label}</span>
         {inherited && (
-          <span title={tooltip} aria-label={tooltip}>
-            <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
+          <span title={inheritedTooltip} aria-label={inheritedTooltip}>
+            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
           </span>
         )}
       </div>
-      <div className="text-lg text-gray-900 dark:text-gray-100">
-        {inherited ? yesLabel : noLabel}
+      <div className="break-all text-xl text-gray-900 dark:text-gray-100">
+        {value || '-'}
       </div>
     </div>
   )
@@ -113,9 +107,11 @@ function InheritanceCard({
 
 const PseudonymDetails: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation(['search', 'common'])
   const showToast = useToastStore((state) => state.show)
-  const { pseudonymValue, setPseudonymValue, clearPseudonymValue } = usePseudonymStore()
+  const { pseudonymValue, setPseudonymValue, clearPseudonymValue } =
+    usePseudonymStore()
   const { entityId, domainName, pseudonymId } = useParams()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -126,8 +122,12 @@ const PseudonymDetails: React.FC = () => {
     asFormValue(pseudonymValue, domainName)
   )
 
+  const locationState = location.state as PseudonymLocationState
+  const returnTo =
+    typeof locationState?.returnTo === 'string' ? locationState.returnTo : ''
   const currentPseudonym = pseudonymValue ?? null
-  const requestDomain = currentPseudonym?.domainName || domainName || formData.domainName
+  const requestDomain =
+    currentPseudonym?.domainName || domainName || formData.domainName
   const inheritanceTooltip = t(
     'search:pseudonym.inheritedTooltip',
     'Inherited from the group configuration.'
@@ -186,6 +186,20 @@ const PseudonymDetails: React.FC = () => {
     setFormData((current) => ({ ...current, ...patch }))
   }
 
+  const handleBack = () => {
+    if (returnTo) {
+      navigate(returnTo)
+      return
+    }
+
+    if (entityId) {
+      navigate(`/search/${encodeURIComponent(entityId)}`)
+      return
+    }
+
+    navigate('/pseudonym-management')
+  }
+
   const handleSave = async () => {
     if (!currentPseudonym || !requestDomain) return
 
@@ -224,7 +238,10 @@ const PseudonymDetails: React.FC = () => {
       if (updatedDomain && updated.psn) {
         navigate(
           `/search/pseudonym/${encodeURIComponent(updatedDomain)}/${encodeURIComponent(updated.psn)}`,
-          { replace: true }
+          {
+            replace: true,
+            state: returnTo ? { returnTo } : undefined
+          }
         )
       }
     } catch (error) {
@@ -258,7 +275,7 @@ const PseudonymDetails: React.FC = () => {
         detail: t('search:pseudonym.deleteSuccess'),
         life: 3000
       })
-      navigate('/pseudonym-management')
+      navigate(returnTo || '/pseudonym-management')
     } catch (error) {
       console.error('Error during pseudonym deletion:', error)
       showToast({
@@ -277,69 +294,70 @@ const PseudonymDetails: React.FC = () => {
   }
 
   const renderField = (
-    id: keyof PseudonymForm,
+    id: PseudonymTextField,
     label: string,
-    mono = false
+    inheritedField?: PseudonymInheritanceField
   ) => {
     const value = formData[id]
-    if (!editMode || typeof value === 'boolean') {
-      return <FieldCard label={label} value={String(value ?? '')} mono={mono} />
-    }
+    const inherited = inheritedField ? Boolean(formData[inheritedField]) : false
 
-    return (
-      <CustomFloatLabel
-        id={`pseudonym-${id}`}
-        value={String(value ?? '')}
-        placeholder={label}
-        onChange={(event) => updateForm({ [id]: event.target.value })}
-      />
-    )
-  }
-
-  const renderInheritanceField = (id: keyof PseudonymForm, label: string) => {
-    const checked = Boolean(formData[id])
     if (!editMode) {
       return (
-        <InheritanceCard
+        <FieldCard
           label={label}
-          inherited={checked}
-          yesLabel={t('common:yes')}
-          noLabel={t('common:no')}
-          tooltip={inheritanceTooltip}
+          value={String(value ?? '')}
+          inherited={inherited}
+          inheritedTooltip={inheritanceTooltip}
         />
       )
     }
 
     return (
-      <label
-        className={`flex min-h-[48px] items-center gap-3 rounded-lg border px-4 py-3 text-base text-gray-700 dark:text-gray-200 ${
-          checked
+      <div
+        className={`rounded-lg border px-4 py-3 ${
+          inherited
             ? 'border-blue-200 bg-blue-50/70 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950/30'
             : 'border-color-light-gray bg-white dark:bg-slate-950'
         }`}
       >
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(event) => updateForm({ [id]: event.target.checked })}
-          className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+        <CustomFloatLabel
+          id={`pseudonym-${id}`}
+          value={String(value ?? '')}
+          placeholder={label}
+          onChange={(event) => updateForm({ [id]: event.target.value })}
         />
-        <span>{label}</span>
-        {checked && (
-          <span title={inheritanceTooltip} aria-label={inheritanceTooltip} className="text-blue-700 dark:text-blue-300">
-            <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
-          </span>
+        {inheritedField && (
+          <label className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+            <input
+              type="checkbox"
+              checked={inherited}
+              onChange={(event) =>
+                updateForm({ [inheritedField]: event.target.checked })
+              }
+              className="h-4 w-4 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+            />
+            <span>{t('search:pseudonym.inherited')}</span>
+            {inherited && (
+              <span
+                title={inheritanceTooltip}
+                aria-label={inheritanceTooltip}
+                className="text-blue-700 dark:text-blue-300"
+              >
+                <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+              </span>
+            )}
+          </label>
         )}
-      </label>
+      </div>
     )
   }
 
   return (
     <div>
-      <div className="relative mb-3 flex w-full items-center 2xl:mx-auto 2xl:w-4/5">
+      <div className="relative mb-4 flex w-full items-center 2xl:mx-auto 2xl:w-4/5">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
-          onClick={() => navigate(entityId ? `/search/${entityId}` : '/pseudonym-management')}
+          onClick={handleBack}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0"
         />
@@ -363,11 +381,13 @@ const PseudonymDetails: React.FC = () => {
       )}
 
       {!loading && currentPseudonym && (
-        <div className="mx-auto grid w-full grid-cols-1 gap-5 2xl:w-4/5 xl:grid-cols-2">
+        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,560px)_minmax(0,500px)]">
           <Panel noMaxWidth className="w-full">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-3xl">{t('search:pseudonym.data')}</h2>
+                <h2 className="text-3xl font-semibold">
+                  {t('search:pseudonym.data')}
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {!editMode ? (
                     <>
@@ -407,25 +427,27 @@ const PseudonymDetails: React.FC = () => {
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {renderField('domainName', t('search:pseudonym.group'))}
-                {renderField('psn', t('search:pseudonym.value'), true)}
-                {renderField('identifier', t('search:pseudonym.id'), true)}
+                {renderField('psn', t('search:pseudonym.value'))}
+                {renderField('identifier', t('search:pseudonym.id'))}
                 {renderField('idType', t('search:pseudonym.idType'))}
-                {renderField('validFrom', t('search:pseudonym.validFrom'))}
-                {renderInheritanceField(
-                  'validFromInherited',
-                  t('search:pseudonym.validFromInherited')
+                {renderField(
+                  'validFrom',
+                  t('search:pseudonym.validFrom'),
+                  'validFromInherited'
                 )}
-                {renderField('validTo', t('search:pseudonym.validTo'))}
-                {renderInheritanceField(
-                  'validToInherited',
-                  t('search:pseudonym.validToInherited')
+                {renderField(
+                  'validTo',
+                  t('search:pseudonym.validTo'),
+                  'validToInherited'
                 )}
               </div>
             </div>
           </Panel>
 
           <Panel noMaxWidth className="h-fit w-full">
-            <h2 className="text-3xl">{t('search:pseudonym.linkedPseudonyms')}</h2>
+            <h2 className="text-3xl font-semibold">
+              {t('search:pseudonym.linkedPseudonyms')}
+            </h2>
             <Divider />
             <PseudonymTable pseudonym={currentPseudonym} />
           </Panel>

@@ -1393,7 +1393,7 @@ export default function PreReg() {
                             key={id}
                             className="hover:bg-gray-50 dark:hover:bg-slate-800"
                           >
-                            <td className="min-w-[18rem] px-4 py-3 font-mono text-sm text-gray-700 dark:text-gray-300">
+                            <td className="min-w-[18rem] px-4 py-3 font-mono text-base text-gray-700 dark:text-gray-300">
                               <span className="block break-all">
                                 {id || '-'}
                               </span>

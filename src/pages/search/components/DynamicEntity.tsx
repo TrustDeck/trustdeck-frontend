@@ -331,7 +331,7 @@ export default function DynamicEntity({
             <div className="flex flex-col gap-4">
               <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
                 <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">trustdeckID</div>
-                <div className="break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+                <div className="break-all font-mono text-base text-gray-900 dark:text-gray-100">
                   {resolveTrustDeckId(entity) || '-'}
                 </div>
               </div>

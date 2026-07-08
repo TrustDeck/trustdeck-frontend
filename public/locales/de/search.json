@@ -142,7 +142,7 @@
     "placeholder": "Pseudonym",
     "help": "Geben Sie ein Pseudonym ein",
     "error": "Ungültiges Pseudonym",
-    "data": "Daten",
+    "data": "Pseudonym",
     "value": "Pseudonym",
     "id": "Identifier",
     "idType": "ID-Typ",
@@ -162,7 +162,9 @@
     "deleteSuccess": "Pseudonym wurde erfolgreich gelöscht.",
     "deleteFailed": "Pseudonym konnte nicht gelöscht werden.",
     "confirmDeleteText": "Das ausgewählte Pseudonym wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "inheritedTooltip": "Aus der Gruppenkonfiguration geerbt."
+    "inheritedTooltip": "Aus der Gruppenkonfiguration geerbt.",
+    "inherited": "Geerbt",
+    "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden."
   },
   "group": {
     "title": "Gruppe",

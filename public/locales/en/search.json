@@ -147,7 +147,21 @@
     "idType": "ID Typ",
     "createdOn": "Created on:",
     "expiresOn": "Expires on:",
-    "parentGroup": "Parent group"
+    "parentGroup": "Parent group",
+    "group": "Group",
+    "validFrom": "Valid from",
+    "validFromInherited": "Valid from inherited",
+    "validTo": "Valid to",
+    "validToInherited": "Valid to inherited",
+    "linkedPseudonyms": "Linked pseudonyms",
+    "dtoPayload": "DTO payload",
+    "notFound": "No pseudonym found.",
+    "loadFailed": "Failed to load pseudonym.",
+    "updateSuccess": "Pseudonym updated successfully.",
+    "updateFailed": "Failed to update pseudonym.",
+    "deleteSuccess": "Pseudonym deleted successfully.",
+    "deleteFailed": "Failed to delete pseudonym.",
+    "confirmDeleteText": "This will delete the selected pseudonym. This action cannot be undone."
   },
   "group": {
     "title": "Group",

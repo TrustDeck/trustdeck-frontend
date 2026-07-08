@@ -38,12 +38,25 @@ const transformLinks = (links: Link[], parentId: string): TreeNode[] => {
   }))
 }
 
-  // Template to add a link to each entry in the table. 
+  const groupTemplate = (node: TreeNode) => (
+    <span className="block min-w-0 truncate text-left align-middle" title={node.data.group}>
+      {node.data.group || '-'}
+    </span>
+  )
+
+  // Template to add a link to each entry in the table.
   const pseudonymTemplate = (node: TreeNode) => {
+    if (!node.data.pseudonym) return <span>-</span>
+
+    const target = node.data.group
+      ? `/search/pseudonym/${encodeURIComponent(node.data.group)}/${encodeURIComponent(node.data.pseudonym)}`
+      : `/search/pseudonym/${encodeURIComponent(node.data.pseudonym)}`
+
     return (
       <button
-        onClick={() => navigate(`/search/${entity.id}/${node.data.pseudonym}`)}
-        className="text-blue-500 hover:underline"
+        type="button"
+        onClick={() => navigate(target)}
+        className="break-all text-left text-blue-500 hover:underline"
       >
         {node.data.pseudonym}
       </button>
@@ -51,8 +64,8 @@ const transformLinks = (links: Link[], parentId: string): TreeNode[] => {
   }
 
   return (
-    <TreeTable className="w-full" value={nodes}>
-      <Column field="group" header={t('search:group.title')} expander />
+    <TreeTable className="w-full linked-pseudonym-table" value={nodes}>
+      <Column field="group" header={t('search:group.title')} expander body={groupTemplate} />
       <Column field="pseudonym" header={t('search:pseudonym.title')} body={pseudonymTemplate}/>
     </TreeTable>
   )

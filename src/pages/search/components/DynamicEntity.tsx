@@ -310,11 +310,11 @@ export default function DynamicEntity({
     <div
       className={
         showIdentifierPanel
-          ? 'w-full 2xl:w-11/12 2xl:mx-auto flex flex-col xl:flex-row gap-4'
+          ? 'grid w-full grid-cols-1 gap-4 xl:grid-cols-2'
           : 'flex w-full justify-center'
       }
     >
-      <Panel className={showIdentifierPanel ? 'w-full xl:w-1/2' : 'w-full max-w-3xl'}>
+      <Panel noMaxWidth className={showIdentifierPanel ? 'w-full' : 'w-full max-w-3xl'}>
         <div className="space-y-3">
           <Divider text={t('search:entityLabel')} />
           {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
@@ -322,8 +322,8 @@ export default function DynamicEntity({
       </Panel>
 
       {showIdentifierPanel && (
-        <div className="w-full xl:w-1/2 flex flex-col gap-4">
-        <Panel className="h-fit">
+        <div className="flex w-full flex-col gap-4">
+        <Panel noMaxWidth className="h-fit w-full">
           <Divider text={t('search:identifier')} />
           <div className="flex flex-col gap-4">
             <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
@@ -332,16 +332,10 @@ export default function DynamicEntity({
                 {resolveTrustDeckId(entity) || '-'}
               </div>
             </div>
-            <CustomFloatLabel
-              id="entity-type"
-              readOnly
-              value={entity.type || entity.entityTypeName || ''}
-              placeholder={t('search:entityLabel')}
-            />
           </div>
         </Panel>
 
-        <Panel className="h-fit">
+        <Panel noMaxWidth className="h-fit w-full">
           <Divider text={t('search:links')} />
           <LinksTable entity={{ id: resolveTrustDeckId(entity), links: entity.links || [] } as Entity} />
         </Panel>

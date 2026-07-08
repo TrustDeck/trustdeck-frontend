@@ -1307,6 +1307,12 @@ export default function PreReg() {
                   id="identity-entity-instance-search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      handleSearchClick()
+                    }
+                  }}
                   placeholder={t('identity:crud.searchPlaceholder')}
                   inputPlaceholder={t('identity:crud.searchInputPlaceholder')}
                 />

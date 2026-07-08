@@ -13,6 +13,7 @@ type CustomFloatLabelProps = {
   helpText?: string
   errorMessage?: string
   onBlur?: () => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   validate?: (value: string) => boolean
   className?: string
   readOnly?: boolean
@@ -27,6 +28,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   placeholder,
   inputPlaceholder,
   helpText,
+  onKeyDown,
   errorMessage = '',
   validate,
   className = '',
@@ -64,6 +66,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         onFocus={handleFocus}
         placeholder={inputPlaceholder}
         onBlur={handleBlur}
+        onKeyDown={onKeyDown}
         readOnly={readOnly}
         disabled={disabled}
         className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${className} ${

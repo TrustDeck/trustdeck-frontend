@@ -16,11 +16,12 @@ import usePseudonymStore from './stores/PseudonymSearchResults'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
-import Panel from '../../core/components/common/Panel'
 import Divider from '../../core/components/common/Divider'
 import PseudonymTable from './components/PseudonymTable'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
-import TrustDeck, { PseudonymUpdatePayload } from '../../core/services/TrustDeck'
+import TrustDeck, {
+  PseudonymUpdatePayload
+} from '../../core/services/TrustDeck'
 import type { Pseudonym } from '../../core/types/Pseudonym'
 import useToastStore from '../../core/stores/ToastStore'
 
@@ -182,8 +183,31 @@ const PseudonymDetails: React.FC = () => {
     }
   }, [domainName, pseudonymValue, pseudonymId, setPseudonymValue, showToast, t])
 
-  const updateForm = (patch: Partial<PseudonymForm>) => {
-    setFormData((current) => ({ ...current, ...patch }))
+  const originalForm = asFormValue(currentPseudonym, domainName)
+
+  const updateEditableField = (
+    id: PseudonymTextField,
+    value: string,
+    inheritedField?: PseudonymInheritanceField
+  ) => {
+    setFormData((current) => {
+      const patch: Partial<PseudonymForm> = {
+        [id]: value
+      } as Partial<PseudonymForm>
+
+      if (inheritedField) {
+        patch[inheritedField] = Boolean(
+          originalForm[inheritedField] && value === originalForm[id]
+        )
+      }
+
+      return { ...current, ...patch }
+    })
+  }
+
+  const resetEditState = () => {
+    setFormData(asFormValue(currentPseudonym, domainName))
+    setEditMode(false)
   }
 
   const handleBack = () => {
@@ -314,40 +338,29 @@ const PseudonymDetails: React.FC = () => {
 
     return (
       <div
-        className={`rounded-lg border px-4 py-3 ${
+        className={`relative rounded-lg border px-4 py-3 ${
           inherited
             ? 'border-blue-200 bg-blue-50/70 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950/30'
             : 'border-color-light-gray bg-white dark:bg-slate-950'
         }`}
       >
+        {inherited && (
+          <span
+            title={inheritanceTooltip}
+            aria-label={inheritanceTooltip}
+            className="absolute right-3 top-3 text-blue-700 dark:text-blue-300"
+          >
+            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+          </span>
+        )}
         <CustomFloatLabel
           id={`pseudonym-${id}`}
           value={String(value ?? '')}
           placeholder={label}
-          onChange={(event) => updateForm({ [id]: event.target.value })}
+          onChange={(event) =>
+            updateEditableField(id, event.target.value, inheritedField)
+          }
         />
-        {inheritedField && (
-          <label className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300">
-            <input
-              type="checkbox"
-              checked={inherited}
-              onChange={(event) =>
-                updateForm({ [inheritedField]: event.target.checked })
-              }
-              className="h-4 w-4 rounded border-gray-300 text-color-blue focus:ring-color-blue"
-            />
-            <span>{t('search:pseudonym.inherited')}</span>
-            {inherited && (
-              <span
-                title={inheritanceTooltip}
-                aria-label={inheritanceTooltip}
-                className="text-blue-700 dark:text-blue-300"
-              >
-                <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-              </span>
-            )}
-          </label>
-        )}
       </div>
     )
   }
@@ -371,86 +384,85 @@ const PseudonymDetails: React.FC = () => {
       )}
 
       {!loading && !currentPseudonym && (
-        <Panel className="mx-auto" noMaxWidth>
+        <div className="mx-auto w-full max-w-[720px]">
           <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
               {t('search:pseudonym.notFound')}
             </h2>
           </div>
-        </Panel>
+        </div>
       )}
 
       {!loading && currentPseudonym && (
-        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,560px)_minmax(0,500px)]">
-          <Panel noMaxWidth className="w-full">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-3xl font-semibold">
-                  {t('search:pseudonym.data')}
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {!editMode ? (
-                    <>
-                      <PrimaryButton
-                        label={t('common:edit')}
-                        onClick={() => setEditMode(true)}
-                        icon={<PencilIcon className="h-5 w-5 mr-1" />}
-                      />
-                      <SecondaryOutlinedButton
-                        label={t('common:delete')}
-                        onClick={() => setDeleteConfirmOpen(true)}
-                        icon={<TrashIcon className="h-5 w-5 mr-1" />}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <PrimaryButton
-                        label={t('common:save')}
-                        onClick={handleSave}
-                        loading={saving}
-                        icon={<CheckIcon className="h-5 w-5 mr-1" />}
-                      />
-                      <PrimaryOutlinedButton
-                        label={t('common:cancel')}
-                        onClick={() => {
-                          setFormData(asFormValue(currentPseudonym, domainName))
-                          setEditMode(false)
-                        }}
-                        disabled={saving}
-                        icon={<XMarkIcon className="h-5 w-5 mr-1" />}
-                      />
-                    </>
+        <div className="mx-auto flex w-full max-w-[1040px] justify-center px-4">
+          <div className="grid w-full grid-cols-1 items-start justify-center gap-5 xl:grid-cols-[minmax(0,560px)_minmax(0,440px)]">
+            <section className="w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-3xl font-semibold">
+                    {t('search:pseudonym.data')}
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {!editMode ? (
+                      <>
+                        <PrimaryButton
+                          label={t('common:edit')}
+                          onClick={() => setEditMode(true)}
+                          icon={<PencilIcon className="h-5 w-5 mr-1" />}
+                        />
+                        <SecondaryOutlinedButton
+                          label={t('common:delete')}
+                          onClick={() => setDeleteConfirmOpen(true)}
+                          icon={<TrashIcon className="h-5 w-5 mr-1" />}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <PrimaryButton
+                          label={t('common:save')}
+                          onClick={handleSave}
+                          loading={saving}
+                          icon={<CheckIcon className="h-5 w-5 mr-1" />}
+                        />
+                        <PrimaryOutlinedButton
+                          label={t('common:cancel')}
+                          onClick={resetEditState}
+                          disabled={saving}
+                          icon={<XMarkIcon className="h-5 w-5 mr-1" />}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+                <Divider />
+
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {renderField('domainName', t('search:pseudonym.group'))}
+                  {renderField('psn', t('search:pseudonym.value'))}
+                  {renderField('identifier', t('search:pseudonym.id'))}
+                  {renderField('idType', t('search:pseudonym.idType'))}
+                  {renderField(
+                    'validFrom',
+                    t('search:pseudonym.validFrom'),
+                    'validFromInherited'
+                  )}
+                  {renderField(
+                    'validTo',
+                    t('search:pseudonym.validTo'),
+                    'validToInherited'
                   )}
                 </div>
               </div>
+            </section>
+
+            <section className="h-fit w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+              <h2 className="text-3xl font-semibold">
+                {t('search:pseudonym.linkedPseudonyms')}
+              </h2>
               <Divider />
-
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {renderField('domainName', t('search:pseudonym.group'))}
-                {renderField('psn', t('search:pseudonym.value'))}
-                {renderField('identifier', t('search:pseudonym.id'))}
-                {renderField('idType', t('search:pseudonym.idType'))}
-                {renderField(
-                  'validFrom',
-                  t('search:pseudonym.validFrom'),
-                  'validFromInherited'
-                )}
-                {renderField(
-                  'validTo',
-                  t('search:pseudonym.validTo'),
-                  'validToInherited'
-                )}
-              </div>
-            </div>
-          </Panel>
-
-          <Panel noMaxWidth className="h-fit w-full">
-            <h2 className="text-3xl font-semibold">
-              {t('search:pseudonym.linkedPseudonyms')}
-            </h2>
-            <Divider />
-            <PseudonymTable pseudonym={currentPseudonym} />
-          </Panel>
+              <PseudonymTable pseudonym={currentPseudonym} />
+            </section>
+          </div>
         </div>
       )}
 

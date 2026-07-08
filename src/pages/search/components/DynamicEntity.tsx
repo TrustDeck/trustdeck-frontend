@@ -306,15 +306,18 @@ export default function DynamicEntity({
       return renderLeaf(attr, context, key, [...pathPrefix, attr.name])
     })
 
+  const modalPanelClass =
+    'w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
+
   return (
     <div
       className={
         showIdentifierPanel
-          ? 'grid w-full grid-cols-1 gap-4 xl:grid-cols-2'
-          : 'flex w-full justify-center'
+          ? 'mx-auto grid w-full max-w-[824px] grid-cols-1 items-start justify-center gap-8 xl:grid-cols-[minmax(0,370px)_minmax(0,370px)]'
+          : 'mx-auto flex w-full max-w-3xl justify-center'
       }
     >
-      <Panel noMaxWidth className={showIdentifierPanel ? 'w-full' : 'w-full max-w-3xl'}>
+      <Panel noBasePanel noMaxWidth className={modalPanelClass}>
         <div className="space-y-3">
           <Divider text={t('search:entityLabel')} />
           {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
@@ -323,23 +326,23 @@ export default function DynamicEntity({
 
       {showIdentifierPanel && (
         <div className="flex w-full flex-col gap-4">
-        <Panel noMaxWidth className="h-fit w-full">
-          <Divider text={t('search:identifier')} />
-          <div className="flex flex-col gap-4">
-            <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
-              <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">trustdeckID</div>
-              <div className="break-all font-mono text-sm text-gray-900 dark:text-gray-100">
-                {resolveTrustDeckId(entity) || '-'}
+          <Panel noBasePanel noMaxWidth className={`${modalPanelClass} h-fit`}>
+            <Divider text={t('search:identifier')} />
+            <div className="flex flex-col gap-4">
+              <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
+                <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">trustdeckID</div>
+                <div className="break-all font-mono text-sm text-gray-900 dark:text-gray-100">
+                  {resolveTrustDeckId(entity) || '-'}
+                </div>
               </div>
             </div>
-          </div>
-        </Panel>
+          </Panel>
 
-        <Panel noMaxWidth className="h-fit w-full">
-          <Divider text={t('search:links')} />
-          <LinksTable entity={{ id: resolveTrustDeckId(entity), links: entity.links || [] } as Entity} />
-        </Panel>
-      </div>
+          <Panel noBasePanel noMaxWidth className={`${modalPanelClass} h-fit`}>
+            <Divider text={t('search:links')} />
+            <LinksTable entity={{ id: resolveTrustDeckId(entity), links: entity.links || [] } as Entity} />
+          </Panel>
+        </div>
       )}
     </div>
   )

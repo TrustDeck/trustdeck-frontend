@@ -256,3 +256,18 @@
 .td-custom-dropdown__help {
   right: 0.75rem;
 }
+
+/* Identity management result modal: keep content centered independently of the action row. */
+.td-identity-entity-dialog .p-dialog-header,
+.td-identity-entity-dialog .p-dialog-content {
+  padding-left: clamp(1.25rem, 3vw, 2rem) !important;
+  padding-right: clamp(1.25rem, 3vw, 2rem) !important;
+}
+
+.linked-pseudonym-table .p-treetable-tbody > tr > td {
+  vertical-align: middle !important;
+}
+
+.linked-pseudonym-table .p-treetable-toggler {
+  vertical-align: middle !important;
+}

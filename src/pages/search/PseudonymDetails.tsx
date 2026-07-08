@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ArrowLeftIcon,
+  ArrowPathRoundedSquareIcon,
   CheckIcon,
   PencilIcon,
   TrashIcon,
@@ -57,14 +58,54 @@ function FieldCard({
   mono?: boolean
 }) {
   return (
-    <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
-      <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+    <div className="rounded-lg border border-color-light-gray bg-white px-4 py-3 dark:bg-slate-950">
+      <div className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">
         {label}
       </div>
       <div
-        className={`break-all text-sm text-gray-900 dark:text-gray-100 ${mono ? 'font-mono' : ''}`}
+        className={`break-all text-lg text-gray-900 dark:text-gray-100 ${mono ? 'font-mono text-base' : ''}`}
       >
         {value || '-'}
+      </div>
+    </div>
+  )
+}
+
+function InheritanceCard({
+  label,
+  inherited,
+  yesLabel,
+  noLabel,
+  tooltip
+}: {
+  label: string
+  inherited: boolean
+  yesLabel: string
+  noLabel: string
+  tooltip: string
+}) {
+  return (
+    <div
+      className={`rounded-lg border px-4 py-3 ${
+        inherited
+          ? 'border-blue-200 bg-blue-50/70 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950/30'
+          : 'border-color-light-gray bg-white dark:bg-slate-950'
+      }`}
+    >
+      <div
+        className={`mb-1 flex items-center gap-1 text-sm font-medium ${
+          inherited ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'
+        }`}
+      >
+        <span>{label}</span>
+        {inherited && (
+          <span title={tooltip} aria-label={tooltip}>
+            <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
+          </span>
+        )}
+      </div>
+      <div className="text-lg text-gray-900 dark:text-gray-100">
+        {inherited ? yesLabel : noLabel}
       </div>
     </div>
   )
@@ -87,6 +128,10 @@ const PseudonymDetails: React.FC = () => {
 
   const currentPseudonym = pseudonymValue ?? null
   const requestDomain = currentPseudonym?.domainName || domainName || formData.domainName
+  const inheritanceTooltip = t(
+    'search:pseudonym.inheritedTooltip',
+    'Inherited from the group configuration.'
+  )
 
   useEffect(() => {
     const needsFetch =
@@ -136,14 +181,6 @@ const PseudonymDetails: React.FC = () => {
       setFormData(asFormValue(pseudonymValue, domainName))
     }
   }, [domainName, pseudonymValue, pseudonymId, setPseudonymValue, showToast, t])
-
-  const dtoJson = useMemo(
-    () => (currentPseudonym ? JSON.stringify(currentPseudonym, null, 2) : ''),
-    [currentPseudonym]
-  )
-
-  const formatBooleanValue = (value: boolean | undefined) =>
-    value ? t('common:yes') : t('common:no')
 
   const updateForm = (patch: Partial<PseudonymForm>) => {
     setFormData((current) => ({ ...current, ...patch }))
@@ -246,13 +283,7 @@ const PseudonymDetails: React.FC = () => {
   ) => {
     const value = formData[id]
     if (!editMode || typeof value === 'boolean') {
-      return (
-        <FieldCard
-          label={label}
-          value={typeof value === 'boolean' ? formatBooleanValue(value) : String(value ?? '')}
-          mono={mono}
-        />
-      )
+      return <FieldCard label={label} value={String(value ?? '')} mono={mono} />
     }
 
     return (
@@ -265,14 +296,28 @@ const PseudonymDetails: React.FC = () => {
     )
   }
 
-  const renderBooleanField = (id: keyof PseudonymForm, label: string) => {
+  const renderInheritanceField = (id: keyof PseudonymForm, label: string) => {
     const checked = Boolean(formData[id])
     if (!editMode) {
-      return <FieldCard label={label} value={formatBooleanValue(checked)} />
+      return (
+        <InheritanceCard
+          label={label}
+          inherited={checked}
+          yesLabel={t('common:yes')}
+          noLabel={t('common:no')}
+          tooltip={inheritanceTooltip}
+        />
+      )
     }
 
     return (
-      <label className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray px-3 text-gray-700 dark:text-gray-200">
+      <label
+        className={`flex min-h-[48px] items-center gap-3 rounded-lg border px-4 py-3 text-base text-gray-700 dark:text-gray-200 ${
+          checked
+            ? 'border-blue-200 bg-blue-50/70 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950/30'
+            : 'border-color-light-gray bg-white dark:bg-slate-950'
+        }`}
+      >
         <input
           type="checkbox"
           checked={checked}
@@ -280,6 +325,11 @@ const PseudonymDetails: React.FC = () => {
           className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
         />
         <span>{label}</span>
+        {checked && (
+          <span title={inheritanceTooltip} aria-label={inheritanceTooltip} className="text-blue-700 dark:text-blue-300">
+            <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
+          </span>
+        )}
       </label>
     )
   }
@@ -305,7 +355,7 @@ const PseudonymDetails: React.FC = () => {
       {!loading && !currentPseudonym && (
         <Panel className="mx-auto" noMaxWidth>
           <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
               {t('search:pseudonym.notFound')}
             </h2>
           </div>
@@ -313,11 +363,11 @@ const PseudonymDetails: React.FC = () => {
       )}
 
       {!loading && currentPseudonym && (
-        <div className="mx-auto grid w-full grid-cols-1 gap-4 2xl:w-4/5 xl:grid-cols-2">
+        <div className="mx-auto grid w-full grid-cols-1 gap-5 2xl:w-4/5 xl:grid-cols-2">
           <Panel noMaxWidth className="w-full">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2>{t('search:pseudonym.data')}</h2>
+                <h2 className="text-3xl">{t('search:pseudonym.data')}</h2>
                 <div className="flex flex-wrap gap-2">
                   {!editMode ? (
                     <>
@@ -358,15 +408,15 @@ const PseudonymDetails: React.FC = () => {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {renderField('domainName', t('search:pseudonym.group'))}
                 {renderField('psn', t('search:pseudonym.value'), true)}
-                {renderField('idType', t('search:pseudonym.idType'))}
                 {renderField('identifier', t('search:pseudonym.id'), true)}
+                {renderField('idType', t('search:pseudonym.idType'))}
                 {renderField('validFrom', t('search:pseudonym.validFrom'))}
-                {renderBooleanField(
+                {renderInheritanceField(
                   'validFromInherited',
                   t('search:pseudonym.validFromInherited')
                 )}
                 {renderField('validTo', t('search:pseudonym.validTo'))}
-                {renderBooleanField(
+                {renderInheritanceField(
                   'validToInherited',
                   t('search:pseudonym.validToInherited')
                 )}
@@ -374,21 +424,11 @@ const PseudonymDetails: React.FC = () => {
             </div>
           </Panel>
 
-          <div className="flex w-full flex-col gap-4">
-            <Panel noMaxWidth className="h-fit w-full">
-              <h2>{t('search:pseudonym.linkedPseudonyms')}</h2>
-              <Divider />
-              <PseudonymTable pseudonym={currentPseudonym} />
-            </Panel>
-
-            <Panel noMaxWidth className="h-fit w-full">
-              <h2>{t('search:pseudonym.dtoPayload')}</h2>
-              <Divider />
-              <pre className="max-h-80 overflow-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm dark:border-slate-700 dark:bg-slate-950">
-                {dtoJson}
-              </pre>
-            </Panel>
-          </div>
+          <Panel noMaxWidth className="h-fit w-full">
+            <h2 className="text-3xl">{t('search:pseudonym.linkedPseudonyms')}</h2>
+            <Divider />
+            <PseudonymTable pseudonym={currentPseudonym} />
+          </Panel>
         </div>
       )}
 
@@ -401,7 +441,7 @@ const PseudonymDetails: React.FC = () => {
         style={{ width: '520px', maxWidth: '95vw' }}
       >
         <div className="flex flex-col gap-4">
-          <p>{t('search:pseudonym.confirmDeleteText')}</p>
+          <p className="text-lg">{t('search:pseudonym.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
             <PrimaryOutlinedButton
               label={t('common:cancel')}

@@ -143,8 +143,8 @@
     "help": "Geben Sie ein Pseudonym ein",
     "error": "Ungültiges Pseudonym",
     "data": "Daten",
-    "value": "Wert",
-    "id": "ID",
+    "value": "Pseudonym",
+    "id": "Identifier",
     "idType": "ID-Typ",
     "createdOn": "Erstellt am:",
     "expiresOn": "Läuft ab am:",
@@ -155,14 +155,14 @@
     "validTo": "Gültig bis",
     "validToInherited": "Gültig bis geerbt",
     "linkedPseudonyms": "Verknüpfte Pseudonyme",
-    "dtoPayload": "DTO-Inhalt",
     "notFound": "Kein Pseudonym gefunden.",
     "loadFailed": "Pseudonym konnte nicht geladen werden.",
     "updateSuccess": "Pseudonym wurde erfolgreich aktualisiert.",
     "updateFailed": "Pseudonym konnte nicht aktualisiert werden.",
     "deleteSuccess": "Pseudonym wurde erfolgreich gelöscht.",
     "deleteFailed": "Pseudonym konnte nicht gelöscht werden.",
-    "confirmDeleteText": "Das ausgewählte Pseudonym wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+    "confirmDeleteText": "Das ausgewählte Pseudonym wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "inheritedTooltip": "Aus der Gruppenkonfiguration geerbt."
   },
   "group": {
     "title": "Gruppe",

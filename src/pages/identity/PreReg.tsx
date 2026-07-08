@@ -1508,7 +1508,7 @@ export default function PreReg() {
           width: modalMode === 'create' ? '760px' : '980px',
           maxWidth: '95vw'
         }}
-        className="mx-auto"
+        className="mx-auto td-identity-entity-dialog"
       >
         <div className="flex flex-col gap-4">
           {selectedSchemaAttributes.length > 0 ? (
@@ -1532,7 +1532,7 @@ export default function PreReg() {
             </p>
           )}
 
-          <div className="flex justify-end gap-2">
+          <div className="mx-auto flex w-full max-w-[824px] justify-end gap-2">
             {modalMode === 'view' && selectedInstance && (
               <PrimaryButton
                 label={t('identity:crud.edit')}

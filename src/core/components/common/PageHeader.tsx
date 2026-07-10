@@ -13,14 +13,8 @@ export default function PageHeader({
 }: PageHeaderProps) {
   return (
     <header className={`td-page-header ${className}`}>
-      <h1 className="text-center text-3xl font-semibold text-gray-900 dark:text-gray-100">
-        {title}
-      </h1>
-      {description && (
-        <p className="mx-auto mt-2 max-w-4xl text-center text-base text-gray-600 dark:text-gray-300">
-          {description}
-        </p>
-      )}
+      <h1 className="td-page-title">{title}</h1>
+      {description && <p className="td-page-subtitle">{description}</p>}
     </header>
   )
 }

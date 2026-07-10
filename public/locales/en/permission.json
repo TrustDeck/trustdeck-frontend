@@ -6,7 +6,7 @@
     "full": "Full Access"
   },
   "currentUser": "Current user",
-  "title": "Permission management",
+  "title": "Permission Management",
   "intro": "Review your current TrustDeck roles and manage global, project, and group permissions for other users.",
   "currentAccess": "Your current rights",
   "keycloakRoles": "Keycloak roles in token",
@@ -51,7 +51,7 @@
     "effectiveForbidden": "Your current account is not allowed to read effective TrustDeck permissions from the backend.",
     "effectiveError": "Effective TrustDeck permissions could not be loaded.",
     "definitionsForbidden": "Permission definitions are currently not available because you do not have the necessary role to view and/or edit permissions.",
-    "retryExplanation": "",
+    "retryExplanation": "Refresh the access token and retry if your permissions were changed recently.",
     "definitionsError": "Permission definitions could not be loaded. Please check the backend logs or try again later."
   },
   "actions": {

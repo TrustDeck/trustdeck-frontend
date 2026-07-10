@@ -247,7 +247,7 @@
   "noLabelsHint": "Add at least an English label for this attribute.",
   "labelText": "Label text",
   "status": "Status",
-  "globalSettingsTitle": "Global settings",
+  "globalSettingsTitle": "Global Settings",
   "baseTypesSectionTitle": "Base types",
   "baseTypesSectionDescription": "Manage reusable type blueprints that can be extended by project-specific entity types.",
   "advancedOptions": {

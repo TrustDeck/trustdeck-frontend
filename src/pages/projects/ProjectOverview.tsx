@@ -16,7 +16,11 @@ import { FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
-import { CachedUserAccess, canManageProject, getCurrentUserAccess } from '../../core/services/PermissionCache'
+import {
+  CachedUserAccess,
+  canManageProject,
+  getCurrentUserAccess
+} from '../../core/services/PermissionCache'
 import PageHeader from '../../core/components/common/PageHeader'
 
 export default function ProjectOverview() {
@@ -35,7 +39,8 @@ export default function ProjectOverview() {
     null
   )
   const [deleting, setDeleting] = useState(false)
-  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [permissionAccess, setPermissionAccess] =
+    useState<CachedUserAccess | null>(null)
   const [permissionsReady, setPermissionsReady] = useState(false)
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -46,7 +51,9 @@ export default function ProjectOverview() {
     (state) => state.setSelectedProject
   )
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
-  const clearSelectedProject = useProjectStore((state) => state.clearSelectedProject)
+  const clearSelectedProject = useProjectStore(
+    (state) => state.clearSelectedProject
+  )
 
   useEffect(() => {
     clearSelectedProject()
@@ -90,7 +97,6 @@ export default function ProjectOverview() {
       isMounted = false
     }
   }, [auth.user?.access_token, auth.isLoading, isAuthenticated])
-
 
   useEffect(() => {
     let active = true
@@ -208,7 +214,13 @@ export default function ProjectOverview() {
 
   const handleDeleteProject = async () => {
     if (!deletingProject) return
-    if (!canManageProject(permissionAccess, deletingProject.abbreviation, 'delete')) {
+    if (
+      !canManageProject(
+        permissionAccess,
+        deletingProject.abbreviation,
+        'delete'
+      )
+    ) {
       showToast({
         severity: 'warn',
         summary: t('projects:noDeletePermission'),
@@ -229,7 +241,9 @@ export default function ProjectOverview() {
       showToast({
         severity: 'success',
         summary: t('projects:projectDeleted'),
-        detail: t('projects:projectDeletedDetail', { name: deletingProject.name }),
+        detail: t('projects:projectDeletedDetail', {
+          name: deletingProject.name
+        }),
         life: 2500
       })
       setDeletingProject(null)
@@ -248,7 +262,10 @@ export default function ProjectOverview() {
 
   return (
     <div className="td-page-shell">
-      <PageHeader title={t('projects:title')} description={t('projects:subtitle')} />
+      <PageHeader
+        title={t('projects:title')}
+        description={t('projects:subtitle')}
+      />
       <div className="mb-6 flex w-full justify-center">
         {projects.length > 0 && !isLoading && (
           <button
@@ -278,10 +295,10 @@ export default function ProjectOverview() {
             <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-semibold text-gray-900">
+                  <h2 className="td-section-title">
                     {t('projects:filterProjects')}
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="td-section-subtitle">
                     {t('projects:filterHelp')}
                   </p>
                 </div>
@@ -342,7 +359,11 @@ export default function ProjectOverview() {
                 project={project}
                 permissionsReady={permissionsReady}
                 canUpdate
-                canDelete={canManageProject(permissionAccess, project.abbreviation, 'delete')}
+                canDelete={canManageProject(
+                  permissionAccess,
+                  project.abbreviation,
+                  'delete'
+                )}
                 onEdit={openProjectSettings}
                 onDelete={setDeletingProject}
                 projectImage={projectImages[project.abbreviation]}
@@ -352,7 +373,7 @@ export default function ProjectOverview() {
 
           {projects.length === 0 && (
             <div className="mx-auto mt-20 max-w-2xl rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center shadow-sm">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="td-section-title">
                 {t('projects:noProjectsTitle')}
               </h2>
               <p className="mt-3 text-gray-600">{t('projects:noProjects')}</p>
@@ -397,7 +418,9 @@ export default function ProjectOverview() {
           <p>
             {t('projects:deleteConfirm', { name: deletingProject?.name ?? '' })}
           </p>
-          <p className="text-sm text-gray-500">{t('projects:deleteIrreversible')}</p>
+          <p className="td-section-subtitle">
+            {t('projects:deleteIrreversible')}
+          </p>
           <div className="flex justify-end gap-2">
             <SecondaryOutlinedButton
               label={t('common:cancel')}

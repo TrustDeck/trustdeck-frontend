@@ -51,7 +51,7 @@
     "effectiveForbidden": "Ihr aktuelles Konto darf die effektiven TrustDeck-Berechtigungen nicht aus dem Backend lesen.",
     "effectiveError": "Effektive TrustDeck-Berechtigungen konnten nicht geladen werden.",
     "definitionsForbidden": "Berechtigungsdefinitionen sind aktuell nicht verfügbar, da Ihnen die notwendige Rolle zum Anzeigen und/oder Bearbeiten von Berechtigungen fehlt.",
-    "retryExplanation": "",
+    "retryExplanation": "Aktualisieren Sie das Zugriffstoken und versuchen Sie es erneut, wenn Ihre Berechtigungen kürzlich geändert wurden.",
     "definitionsError": "Berechtigungsdefinitionen konnten nicht geladen werden. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut."
   },
   "actions": {

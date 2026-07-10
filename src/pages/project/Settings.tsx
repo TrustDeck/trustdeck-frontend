@@ -51,20 +51,26 @@ const Settings: React.FC = () => {
   const auth = useAuth()
   const showToast = useToastStore((state) => state.show)
   const selectedProject = useProjectStore((state) => state.selectedProject)
-  const setSelectedProject = useProjectStore((state) => state.setSelectedProject)
+  const setSelectedProject = useProjectStore(
+    (state) => state.setSelectedProject
+  )
   const projectImage = useProjectStore((state) => state.projectImage)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
   const [projectDetails, setProjectDetails] = useState<ProjectType | null>(null)
-  const [projectForm, setProjectForm] = useState<ProjectFormState>(emptyProjectForm)
+  const [projectForm, setProjectForm] =
+    useState<ProjectFormState>(emptyProjectForm)
   const [isEditingProject, setIsEditingProject] = useState(false)
   const [savingProject, setSavingProject] = useState(false)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [loadingDelete, setLoadingDelete] = useState(false)
   const [confirmVisible, setConfirmVisible] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string | undefined>(projectImage)
+  const [imagePreview, setImagePreview] = useState<string | undefined>(
+    projectImage
+  )
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [removeImageRequested, setRemoveImageRequested] = useState(false)
-  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [permissionAccess, setPermissionAccess] =
+    useState<CachedUserAccess | null>(null)
   const [permissionsReady, setPermissionsReady] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
@@ -143,7 +149,8 @@ const Settings: React.FC = () => {
     (project: ProjectType | null) => {
       setProjectForm({
         name: project?.name ?? selectedProject?.name ?? '',
-        abbreviation: project?.abbreviation ?? selectedProject?.abbreviation ?? '',
+        abbreviation:
+          project?.abbreviation ?? selectedProject?.abbreviation ?? '',
         startDate: toDate(project?.startDate),
         endDate: toDate(project?.endDate),
         description: project?.description ?? ''
@@ -168,7 +175,8 @@ const Settings: React.FC = () => {
       if (!selectedAbbreviation) return
       try {
         setLoadingDetails(true)
-        const match = await TrustDeck.instance().getProject(selectedAbbreviation)
+        const match =
+          await TrustDeck.instance().getProject(selectedAbbreviation)
         if (!isMounted) return
         setProjectDetails(match)
         hydrateForm(match)
@@ -225,7 +233,8 @@ const Settings: React.FC = () => {
       },
       {
         label: t('settings:projectAbbreviation'),
-        value: projectDetails?.abbreviation ?? selectedProject?.abbreviation ?? '—'
+        value:
+          projectDetails?.abbreviation ?? selectedProject?.abbreviation ?? '—'
       },
       {
         label: t('settings:projectStartDate'),
@@ -327,16 +336,22 @@ const Settings: React.FC = () => {
         ...(projectDetails ?? {
           name: projectForm.name,
           abbreviation: projectForm.abbreviation,
-          startDate: projectForm.startDate?.toISOString() ?? new Date().toISOString(),
-          endDate: projectForm.endDate?.toISOString() ?? new Date().toISOString()
+          startDate:
+            projectForm.startDate?.toISOString() ?? new Date().toISOString(),
+          endDate:
+            projectForm.endDate?.toISOString() ?? new Date().toISOString()
         }),
         name: projectForm.name.trim(),
         abbreviation: projectForm.abbreviation.trim(),
         startDate: (
-          projectForm.startDate ?? toDate(projectDetails?.startDate) ?? new Date()
+          projectForm.startDate ??
+          toDate(projectDetails?.startDate) ??
+          new Date()
         ).toISOString(),
         endDate: (
-          projectForm.endDate ?? toDate(projectDetails?.endDate) ?? new Date()
+          projectForm.endDate ??
+          toDate(projectDetails?.endDate) ??
+          new Date()
         ).toISOString(),
         // These backend flags are intentionally preserved, but are no longer exposed in the UI.
         storeEntities: projectDetails?.storeEntities,
@@ -344,7 +359,10 @@ const Settings: React.FC = () => {
         description: projectForm.description.trim()
       }
 
-      const updated = await ProjectService.updateProject(payload, selectedAbbreviation)
+      const updated = await ProjectService.updateProject(
+        payload,
+        selectedAbbreviation
+      )
       await persistImageChanges()
       setProjectDetails(updated)
       hydrateForm(updated)
@@ -366,9 +384,10 @@ const Settings: React.FC = () => {
       showToast({
         severity: 'error',
         summary: t('settings:updateFailed'),
-        detail: error instanceof Error && error.message
-          ? error.message
-          : getUpdateErrorDetail(error),
+        detail:
+          error instanceof Error && error.message
+            ? error.message
+            : getUpdateErrorDetail(error),
         life: 4000
       })
     } finally {
@@ -449,10 +468,11 @@ const Settings: React.FC = () => {
             {!isEditingProject ? (
               <dl className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 font-font-text">
                 {displayRows.map((row) => (
-                  <div key={row.label} className={row.wide ? 'sm:col-span-2' : ''}>
-                    <dt className="text-base font-semibold text-gray-500 dark:text-gray-300">
-                      {row.label}
-                    </dt>
+                  <div
+                    key={row.label}
+                    className={row.wide ? 'sm:col-span-2' : ''}
+                  >
+                    <dt className="td-field-label">{row.label}</dt>
                     <dd className="mt-1 whitespace-pre-wrap break-words text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {row.value}
                     </dd>
@@ -467,7 +487,10 @@ const Settings: React.FC = () => {
                     <input
                       value={projectForm.name}
                       onChange={(event) =>
-                        setProjectForm((prev) => ({ ...prev, name: event.target.value }))
+                        setProjectForm((prev) => ({
+                          ...prev,
+                          name: event.target.value
+                        }))
                       }
                       className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
                     />
@@ -477,7 +500,10 @@ const Settings: React.FC = () => {
                     <input
                       value={projectForm.abbreviation}
                       onChange={(event) =>
-                        setProjectForm((prev) => ({ ...prev, abbreviation: event.target.value }))
+                        setProjectForm((prev) => ({
+                          ...prev,
+                          abbreviation: event.target.value
+                        }))
                       }
                       className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
                     />
@@ -490,7 +516,10 @@ const Settings: React.FC = () => {
                     placeholder={t('settings:startDateTime')}
                     value={projectForm.startDate}
                     onChange={(event) =>
-                      setProjectForm((prev) => ({ ...prev, startDate: event.value }))
+                      setProjectForm((prev) => ({
+                        ...prev,
+                        startDate: event.value
+                      }))
                     }
                     showTime
                   />
@@ -499,7 +528,10 @@ const Settings: React.FC = () => {
                     placeholder={t('settings:endDateTime')}
                     value={projectForm.endDate}
                     onChange={(event) =>
-                      setProjectForm((prev) => ({ ...prev, endDate: event.value }))
+                      setProjectForm((prev) => ({
+                        ...prev,
+                        endDate: event.value
+                      }))
                     }
                     showTime
                   />
@@ -510,7 +542,10 @@ const Settings: React.FC = () => {
                   <textarea
                     value={projectForm.description}
                     onChange={(event) =>
-                      setProjectForm((prev) => ({ ...prev, description: event.target.value }))
+                      setProjectForm((prev) => ({
+                        ...prev,
+                        description: event.target.value
+                      }))
                     }
                     rows={7}
                     className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
@@ -521,9 +556,7 @@ const Settings: React.FC = () => {
           </section>
 
           <section className="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-slate-700 dark:bg-slate-900">
-            <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-              {t('settings:photo')}
-            </h3>
+            <h3 className="td-section-title mb-4">{t('settings:photo')}</h3>
             <div className="relative mx-auto flex min-h-52 w-full items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-950">
               {imagePreview ? (
                 <img
@@ -593,7 +626,9 @@ const Settings: React.FC = () => {
             <PrimaryButton
               label={t('settings:saveChanges')}
               loading={savingProject}
-              disabled={!projectForm.name.trim() || !projectForm.abbreviation.trim()}
+              disabled={
+                !projectForm.name.trim() || !projectForm.abbreviation.trim()
+              }
               onClick={handleSaveProject}
             />
             <SecondaryOutlinedButton

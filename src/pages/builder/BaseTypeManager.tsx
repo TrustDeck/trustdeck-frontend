@@ -25,12 +25,6 @@ function statusLabel(type: EntityTypePayload) {
   return 'active'
 }
 
-function statusText(status: string) {
-  if (status === 'deleted') return 'Deleted'
-  if (status === 'deprecated') return 'Deprecated'
-  return 'Active'
-}
-
 export default function BaseTypeManager() {
   const { t } = useTranslation(['entityBuilder', 'common'])
   const showToast = useToastStore((state) => state.show)
@@ -137,7 +131,10 @@ export default function BaseTypeManager() {
 
   return (
     <div className="td-page-shell">
-      <PageHeader title={t('globalSettingsTitle', 'Global settings')} description={t('globalSettingsSubtitle', 'Manage reusable base entity types and global TrustDeck configuration.')} />
+      <PageHeader
+        title={t('globalSettingsTitle')}
+        description={t('globalSettingsSubtitle')}
+      />
       <div className="td-page-content flex w-full flex-col gap-6">
         <Panel
           noMaxWidth
@@ -159,7 +156,7 @@ export default function BaseTypeManager() {
 
               {baseTypes.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <h2 className="td-section-title">
                     {t('noBaseTypesTitle', 'No base types available')}
                   </h2>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -215,7 +212,7 @@ export default function BaseTypeManager() {
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                        <h2 className="td-panel-title !mb-0">
                           {selectedType.name}
                         </h2>
                         <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
@@ -270,16 +267,13 @@ export default function BaseTypeManager() {
                           {t('status', 'Status')}
                         </dt>
                         <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {t(
-                            `typeStatus.${statusLabel(selectedType)}`,
-                            statusText(statusLabel(selectedType))
-                          )}
+                          {t(`typeStatus.${statusLabel(selectedType)}`)}
                         </dd>
                       </div>
                     </dl>
 
                     <div>
-                      <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="td-section-title mb-2">
                         {t('typeDefinition', 'Type definition')}
                       </h3>
                       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-950">
@@ -312,7 +306,7 @@ export default function BaseTypeManager() {
           <div className="max-h-[92vh] w-full max-w-6xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                <h2 className="td-panel-title !mb-0">
                   {editingType
                     ? t('editBaseType', 'Edit base type')
                     : t('addBaseType', 'Add base type')}
@@ -348,7 +342,7 @@ export default function BaseTypeManager() {
       {deleteConfirmOpen && selectedType && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="td-panel-title !mb-0">
               {t('confirmDeleteTitle', 'Confirm deletion')}
             </h2>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">

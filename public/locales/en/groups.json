@@ -1,7 +1,7 @@
 {
   "modal": "This page shows all of the groups and subgroups in your project. The first group has been created for you. To create a subgroup for it, click the \"New group\" button and follow the prompts in the inspector on the right side of the screen.",
   "headers": {
-    "title": "Group management",
+    "title": "Pseudonym Group Management",
     "left": "Groups",
     "modalHeader": "How to use this page:",
     "subtitle": "Manage pseudonym groups, their hierarchy, and group-specific configuration."

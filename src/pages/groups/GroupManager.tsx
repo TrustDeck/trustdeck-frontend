@@ -82,7 +82,8 @@ function mergeDomains(primary: Domain[], fallback: Domain[]): Domain[] {
     if (domain.name) map.set(domain.name, domain)
   })
   primary.forEach((domain) => {
-    if (domain.name) map.set(domain.name, { ...map.get(domain.name), ...domain })
+    if (domain.name)
+      map.set(domain.name, { ...map.get(domain.name), ...domain })
   })
   return Array.from(map.values()).sort((a, b) =>
     (a.name ?? '').localeCompare(b.name ?? '')
@@ -121,8 +122,12 @@ export default function GroupManager() {
   const [selectedGroupName, setSelectedGroupName] = useState<string>('')
   const [viewMode, setViewMode] = useState<ViewMode>('details')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [currentProjectGroupNames, setCurrentProjectGroupNames] = useState<Set<string>>(new Set())
-  const [allAssignedGroupNames, setAllAssignedGroupNames] = useState<Set<string>>(new Set())
+  const [currentProjectGroupNames, setCurrentProjectGroupNames] = useState<
+    Set<string>
+  >(new Set())
+  const [allAssignedGroupNames, setAllAssignedGroupNames] = useState<
+    Set<string>
+  >(new Set())
 
   const nodeTemplate = useCallback(
     (node: TreeNode) => {
@@ -189,7 +194,10 @@ export default function GroupManager() {
 
     try {
       if (currentProject) {
-        const projectTypes = await TrustDeck.instance().getProjectEntities('*', currentProject)
+        const projectTypes = await TrustDeck.instance().getProjectEntities(
+          '*',
+          currentProject
+        )
         projectTypes.forEach((type) => {
           if (type.associatedDomainName) {
             currentProjectGroups.add(type.associatedDomainName)
@@ -208,9 +216,13 @@ export default function GroupManager() {
           const projectName = project.abbreviation
           if (!projectName) return
           try {
-            const projectTypes = await TrustDeck.instance().getProjectEntities('*', projectName)
+            const projectTypes = await TrustDeck.instance().getProjectEntities(
+              '*',
+              projectName
+            )
             projectTypes.forEach((type) => {
-              if (type.associatedDomainName) allProjectGroups.add(type.associatedDomainName)
+              if (type.associatedDomainName)
+                allProjectGroups.add(type.associatedDomainName)
             })
           } catch {
             // Project-specific type access may be restricted. Keep the information we can see.
@@ -373,7 +385,9 @@ export default function GroupManager() {
           ? 'bg-blue-100 text-blue-800'
           : 'bg-gray-100 text-gray-700'
     return (
-      <span className={`rounded-full px-2 py-1 text-xs font-semibold ${className}`}>
+      <span
+        className={`rounded-full px-2 py-1 text-xs font-semibold ${className}`}
+      >
         {label}
       </span>
     )
@@ -429,7 +443,7 @@ export default function GroupManager() {
 
   const renderGroupTable = (title: string, items: Domain[]) => (
     <div className="space-y-2">
-      <h3 className="text-lg font-semibold text-blue-900">{title}</h3>
+      <h3 className="td-section-title text-blue-900">{title}</h3>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-600">
@@ -438,7 +452,9 @@ export default function GroupManager() {
               <th className="px-4 py-3">{t('groups:crud.table.prefix')}</th>
               <th className="px-4 py-3">{t('groups:crud.table.parent')}</th>
               <th className="px-4 py-3">{t('groups:crud.table.assignment')}</th>
-              <th className="px-4 py-3 text-right">{t('groups:crud.table.actions')}</th>
+              <th className="px-4 py-3 text-right">
+                {t('groups:crud.table.actions')}
+              </th>
             </tr>
           </thead>
           <tbody>{renderGroupRows(items)}</tbody>
@@ -456,8 +472,8 @@ export default function GroupManager() {
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2>{selectedGroup.name}</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="td-section-title">{selectedGroup.name}</h2>
+            <p className="td-section-subtitle">
               {t('groups:crud.detailSubtitle')}
             </p>
           </div>
@@ -487,7 +503,9 @@ export default function GroupManager() {
           />
           <SecondaryOutlinedButton
             label={t('groups:buttons.delete')}
-            onClick={() => selectedGroup.name && handleDelete(selectedGroup.name)}
+            onClick={() =>
+              selectedGroup.name && handleDelete(selectedGroup.name)
+            }
           />
         </div>
       </div>
@@ -514,7 +532,9 @@ export default function GroupManager() {
           <Panel className="w-full">
             <div className="flex flex-wrap justify-between items-center gap-3">
               <div className="flex items-center">
-                <h2 className="mr-3">{t('groups:headers.left')}</h2>
+                <h2 className="td-section-title mr-3">
+                  {t('groups:headers.left')}
+                </h2>
                 <QuestionMarkCircleIcon
                   className="h-5 w-5 mr-1 cursor-pointer"
                   onClick={() => setVisible(true)}
@@ -557,7 +577,9 @@ export default function GroupManager() {
 
           <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4">
             <Panel className="w-full basis-2/5">
-              <h2>{t('groups:crud.hierarchyTitle')}</h2>
+              <h2 className="td-section-title">
+                {t('groups:crud.hierarchyTitle')}
+              </h2>
               <p className="mb-4 text-sm text-gray-600">
                 {t('groups:crud.hierarchySubtitle')}
               </p>

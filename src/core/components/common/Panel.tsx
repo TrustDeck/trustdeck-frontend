@@ -22,7 +22,11 @@ const Panel: React.FC<PanelProps> = ({
   return (
     <div className={classes} onClick={onClick}>
       {title && (
-        <h2 className={centered ? 'text-center' : 'text-left'}>{title}</h2>
+        <h2
+          className={`td-panel-title ${centered ? 'text-center' : 'text-left'}`}
+        >
+          {title}
+        </h2>
       )}
       <div>{children}</div>
     </div>

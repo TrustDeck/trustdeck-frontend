@@ -18,7 +18,8 @@
     "newProject": "New project",
     "entityManagement": "Entity Management",
     "globalSettings": "Global Settings",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "entityBuilder": "Entity Builder"
   },
   "logOut": {
     "loggingOut": "Logging you out",

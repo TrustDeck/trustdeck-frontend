@@ -272,7 +272,7 @@
   vertical-align: middle !important;
 }
 
-/* Shared subsite workspace sizing and page headings. */
+/* Shared subsite workspace sizing and typography hierarchy. */
 .td-page-shell {
   width: 100%;
   max-width: 112rem;
@@ -282,12 +282,88 @@
 
 .td-page-header {
   width: 100%;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.td-page-title {
+  margin: 0;
+  text-align: center;
+  font-family: Arimo, serif;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .td-page-title {
+  color: rgb(243 244 246);
+}
+
+.td-page-subtitle {
+  max-width: 64rem;
+  margin: 0.5rem auto 0;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 400;
+  color: rgb(75 85 99);
+}
+
+.dark .td-page-subtitle {
+  color: rgb(209 213 219);
 }
 
 .td-page-content {
   width: 100%;
   min-width: 0;
+}
+
+.td-panel-title {
+  margin: 0 0 1rem;
+  font-family: Arimo, serif;
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .td-panel-title {
+  color: rgb(243 244 246);
+}
+
+.td-section-title {
+  margin: 0;
+  font-family: Arimo, serif;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+.dark .td-section-title {
+  color: rgb(243 244 246);
+}
+
+.td-section-subtitle {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: rgb(75 85 99);
+}
+
+.dark .td-section-subtitle {
+  color: rgb(209 213 219);
+}
+
+.td-field-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  color: rgb(55 65 81);
+}
+
+.dark .td-field-label {
+  color: rgb(229 231 235);
 }
 
 .td-section-divider {

@@ -37,7 +37,6 @@ type ModalMode = 'view' | 'create' | 'edit'
 
 type EntityInstance = Record<string, any>
 
-
 type IconActionButtonProps = {
   title: string
   onClick: () => void
@@ -387,7 +386,9 @@ function validateLeafAttribute(
     return validateSingleLeafValue(attr, value, label, t)
   }
 
-  const values = asRepeatableValues(value).filter((entry) => !isEmptyValue(entry))
+  const values = asRepeatableValues(value).filter(
+    (entry) => !isEmptyValue(entry)
+  )
   if (attr.required && values.length === 0) {
     return [t('identity:crud.requiredFieldError', { field: label })]
   }
@@ -470,7 +471,9 @@ function coerceEntityDataTypes(
       if (isRepeatableLeaf(attr)) {
         context[attr.name] = asRepeatableValues(value)
           .filter((entry) => !isEmptyValue(entry))
-          .map((entry) => normalizeValueForType({ ...attr, repeatable: false }, entry))
+          .map((entry) =>
+            normalizeValueForType({ ...attr, repeatable: false }, entry)
+          )
         return
       }
       context[attr.name] = normalizeValueForType(attr, value)
@@ -546,7 +549,9 @@ function pruneEmptyOptionalEntityData(
         return
       const value = context[attr.name]
       if (isRepeatableLeaf(attr)) {
-        const values = asRepeatableValues(value).filter((entry) => !isEmptyValue(entry))
+        const values = asRepeatableValues(value).filter(
+          (entry) => !isEmptyValue(entry)
+        )
         if (values.length === 0 && !shouldKeepOptionalEmpty(attr)) return
         result[attr.name] = values
         return
@@ -561,9 +566,7 @@ function pruneEmptyOptionalEntityData(
   return pruneAttributes(attributes, data ?? {})
 }
 
-function pseudonymsToLinks(
-  pseudonyms: any[] = []
-): Array<{
+function pseudonymsToLinks(pseudonyms: any[] = []): Array<{
   group: string
   pseudonym: string
   children?: Array<{ group: string; pseudonym: string; children?: any[] }>
@@ -1206,11 +1209,9 @@ export default function PreReg() {
   return (
     <div className="td-page-shell">
       <div className="td-page-content flex w-full flex-col gap-6">
-        <div className="text-center">
-          <h1 className="mb-2">{t('identity:crud.title')}</h1>
-          <p className="mx-auto max-w-3xl text-gray-600 dark:text-gray-300">
-            {t('identity:crud.subtitle')}
-          </p>
+        <div className="td-page-header">
+          <h1 className="td-page-title">{t('identity:crud.title')}</h1>
+          <p className="td-page-subtitle">{t('identity:crud.subtitle')}</p>
         </div>
 
         <Panel
@@ -1224,7 +1225,7 @@ export default function PreReg() {
             </div>
           ) : typeDefinitions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="td-section-title">
                 {t('entityBuilder:noEntityTypesTitle')}
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-gray-600 dark:text-gray-300">
@@ -1347,7 +1348,7 @@ export default function PreReg() {
                 </div>
               ) : !hasSearchedInstances && instances.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <h3 className="td-section-title">
                     {t('identity:crud.searchFirst')}
                   </h3>
                   <p className="mt-2 text-gray-600 dark:text-gray-300">
@@ -1356,7 +1357,7 @@ export default function PreReg() {
                 </div>
               ) : instances.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  <h3 className="td-section-title">
                     {t('identity:crud.noInstances')}
                   </h3>
                   <p className="mt-2 text-gray-600 dark:text-gray-300">

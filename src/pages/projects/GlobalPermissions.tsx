@@ -256,7 +256,9 @@ function ReadOnlyPermissionSummary({
   }
 
   const grantedKeys = new Set(
-    uniquePermissions(permissions).map((permission) => permissionKey(permission))
+    uniquePermissions(permissions).map((permission) =>
+      permissionKey(permission)
+    )
   )
   const groupedRows = buildReadOnlyRowsForCurrentAccess(
     permissions,
@@ -338,9 +340,7 @@ function ReadOnlyPermissionSummary({
           key={section.type}
           className={sectionIndex > 0 ? 'td-section-divider' : ''}
         >
-          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-            {section.title}
-          </h3>
+          <h3 className="td-section-title mb-4">{section.title}</h3>
           <div className="space-y-3">
             {section.groups.map(([group, rows]) => {
               const granted = rows.filter((row) =>
@@ -373,7 +373,9 @@ function ReadOnlyPermissionSummary({
                         {t('grantedCount', { count: granted.length })}
                       </span>
                       <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                        {t('missingCount', { count: canShowMissing ? missing.length : 0 })}
+                        {t('missingCount', {
+                          count: canShowMissing ? missing.length : 0
+                        })}
                       </span>
                     </div>
                   </summary>
@@ -1028,133 +1030,150 @@ export default function GlobalPermissions() {
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
               <p>{t('errors.definitionsError')}</p>
               <SecondaryOutlinedButton
-                label={retryingDefinitions ? t('actions.retrying') : t('actions.retry')}
+                label={
+                  retryingDefinitions
+                    ? t('actions.retrying')
+                    : t('actions.retry')
+                }
                 loading={retryingDefinitions}
                 onClick={handleRetry}
               />
             </div>
           )}
 
-          {!permissionManagementUnavailable && permissionApiState === 'ready' && (
-            <>
-              <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
-                {t('searchHelp')}
-              </p>
-              <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-base text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
-                {t('assignmentNote')}
-              </div>
-              <div className="relative flex w-full min-w-0 flex-row items-center gap-2">
-                <AutoComplete
-                  value={personValue}
-                  suggestions={personSuggestions}
-                  completeMethod={handlePersonSearch}
-                  onChange={handlePersonChange}
-                  field="name"
-                  itemTemplate={personItemTemplate}
-                  forceSelection
-                  placeholder={t('search:searchFor')}
-                  className="min-w-0 flex-1 !w-full"
-                  inputClassName="w-full min-w-0 text-base"
-                />
-                {personValue && (
-                  <button
-                    type="button"
-                    onClick={clearPersonSelection}
-                    className="flex shrink-0 rounded bg-blue-500 px-4 py-2 text-white"
-                    tabIndex={-1}
-                    aria-label={t('common:close')}
-                  >
-                    <XMarkIcon className="h-7 w-7" />
-                  </button>
-                )}
-              </div>
-
-              {selectedPersonId && (
-                <div className="mt-6">
-                  <section>
-                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                      {t('scope.global')}
-                    </h3>
-                    <PermissionScopeCard
-                      title={t('globalPermissions')}
-                      rows={globalPermissionRows}
-                      permissionState={permissionState}
-                      onPermissionChange={(key, checked) =>
-                        setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                      }
-                      t={t}
-                      defaultOpen
-                    />
-                  </section>
-
-                  <section className="td-section-divider">
-                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                      {t('scope.projectPermissions')}
-                    </h3>
-                    <div className="space-y-3">
-                      {projectCards.length ? (
-                        projectCards.map((card) => (
-                          <PermissionScopeCard
-                            key={card.key}
-                            title={card.title}
-                            subtitle={card.subtitle}
-                            rows={card.rows}
-                            permissionState={permissionState}
-                            onPermissionChange={(key, checked) =>
-                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                            }
-                            t={t}
-                          />
-                        ))
-                      ) : (
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                          {t('empty.noProjectRows')}
-                        </div>
-                      )}
-                    </div>
-                  </section>
-
-                  <section className="td-section-divider">
-                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                      {t('scope.groupPermissions')}
-                    </h3>
-                    <div className="space-y-3">
-                      {groupCards.length ? (
-                        groupCards.map((card) => (
-                          <PermissionScopeCard
-                            key={card.key}
-                            title={card.title}
-                            subtitle={card.subtitle}
-                            rows={card.rows}
-                            permissionState={permissionState}
-                            onPermissionChange={(key, checked) =>
-                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
-                            }
-                            t={t}
-                          />
-                        ))
-                      ) : (
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                          {t('empty.noGroupRows')}
-                        </div>
-                      )}
-                    </div>
-                  </section>
-
-                  <div className="mt-6 flex justify-center">
-                    <PrimaryButton
-                      label={loading ? t('actions.saving') : t('actions.savePermissions')}
-                      onClick={handleSave}
-                      loading={loading}
-                    />
-                  </div>
+          {!permissionManagementUnavailable &&
+            permissionApiState === 'ready' && (
+              <>
+                <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
+                  {t('searchHelp')}
+                </p>
+                <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-base text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                  {t('assignmentNote')}
                 </div>
-              )}
-            </>
-          )}
+                <div className="relative flex w-full min-w-0 flex-row items-center gap-2">
+                  <AutoComplete
+                    value={personValue}
+                    suggestions={personSuggestions}
+                    completeMethod={handlePersonSearch}
+                    onChange={handlePersonChange}
+                    field="name"
+                    itemTemplate={personItemTemplate}
+                    forceSelection
+                    placeholder={t('search:searchFor')}
+                    className="min-w-0 flex-1 !w-full"
+                    inputClassName="w-full min-w-0 text-base"
+                  />
+                  {personValue && (
+                    <button
+                      type="button"
+                      onClick={clearPersonSelection}
+                      className="flex shrink-0 rounded bg-blue-500 px-4 py-2 text-white"
+                      tabIndex={-1}
+                      aria-label={t('common:close')}
+                    >
+                      <XMarkIcon className="h-7 w-7" />
+                    </button>
+                  )}
+                </div>
+
+                {selectedPersonId && (
+                  <div className="mt-6">
+                    <section>
+                      <h3 className="td-section-title mb-4">
+                        {t('scope.global')}
+                      </h3>
+                      <PermissionScopeCard
+                        title={t('globalPermissions')}
+                        rows={globalPermissionRows}
+                        permissionState={permissionState}
+                        onPermissionChange={(key, checked) =>
+                          setPermissionState((prev) => ({
+                            ...prev,
+                            [key]: checked
+                          }))
+                        }
+                        t={t}
+                        defaultOpen
+                      />
+                    </section>
+
+                    <section className="td-section-divider">
+                      <h3 className="td-section-title mb-4">
+                        {t('scope.projectPermissions')}
+                      </h3>
+                      <div className="space-y-3">
+                        {projectCards.length ? (
+                          projectCards.map((card) => (
+                            <PermissionScopeCard
+                              key={card.key}
+                              title={card.title}
+                              subtitle={card.subtitle}
+                              rows={card.rows}
+                              permissionState={permissionState}
+                              onPermissionChange={(key, checked) =>
+                                setPermissionState((prev) => ({
+                                  ...prev,
+                                  [key]: checked
+                                }))
+                              }
+                              t={t}
+                            />
+                          ))
+                        ) : (
+                          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                            {t('empty.noProjectRows')}
+                          </div>
+                        )}
+                      </div>
+                    </section>
+
+                    <section className="td-section-divider">
+                      <h3 className="td-section-title mb-4">
+                        {t('scope.groupPermissions')}
+                      </h3>
+                      <div className="space-y-3">
+                        {groupCards.length ? (
+                          groupCards.map((card) => (
+                            <PermissionScopeCard
+                              key={card.key}
+                              title={card.title}
+                              subtitle={card.subtitle}
+                              rows={card.rows}
+                              permissionState={permissionState}
+                              onPermissionChange={(key, checked) =>
+                                setPermissionState((prev) => ({
+                                  ...prev,
+                                  [key]: checked
+                                }))
+                              }
+                              t={t}
+                            />
+                          ))
+                        ) : (
+                          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                            {t('empty.noGroupRows')}
+                          </div>
+                        )}
+                      </div>
+                    </section>
+
+                    <div className="mt-6 flex justify-center">
+                      <PrimaryButton
+                        label={
+                          loading
+                            ? t('actions.saving')
+                            : t('actions.savePermissions')
+                        }
+                        onClick={handleSave}
+                        loading={loading}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
         </Panel>
       </div>
     </div>
   )
-
 }

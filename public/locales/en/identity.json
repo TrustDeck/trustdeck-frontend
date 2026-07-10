@@ -32,7 +32,9 @@
         "auntUncle": "Aunt/Uncle",
         "nieceNephew": "Niece/Nephew",
         "cousin": "Cousin",
-        "friend": "Friend"
+        "friend": "Friend",
+        "aunt_uncle": "Aunt/Uncle",
+        "niece_nephew": "Niece/Nephew"
       },
       "addPhone": "Add phone",
       "addEmail": "Add email",

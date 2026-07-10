@@ -195,5 +195,7 @@
   "noEntitySchema": "No type definition is available for the selected entity type.",
   "listAll": "List all",
   "ok": "Ok",
-  "subtitle": "Search for entities or pseudonyms in the selected project."
+  "subtitle": "Search for entities or pseudonyms in the selected project.",
+  "personView": "View person",
+  "biosampleView": "View biosample"
 }

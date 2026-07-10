@@ -3,7 +3,8 @@
     "title": "Generate pseudonym",
     "stepone": "Search for the entity that you want to pseudonymize.",
     "steptwo": "Select the entity that you want to pseudonymize.",
-    "stepthree": "In which group should the pseudonym be saved?"
+    "stepthree": "In which group should the pseudonym be saved?",
+    "subtitle": "Search, review, and generate pseudonyms for the selected project."
   },
   "buttons": {
     "back": "Back",

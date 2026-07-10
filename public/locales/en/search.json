@@ -194,5 +194,6 @@
   "confirmDeleteEntity": "Do you really want to delete this entity? This action cannot be undone.",
   "noEntitySchema": "No type definition is available for the selected entity type.",
   "listAll": "List all",
-  "ok": "Ok"
+  "ok": "Ok",
+  "subtitle": "Search for entities or pseudonyms in the selected project."
 }

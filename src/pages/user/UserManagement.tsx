@@ -12,6 +12,7 @@ import useUserStore from '../../core/stores/UserStore'
 import { oidcConfig } from '../../core/configs/oidc'
 import { markLoggedOut } from '../../core/services/authSession'
 import Panel from '../../core/components/common/Panel'
+import PageHeader from '../../core/components/common/PageHeader'
 
 function formatRemaining(expiresAt: number | null) {
   if (!expiresAt) return '—'
@@ -75,16 +76,12 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full max-w-6xl space-y-6">
-        <div>
-          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
-            {t('layout:userManagement.title')}
-          </h1>
-          <p className="mt-2 text-base text-gray-600 dark:text-gray-300">
-            {t('layout:userManagement.subtitle')}
-          </p>
-        </div>
+    <div className="td-page-shell">
+      <PageHeader
+        title={t('layout:userManagement.title')}
+        description={t('layout:userManagement.subtitle')}
+      />
+      <div className="td-page-content space-y-6">
 
         <Panel className="!w-full">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
@@ -129,15 +126,15 @@ export default function UserManagement() {
                 className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-base font-medium text-gray-800 transition hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
                 onClick={() => setDarkMode((value) => !value)}
               >
-                <span>{t('layout:userMenu.darkMode')}</span>
+                <span>{t('layout:userManagement.darkMode')}</span>
                 <span className="inline-flex items-center gap-2">
                   {darkMode ? <MoonIcon className="h-5 w-5" /> : <SunIcon className="h-5 w-5" />}
-                  <span>{darkMode ? t('common:on', 'On') : t('common:off', 'Off')}</span>
+                  <span>{darkMode ? t('layout:userManagement.enabled') : t('layout:userManagement.disabled')}</span>
                 </span>
               </button>
 
               <div className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-base font-medium text-gray-800 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100">
-                <span>{t('layout:userMenu.language')}</span>
+                <span>{t('layout:userManagement.language')}</span>
                 <div className="inline-flex rounded-lg border border-gray-200 p-1 dark:border-slate-700">
                   {(['en', 'de'] as const).map((language) => (
                     <button
@@ -157,7 +154,7 @@ export default function UserManagement() {
                 className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-base font-medium text-gray-800 transition hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
                 onClick={openAccountConsole}
               >
-                <span>{t('layout:userMenu.yourAccount')}</span>
+                <span>{t('layout:userManagement.account')}</span>
                 <ArrowTopRightOnSquareIcon className="h-5 w-5" />
               </button>
 
@@ -166,7 +163,7 @@ export default function UserManagement() {
                 className="flex w-full items-center justify-between rounded-xl border border-red-200 bg-white px-4 py-3 text-left text-base font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/30"
                 onClick={logout}
               >
-                <span>{t('layout:menu.logout')}</span>
+                <span>{t('layout:userManagement.logout')}</span>
                 <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
               </button>
             </section>

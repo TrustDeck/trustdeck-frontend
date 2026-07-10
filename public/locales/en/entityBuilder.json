@@ -363,5 +363,8 @@
     "lengthIncludesCheckDigit": "When enabled, the check digit counts as part of the configured pseudonym length instead of being added on top.",
     "enforceStartDateValidity": "Requires created values to start no earlier than this group allows.",
     "enforceEndDateValidity": "Requires created values to end no later than this group allows."
-  }
+  },
+  "entityManagementTitle": "Entity Management",
+  "entityManagementSubtitle": "Manage the project-specific entity types used to structure and search entities.",
+  "globalSettingsSubtitle": "Manage reusable base entity types and global TrustDeck configuration."
 }

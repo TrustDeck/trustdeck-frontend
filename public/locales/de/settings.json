@@ -7,7 +7,7 @@
   "projectAbbreviation": "Kürzel",
   "projectStartDate": "Startdatum",
   "projectEndDate": "Enddatum",
-  "projectInfoHelp": "Prüfen Sie alle vom Backend gelieferten Projektmetadaten. Die interne Projekt-ID wird absichtlich nicht angezeigt.",
+  "projectInfoHelp": "Prüfen und aktualisieren Sie die Projektmetadaten und das Projektbild.",
   "storeEntities": "Entitäten speichern",
   "storePseudonyms": "Pseudonyme erstellen/speichern",
   "description": "Beschreibung",
@@ -57,5 +57,7 @@
   "updateNotFound": "Das Projekt existiert nicht mehr oder ist nicht mehr zugänglich.",
   "updateBackendError": "Das Backend konnte das Projekt nicht aktualisieren. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut.",
   "imageUploadNotAllowed": "Sie haben keine Berechtigung, das Projektbild zu ändern.",
-  "imageDeleteNotAllowed": "Sie haben keine Berechtigung, das Projektbild zu entfernen."
+  "imageDeleteNotAllowed": "Sie haben keine Berechtigung, das Projektbild zu entfernen.",
+  "subtitle": "Prüfen und bearbeiten Sie das ausgewählte Projekt und sein Projektbild.",
+  "projectImageAlt": "Vorschau des Projektbilds"
 }

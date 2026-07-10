@@ -8,7 +8,7 @@
   "currentUser": "Aktueller Benutzer",
   "title": "Berechtigungsverwaltung",
   "intro": "Prüfen Sie Ihre aktuellen TrustDeck-Rollen und verwalten Sie globale, Projekt- und Gruppenberechtigungen für andere Benutzer.",
-  "currentAccess": "Ihr aktueller Zugriff",
+  "currentAccess": "Ihre aktuellen Rechte",
   "keycloakRoles": "Keycloak-Rollen im Token",
   "effectivePermissions": "Effektive TrustDeck-Berechtigungen",
   "grantOrRevoke": "Berechtigungen vergeben oder entziehen",
@@ -22,7 +22,9 @@
     "global": "Globale Berechtigungen",
     "project": "Projekt",
     "group": "Gruppe",
-    "permissions": "Berechtigungen"
+    "permissions": "Berechtigungen",
+    "projectPermissions": "Projektspezifische Berechtigungen",
+    "groupPermissions": "Gruppenspezifische Berechtigungen"
   },
   "status": {
     "granted": "Vergeben",
@@ -37,7 +39,9 @@
     "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
     "missingRightsUnavailable": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Daher können nur vergebene Rechte angezeigt werden; nicht vergebene Rechte können noch nicht berechnet werden.",
     "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind.",
-    "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar."
+    "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
+    "noProjectRows": "Es sind keine projektspezifischen Berechtigungsdefinitionen verfügbar.",
+    "noGroupRows": "Es sind keine gruppenspezifischen Berechtigungsdefinitionen verfügbar."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",
@@ -88,5 +92,6 @@
     "missingRights": "Nicht vergebene Rechte"
   },
   "allProjectAndGroupPermissions": "Alle Projekt- und Gruppenberechtigungen",
-  "selectedUserRoles": "Rollen des ausgewählten Benutzers"
+  "selectedUserRoles": "Rollen des ausgewählten Benutzers",
+  "assignmentNote": "Berechtigungen können jeweils nur für ein Projekt oder eine Gruppe vergeben werden. Sie können nur Rechte weitergeben, über die Sie selbst bereits verfügen; eine Rechteausweitung ist nicht möglich."
 }

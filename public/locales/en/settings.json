@@ -7,7 +7,7 @@
   "projectAbbreviation": "Abbreviation",
   "projectStartDate": "Start date",
   "projectEndDate": "End date",
-  "projectInfoHelp": "Review all project metadata shown by the backend. The internal project ID is intentionally hidden.",
+  "projectInfoHelp": "Review and update the project metadata and image.",
   "storeEntities": "Store entities",
   "storePseudonyms": "Create/store pseudonyms",
   "description": "Description",
@@ -57,5 +57,7 @@
   "updateNotFound": "The project no longer exists or is no longer accessible.",
   "updateBackendError": "The backend could not update the project. Please check the backend logs or try again later.",
   "imageUploadNotAllowed": "You do not have permission to change the project image.",
-  "imageDeleteNotAllowed": "You do not have permission to remove the project image."
+  "imageDeleteNotAllowed": "You do not have permission to remove the project image.",
+  "subtitle": "Review and edit the selected project and its project image.",
+  "projectImageAlt": "Project image preview"
 }

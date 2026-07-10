@@ -363,5 +363,8 @@
     "lengthIncludesCheckDigit": "Wenn aktiviert, zählt die Prüfziffer zur konfigurierten Pseudonymlänge, statt zusätzlich angehängt zu werden.",
     "enforceStartDateValidity": "Erfordert, dass erstellte Werte nicht früher beginnen, als diese Gruppe erlaubt.",
     "enforceEndDateValidity": "Erfordert, dass erstellte Werte nicht später enden, als diese Gruppe erlaubt."
-  }
+  },
+  "entityManagementTitle": "Entitätsverwaltung",
+  "entityManagementSubtitle": "Verwalten Sie die projektspezifischen Entitätstypen zur Strukturierung und Suche von Entitäten.",
+  "globalSettingsSubtitle": "Verwalten Sie wiederverwendbare Basis-Entitätstypen und globale TrustDeck-Konfigurationen."
 }

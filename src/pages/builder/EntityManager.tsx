@@ -14,6 +14,7 @@ import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOut
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
+import PageHeader from '../../core/components/common/PageHeader'
 
 function typeLabel(type: EntityTypePayload) {
   return `${type.name}${type.version ? ` (${type.version})` : ''}`
@@ -165,8 +166,9 @@ export default function EntityManager() {
   }
 
   return (
-    <div className="builder-page-shell w-full">
-      <div className="builder-content-column mx-auto flex w-full flex-col gap-6">
+    <div className="td-page-shell">
+      <PageHeader title={t('entityManagementTitle', 'Entity Management')} description={t('entityManagementSubtitle', 'Manage the project-specific entity types used to structure and search entities.')} />
+      <div className="td-page-content flex w-full flex-col gap-6">
         <Panel
           noMaxWidth
           className="mx-auto !w-full"

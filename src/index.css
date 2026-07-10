@@ -271,3 +271,31 @@
 .linked-pseudonym-table .p-treetable-toggler {
   vertical-align: middle !important;
 }
+
+/* Shared subsite workspace sizing and page headings. */
+.td-page-shell {
+  width: 100%;
+  max-width: 112rem;
+  margin-inline: auto;
+  padding-bottom: 4rem;
+}
+
+.td-page-header {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.td-page-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.td-section-divider {
+  border-top: 1px solid rgb(209 213 219);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.dark .td-section-divider {
+  border-top-color: rgb(51 65 85);
+}

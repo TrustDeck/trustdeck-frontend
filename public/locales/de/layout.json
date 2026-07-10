@@ -43,6 +43,12 @@
     "title": "Benutzerverwaltung",
     "subtitle": "Verwalten Sie Ihre Sitzung, Oberflächeneinstellungen und Ihren Kontozugriff.",
     "username": "Benutzername",
-    "sessionRemaining": "Verbleibende Sitzungszeit"
+    "sessionRemaining": "Verbleibende Sitzungszeit",
+    "darkMode": "Dunkelmodus",
+    "language": "Sprache",
+    "account": "Kontoeinstellungen öffnen",
+    "logout": "Abmelden",
+    "enabled": "An",
+    "disabled": "Aus"
   }
 }

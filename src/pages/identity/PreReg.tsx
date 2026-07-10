@@ -1204,8 +1204,8 @@ export default function PreReg() {
   }
 
   return (
-    <div className="w-full">
-      <div className="flex w-full max-w-none flex-col gap-6">
+    <div className="td-page-shell">
+      <div className="td-page-content flex w-full flex-col gap-6">
         <div className="text-center">
           <h1 className="mb-2">{t('identity:crud.title')}</h1>
           <p className="mx-auto max-w-3xl text-gray-600 dark:text-gray-300">

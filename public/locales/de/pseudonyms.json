@@ -3,7 +3,8 @@
     "title": "Pseudonym generieren",
     "stepone": "Suchen Sie die Entität, die pseudonymisiert werden soll.",
     "steptwo": "Wählen Sie die Entität aus, die pseudonymisiert werden soll.",
-    "stepthree": "In welcher Gruppe soll das Pseudonym gespeichert werden?"
+    "stepthree": "In welcher Gruppe soll das Pseudonym gespeichert werden?",
+    "subtitle": "Suchen, prüfen und erzeugen Sie Pseudonyme für das ausgewählte Projekt."
   },
   "buttons": {
     "back": "Zurück",

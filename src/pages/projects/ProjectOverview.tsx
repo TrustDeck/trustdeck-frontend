@@ -17,6 +17,7 @@ import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { CachedUserAccess, canManageProject, getCurrentUserAccess } from '../../core/services/PermissionCache'
+import PageHeader from '../../core/components/common/PageHeader'
 
 export default function ProjectOverview() {
   const [projects, setProjects] = useState<ProjectType[]>([])
@@ -246,14 +247,9 @@ export default function ProjectOverview() {
   }
 
   return (
-    <div className="w-full pb-24">
-      <div className="mb-6 flex w-full flex-col items-start gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('projects:title')}</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-            {t('projects:subtitle')}
-          </p>
-        </div>
+    <div className="td-page-shell">
+      <PageHeader title={t('projects:title')} description={t('projects:subtitle')} />
+      <div className="mb-6 flex w-full justify-center">
         {projects.length > 0 && !isLoading && (
           <button
             type="button"

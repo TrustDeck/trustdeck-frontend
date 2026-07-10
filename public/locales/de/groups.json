@@ -3,7 +3,8 @@
   "headers": {
     "title": "Gruppenverwaltung",
     "left": "Gruppen",
-    "modalHeader": "Wie diese Seite zu verwenden ist:"
+    "modalHeader": "Wie diese Seite zu verwenden ist:",
+    "subtitle": "Verwalten Sie Pseudonymgruppen, ihre Hierarchie und gruppenspezifische Konfiguration."
   },
   "buttons": {
     "newGroup": "Neue Gruppe",

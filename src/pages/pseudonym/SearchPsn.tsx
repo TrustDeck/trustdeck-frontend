@@ -24,6 +24,7 @@ import usePseudonymStore from '../search/stores/PseudonymSearchResults'
 import SearchPseudonymService from '../search/services/PseudonymService'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { ArrowUpIcon } from '@heroicons/react/24/outline'
+import PageHeader from '../../core/components/common/PageHeader'
 // import { Toast } from 'primereact/toast'
 
 type StandalonePseudonymForm = {
@@ -237,9 +238,12 @@ export default function SearchPsn() {
   }
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <h1>{t('pseudonyms:headers.title')}</h1>
-      <Panel>
+    <div className="td-page-shell">
+      <PageHeader
+        title={t('pseudonyms:headers.title')}
+        description={t('pseudonyms:headers.subtitle')}
+      />
+      <Panel className="!w-full">
         <Stepper ref={stepperRef} orientation="vertical" linear>
           {/* Step 1 - Search */}
           <StepperPanel header={t('pseudonyms:headers.stepone')}>

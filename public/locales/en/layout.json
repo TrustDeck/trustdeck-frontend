@@ -42,6 +42,12 @@
     "title": "User Management",
     "subtitle": "Manage your session, interface preferences, and account access.",
     "username": "Username",
-    "sessionRemaining": "Session remaining"
+    "sessionRemaining": "Session remaining",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "account": "Open account settings",
+    "logout": "Log out",
+    "enabled": "On",
+    "disabled": "Off"
   }
 }

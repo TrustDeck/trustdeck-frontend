@@ -13,6 +13,7 @@ import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOut
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
+import PageHeader from '../../core/components/common/PageHeader'
 
 function typeLabel(type: EntityTypePayload) {
   return `${type.name}${type.version ? ` (${type.version})` : ''}`
@@ -135,12 +136,13 @@ export default function BaseTypeManager() {
   }
 
   return (
-    <div className="builder-page-shell w-full">
-      <div className="builder-content-column mx-auto flex w-full flex-col gap-6">
+    <div className="td-page-shell">
+      <PageHeader title={t('globalSettingsTitle', 'Global settings')} description={t('globalSettingsSubtitle', 'Manage reusable base entity types and global TrustDeck configuration.')} />
+      <div className="td-page-content flex w-full flex-col gap-6">
         <Panel
           noMaxWidth
           className="mx-auto !w-full"
-          title={t('globalSettingsTitle', 'Global settings')}
+          title={t('baseTypesSectionTitle', 'Base types')}
         >
           {loading ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
@@ -148,17 +150,12 @@ export default function BaseTypeManager() {
             </div>
           ) : (
             <div className="mt-6 space-y-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  {t('baseTypesSectionTitle', 'Base types')}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                  {t(
-                    'baseTypesSectionDescription',
-                    'Manage reusable type blueprints that can be extended by project-specific entity types.'
-                  )}
-                </p>
-              </div>
+              <p className="text-base text-gray-600 dark:text-gray-300">
+                {t(
+                  'baseTypesSectionDescription',
+                  'Manage reusable type blueprints that can be extended by project-specific entity types.'
+                )}
+              </p>
 
               {baseTypes.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
@@ -174,34 +171,25 @@ export default function BaseTypeManager() {
                 </div>
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                  <div className="grid grid-cols-[1.6fr_0.7fr_0.7fr] gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
+                  <div className="grid grid-cols-[1.7fr_0.8fr] gap-4 border-b border-gray-200 bg-gray-50 px-5 py-4 text-base font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
                     <span>{t('entityName')}</span>
                     <span>{t('version', 'Version')}</span>
-                    <span>{t('status', 'Status')}</span>
                   </div>
                   <div className="divide-y divide-gray-200 dark:divide-slate-700">
                     {baseTypes.map((definition) => {
                       const selected = selectedType?.name === definition.name
-                      const status = statusLabel(definition)
                       return (
                         <button
                           key={`${definition.name}-${definition.version ?? ''}`}
                           type="button"
                           onClick={() => setSelectedTypeName(definition.name)}
-                          className={`grid w-full grid-cols-[1.6fr_0.7fr_0.7fr] gap-3 px-4 py-3 text-left text-sm transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
+                          className={`grid w-full grid-cols-[1.7fr_0.8fr] gap-4 px-5 py-4 text-left text-base transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
                         >
                           <span className="min-w-0 truncate font-semibold">
                             {definition.name}
                           </span>
                           <span className="min-w-0 truncate text-gray-600 dark:text-gray-300">
                             {definition.version ?? 'v1.0'}
-                          </span>
-                          <span>
-                            <span
-                              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200'}`}
-                            >
-                              {t(`typeStatus.${status}`, statusText(status))}
-                            </span>
                           </span>
                         </button>
                       )

@@ -4,6 +4,7 @@ import Panel from '../../core/components/common/Panel'
 import EntityMask from './components/EntityMask'
 import PseudonymMask from './components/PseudonymMask'
 import useSearchStore from './stores/SearchStore'
+import PageHeader from '../../core/components/common/PageHeader'
 
 type SearchMode = 'entity' | 'pseudonym'
 
@@ -53,8 +54,14 @@ export default function SearchMask({ psn = false }) {
   )
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <Panel title={titleContent}>
+    <div className={psn ? 'w-full' : 'td-page-shell'}>
+      {!psn && (
+        <PageHeader
+          title={t('search:title')}
+          description={t('search:subtitle')}
+        />
+      )}
+      <Panel title={titleContent} className="!w-full">
         {mode === 'entity' && <EntityMask psn={psn} />}
         {mode === 'pseudonym' && <PseudonymMask psn={psn} />}
       </Panel>

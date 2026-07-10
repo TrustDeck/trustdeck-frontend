@@ -20,6 +20,7 @@ import { findNodeByKey, findNodeByLabel } from './utils/findNodeByKey.ts'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import TrustDeck from '../../core/services/TrustDeck.ts'
 import type { Domain } from '../../core/types/Domain.ts'
+import PageHeader from '../../core/components/common/PageHeader.tsx'
 
 const DOMAIN_DETAIL_FIELDS: Array<keyof Domain> = [
   'name',
@@ -504,8 +505,11 @@ export default function GroupManager() {
         onHide={() => setShowDeleteDialog(false)}
         onAccept={() => deleteSelectedGroup()}
       />
-      <div className="w-full">
-        <h1 className="text-center">{t('groups:headers.title')}</h1>
+      <div className="td-page-shell">
+        <PageHeader
+          title={t('groups:headers.title')}
+          description={t('groups:headers.subtitle')}
+        />
         <div className="w-full space-y-8">
           <Panel className="w-full">
             <div className="flex flex-wrap justify-between items-center gap-3">

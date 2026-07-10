@@ -3,7 +3,8 @@
   "headers": {
     "title": "Group management",
     "left": "Groups",
-    "modalHeader": "How to use this page:"
+    "modalHeader": "How to use this page:",
+    "subtitle": "Manage pseudonym groups, their hierarchy, and group-specific configuration."
   },
   "buttons": {
     "newGroup": "New group",

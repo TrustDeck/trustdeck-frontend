@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import Panel from '@component/common/Panel'
+import PageHeader from '@component/common/PageHeader'
 import { useTranslation } from 'react-i18next'
 import {
   AutoComplete,
@@ -53,29 +54,6 @@ function uniquePermissions(permissions: EffectivePermission[]) {
 function permissionErrorState(error: unknown): PermissionApiState {
   const message = error instanceof Error ? error.message : String(error)
   return message.includes('403') ? 'forbidden' : 'error'
-}
-
-function rolesForPerson(person: PersonSuggestion | null): string[] {
-  if (!person) return []
-  const candidate = person as PersonSuggestion & Record<string, unknown>
-  const rawValues = [
-    candidate.roles,
-    candidate.realmRoles,
-    candidate.clientRoles,
-    candidate.groups,
-    candidate.roleNames,
-    candidate.authorities
-  ]
-  return Array.from(
-    new Set(
-      rawValues
-        .flatMap((value) => (Array.isArray(value) ? value : []))
-        .filter(
-          (value): value is string =>
-            typeof value === 'string' && value.trim().length > 0
-        )
-    )
-  ).sort((a, b) => a.localeCompare(b))
 }
 
 function formatPermissionAction(action: string) {
@@ -278,9 +256,7 @@ function ReadOnlyPermissionSummary({
   }
 
   const grantedKeys = new Set(
-    uniquePermissions(permissions).map((permission) =>
-      permissionKey(permission)
-    )
+    uniquePermissions(permissions).map((permission) => permissionKey(permission))
   )
   const groupedRows = buildReadOnlyRowsForCurrentAccess(
     permissions,
@@ -305,14 +281,14 @@ function ReadOnlyPermissionSummary({
         {items.map((permission) => (
           <div
             key={permissionKey(permission)}
-            className="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-3 px-3 py-2.5 text-sm"
+            className="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-3 px-4 py-3 text-base"
             title={permission.action}
           >
             <div className="min-w-0">
               <div className="truncate font-semibold text-gray-900 dark:text-gray-100">
                 {formatPermissionAction(permission.action)}
               </div>
-              <div className="truncate font-mono text-[0.72rem] text-gray-500 dark:text-gray-400">
+              <div className="truncate font-mono text-xs text-gray-500 dark:text-gray-400">
                 {permission.action}
               </div>
             </div>
@@ -331,78 +307,106 @@ function ReadOnlyPermissionSummary({
     )
   }
 
+  const sections = [
+    {
+      type: 'GLOBAL',
+      title: t('scope.global'),
+      groups: groupedRows.filter(([group]) => group.startsWith('GLOBAL'))
+    },
+    {
+      type: 'PROJECT',
+      title: t('scope.projectPermissions'),
+      groups: groupedRows.filter(([group]) => group.startsWith('PROJECT'))
+    },
+    {
+      type: 'DOMAIN',
+      title: t('scope.groupPermissions'),
+      groups: groupedRows.filter(([group]) => group.startsWith('DOMAIN'))
+    }
+  ].filter((section) => section.groups.length > 0)
+
   return (
-    <div className="space-y-3">
+    <div>
       {!canShowMissing && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
           {t('empty.missingRightsUnavailable')}
         </div>
       )}
 
-      {groupedRows.map(([group, rows]) => {
-        const granted = rows.filter((row) =>
-          grantedKeys.has(permissionKey(row))
-        )
-        const missing = canShowMissing
-          ? rows.filter((row) => !grantedKeys.has(permissionKey(row)))
-          : []
+      {sections.map((section, sectionIndex) => (
+        <section
+          key={section.type}
+          className={sectionIndex > 0 ? 'td-section-divider' : ''}
+        >
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            {section.title}
+          </h3>
+          <div className="space-y-3">
+            {section.groups.map(([group, rows]) => {
+              const granted = rows.filter((row) =>
+                grantedKeys.has(permissionKey(row))
+              )
+              const missing = canShowMissing
+                ? rows.filter((row) => !grantedKeys.has(permissionKey(row)))
+                : []
 
-        return (
-          <details
-            key={group}
-            className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
-              <div className="flex min-w-0 items-center gap-2">
-                <ChevronRightIcon className="h-4 w-4 shrink-0 text-gray-500 group-open:hidden" />
-                <ChevronDownIcon className="hidden h-4 w-4 shrink-0 text-gray-500 group-open:block" />
-                <div className="min-w-0">
-                  <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">
-                    {scopeTitleForPermissionGroup(group, t)}
-                  </h4>
-                  <p className="mt-0.5 truncate font-mono text-[0.72rem] text-gray-500 dark:text-gray-400">
-                    {group}
-                  </p>
-                </div>
-              </div>
-              <div className="grid shrink-0 grid-cols-2 gap-2 text-center text-xs font-bold">
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100">
-                  {t('grantedCount', { count: granted.length })}
-                </span>
-                <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                  {canShowMissing
-                    ? t('missingCount', { count: missing.length })
-                    : t('missingCount', { count: 0 })}
-                </span>
-              </div>
-            </summary>
+              return (
+                <details
+                  key={group}
+                  className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-800 [&::-webkit-details-marker]:hidden">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <ChevronRightIcon className="h-4 w-4 shrink-0 text-gray-500 group-open:hidden" />
+                      <ChevronDownIcon className="hidden h-4 w-4 shrink-0 text-gray-500 group-open:block" />
+                      <div className="min-w-0">
+                        <h4 className="truncate text-base font-bold text-gray-900 dark:text-gray-50">
+                          {scopeTitleForPermissionGroup(group, t)}
+                        </h4>
+                        <p className="mt-0.5 truncate font-mono text-xs text-gray-500 dark:text-gray-400">
+                          {group}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid shrink-0 grid-cols-2 gap-2 text-center text-xs font-bold">
+                      <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800 dark:bg-emerald-900/70 dark:text-emerald-100">
+                        {t('grantedCount', { count: granted.length })}
+                      </span>
+                      <span className="rounded-full bg-slate-200 px-2.5 py-1 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        {t('missingCount', { count: canShowMissing ? missing.length : 0 })}
+                      </span>
+                    </div>
+                  </summary>
 
-            <div className="grid gap-4 border-t border-gray-100 p-4 dark:border-slate-800 xl:grid-cols-2">
-              <section className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/10">
-                <div className="mb-2 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-                  <span>{t('sections.grantedRights')}</span>
-                  <span>{granted.length}</span>
-                </div>
-                {renderPermissionRows(granted, true)}
-              </section>
+                  <div className="grid gap-4 border-t border-gray-100 p-4 dark:border-slate-800 xl:grid-cols-2">
+                    <section className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 dark:border-emerald-900/60 dark:bg-emerald-950/10">
+                      <div className="mb-2 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+                        <span>{t('sections.grantedRights')}</span>
+                        <span>{granted.length}</span>
+                      </div>
+                      {renderPermissionRows(granted, true)}
+                    </section>
 
-              <section className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
-                <div className="mb-2 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-200">
-                  <span>{t('sections.missingRights')}</span>
-                  <span>{canShowMissing ? missing.length : '—'}</span>
-                </div>
-                {canShowMissing ? (
-                  renderPermissionRows(missing, false)
-                ) : (
-                  <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-                    {t('empty.missingRightsUnavailableShort')}
-                  </p>
-                )}
-              </section>
-            </div>
-          </details>
-        )
-      })}
+                    <section className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+                      <div className="mb-2 flex items-center justify-between text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-200">
+                        <span>{t('sections.missingRights')}</span>
+                        <span>{canShowMissing ? missing.length : '—'}</span>
+                      </div>
+                      {canShowMissing ? (
+                        renderPermissionRows(missing, false)
+                      ) : (
+                        <p className="rounded-lg border border-dashed border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+                          {t('empty.missingRightsUnavailableShort')}
+                        </p>
+                      )}
+                    </section>
+                  </div>
+                </details>
+              )
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   )
 }
@@ -449,10 +453,6 @@ export default function GlobalPermissions() {
 
   const currentUserLabel =
     currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
-  const selectedPersonRoles = useMemo(
-    () => rolesForPerson(selectedPerson),
-    [selectedPerson]
-  )
 
   const loadDefinedPermissions = useCallback(
     async (force = false): Promise<DefinedPermission[]> => {
@@ -968,51 +968,50 @@ export default function GlobalPermissions() {
     })
   }, [projectDisplayNames, projectPermissionRows, t])
 
-  return (
-    <div className="flex min-h-[calc(100dvh-3rem)] w-full flex-col pb-10 text-base">
-      <div className="w-full space-y-6">
-        <Panel title={t('title')} className="w-full mx-auto">
-          <p className="mb-5 text-base text-gray-500 dark:text-gray-300">
-            {t('intro')}
-          </p>
+  const projectCards = useMemo(
+    () => projectScopeCards.filter((card) => card.key.startsWith('PROJECT:')),
+    [projectScopeCards]
+  )
+  const groupCards = useMemo(
+    () => projectScopeCards.filter((card) => card.key.startsWith('DOMAIN:')),
+    [projectScopeCards]
+  )
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-50">
-              {t('currentAccess')}
-            </h2>
-            <div className="mb-5 text-base text-gray-600 dark:text-gray-300">
-              <div>{currentUserLabel}</div>
-              {currentUserEmail && <div>{currentUserEmail}</div>}
+  return (
+    <div className="td-page-shell text-base">
+      <PageHeader title={t('title')} description={t('intro')} />
+
+      <div className="td-page-content space-y-6">
+        <Panel title={t('currentAccess')} className="!w-full">
+          <div className="mb-5 text-base text-gray-600 dark:text-gray-300">
+            <div className="font-semibold text-gray-900 dark:text-gray-100">
+              {currentUserLabel}
             </div>
-            <div>
-              <h3 className="mb-2 text-base font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                {t('effectivePermissions')}
-              </h3>
-              {currentAccessState === 'loading' ||
-              currentAccessState === 'idle' ? (
-                <p className="text-base text-gray-500 dark:text-gray-300">
-                  {t('loading.effectivePermissions')}
-                </p>
-              ) : currentAccessState === 'forbidden' ? (
-                <p className="text-base text-amber-700 dark:text-amber-300">
-                  {t('errors.effectiveForbidden')}
-                </p>
-              ) : currentAccessState === 'error' ? (
-                <p className="text-base text-amber-700 dark:text-amber-300">
-                  {t('errors.effectiveError')}
-                </p>
-              ) : (
-                <ReadOnlyPermissionSummary
-                  permissions={currentEffectivePermissions}
-                  definedPermissions={definedPermissions}
-                  t={t}
-                />
-              )}
-            </div>
+            {currentUserEmail && <div>{currentUserEmail}</div>}
           </div>
+
+          {currentAccessState === 'loading' || currentAccessState === 'idle' ? (
+            <p className="text-base text-gray-500 dark:text-gray-300">
+              {t('loading.effectivePermissions')}
+            </p>
+          ) : currentAccessState === 'forbidden' ? (
+            <p className="text-base text-amber-700 dark:text-amber-300">
+              {t('errors.effectiveForbidden')}
+            </p>
+          ) : currentAccessState === 'error' ? (
+            <p className="text-base text-amber-700 dark:text-amber-300">
+              {t('errors.effectiveError')}
+            </p>
+          ) : (
+            <ReadOnlyPermissionSummary
+              permissions={currentEffectivePermissions}
+              definedPermissions={definedPermissions}
+              t={t}
+            />
+          )}
         </Panel>
 
-        <Panel title={t('grantOrRevoke')} className="w-full mx-auto">
+        <Panel title={t('grantOrRevoke')} className="!w-full">
           {permissionApiState === 'loading' || permissionApiState === 'idle' ? (
             <p className="text-base text-gray-500 dark:text-gray-300">
               {t('loading.permissionDefinitions')}
@@ -1029,92 +1028,72 @@ export default function GlobalPermissions() {
             <div className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4 text-base text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
               <p>{t('errors.definitionsError')}</p>
               <SecondaryOutlinedButton
-                label={
-                  retryingDefinitions
-                    ? t('actions.retrying')
-                    : t('actions.retry')
-                }
+                label={retryingDefinitions ? t('actions.retrying') : t('actions.retry')}
                 loading={retryingDefinitions}
                 onClick={handleRetry}
               />
             </div>
           )}
 
-          {!permissionManagementUnavailable &&
-            permissionApiState === 'ready' && (
-              <>
-                <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
-                  {t('searchHelp')}
-                </p>
-                <div className="relative flex flex-row items-center w-full min-w-0 gap-2">
-                  <AutoComplete
-                    value={personValue}
-                    suggestions={personSuggestions}
-                    completeMethod={handlePersonSearch}
-                    onChange={handlePersonChange}
-                    field="name"
-                    itemTemplate={personItemTemplate}
-                    forceSelection
-                    placeholder={t('search:searchFor')}
-                    className="flex-1 min-w-0 w-full"
-                    inputClassName="w-full min-w-0 text-base"
-                  />
-                  {personValue && (
-                    <button
-                      type="button"
-                      onClick={clearPersonSelection}
-                      className="flex-shrink-0 flex px-4 py-2 bg-blue-500 text-white rounded"
-                      tabIndex={-1}
-                      aria-label="Clear"
-                    >
-                      <XMarkIcon className="h-7 w-7" />
-                    </button>
-                  )}
-                </div>
+          {!permissionManagementUnavailable && permissionApiState === 'ready' && (
+            <>
+              <p className="mb-4 text-base text-gray-500 dark:text-gray-300">
+                {t('searchHelp')}
+              </p>
+              <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-base text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                {t('assignmentNote')}
+              </div>
+              <div className="relative flex w-full min-w-0 flex-row items-center gap-2">
+                <AutoComplete
+                  value={personValue}
+                  suggestions={personSuggestions}
+                  completeMethod={handlePersonSearch}
+                  onChange={handlePersonChange}
+                  field="name"
+                  itemTemplate={personItemTemplate}
+                  forceSelection
+                  placeholder={t('search:searchFor')}
+                  className="min-w-0 flex-1 !w-full"
+                  inputClassName="w-full min-w-0 text-base"
+                />
+                {personValue && (
+                  <button
+                    type="button"
+                    onClick={clearPersonSelection}
+                    className="flex shrink-0 rounded bg-blue-500 px-4 py-2 text-white"
+                    tabIndex={-1}
+                    aria-label={t('common:close')}
+                  >
+                    <XMarkIcon className="h-7 w-7" />
+                  </button>
+                )}
+              </div>
 
-                {selectedPersonId && (
-                  <div className="mt-6 space-y-6">
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                      <h3 className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-100">
-                        {t('selectedUserRoles')}
-                      </h3>
-                      {selectedPersonRoles.length ? (
-                        <div className="flex flex-wrap gap-2">
-                          {selectedPersonRoles.map((role) => (
-                            <span
-                              key={role}
-                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                            >
-                              {role}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-300">
-                          {t('empty.noTokenRoles')}
-                        </p>
-                      )}
-                    </div>
-
+              {selectedPersonId && (
+                <div className="mt-6">
+                  <section>
+                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      {t('scope.global')}
+                    </h3>
                     <PermissionScopeCard
                       title={t('globalPermissions')}
                       rows={globalPermissionRows}
                       permissionState={permissionState}
                       onPermissionChange={(key, checked) =>
-                        setPermissionState((prev) => ({
-                          ...prev,
-                          [key]: checked
-                        }))
+                        setPermissionState((prev) => ({ ...prev, [key]: checked }))
                       }
                       t={t}
+                      defaultOpen
                     />
+                  </section>
 
+                  <section className="td-section-divider">
+                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      {t('scope.projectPermissions')}
+                    </h3>
                     <div className="space-y-3">
-                      <h3 className="text-xl font-semibold dark:text-gray-100">
-                        {t('allProjectAndGroupPermissions')}
-                      </h3>
-                      {projectScopeCards.length ? (
-                        projectScopeCards.map((card) => (
+                      {projectCards.length ? (
+                        projectCards.map((card) => (
                           <PermissionScopeCard
                             key={card.key}
                             title={card.title}
@@ -1122,38 +1101,60 @@ export default function GlobalPermissions() {
                             rows={card.rows}
                             permissionState={permissionState}
                             onPermissionChange={(key, checked) =>
-                              setPermissionState((prev) => ({
-                                ...prev,
-                                [key]: checked
-                              }))
+                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
                             }
                             t={t}
                           />
                         ))
                       ) : (
                         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
-                          {t('empty.noProjectOrGroupRowsAll')}
+                          {t('empty.noProjectRows')}
                         </div>
                       )}
                     </div>
+                  </section>
 
-                    <div className="mt-4 flex justify-end">
-                      <PrimaryButton
-                        label={
-                          loading
-                            ? t('actions.saving')
-                            : t('actions.savePermissions')
-                        }
-                        onClick={handleSave}
-                        loading={loading}
-                      />
+                  <section className="td-section-divider">
+                    <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      {t('scope.groupPermissions')}
+                    </h3>
+                    <div className="space-y-3">
+                      {groupCards.length ? (
+                        groupCards.map((card) => (
+                          <PermissionScopeCard
+                            key={card.key}
+                            title={card.title}
+                            subtitle={card.subtitle}
+                            rows={card.rows}
+                            permissionState={permissionState}
+                            onPermissionChange={(key, checked) =>
+                              setPermissionState((prev) => ({ ...prev, [key]: checked }))
+                            }
+                            t={t}
+                          />
+                        ))
+                      ) : (
+                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+                          {t('empty.noGroupRows')}
+                        </div>
+                      )}
                     </div>
+                  </section>
+
+                  <div className="mt-6 flex justify-center">
+                    <PrimaryButton
+                      label={loading ? t('actions.saving') : t('actions.savePermissions')}
+                      onClick={handleSave}
+                      loading={loading}
+                    />
                   </div>
-                )}
-              </>
-            )}
+                </div>
+              )}
+            </>
+          )}
         </Panel>
       </div>
     </div>
   )
+
 }

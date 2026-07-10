@@ -8,7 +8,7 @@
   "currentUser": "Current user",
   "title": "Permission management",
   "intro": "Review your current TrustDeck roles and manage global, project, and group permissions for other users.",
-  "currentAccess": "Your current access",
+  "currentAccess": "Your current rights",
   "keycloakRoles": "Keycloak roles in token",
   "effectivePermissions": "Effective TrustDeck permissions",
   "grantOrRevoke": "Grant or revoke permissions",
@@ -22,7 +22,9 @@
     "global": "Global permissions",
     "project": "Project",
     "group": "Group",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "projectPermissions": "Project-specific permissions",
+    "groupPermissions": "Group-specific permissions"
   },
   "status": {
     "granted": "Granted",
@@ -37,7 +39,9 @@
     "noProjectOrGroupRows": "No project or group permission definitions are available for this project.",
     "missingRightsUnavailable": "Permission definitions are currently unavailable, so only granted rights can be shown. Missing rights cannot be calculated yet.",
     "missingRightsUnavailableShort": "Missing rights cannot be calculated until permission definitions are available.",
-    "noProjectOrGroupRowsAll": "No project or group permission definitions are available."
+    "noProjectOrGroupRowsAll": "No project or group permission definitions are available.",
+    "noProjectRows": "No project-specific permission definitions are available.",
+    "noGroupRows": "No group-specific permission definitions are available."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",
@@ -88,5 +92,6 @@
     "missingRights": "Rights not granted"
   },
   "allProjectAndGroupPermissions": "All project and group permissions",
-  "selectedUserRoles": "Roles for selected user"
+  "selectedUserRoles": "Roles for selected user",
+  "assignmentNote": "Permissions can only be assigned for one project or group at a time. You can only grant rights that you already hold yourself; privilege escalation is not permitted."
 }

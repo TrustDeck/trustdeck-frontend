@@ -400,7 +400,7 @@ const PseudonymDetails: React.FC = () => {
 
   return (
     <div className="w-full">
-      <div className="relative mb-4 flex w-full items-center 2xl:mx-auto 2xl:w-4/5">
+      <div className="relative mb-4 flex w-full items-center">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
           onClick={handleBack}

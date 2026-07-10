@@ -2,7 +2,7 @@
   "menu": {
     "logout": "Abmelden",
     "pseudonymManagement": "Pseudonymverwaltung",
-    "groupManagement": "Gruppenmanagement",
+    "groupManagement": "Pseudonym-Gruppenverwaltung",
     "projectSettings": "Projekteinstellungen",
     "search": "Suche",
     "entityBuilder": "Entitäten-Manager",
@@ -18,7 +18,8 @@
     "newProject": "Neues Projekt",
     "identityManagement": "Identitätsmanagement",
     "entityManagement": "Entitätenverwaltung",
-    "globalSettings": "Globale Einstellungen"
+    "globalSettings": "Globale Einstellungen",
+    "userManagement": "Benutzerverwaltung"
   },
   "logOut": {
     "loggingOut": "Sie werden abgemeldet",
@@ -37,5 +38,11 @@
     "yourAccount": "Ihr Konto",
     "english": "Englisch",
     "german": "Deutsch"
+  },
+  "userManagement": {
+    "title": "Benutzerverwaltung",
+    "subtitle": "Verwalten Sie Ihre Sitzung, Oberflächeneinstellungen und Ihren Kontozugriff.",
+    "username": "Benutzername",
+    "sessionRemaining": "Verbleibende Sitzungszeit"
   }
 }

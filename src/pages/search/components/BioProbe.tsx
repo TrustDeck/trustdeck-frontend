@@ -40,7 +40,7 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
   }, [editMode, entity, loadEntity])
 
   return (
-    <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
+    <div className="w-full space-y-8 lg:flex lg:space-x-4 lg:space-y-0">
       <Panel title={t('search:headers.data')} className="flex-1">
         <Divider />
         <div className="space-y-5">

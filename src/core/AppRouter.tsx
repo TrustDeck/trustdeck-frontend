@@ -156,56 +156,6 @@ const AuthStateListener: React.FC = () => {
   return null
 }
 
-//this is updated on every page change
-const BreadcrumbUpdater: React.FC = () => {
-  const location = useLocation()
-  const setBreadcrumbItems = useLayoutStore((state) => state.setBreadcrumbItems)
-
-  useEffect(() => {
-    const pathname = location.pathname
-    
-    // Special handling for direct pseudonym search: /search/pseudonym/:pseudonymId
-    // Should only show: Search > Pseudonym Details (not entities > pseudonyms)
-    if (pathname.match(/^\/search\/pseudonym\/([^/]+)(\/[^/]+)?$/)) {
-      const searchRoute = routes.find((r) => r.path === '/search')
-      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:domainName/:pseudonymId') ?? routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
-      const breadcrumbList = [
-        { label: searchRoute?.titleKey || '/search', url: '/search' },
-        { label: pseudonymRoute?.titleKey || pathname, url: pathname }
-      ]
-      setBreadcrumbItems(breadcrumbList)
-      return
-    }
-
-    // Project overview still gets an explicit breadcrumb.
-    if (pathname === '/projects') {
-      const projectRoute = routes.find((r) => r.path === '/projects')
-      setBreadcrumbItems([{ label: projectRoute?.titleKey || 'Projects', url: '/projects' }])
-      return
-    }
-
-    // Default behavior for all other paths
-    const pathnames = pathname.split('/').filter((x) => x)
-    const breadcrumbList = pathnames
-      .map((_, index) => {
-        const path = `/${pathnames.slice(0, index + 1).join('/')}`
-        const route = routes.find((r) =>
-          matchPath({ path: r.path, end: true }, path)
-        )
-
-        // Skip intermediate synthetic segments like "/entity" when there is no route.
-        if (!route && index < pathnames.length - 1) return null
-
-        return { label: route ? route.titleKey : path, url: path }
-      })
-      .filter((item): item is { label: string; url: string } => item !== null)
-
-    setBreadcrumbItems(breadcrumbList)
-  }, [location, setBreadcrumbItems])
-
-  return null
-}
-
 const AppRouter: FC = () => {
   useSyncApiToken()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
@@ -214,7 +164,6 @@ const AppRouter: FC = () => {
     <>
       <AuthStateListener />
       <TokenRefreshOnMainNavigation />
-      <BreadcrumbUpdater />
       <Routes>
         <Route element={<Layout />}>
           {routes.map(({ path, component, isProtected }) => (

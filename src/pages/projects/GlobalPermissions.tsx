@@ -969,7 +969,7 @@ export default function GlobalPermissions() {
   }, [projectDisplayNames, projectPermissionRows, t])
 
   return (
-    <div className="flex min-h-[calc(100dvh-7rem)] w-full flex-col px-4 pb-10 pt-4 text-base sm:px-8">
+    <div className="flex min-h-[calc(100dvh-3rem)] w-full flex-col pb-10 text-base">
       <div className="w-full space-y-6">
         <Panel title={t('title')} className="w-full mx-auto">
           <p className="mb-5 text-base text-gray-500 dark:text-gray-300">

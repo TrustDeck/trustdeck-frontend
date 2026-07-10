@@ -3,7 +3,7 @@
     "logout": "Log out",
     "identityManagement": "Identity Management",
     "pseudonymManagement": "Pseudonym Management",
-    "groupManagement": "Group Management",
+    "groupManagement": "Pseudonym Group Management",
     "projectSettings": "Project Settings",
     "search": "Search",
     "searchResults": "Search results",
@@ -17,7 +17,8 @@
     "permissionManagement": "Permission Management",
     "newProject": "New project",
     "entityManagement": "Entity Management",
-    "globalSettings": "Global Settings"
+    "globalSettings": "Global Settings",
+    "userManagement": "User Management"
   },
   "logOut": {
     "loggingOut": "Logging you out",
@@ -36,5 +37,11 @@
     "yourAccount": "Your account",
     "english": "English",
     "german": "German"
+  },
+  "userManagement": {
+    "title": "User Management",
+    "subtitle": "Manage your session, interface preferences, and account access.",
+    "username": "Username",
+    "sessionRemaining": "Session remaining"
   }
 }

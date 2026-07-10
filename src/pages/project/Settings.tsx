@@ -445,7 +445,7 @@ const Settings: React.FC = () => {
   if (!selectedProject) {
     return (
       <div className="flex w-full justify-center px-4 pt-8">
-        <Panel title={t('settings:header')} className="w-full max-w-4xl">
+        <Panel title={t('settings:header')} className="w-full max-w-7xl">
           <p className="text-base text-gray-600 dark:text-gray-300">
             {t('settings:selectProjectFirst')}
           </p>
@@ -465,7 +465,7 @@ const Settings: React.FC = () => {
       <div className="flex flex-1 flex-col items-center w-full px-4 pt-4">
         <h1 className="text-center">{t('settings:header')}</h1>
 
-        <Panel title={t('settings:projectInfo')} className="w-full max-w-4xl mt-4">
+        <Panel title={t('settings:projectInfo')} className="w-full max-w-7xl mt-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <p className="text-base text-gray-600 dark:text-gray-300">
               {t('settings:projectInfoHelp')}
@@ -622,7 +622,7 @@ const Settings: React.FC = () => {
           </div>
         </Panel>
 
-        <Panel title={t('settings:photo')} className="w-full max-w-4xl mt-6">
+        <Panel title={t('settings:photo')} className="w-full max-w-7xl mt-6">
           <div className="mt-3 grid gap-6 md:grid-cols-[180px_1fr]">
             <div className="flex justify-center md:justify-start">
               {imagePreview ? (

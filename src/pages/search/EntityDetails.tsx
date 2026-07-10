@@ -202,7 +202,7 @@ const EntityDetails: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="relative flex justify-between items-center w-full 2xl:w-4/5 2xl:mx-auto mb-4">
+      <div className="relative mb-4 flex w-full items-center justify-between">
         {/* Left button */}
         <div className="flex-shrink-0">
           <PrimaryOutlinedButton

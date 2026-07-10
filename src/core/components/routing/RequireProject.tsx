@@ -13,7 +13,7 @@ export default function RequireProject({ children }: Props) {
   const { t } = useTranslation()
 
   // Allow reaching /projects (and other public-ish paths) without a selected project
-  const allowList = ['/projects', '/projects/new', '/permissions', '/projects/global-permissions', '/base-types', '/login', '/callback', '/logged-out']
+  const allowList = ['/projects', '/projects/new', '/permissions', '/projects/global-permissions', '/base-types', '/user-management', '/login', '/callback', '/logged-out']
   const isAllowed = allowList.some((p) => location.pathname.startsWith(p))
 
   useEffect(() => {

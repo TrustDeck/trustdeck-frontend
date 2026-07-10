@@ -41,7 +41,7 @@
 }
 
 .basic-panel {
-  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full lg:w-4/5;
+  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full;
 }
 
 @layer components {
@@ -204,7 +204,7 @@
 }
 
 .builder-content-column {
-  width: min(100%, 72rem);
+  width: min(100%, 96rem);
 }
 
 .td-custom-dropdown .p-dropdown,

@@ -81,7 +81,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
   const relationshipLabel = relationshipOptions.find((o) => o.value === contactRelationship)?.label ?? contactRelationship
 
   return (
-    <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
+    <div className="w-full space-y-8 lg:flex lg:space-x-4 lg:space-y-0">
       <Panel
         title={t('search:headers.personalData')}
         className="flex-1"

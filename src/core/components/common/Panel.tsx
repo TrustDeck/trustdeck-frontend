@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react'
 
 interface PanelProps {
-  title?: ReactNode 
+  title?: ReactNode
   centered?: boolean
   children?: ReactNode
   className?: string
@@ -9,16 +9,22 @@ interface PanelProps {
   noBasePanel?: boolean
   onClick?: () => void
 }
-// A basic panel. You can pass it a title, a centered prop, any children, any classes you want, and finally a "noMaxWidth" to remove the max-w-7xl restriction. 
 
-const Panel: React.FC<PanelProps> = ({ title, centered, children, className, noMaxWidth, noBasePanel, onClick }) => {
-  const classes = `${noBasePanel ? "" : "basic-panel"} ${noMaxWidth ? "max-w-none" : "max-w-7xl"} ${className ? className : ""}` 
+const Panel: React.FC<PanelProps> = ({
+  title,
+  centered,
+  children,
+  className,
+  noBasePanel,
+  onClick
+}) => {
+  const classes = `${noBasePanel ? '' : 'basic-panel'} max-w-none ${className ?? ''}`
   return (
     <div className={classes} onClick={onClick}>
       {title && (
-        <h2 className={`${centered ? 'text-center' : 'text-left'}`}>{title}</h2>
+        <h2 className={centered ? 'text-center' : 'text-left'}>{title}</h2>
       )}
-      <div className=''>{children}</div>
+      <div>{children}</div>
     </div>
   )
 }

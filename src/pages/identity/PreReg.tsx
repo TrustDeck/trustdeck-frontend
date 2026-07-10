@@ -1205,7 +1205,7 @@ export default function PreReg() {
 
   return (
     <div className="w-full">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-2 sm:px-4">
+      <div className="flex w-full max-w-none flex-col gap-6">
         <div className="text-center">
           <h1 className="mb-2">{t('identity:crud.title')}</h1>
           <p className="mx-auto max-w-3xl text-gray-600 dark:text-gray-300">

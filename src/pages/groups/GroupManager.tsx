@@ -506,7 +506,7 @@ export default function GroupManager() {
       />
       <div className="w-full">
         <h1 className="text-center">{t('groups:headers.title')}</h1>
-        <div className="space-y-8 2xl:w-4/5 2xl:mx-auto">
+        <div className="w-full space-y-8">
           <Panel className="w-full">
             <div className="flex flex-wrap justify-between items-center gap-3">
               <div className="flex items-center">

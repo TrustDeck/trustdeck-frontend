@@ -20,7 +20,8 @@ import {
   FolderPlusIcon,
   FolderIcon,
   CubeTransparentIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline'
 import PseudonymDetails from '../../pages/search/PseudonymDetails'
 import Registration from '../../pages/identity/Registration'
@@ -33,6 +34,7 @@ import PermissionsRedirect from '../../pages/projects/PermissionsRedirect'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
 import BaseTypeManager from '../../pages/builder/BaseTypeManager'
+import UserManagement from '../../pages/user/UserManagement'
 
 export type RouteConfig = {
   path: string
@@ -79,7 +81,7 @@ export const routes: RouteConfig[] = [
     Icon: FolderIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: -3
+    sideboardOrder: 0
   },
   {
     path: '/projects/new',
@@ -97,7 +99,17 @@ export const routes: RouteConfig[] = [
     Icon: ShieldCheckIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 8,
+    sideboardOrder: 9,
+    isNonProject: true
+  },
+  {
+    path: '/user-management',
+    titleKey: 'layout:menu.userManagement',
+    component: UserManagement,
+    Icon: UserCircleIcon,
+    isProtected: true,
+    isSidebar: true,
+    sideboardOrder: 10,
     isNonProject: true
   },
   {
@@ -107,7 +119,7 @@ export const routes: RouteConfig[] = [
     Icon: WrenchScrewdriverIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 7,
+    sideboardOrder: 8,
     isNonProject: true
   },
   {
@@ -125,7 +137,7 @@ export const routes: RouteConfig[] = [
     Icon: CubeTransparentIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 1
+    sideboardOrder: 4
   },
   {
     path: '/entity/manager/new',
@@ -142,7 +154,7 @@ export const routes: RouteConfig[] = [
     Icon: IdentificationIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 1
+    sideboardOrder: 5
   },
   {
     path: '/identity/register',
@@ -175,7 +187,7 @@ export const routes: RouteConfig[] = [
     Icon: EyeSlashIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 2
+    sideboardOrder: 6
   },
   {
     path: '/group-management',
@@ -193,7 +205,7 @@ export const routes: RouteConfig[] = [
     Icon: Cog8ToothIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 4
+    sideboardOrder: 1
   },
   {
     path: '/search/results',
@@ -242,6 +254,6 @@ export const routes: RouteConfig[] = [
     Icon: MagnifyingGlassIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 0
+    sideboardOrder: 2
   }
 ]

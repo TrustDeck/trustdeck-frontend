@@ -39,8 +39,8 @@ type StandalonePseudonymForm = {
 
 const createStandaloneForm = (): StandalonePseudonymForm => ({
   group: '',
-  identifier: crypto.randomUUID(),
-  idType: 'standalone-pseudonym',
+  identifier: '',
+  idType: '',
   psn: '',
   validFrom: null,
   validTo: null,
@@ -430,6 +430,7 @@ export default function SearchPsn() {
                     }))
                   }
                   helpText={t('pseudonyms:standalone.fields.validityTimeHelp')}
+                  helpIconInside
                 />
                 <CustomCalendar
                   id="standalone-valid-from"

@@ -11,6 +11,7 @@ type CustomFloatLabelProps = {
   placeholder: string
   inputPlaceholder?: string
   helpText?: string
+  helpIconInside?: boolean
   errorMessage?: string
   onBlur?: () => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
@@ -28,6 +29,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   placeholder,
   inputPlaceholder,
   helpText,
+  helpIconInside = false,
   onKeyDown,
   errorMessage = '',
   validate,
@@ -69,7 +71,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         onKeyDown={onKeyDown}
         readOnly={readOnly}
         disabled={disabled}
-        className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${className} ${
+        className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
           !isValid ? 'border border-red-500' : 'border border-color-light-gray'
         } ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
       />
@@ -90,7 +92,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         <>
           <QuestionMarkCircleIcon
             id={`${id}-help`}
-            className="h-5 w-5 absolute -right-8 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer z-10"
+            className={`h-5 w-5 absolute top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer z-10 ${helpIconInside ? 'right-3' : '-right-8'}`}
             onClick={() => setVisible(true)}
           />
           <Dialog

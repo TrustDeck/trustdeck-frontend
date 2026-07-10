@@ -52,5 +52,16 @@
   "creationForbiddenDetail": "Sie haben nicht die erforderliche Berechtigung, Projekte anzulegen. Bitte bitten Sie Ihre PI bzw. eine Systemadministration um die entsprechende Berechtigung, falls Sie Projekte erstellen sollen.",
   "creationExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
   "creationInvalid": "Das Backend hat die Projektdaten abgelehnt. Bitte prüfen Sie Name, Kürzel, Zeiträume und Einstellungen.",
-  "creationBackendError": "Das Backend konnte das Projekt nicht erstellen. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut."
+  "creationBackendError": "Das Backend konnte das Projekt nicht erstellen. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut.",
+  "actions": {
+    "openSettings": "Projekteinstellungen öffnen",
+    "checkingPermissions": "Projektberechtigungen werden geprüft...",
+    "deleteProject": "Projekt löschen",
+    "deleteNotAllowed": "Sie haben keine Berechtigung, dieses Projekt zu löschen.",
+    "updateProject": "Projekt aktualisieren"
+  },
+  "projectIconAlt": "Projektsymbol für {{name}}",
+  "subgroups_one": "Untergruppe",
+  "subgroups_other": "Untergruppen",
+  "subgroups": "Untergruppen"
 }

@@ -28,5 +28,10 @@
     "summary": "Select a project first",
     "detail": "Please select a project before opening this section."
   },
-  "back": "Back"
+  "back": "Back",
+  "routeError": {
+    "title": "This page could not be displayed",
+    "description": "Please reload the page. If the problem persists, check the browser console and backend permissions.",
+    "fallbackMessage": "The page could not be rendered."
+  }
 }

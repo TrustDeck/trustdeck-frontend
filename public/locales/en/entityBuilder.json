@@ -366,5 +366,7 @@
   },
   "entityManagementTitle": "Entity Management",
   "entityManagementSubtitle": "Manage the project-specific entity types used to structure and search entities.",
-  "globalSettingsSubtitle": "Manage reusable base entity types and global TrustDeck configuration."
+  "globalSettingsSubtitle": "Manage reusable base entity types and global TrustDeck configuration.",
+  "drag": "Drag",
+  "dragHandle": "Drag handle"
 }

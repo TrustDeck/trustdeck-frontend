@@ -24,7 +24,7 @@ export default function EditGroupOption() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showSaveAllDialog, setShowSaveAllDialog] = useState(false)
   const showToast = useToastStore((state) => state.show)
-  const { t } = useTranslation()
+  const { t } = useTranslation(['groups', 'common'])
 
   async function handleSave() {
     //iterate over tree to find if any node has changes
@@ -63,8 +63,8 @@ export default function EditGroupOption() {
         setIsDeleting(false)
         showToast({
           severity: 'success',
-          summary: 'Success',
-          detail: 'Group deleted successfully',
+          summary: t('common:success'),
+          detail: t('groups:crud.deleteSuccessDetail'),
           life: 4000
         })
       })
@@ -73,8 +73,8 @@ export default function EditGroupOption() {
         setIsDeleting(false)
         showToast({
           severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to delete group',
+          summary: t('common:error'),
+          detail: t('groups:crud.deleteFailedDetail'),
           life: 4000
         })
       })
@@ -90,8 +90,8 @@ export default function EditGroupOption() {
           storeNodeChanges()
           showToast({
             severity: 'success',
-            summary: 'Success',
-            detail: 'Group created successfully',
+            summary: t('common:success'),
+            detail: t('groups:crud.updateSuccessDetail'),
             life: 4000
           })
           setGroupOption('edit')
@@ -102,8 +102,8 @@ export default function EditGroupOption() {
           setShowSaveAllDialog(false)
           showToast({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to create groups updates',
+            summary: t('common:error'),
+            detail: t('groups:crud.updateFailedDetail'),
             life: 4000
           })
         })
@@ -121,8 +121,8 @@ export default function EditGroupOption() {
           </div>
           <p>
             {isCreating
-              ? 'Group is being updated...'
-              : 'Group is being deleted...'}
+              ? t('groups:status.updating')
+              : t('groups:status.deleting')}
           </p>
         </>
       ) : (
@@ -132,15 +132,15 @@ export default function EditGroupOption() {
             visible={showDeleteDialog}
             message={t('groups:messages.deleteConfirmation')}
             header={t('groups:messages.confirmDelete')}
-            label="Delete"
+            label={t('groups:buttons.yesDelete')}
             onHide={() => setShowDeleteDialog(false)}
             onAccept={() => deleteNodes()}
           />
           <ConfirmDialog
             visible={showSaveAllDialog}
-            message="Es gibt weitere Änderungen. Diesen müssen ebenanfalls gespeichert werden, bevor eine neue Gruppe angelegt werden kann."
-            header="Weitere Änderungen speichern?"
-            label="Ja, Änderungen speichern"
+            message={t('groups:messages.saveOtherChanges')}
+            header={t('groups:messages.saveOtherChangesHeader')}
+            label={t('groups:messages.saveOtherChangesAction')}
             onHide={() => setShowSaveAllDialog(false)}
             onAccept={() => confirmSaveAll()}
           />

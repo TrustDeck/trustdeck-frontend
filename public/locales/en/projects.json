@@ -52,5 +52,16 @@
   "creationForbiddenDetail": "You do not have the required permission to create projects. Please ask a PI or system administrator to grant project creation rights if you should create projects.",
   "creationExpired": "Your session has expired. Please sign in again.",
   "creationInvalid": "The backend rejected the project data. Please check the name, abbreviation, dates, and settings.",
-  "creationBackendError": "The backend could not create the project. Please check the backend logs or try again later."
+  "creationBackendError": "The backend could not create the project. Please check the backend logs or try again later.",
+  "actions": {
+    "openSettings": "Open project settings",
+    "checkingPermissions": "Checking your project permissions...",
+    "deleteProject": "Delete project",
+    "deleteNotAllowed": "You do not have permission to delete this project.",
+    "updateProject": "Update project"
+  },
+  "projectIconAlt": "Project icon for {{name}}",
+  "subgroups_one": "subgroup",
+  "subgroups_other": "subgroups",
+  "subgroups": "subgroups"
 }

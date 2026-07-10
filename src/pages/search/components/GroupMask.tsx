@@ -41,7 +41,7 @@ const GroupMask: React.FC<GroupMaskProps> = ({ psn }) => {
       <form onSubmit={handleSubmit} className="flex flex-col">
         <div className="my-4 gap-4 flex items-end">
           <div className="flex-1">
-          {psn && <p className="mb-2"> Lorem ipsum dolor sit amet, consetetur sadipscing elitr. </p>}
+            {psn && <p className="mb-2">{t('search:group.searchHint')}</p>}
             <CustomFloatLabel
               id="group"
               value={group}

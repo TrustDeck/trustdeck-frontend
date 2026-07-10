@@ -52,7 +52,8 @@
     "selectFile": "Dateien durchsuchen",
     "upload": "Upload",
     "uploadComplete": "Upload abgeschlossen.",
-    "uploadFailed": "Upload fehlgeschlagen."
+    "uploadFailed": "Upload fehlgeschlagen.",
+    "or": "oder"
   },
   "duplicate": {
     "header": "Mögliche Dublette gefunden",

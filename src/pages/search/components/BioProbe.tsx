@@ -93,7 +93,9 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
             <CustomFloatLabel
               id="id"
               value={sampleNumber}
-              placeholder={t('search:entity.biosample.sampleNumber.placeholder')}
+              placeholder={t(
+                'search:entity.biosample.sampleNumber.placeholder'
+              )}
               readOnly={!editMode}
               onChange={(e) => setSampleNumber(e.target.value)}
               validate={validation.isValidRegistrationLocation}
@@ -113,7 +115,7 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
         <CustomFloatLabel
           id="MOI"
           value={moi}
-          placeholder="Master Object Index"
+          placeholder={t('search:masterObjectIndex')}
           readOnly={!editMode}
           onChange={(e) => setMoi(e.target.value)}
           className="my-8"

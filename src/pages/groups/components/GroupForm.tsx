@@ -4,9 +4,22 @@ import { useEffect, useState } from 'react'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
-import { AlphabetKey, alphabetOptions, characters, CUSTOM_ALPHABET_VALUE } from '../utils/alphabetOptions.ts'
-import { algorithmOptions, defaultAlphabetForAlgorithm } from '../utils/algorithmOptions.ts'
-import { getAlgorithmOutputLength, isConsecutiveAlgorithm, isHashAlgorithm, isRandomnessAlgorithm } from '../utils/algorithmOutputLength.ts'
+import {
+  AlphabetKey,
+  alphabetOptions,
+  characters,
+  CUSTOM_ALPHABET_VALUE
+} from '../utils/alphabetOptions.ts'
+import {
+  algorithmOptions,
+  defaultAlphabetForAlgorithm
+} from '../utils/algorithmOptions.ts'
+import {
+  getAlgorithmOutputLength,
+  isConsecutiveAlgorithm,
+  isHashAlgorithm,
+  isRandomnessAlgorithm
+} from '../utils/algorithmOutputLength.ts'
 import { psnLengthOptions } from '../utils/psnLengthOptions.ts'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey.ts'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
@@ -18,7 +31,9 @@ import { Checkbox } from 'primereact/checkbox'
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 
 const formatIntegerForLocale = (locale: string | undefined, value: number) =>
-  new Intl.NumberFormat(locale || undefined, { maximumFractionDigits: 0 }).format(value)
+  new Intl.NumberFormat(locale || undefined, {
+    maximumFractionDigits: 0
+  }).format(value)
 
 const formatDecimalForLocale = (locale: string | undefined, value: number) =>
   new Intl.NumberFormat(locale || undefined, {
@@ -51,17 +66,25 @@ const INHERITABLE_GROUP_FIELDS: Array<keyof GroupStoredAttributes> = [
 
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState<string>('')
-  const [parentGroupData, setParentGroupData] = useState<GroupStoredAttributes | null>(null)
+  const [parentGroupData, setParentGroupData] =
+    useState<GroupStoredAttributes | null>(null)
   const showToast = useToastStore((state) => state.show)
 
   const { tree, selectedNodeKey, updateNodeAttribute, moveNode } =
     useTreeStateStore()
   const { t, i18n } = useTranslation()
-  const desiredPoolSizePlaceholder = formatIntegerForLocale(i18n.language, 1000000)
-  const desiredSuccessProbabilityPlaceholder = formatDecimalForLocale(i18n.language, 0.999)
+  const desiredPoolSizePlaceholder = formatIntegerForLocale(
+    i18n.language,
+    1000000
+  )
+  const desiredSuccessProbabilityPlaceholder = formatDecimalForLocale(
+    i18n.language,
+    0.999
+  )
 
   // Keep parentGroupData in sync with selected parent (from tree)
-  const currentParentGroup = findNodeByKey(tree, selectedNodeKey)?.data.temporal.parentgroup
+  const currentParentGroup = findNodeByKey(tree, selectedNodeKey)?.data.temporal
+    .parentgroup
   useEffect(() => {
     if (!currentParentGroup || currentParentGroup === 'ROOT') {
       setParentGroupData(null)
@@ -83,20 +106,56 @@ export default function GroupForm() {
         updateNodeAttribute(selectedNodeKey, field, value as any)
       }
     })
-    updateNodeAttribute(selectedNodeKey, 'validFromInherited', Boolean(parent.validFrom))
-    updateNodeAttribute(selectedNodeKey, 'validToInherited', Boolean(parent.validTo))
-    updateNodeAttribute(selectedNodeKey, 'pseudonymLengthInherited', Boolean(parent.psnlength))
-    updateNodeAttribute(selectedNodeKey, 'algorithmInherited', Boolean(parent.algorithm))
-    updateNodeAttribute(selectedNodeKey, 'alphabetInherited', Boolean(parent.alphabet))
-    updateNodeAttribute(selectedNodeKey, 'randomAlgorithmDesiredSizeInherited', Boolean(parent.maxnumpsn))
+    updateNodeAttribute(
+      selectedNodeKey,
+      'validFromInherited',
+      Boolean(parent.validFrom)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'validToInherited',
+      Boolean(parent.validTo)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'pseudonymLengthInherited',
+      Boolean(parent.psnlength)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'algorithmInherited',
+      Boolean(parent.algorithm)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'alphabetInherited',
+      Boolean(parent.alphabet)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'randomAlgorithmDesiredSizeInherited',
+      Boolean(parent.maxnumpsn)
+    )
     updateNodeAttribute(
       selectedNodeKey,
       'randomAlgorithmDesiredSuccessProbabilityInherited',
       Boolean(parent.randomAlgorithmDesiredSuccessProbability)
     )
-    updateNodeAttribute(selectedNodeKey, 'multiplePsnAllowedInherited', parent.multiplepsn !== undefined)
-    updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', Boolean(parent.paddingchar))
-    updateNodeAttribute(selectedNodeKey, 'addCheckDigitInherited', parent.checkdigit !== undefined)
+    updateNodeAttribute(
+      selectedNodeKey,
+      'multiplePsnAllowedInherited',
+      parent.multiplepsn !== undefined
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'paddingCharacterInherited',
+      Boolean(parent.paddingchar)
+    )
+    updateNodeAttribute(
+      selectedNodeKey,
+      'addCheckDigitInherited',
+      parent.checkdigit !== undefined
+    )
     updateNodeAttribute(
       selectedNodeKey,
       'lengthIncludesCheckDigitInherited',
@@ -119,7 +178,10 @@ export default function GroupForm() {
   const temporal = node?.data?.temporal
   useEffect(() => {
     if (!selectedNodeKey || !temporal) return
-    if (isHashAlgorithm(temporal.algorithm) && temporal.alphabet !== 'HEXADECIMAL_ALPHABET') {
+    if (
+      isHashAlgorithm(temporal.algorithm) &&
+      temporal.alphabet !== 'HEXADECIMAL_ALPHABET'
+    ) {
       updateNodeAttribute(selectedNodeKey, 'alphabet', 'HEXADECIMAL_ALPHABET')
     }
   }, [selectedNodeKey, temporal, updateNodeAttribute])
@@ -153,11 +215,11 @@ export default function GroupForm() {
 
   const [parentGroupOptions, setParentGroupOptions] = useState<
     { label: string; value: string }[]
-  >([{ label: 'No Parent', value: 'ROOT' }])
+  >([{ label: t('groups:inputs.parentgroup.none'), value: 'ROOT' }])
 
   // whenever the tree changes, update the parentGroupOptions array; the default option is always { label: 'No Parent', value: 'ROOT' }
   useEffect(() => {
-    const base = [{ label: 'No Parent', value: 'ROOT' }]
+    const base = [{ label: t('groups:inputs.parentgroup.none'), value: 'ROOT' }]
 
     const traverse = (node: any) => {
       if (!node) return
@@ -178,7 +240,7 @@ export default function GroupForm() {
 
     traverse(tree)
     setParentGroupOptions(base)
-  }, [tree, selectedNodeKey])
+  }, [tree, selectedNodeKey, t])
 
   useEffect(() => {
     const node = findNodeByKey(tree, selectedNodeKey)
@@ -198,7 +260,8 @@ export default function GroupForm() {
     const charSet =
       temporal.alphabet === CUSTOM_ALPHABET_VALUE
         ? (temporal.customAlphabetCharacters ?? '')
-        : (characters[temporal.alphabet as AlphabetKey] ?? characters.HEXADECIMAL_ALPHABET)
+        : (characters[temporal.alphabet as AlphabetKey] ??
+          characters.HEXADECIMAL_ALPHABET)
 
     const psnlength = Number(temporal.psnlength) || 0
     const prefix = temporal.prefix ?? ''
@@ -221,10 +284,7 @@ export default function GroupForm() {
 
     const body = randomLetter(bodyLength, charSet)
     setExamplePsn(`${prefix}${paddingStr}${body}`)
-  }, [
-    tree,
-    selectedNodeKey,
-  ])
+  }, [tree, selectedNodeKey])
 
   return (
     <>
@@ -277,14 +337,17 @@ export default function GroupForm() {
             if (isChild(selectedNodeKey, parentName) || isSame) {
               showToast({
                 severity: 'error',
-                summary: 'Fehler beim Ändern der Elterngruppe.',
-                detail:
-                  'Die Elterngruppe darf nicht die Gruppe selbst oder eine eigene Untergruppe sein.',
+                summary: t('groups:messages.invalidParentSummary'),
+                detail: t('groups:messages.invalidParentDetail'),
                 life: 4000
               })
               return
             }
-            updateNodeAttribute(selectedNodeKey, 'parentgroup', parentName || 'ROOT')
+            updateNodeAttribute(
+              selectedNodeKey,
+              'parentgroup',
+              parentName || 'ROOT'
+            )
             moveNode(selectedNodeKey, parentName)
             if (parentName) {
               const parentNode = findNodeByLabel(tree, parentName)
@@ -327,27 +390,41 @@ export default function GroupForm() {
           />
         </div>
         {parentGroupData && (
-        <div className="form-grid -mt-4 form-grid--inherit">
-          <div />
-          <div className="flex align-items-center gap-1.5 text-xs">
-            <span className="scale-90 origin-left">
-              <Checkbox
-                inputId="pseudonymLengthInherited"
-                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.pseudonymLengthInherited)}
-                onChange={(e) => {
-                  const checked = e.checked ?? false
-                  if (checked && parentGroupData?.psnlength != null) {
-                    updateNodeAttribute(selectedNodeKey, 'psnlength', parentGroupData.psnlength)
-                  }
-                  updateNodeAttribute(selectedNodeKey, 'pseudonymLengthInherited', checked)
-                }}
-              />
-            </span>
-            <label htmlFor="pseudonymLengthInherited" className="cursor-pointer">
-              {t('groups:inputs.inheritFromParent')}
-            </label>
+          <div className="form-grid -mt-4 form-grid--inherit">
+            <div />
+            <div className="flex align-items-center gap-1.5 text-xs">
+              <span className="scale-90 origin-left">
+                <Checkbox
+                  inputId="pseudonymLengthInherited"
+                  checked={Boolean(
+                    findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                      .pseudonymLengthInherited
+                  )}
+                  onChange={(e) => {
+                    const checked = e.checked ?? false
+                    if (checked && parentGroupData?.psnlength != null) {
+                      updateNodeAttribute(
+                        selectedNodeKey,
+                        'psnlength',
+                        parentGroupData.psnlength
+                      )
+                    }
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'pseudonymLengthInherited',
+                      checked
+                    )
+                  }}
+                />
+              </span>
+              <label
+                htmlFor="pseudonymLengthInherited"
+                className="cursor-pointer"
+              >
+                {t('groups:inputs.inheritFromParent')}
+              </label>
+            </div>
           </div>
-        </div>
         )}
         <div className="form-grid">
           <CustomCalendar
@@ -386,51 +463,76 @@ export default function GroupForm() {
           />
         </div>
         {parentGroupData && (
-        <div className="form-grid -mt-4 form-grid--inherit">
-          <div className="flex align-items-center gap-1.5 text-xs">
-            <span className="scale-90 origin-left">
-              <Checkbox
-                inputId="validFromInherited"
-                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validFromInherited)}
-                onChange={(e) => {
-                  const checked = e.checked ?? false
-                  if (checked && parentGroupData?.validFrom != null) {
-                    updateNodeAttribute(selectedNodeKey, 'validFrom', parentGroupData.validFrom)
-                  }
-                  updateNodeAttribute(selectedNodeKey, 'validFromInherited', checked)
-                }}
-              />
-            </span>
-            <label htmlFor="validFromInherited" className="cursor-pointer">
-              {t('groups:inputs.inheritFromParent')}
-            </label>
+          <div className="form-grid -mt-4 form-grid--inherit">
+            <div className="flex align-items-center gap-1.5 text-xs">
+              <span className="scale-90 origin-left">
+                <Checkbox
+                  inputId="validFromInherited"
+                  checked={Boolean(
+                    findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                      .validFromInherited
+                  )}
+                  onChange={(e) => {
+                    const checked = e.checked ?? false
+                    if (checked && parentGroupData?.validFrom != null) {
+                      updateNodeAttribute(
+                        selectedNodeKey,
+                        'validFrom',
+                        parentGroupData.validFrom
+                      )
+                    }
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'validFromInherited',
+                      checked
+                    )
+                  }}
+                />
+              </span>
+              <label htmlFor="validFromInherited" className="cursor-pointer">
+                {t('groups:inputs.inheritFromParent')}
+              </label>
+            </div>
+            <div className="flex align-items-center gap-1.5 text-xs">
+              <span className="scale-90 origin-left">
+                <Checkbox
+                  inputId="validToInherited"
+                  checked={Boolean(
+                    findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                      .validToInherited
+                  )}
+                  onChange={(e) => {
+                    const checked = e.checked ?? false
+                    if (checked && parentGroupData?.validTo != null) {
+                      updateNodeAttribute(
+                        selectedNodeKey,
+                        'validTo',
+                        parentGroupData.validTo
+                      )
+                    }
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'validToInherited',
+                      checked
+                    )
+                  }}
+                />
+              </span>
+              <label htmlFor="validToInherited" className="cursor-pointer">
+                {t('groups:inputs.inheritFromParent')}
+              </label>
+            </div>
           </div>
-          <div className="flex align-items-center gap-1.5 text-xs">
-            <span className="scale-90 origin-left">
-              <Checkbox
-                inputId="validToInherited"
-                checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.validToInherited)}
-                onChange={(e) => {
-                  const checked = e.checked ?? false
-                  if (checked && parentGroupData?.validTo != null) {
-                    updateNodeAttribute(selectedNodeKey, 'validTo', parentGroupData.validTo)
-                  }
-                  updateNodeAttribute(selectedNodeKey, 'validToInherited', checked)
-                }}
-              />
-            </span>
-            <label htmlFor="validToInherited" className="cursor-pointer">
-              {t('groups:inputs.inheritFromParent')}
-            </label>
-          </div>
-        </div>
         )}
         <CustomFloatLabel
           id="validityTime"
           placeholder={t('groups:inputs.validityTime.label')}
           inputPlaceholder={t('groups:inputs.validityTime.placeholder')}
           helpText={t('groups:inputs.validityTime.help')}
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.validityTime ?? ''}
+          value={
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal.validityTime ??
+            ''
+          }
           onChange={(e) =>
             updateNodeAttribute(selectedNodeKey, 'validityTime', e.target.value)
           }
@@ -460,37 +562,54 @@ export default function GroupForm() {
               defaultAlphabetForAlgorithm(newAlgorithm)
             )
             if (!isConsecutiveAlgorithm(newAlgorithm)) {
-              updateNodeAttribute(selectedNodeKey, 'consecutiveValueCounter', '1')
+              updateNodeAttribute(
+                selectedNodeKey,
+                'consecutiveValueCounter',
+                '1'
+              )
             }
             markFieldOverridden('algorithmInherited')
           }}
           options={algorithmOptions}
         />
         {parentGroupData && (
-        <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
-          <span className="scale-90 origin-left">
-            <Checkbox
-              inputId="algorithmInherited"
-              checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithmInherited)}
-              onChange={(e) => {
-                const checked = e.checked ?? false
-                if (checked && parentGroupData?.algorithm != null) {
-                  updateNodeAttribute(selectedNodeKey, 'algorithm', parentGroupData.algorithm)
-                }
-                updateNodeAttribute(selectedNodeKey, 'algorithmInherited', checked)
-              }}
-            />
-          </span>
-          <label htmlFor="algorithmInherited" className="cursor-pointer">
-            {t('groups:inputs.inheritFromParent')}
-          </label>
-        </div>
+          <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
+            <span className="scale-90 origin-left">
+              <Checkbox
+                inputId="algorithmInherited"
+                checked={Boolean(
+                  findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                    .algorithmInherited
+                )}
+                onChange={(e) => {
+                  const checked = e.checked ?? false
+                  if (checked && parentGroupData?.algorithm != null) {
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'algorithm',
+                      parentGroupData.algorithm
+                    )
+                  }
+                  updateNodeAttribute(
+                    selectedNodeKey,
+                    'algorithmInherited',
+                    checked
+                  )
+                }}
+              />
+            </span>
+            <label htmlFor="algorithmInherited" className="cursor-pointer">
+              {t('groups:inputs.inheritFromParent')}
+            </label>
+          </div>
         )}
         <CustomDropdown
           id="alphabet"
           placeholder={t('groups:inputs.alphabet.label')}
           value={
-            isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)
+            isHashAlgorithm(
+              findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm
+            )
               ? 'HEXADECIMAL_ALPHABET'
               : findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet
           }
@@ -500,9 +619,12 @@ export default function GroupForm() {
           }}
           options={alphabetOptions}
           helpText={t('groups:inputs.alphabet.help')}
-          disabled={isHashAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm)}
+          disabled={isHashAlgorithm(
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm
+          )}
         />
-        {findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet === CUSTOM_ALPHABET_VALUE && (
+        {findNodeByKey(tree, selectedNodeKey)?.data.temporal.alphabet ===
+          CUSTOM_ALPHABET_VALUE && (
           <CustomFloatLabel
             id="customAlphabetCharacters"
             placeholder={t('groups:inputs.customAlphabetChars.label')}
@@ -514,19 +636,32 @@ export default function GroupForm() {
               'groups:inputs.customAlphabetChars.help',
               'Enter every character that may appear in generated pseudonyms. This is a literal character list, not a regular expression.'
             )}
-            value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.customAlphabetCharacters ?? ''}
+            value={
+              findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                .customAlphabetCharacters ?? ''
+            }
             onChange={(e) =>
-              updateNodeAttribute(selectedNodeKey, 'customAlphabetCharacters', e.target.value)
+              updateNodeAttribute(
+                selectedNodeKey,
+                'customAlphabetCharacters',
+                e.target.value
+              )
             }
           />
         )}
         <CustomFloatLabel
           id="maxnumpsn"
           value={(() => {
-            const raw = findNodeByKey(tree, selectedNodeKey)?.data.temporal.maxnumpsn
+            const raw = findNodeByKey(tree, selectedNodeKey)?.data.temporal
+              .maxnumpsn
             if (raw == null || raw === '') return ''
-            const num = typeof raw === 'number' ? raw : Number(String(raw).replace(/\D/g, ''))
-            return Number.isNaN(num) ? String(raw) : num.toLocaleString(i18n.language || undefined)
+            const num =
+              typeof raw === 'number'
+                ? raw
+                : Number(String(raw).replace(/\D/g, ''))
+            return Number.isNaN(num)
+              ? String(raw)
+              : num.toLocaleString(i18n.language || undefined)
           })()}
           onChange={(e) => {
             const filtered = e.target.value.replace(/\D/g, '')
@@ -544,7 +679,10 @@ export default function GroupForm() {
         />
         <CustomFloatLabel
           id="randomAlgorithmDesiredSuccessProbability"
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.randomAlgorithmDesiredSuccessProbability ?? ''}
+          value={
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal
+              .randomAlgorithmDesiredSuccessProbability ?? ''
+          }
           onChange={(e) =>
             updateNodeAttribute(
               selectedNodeKey,
@@ -552,16 +690,29 @@ export default function GroupForm() {
               e.target.value
             )
           }
-          placeholder={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.label')}
+          placeholder={t(
+            'groups:inputs.randomAlgorithmDesiredSuccessProbability.label'
+          )}
           inputPlaceholder={desiredSuccessProbabilityPlaceholder}
-          helpText={t('groups:inputs.randomAlgorithmDesiredSuccessProbability.help')}
+          helpText={t(
+            'groups:inputs.randomAlgorithmDesiredSuccessProbability.help'
+          )}
         />
-        {isConsecutiveAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
+        {isConsecutiveAlgorithm(
+          findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm
+        ) && (
           <CustomFloatLabel
             id="consecutiveValueCounter"
-            value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.consecutiveValueCounter ?? '1'}
+            value={
+              findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                .consecutiveValueCounter ?? '1'
+            }
             onChange={(e) =>
-              updateNodeAttribute(selectedNodeKey, 'consecutiveValueCounter', e.target.value)
+              updateNodeAttribute(
+                selectedNodeKey,
+                'consecutiveValueCounter',
+                e.target.value
+              )
             }
             placeholder={t('groups:inputs.consecutiveValueCounter.label')}
             inputPlaceholder="1"
@@ -570,7 +721,10 @@ export default function GroupForm() {
         )}
         <CustomFloatLabel
           id="saltLength"
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.saltLength ?? BACKEND_DEFAULT_SALT_LENGTH}
+          value={
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal.saltLength ??
+            BACKEND_DEFAULT_SALT_LENGTH
+          }
           onChange={(e) =>
             updateNodeAttribute(selectedNodeKey, 'saltLength', e.target.value)
           }
@@ -581,18 +735,22 @@ export default function GroupForm() {
         <CustomFloatLabel
           id="salt"
           value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.salt ?? ''}
-          onChange={(e) => updateNodeAttribute(selectedNodeKey, 'salt', e.target.value)}
+          onChange={(e) =>
+            updateNodeAttribute(selectedNodeKey, 'salt', e.target.value)
+          }
           placeholder={t('groups:inputs.salt.label')}
           helpText={t('groups:inputs.salt.help')}
         />
-        {!isRandomnessAlgorithm(findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm) && (
+        {!isRandomnessAlgorithm(
+          findNodeByKey(tree, selectedNodeKey)?.data.temporal.algorithm
+        ) && (
           <>
             <CustomFloatLabel
               id="paddingCharacter"
               placeholder={t('groups:inputs.paddingchar.label')}
               value={(
-                findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingchar ??
-                ''
+                findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                  .paddingchar ?? ''
               ).slice(0, 1)}
               onChange={(e) => {
                 const val = (e.target.value ?? '').slice(0, 1)
@@ -601,24 +759,38 @@ export default function GroupForm() {
               }}
             />
             {parentGroupData && (
-            <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
-              <span className="scale-90 origin-left">
-                <Checkbox
-                  inputId="paddingCharacterInherited"
-                  checked={Boolean(findNodeByKey(tree, selectedNodeKey)?.data.temporal.paddingCharacterInherited)}
-                  onChange={(e) => {
-                    const checked = e.checked ?? false
-                    if (checked && parentGroupData?.paddingchar != null) {
-                      updateNodeAttribute(selectedNodeKey, 'paddingchar', parentGroupData.paddingchar)
-                    }
-                    updateNodeAttribute(selectedNodeKey, 'paddingCharacterInherited', checked)
-                  }}
-                />
-              </span>
-              <label htmlFor="paddingCharacterInherited" className="cursor-pointer">
-                {t('groups:inputs.inheritFromParent')}
-              </label>
-            </div>
+              <div className="flex align-items-center gap-1.5 -mt-4 text-xs form-grid--inherit">
+                <span className="scale-90 origin-left">
+                  <Checkbox
+                    inputId="paddingCharacterInherited"
+                    checked={Boolean(
+                      findNodeByKey(tree, selectedNodeKey)?.data.temporal
+                        .paddingCharacterInherited
+                    )}
+                    onChange={(e) => {
+                      const checked = e.checked ?? false
+                      if (checked && parentGroupData?.paddingchar != null) {
+                        updateNodeAttribute(
+                          selectedNodeKey,
+                          'paddingchar',
+                          parentGroupData.paddingchar
+                        )
+                      }
+                      updateNodeAttribute(
+                        selectedNodeKey,
+                        'paddingCharacterInherited',
+                        checked
+                      )
+                    }}
+                  />
+                </span>
+                <label
+                  htmlFor="paddingCharacterInherited"
+                  className="cursor-pointer"
+                >
+                  {t('groups:inputs.inheritFromParent')}
+                </label>
+              </div>
             )}
           </>
         )}
@@ -642,9 +814,16 @@ export default function GroupForm() {
         />
         <RockerToggle
           label={t('groups:inputs.lengthIncludesCheckDigit.label')}
-          value={findNodeByKey(tree, selectedNodeKey)?.data.temporal.lengthIncludesCheckDigit}
+          value={
+            findNodeByKey(tree, selectedNodeKey)?.data.temporal
+              .lengthIncludesCheckDigit
+          }
           onChange={(val) => {
-            updateNodeAttribute(selectedNodeKey, 'lengthIncludesCheckDigit', val)
+            updateNodeAttribute(
+              selectedNodeKey,
+              'lengthIncludesCheckDigit',
+              val
+            )
             markFieldOverridden('lengthIncludesCheckDigitInherited')
           }}
         />

@@ -163,13 +163,15 @@
     "confirmDeleteText": "This will delete the selected pseudonym. This action cannot be undone.",
     "inheritedTooltip": "Inherited from the group configuration.",
     "inherited": "Inherited",
-    "noLinkedPseudonyms": "No linked pseudonyms available."
+    "noLinkedPseudonyms": "No linked pseudonyms available.",
+    "searchHint": "Enter a pseudonym and select the group in which it should be searched."
   },
   "group": {
     "title": "Group",
     "placeholder": "Group",
     "help": "Enter a group",
-    "error": "Invalid group"
+    "error": "Invalid group",
+    "searchHint": "Enter a group name to search for it."
   },
   "headers": {
     "personalData": "Personal data",
@@ -197,5 +199,9 @@
   "ok": "Ok",
   "subtitle": "Search for entities or pseudonyms in the selected project.",
   "personView": "View person",
-  "biosampleView": "View biosample"
+  "biosampleView": "View biosample",
+  "trustDeckId": "TrustDeck ID",
+  "entityNotFoundById": "No result was found for identifier {{id}}.",
+  "masterObjectIndex": "Master Object Index",
+  "genericId": "ID"
 }

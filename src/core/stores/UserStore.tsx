@@ -4,6 +4,10 @@ import { jwtDecode } from 'jwt-decode'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { isTimestampExpired } from '../services/authSession'
 
+function normalizeLocale(locale?: string | null): 'en' | 'de' {
+  return locale?.toLowerCase().startsWith('de') ? 'de' : 'en'
+}
+
 interface TokenDetails {
   sub: string
   preferred_username?: string
@@ -17,7 +21,6 @@ interface TokenDetails {
   }
   resource_access?: Record<string, { roles?: string[] }>
 }
-
 
 function getStoredLocaleOverride() {
   if (typeof window === 'undefined') return null
@@ -80,8 +83,9 @@ const useUserStore = create<UserState>()(
               return
             }
 
-            const resourceRoles = Object.values(decoded.resource_access ?? {})
-              .flatMap((client) => client.roles ?? [])
+            const resourceRoles = Object.values(
+              decoded.resource_access ?? {}
+            ).flatMap((client) => client.roles ?? [])
             const realmRoles = decoded.realm_access?.roles ?? []
             const roles = Array.from(new Set([...realmRoles, ...resourceRoles]))
 
@@ -95,7 +99,8 @@ const useUserStore = create<UserState>()(
               firstname: decoded.given_name || '',
               lastname: decoded.family_name || '',
               email: decoded.email || '',
-              locale: getStoredLocaleOverride() ?? decoded.locale ?? 'en',
+              locale:
+                getStoredLocaleOverride() ?? normalizeLocale(decoded.locale),
               roles,
               tokenExpiresAt,
               isAuthenticated: true
@@ -116,8 +121,9 @@ const useUserStore = create<UserState>()(
           }
         },
         setLocale: (locale: string) => {
-          persistLocaleOverride(locale)
-          set({ locale })
+          const normalized = normalizeLocale(locale)
+          persistLocaleOverride(normalized)
+          set({ locale: normalized })
         },
         clear: () =>
           set({

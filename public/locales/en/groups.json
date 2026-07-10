@@ -54,7 +54,8 @@
       "label": "End date"
     },
     "parentgroup": {
-      "label": "Parent group"
+      "label": "Parent group",
+      "none": "No parent group"
     },
     "description": {
       "label": "Description",
@@ -111,7 +112,12 @@
     "deleteConfirmation": "Are you sure you want to delete this group?",
     "confirmDelete": "Confirm Delete",
     "unsavedChangesHeader": "Unsaved changes",
-    "unsavedChanges": "You have unsaved changes. Would you like to save before continuing?"
+    "unsavedChanges": "You have unsaved changes. Would you like to save before continuing?",
+    "saveOtherChanges": "There are additional unsaved changes. They must also be saved before you can continue.",
+    "saveOtherChangesHeader": "Save additional changes?",
+    "saveOtherChangesAction": "Yes, save all changes",
+    "invalidParentSummary": "Could not change parent group",
+    "invalidParentDetail": "A group cannot be its own parent or use one of its own subgroups as its parent."
   },
   "crud": {
     "loadFailedSummary": "Could not load groups",
@@ -139,7 +145,11 @@
       "parent": "Parent group",
       "assignment": "Assignment",
       "actions": "Actions"
-    }
+    },
+    "createSuccessDetail": "The group was created successfully.",
+    "createFailedDetail": "The group could not be created.",
+    "updateSuccessDetail": "The group changes were saved successfully.",
+    "updateFailedDetail": "The group changes could not be saved."
   },
   "details": {
     "name": "Name",
@@ -177,5 +187,10 @@
     "description": "Description",
     "superDomainID": "Parent group ID",
     "superDomainName": "Parent group"
+  },
+  "status": {
+    "creating": "The group is being created...",
+    "updating": "The group is being updated...",
+    "deleting": "The group is being deleted..."
   }
 }

@@ -59,18 +59,24 @@ function formatRemaining(expiresAt: number | null) {
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
   const seconds = totalSeconds % 60
-  if (hours > 0) return `${hours}h ${minutes}m ${String(seconds).padStart(2, '0')}s`
+  if (hours > 0)
+    return `${hours}h ${minutes}m ${String(seconds).padStart(2, '0')}s`
   return `${minutes}m ${String(seconds).padStart(2, '0')}s`
 }
 
 function shortenProjectAbbreviation(abbreviation?: string) {
   if (!abbreviation) return 'TrustDeck'
-  return abbreviation.length > 10 ? `${abbreviation.slice(0, 9)}…` : abbreviation
+  return abbreviation.length > 10
+    ? `${abbreviation.slice(0, 9)}…`
+    : abbreviation
 }
 
-export default function Sidebar({ projectAbbreviation, projectName }: SidebarProps) {
+export default function Sidebar({
+  projectAbbreviation,
+  projectName
+}: SidebarProps) {
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useLayoutStore()
-  const { t, i18n } = useTranslation(['layout', 'common'])
+  const { t } = useTranslation(['layout', 'common'])
   const auth = useAuth()
   const projectImage = useProjectStore((state) => state.projectImage)
   const selectedProject = useProjectStore((state) => state.selectedProject)
@@ -80,13 +86,17 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
   const email = useUserStore((state) => state.email)
   const username = useUserStore((state) => state.username)
   const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
-  const [remaining, setRemaining] = useState(() => formatRemaining(tokenExpiresAt))
-  const [permissionAccess, setPermissionAccess] = useState<CachedUserAccess | null>(null)
+  const [remaining, setRemaining] = useState(() =>
+    formatRemaining(tokenExpiresAt)
+  )
+  const [permissionAccess, setPermissionAccess] =
+    useState<CachedUserAccess | null>(null)
   const hasTriedRefetch = useRef(false)
 
   const displayedProjectTitle = shortenProjectAbbreviation(projectAbbreviation)
   const fullProjectTitle = projectName || projectAbbreviation || 'TrustDeck'
-  const displayName = fullname || email || username || t('layout:userMenu.signedInUser')
+  const displayName =
+    fullname || email || username || t('layout:userMenu.signedInUser')
 
   useEffect(() => {
     const updateRemaining = () => setRemaining(formatRemaining(tokenExpiresAt))
@@ -129,7 +139,8 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
   useEffect(() => {
     const abbreviation = selectedProject?.abbreviation
     if (!abbreviation || !projectAbbreviation) return
-    const isBrokenBlob = typeof projectImage === 'string' && projectImage.startsWith('blob:')
+    const isBrokenBlob =
+      typeof projectImage === 'string' && projectImage.startsWith('blob:')
     if (isBrokenBlob && !hasTriedRefetch.current) {
       hasTriedRefetch.current = true
       setProjectImage(undefined)
@@ -142,7 +153,12 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
           hasTriedRefetch.current = false
         })
     }
-  }, [projectAbbreviation, projectImage, selectedProject?.abbreviation, setProjectImage])
+  }, [
+    projectAbbreviation,
+    projectImage,
+    selectedProject?.abbreviation,
+    setProjectImage
+  ])
 
   useEffect(() => {
     let active = true
@@ -174,7 +190,11 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
 
   const accessForSidebar = useMemo<CachedUserAccess | null>(() => {
     const mergedRoles = Array.from(
-      new Set([...(roles ?? []), ...tokenRoles, ...(permissionAccess?.roles ?? [])])
+      new Set([
+        ...(roles ?? []),
+        ...tokenRoles,
+        ...(permissionAccess?.roles ?? [])
+      ])
     )
     if (permissionAccess) return { ...permissionAccess, roles: mergedRoles }
     return {
@@ -199,7 +219,9 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
       )
   }, [accessForSidebar, auth.isAuthenticated, permissionAccess])
 
-  const projectScopedRoutes = sidebarRoutes.filter((route) => !route.isNonProject)
+  const projectScopedRoutes = sidebarRoutes.filter(
+    (route) => !route.isNonProject
+  )
   const nonProjectRoutes = sidebarRoutes.filter((route) => route.isNonProject)
 
   const closeSidebarOnNavigate = () => {
@@ -215,36 +237,13 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
   }
 
   const routeTitle = (titleKey: string) => {
-    const lang = (i18n.resolvedLanguage ?? i18n.language ?? 'en')
-      .toLowerCase()
-      .split('-')[0]
     const normalizedKey = titleKey.startsWith('layout:')
       ? titleKey.slice('layout:'.length)
       : titleKey
-    const fixedSidebarTitles: Record<string, Record<string, string>> = {
-      'menu.entityManagement': {
-        en: 'Entity Management',
-        de: 'Entitätenverwaltung'
-      },
-      'menu.globalSettings': {
-        en: 'Global Settings',
-        de: 'Globale Einstellungen'
-      },
-      'menu.permissionManagement': {
-        en: 'Permission Management',
-        de: 'Berechtigungsverwaltung'
-      }
-    }
 
-    const fixedTitle = fixedSidebarTitles[normalizedKey]
-    if (fixedTitle) return fixedTitle[lang] ?? fixedTitle.en
-
-    const translated = titleKey.startsWith('layout:')
-      ? t(normalizedKey, { ns: 'layout' })
-      : t(titleKey)
-    return translated === titleKey || translated === normalizedKey
-      ? fixedSidebarTitles[normalizedKey]?.[lang] ?? translated
-      : translated
+    return titleKey.startsWith('layout:')
+      ? t(normalizedKey, { ns: 'layout', defaultValue: normalizedKey })
+      : t(titleKey, { defaultValue: titleKey })
   }
 
   const renderNavLinks = (items: RouteConfig[], collapsed = false) =>
@@ -264,7 +263,11 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
             title={tooltip}
             aria-label={isUserManagement ? `${label}. ${tooltip}` : label}
           >
-            <Icon className={collapsed ? 'h-6 w-6 shrink-0' : 'h-6 w-6 mr-2 shrink-0'} />
+            <Icon
+              className={
+                collapsed ? 'h-6 w-6 shrink-0' : 'h-6 w-6 mr-2 shrink-0'
+              }
+            />
             {!collapsed && <span className="min-w-0 truncate">{label}</span>}
           </NavLink>
         </li>
@@ -277,7 +280,7 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
         <Bars3Icon
           onClick={toggleSidebar}
           className="absolute left-3 top-3 h-7 w-7 cursor-pointer text-black dark:text-gray-100"
-          aria-label="Open Sidebar"
+          aria-label={t('layout:sidebar.open')}
         />
       </div>
 
@@ -287,13 +290,15 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
         <ChevronDoubleRightIcon
           onClick={toggleSidebar}
           className="absolute top-4 h-6 w-6 cursor-pointer dark:text-gray-100"
-          aria-label="Open Sidebar"
+          aria-label={t('layout:sidebar.open')}
         />
         <ul className="space-y-8">
           {renderNavLinks(projectScopedRoutes, true)}
           {nonProjectRoutes.length > 0 && (
             <li className="border-t border-gray-300 pt-8 dark:border-slate-700">
-              <ul className="space-y-8">{renderNavLinks(nonProjectRoutes, true)}</ul>
+              <ul className="space-y-8">
+                {renderNavLinks(nonProjectRoutes, true)}
+              </ul>
             </li>
           )}
         </ul>
@@ -308,14 +313,14 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
           <XMarkIcon
             onClick={toggleSidebar}
             className="absolute right-3 top-3 h-7 w-7 cursor-pointer text-black dark:text-gray-100"
-            aria-label="Close Sidebar"
+            aria-label={t('layout:sidebar.close')}
           />
         </div>
         <div className="hidden sm:block">
           <ChevronDoubleLeftIcon
             onClick={toggleSidebar}
             className="absolute right-3 top-3 h-7 w-7 cursor-pointer text-black dark:text-gray-100"
-            aria-label="Close Sidebar"
+            aria-label={t('layout:sidebar.close')}
           />
         </div>
 
@@ -323,7 +328,7 @@ export default function Sidebar({ projectAbbreviation, projectName }: SidebarPro
           {projectImage && projectAbbreviation && (
             <img
               src={projectImage}
-              alt="Project icon"
+              alt={t('layout:sidebar.projectIconAlt')}
               className="mt-8 h-10 w-10 shrink-0 rounded-xl object-cover"
             />
           )}

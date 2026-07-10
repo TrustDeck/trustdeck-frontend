@@ -3,8 +3,7 @@ import type { Identifier, XYCoord } from 'dnd-core'
 import type { FC, ReactNode } from 'react'
 import { useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-
-
+import { useTranslation } from 'react-i18next'
 
 export interface CardProps {
   node: ReactNode
@@ -24,6 +23,7 @@ export const DragContainer: FC<CardProps> = ({
   listId,
   moveCard
 }) => {
+  const { t } = useTranslation('entityBuilder')
   const ref = useRef<HTMLDivElement>(null)
   const handleRef = useRef<HTMLDivElement>(null)
 
@@ -97,10 +97,20 @@ export const DragContainer: FC<CardProps> = ({
   drag(handleRef)
   // use the full container as the drag preview so the whole item is visible
   preview(ref)
-  
+
   return (
-    <div ref={ref} style={{ opacity }} data-handler-id={handlerId} className='flex flex-row w-full'>
-      <div ref={handleRef} aria-label="drag-handle" title="Drag" className="cursor-grab p-2">
+    <div
+      ref={ref}
+      style={{ opacity }}
+      data-handler-id={handlerId}
+      className="flex flex-row w-full"
+    >
+      <div
+        ref={handleRef}
+        aria-label={t('dragHandle')}
+        title={t('drag')}
+        className="cursor-grab p-2"
+      >
         <ChevronUpDownIcon className="h-5 w-5" />
       </div>
       {node}

@@ -50,5 +50,10 @@
     "logout": "Log out",
     "enabled": "On",
     "disabled": "Off"
+  },
+  "sidebar": {
+    "open": "Open sidebar",
+    "close": "Close sidebar",
+    "projectIconAlt": "Project icon"
   }
 }

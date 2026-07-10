@@ -8,9 +8,9 @@ import TrustDeck from '../../../core/services/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
 
 /**
- * `BulkRegistration` is a React component that provides a drag-and-drop area 
+ * `BulkRegistration` is a React component that provides a drag-and-drop area
  * for uploading multiple files, typically used for registering entities in bulk via CSV or Excel files.
- * 
+ *
  * Users can drag and drop files onto the panel or click to trigger the file input dialog.
  * The selected files are then uploaded using a `POST` request with `FormData`.
  *
@@ -36,7 +36,10 @@ export default function BulkRegistration() {
       showToast({
         severity: 'error',
         summary: t('identity:bulk.upload'),
-        detail: error instanceof Error ? error.message : t('identity:bulk.uploadFailed'),
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('identity:bulk.uploadFailed'),
         life: 5000
       })
     }
@@ -65,7 +68,7 @@ export default function BulkRegistration() {
         onDrop={handleDrop}
       >
         <h4>{t('identity:bulk.dragAndDrop')}</h4>
-        <h4>or</h4>
+        <h4>{t('identity:bulk.or')}</h4>
         <PrimaryButton
           label={t('identity:bulk.selectFile')}
           icon={<PlusIcon className="w-6 h-6 mr-1" />}

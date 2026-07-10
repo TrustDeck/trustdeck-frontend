@@ -81,7 +81,9 @@ export default function SingleProject({
     })
 
     try {
-      const image = projectImage ?? await ProjectService.getProjectImage(project.abbreviation)
+      const image =
+        projectImage ??
+        (await ProjectService.getProjectImage(project.abbreviation))
       setProjectImage(image)
     } catch (error) {
       console.warn('Failed to load project image', error)
@@ -107,12 +109,12 @@ export default function SingleProject({
     navigate(from)
   }
 
-  const updateTooltip = 'Open project settings'
+  const updateTooltip = t('projects:actions.openSettings')
   const deleteTooltip = !permissionsReady
-    ? 'Checking your project permissions...'
+    ? t('projects:actions.checkingPermissions')
     : canDelete
-      ? 'Delete this project'
-      : 'You do not have permission to delete this project.'
+      ? t('projects:actions.deleteProject')
+      : t('projects:actions.deleteNotAllowed')
 
   return (
     <Panel
@@ -122,20 +124,30 @@ export default function SingleProject({
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           {projectImage ? (
-            <img src={projectImage} alt={`${project.name} icon`} className="h-14 w-14 shrink-0 rounded-2xl object-cover" />
+            <img
+              src={projectImage}
+              alt={t('projects:projectIconAlt', { name: project.name })}
+              className="h-14 w-14 shrink-0 rounded-2xl object-cover"
+            />
           ) : (
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-lg font-semibold text-color-blue dark:bg-blue-950/50 dark:text-blue-100">
-              {(project.name || project.abbreviation || "?").slice(0, 1).toUpperCase()}
+              {(project.name || project.abbreviation || '?')
+                .slice(0, 1)
+                .toUpperCase()}
             </div>
           )}
           <div className="min-w-0">
-            <h2 className="my-1 truncate" title={project.name}>{project.name}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-300">{project.abbreviation}</p>
+            <h2 className="my-1 truncate" title={project.name}>
+              {project.name}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-300">
+              {project.abbreviation}
+            </p>
           </div>
         </div>
         <div className="flex shrink-0 gap-2 pt-2">
           <ProjectActionButton
-            label="Update project"
+            label={t('projects:actions.updateProject')}
             disabled={!canUpdate}
             title={updateTooltip}
             onClick={() => onEdit?.(project)}
@@ -143,7 +155,7 @@ export default function SingleProject({
             <PencilSquareIcon className="h-5 w-5" />
           </ProjectActionButton>
           <ProjectActionButton
-            label="Delete project"
+            label={t('projects:actions.deleteProject')}
             disabled={!permissionsReady || !canDelete}
             title={deleteTooltip}
             onClick={() => onDelete?.(project)}
@@ -161,7 +173,10 @@ export default function SingleProject({
         )}
         {project.statistics?.totalSubGroups && (
           <p>
-            <strong>{project.statistics.totalSubGroups}</strong> subgroups
+            <strong>{project.statistics.totalSubGroups}</strong>{' '}
+            {t('projects:subgroups', {
+              count: project.statistics.totalSubGroups
+            })}
           </p>
         )}
       </div>

@@ -53,7 +53,8 @@
       "label": "Enddatum"
     },
     "parentgroup": {
-      "label": "Übergeordnete Gruppe"
+      "label": "Übergeordnete Gruppe",
+      "none": "Keine übergeordnete Gruppe"
     },
     "description": {
       "label": "Beschreibung",
@@ -111,7 +112,12 @@
     "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
     "confirmDelete": "Löschen bestätigen",
     "unsavedChangesHeader": "Ungespeicherte Änderungen",
-    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?"
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?",
+    "saveOtherChanges": "Es gibt weitere ungespeicherte Änderungen. Diese müssen ebenfalls gespeichert werden, bevor Sie fortfahren können.",
+    "saveOtherChangesHeader": "Weitere Änderungen speichern?",
+    "saveOtherChangesAction": "Ja, alle Änderungen speichern",
+    "invalidParentSummary": "Übergeordnete Gruppe konnte nicht geändert werden",
+    "invalidParentDetail": "Eine Gruppe kann weder sich selbst noch eine eigene Untergruppe als übergeordnete Gruppe verwenden."
   },
   "crud": {
     "loadFailedSummary": "Gruppen konnten nicht geladen werden",
@@ -139,7 +145,11 @@
       "parent": "Übergeordnete Gruppe",
       "assignment": "Zuordnung",
       "actions": "Aktionen"
-    }
+    },
+    "createSuccessDetail": "Die Gruppe wurde erfolgreich erstellt.",
+    "createFailedDetail": "Die Gruppe konnte nicht erstellt werden.",
+    "updateSuccessDetail": "Die Gruppenänderungen wurden erfolgreich gespeichert.",
+    "updateFailedDetail": "Die Gruppenänderungen konnten nicht gespeichert werden."
   },
   "details": {
     "name": "Name",
@@ -177,5 +187,10 @@
     "description": "Beschreibung",
     "superDomainID": "ID der übergeordneten Gruppe",
     "superDomainName": "Übergeordnete Gruppe"
+  },
+  "status": {
+    "creating": "Die Gruppe wird erstellt...",
+    "updating": "Die Gruppe wird aktualisiert...",
+    "deleting": "Die Gruppe wird gelöscht..."
   }
 }

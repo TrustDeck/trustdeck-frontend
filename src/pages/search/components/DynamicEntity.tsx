@@ -30,7 +30,8 @@ function formatValue(value: unknown): string {
   }
   if (typeof value === 'object') return JSON.stringify(value)
   const raw = String(value)
-  if (raw.includes('T') && /^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.split('T')[0]
+  if (raw.includes('T') && /^\d{4}-\d{2}-\d{2}T/.test(raw))
+    return raw.split('T')[0]
   return raw
 }
 
@@ -76,8 +77,16 @@ export default function DynamicEntity({
   const resolveLabel = (attr: any) => {
     const isGerman = i18n.language.startsWith('de')
     return isGerman
-      ? attr.label_de || attr.labelDe || attr.label_en || attr.labelEn || attr.name
-      : attr.label_en || attr.labelEn || attr.label_de || attr.labelDe || attr.name
+      ? attr.label_de ||
+          attr.labelDe ||
+          attr.label_en ||
+          attr.labelEn ||
+          attr.name
+      : attr.label_en ||
+          attr.labelEn ||
+          attr.label_de ||
+          attr.labelDe ||
+          attr.name
   }
 
   const isEmptyValue = (value: unknown) =>
@@ -104,7 +113,10 @@ export default function DynamicEntity({
           key={key}
           id={key}
           value={rawValue ?? ''}
-          options={enumValues.map((option: string) => ({ label: option, value: option }))}
+          options={enumValues.map((option: string) => ({
+            label: option,
+            value: option
+          }))}
           onChange={(e) => setValue(e.value)}
           placeholder={displayLabel}
           required={attr.required}
@@ -112,7 +124,11 @@ export default function DynamicEntity({
       )
     }
 
-    if (editMode && attr.name && (attr.type === 'date' || attr.type === 'datetime')) {
+    if (
+      editMode &&
+      attr.name &&
+      (attr.type === 'date' || attr.type === 'datetime')
+    ) {
       return (
         <CustomCalendar
           key={key}
@@ -123,7 +139,11 @@ export default function DynamicEntity({
               setValue('')
               return
             }
-            setValue(attr.type === 'date' ? formatDateOnly(e.value) : e.value.toISOString())
+            setValue(
+              attr.type === 'date'
+                ? formatDateOnly(e.value)
+                : e.value.toISOString()
+            )
           }}
           placeholder={displayLabel}
           required={attr.required}
@@ -132,23 +152,37 @@ export default function DynamicEntity({
       )
     }
 
-    if (editMode && attr.name && (attr.type === 'integer' || attr.type === 'number')) {
+    if (
+      editMode &&
+      attr.name &&
+      (attr.type === 'integer' || attr.type === 'number')
+    ) {
       return (
         <CustomInputNumber
           key={key}
           id={key}
-          value={typeof rawValue === 'number' ? rawValue : rawValue !== '' && rawValue !== undefined && rawValue !== null ? Number(rawValue) : null}
+          value={
+            typeof rawValue === 'number'
+              ? rawValue
+              : rawValue !== '' && rawValue !== undefined && rawValue !== null
+                ? Number(rawValue)
+                : null
+          }
           onChange={(e) => setValue(e.value ?? '')}
           placeholder={attr.required ? `${displayLabel} *` : displayLabel}
           min={attr.minimum}
           max={attr.maximum}
           step={attr.type === 'integer' ? 1 : 0.01}
           validate={(value) => {
-            if (attr.required && (value === null || value === undefined)) return false
+            if (attr.required && (value === null || value === undefined))
+              return false
             if (value === null || value === undefined) return true
-            if (attr.type === 'integer' && !Number.isInteger(value)) return false
-            if (typeof attr.minimum === 'number' && value < attr.minimum) return false
-            if (typeof attr.maximum === 'number' && value > attr.maximum) return false
+            if (attr.type === 'integer' && !Number.isInteger(value))
+              return false
+            if (typeof attr.minimum === 'number' && value < attr.minimum)
+              return false
+            if (typeof attr.maximum === 'number' && value > attr.maximum)
+              return false
             return true
           }}
           errorMessage={t('identity:crud.invalidField')}
@@ -192,7 +226,8 @@ export default function DynamicEntity({
     key: string,
     path: Array<string | number>
   ) => {
-    const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
+    const rawValue =
+      context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
 
     if (editMode && attr.name && attr.repeatable) {
       const values = toRepeatableValues(rawValue)
@@ -202,20 +237,32 @@ export default function DynamicEntity({
         onFieldChange(path, nextValues)
       }
       const removeRepeatableValue = (index: number) => {
-        const nextValues = values.filter((_, currentIndex) => currentIndex !== index)
+        const nextValues = values.filter(
+          (_, currentIndex) => currentIndex !== index
+        )
         onFieldChange(path, nextValues.length > 0 ? nextValues : [''])
       }
 
       return (
-        <div key={key} className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-slate-700">
+        <div
+          key={key}
+          className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-slate-700"
+        >
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {resolveLabel(attr)}
           </div>
           {values.map((value, index) => (
-            <div key={`${key}-value-${index}`} className="flex items-center gap-2">
+            <div
+              key={`${key}-value-${index}`}
+              className="flex items-center gap-2"
+            >
               <div className="min-w-0 flex-1">
                 {renderScalarLeaf(
-                  { ...attr, repeatable: false, required: attr.required && index === 0 },
+                  {
+                    ...attr,
+                    repeatable: false,
+                    required: attr.required && index === 0
+                  },
                   value,
                   `${key}-input-${index}`,
                   (nextValue) => setRepeatableValue(index, nextValue)
@@ -245,7 +292,9 @@ export default function DynamicEntity({
       )
     }
 
-    return renderScalarLeaf(attr, rawValue, key, (value) => onFieldChange(path, value))
+    return renderScalarLeaf(attr, rawValue, key, (value) =>
+      onFieldChange(path, value)
+    )
   }
 
   const renderAttributes = (
@@ -274,7 +323,8 @@ export default function DynamicEntity({
 
       if (Array.isArray(attr.attributes)) {
         const namedDataGroup = isNamedDataGroup(attr)
-        const groupContext = namedDataGroup && attr.name ? context?.[attr.name] : context
+        const groupContext =
+          namedDataGroup && attr.name ? context?.[attr.name] : context
         const entries = Array.isArray(groupContext)
           ? groupContext
           : [groupContext ?? context ?? {}]
@@ -294,7 +344,9 @@ export default function DynamicEntity({
                   [
                     ...pathPrefix,
                     ...(namedDataGroup && attr.name ? [attr.name] : []),
-                    ...(namedDataGroup && Array.isArray(groupContext) ? [entryIndex] : [])
+                    ...(namedDataGroup && Array.isArray(groupContext)
+                      ? [entryIndex]
+                      : [])
                   ]
                 )}
               </div>
@@ -320,7 +372,12 @@ export default function DynamicEntity({
       <Panel noBasePanel noMaxWidth className={modalPanelClass}>
         <div className="space-y-3">
           <Divider text={t('search:entityLabel')} />
-          {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
+          {renderAttributes(
+            schemaAttributes,
+            formData ?? {},
+            'entity-root',
+            []
+          )}
         </div>
       </Panel>
 
@@ -330,7 +387,9 @@ export default function DynamicEntity({
             <Divider text={t('search:identifier')} />
             <div className="flex flex-col gap-4">
               <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
-                <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">trustdeckID</div>
+                <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {t('search:trustDeckId')}
+                </div>
                 <div className="break-all font-mono text-base text-gray-900 dark:text-gray-100">
                   {resolveTrustDeckId(entity) || '-'}
                 </div>
@@ -340,7 +399,14 @@ export default function DynamicEntity({
 
           <Panel noBasePanel noMaxWidth className={`${modalPanelClass} h-fit`}>
             <Divider text={t('search:links')} />
-            <LinksTable entity={{ id: resolveTrustDeckId(entity), links: entity.links || [] } as Entity} />
+            <LinksTable
+              entity={
+                {
+                  id: resolveTrustDeckId(entity),
+                  links: entity.links || []
+                } as Entity
+              }
+            />
           </Panel>
         </div>
       )}

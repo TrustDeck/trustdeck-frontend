@@ -164,13 +164,15 @@
     "confirmDeleteText": "Das ausgewählte Pseudonym wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
     "inheritedTooltip": "Aus der Gruppenkonfiguration geerbt.",
     "inherited": "Geerbt",
-    "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden."
+    "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden.",
+    "searchHint": "Geben Sie ein Pseudonym ein und wählen Sie die Gruppe aus, in der gesucht werden soll."
   },
   "group": {
     "title": "Gruppe",
     "placeholder": "Gruppe",
     "help": "Geben Sie eine Gruppe ein",
-    "error": "Ungültige Gruppe"
+    "error": "Ungültige Gruppe",
+    "searchHint": "Geben Sie einen Gruppennamen ein, um danach zu suchen."
   },
   "headers": {
     "personalData": "Stammdaten",
@@ -197,5 +199,9 @@
   "noEntitySchema": "Für den ausgewählten Entitätstyp ist keine Typdefinition verfügbar.",
   "listAll": "Alle auflisten",
   "ok": "Ok",
-  "subtitle": "Suchen Sie im ausgewählten Projekt nach Entitäten oder Pseudonymen."
+  "subtitle": "Suchen Sie im ausgewählten Projekt nach Entitäten oder Pseudonymen.",
+  "trustDeckId": "TrustDeck-ID",
+  "entityNotFoundById": "Für den Bezeichner {{id}} wurde kein Ergebnis gefunden.",
+  "masterObjectIndex": "Master Object Index",
+  "genericId": "ID"
 }

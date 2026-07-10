@@ -50,5 +50,10 @@
     "logout": "Abmelden",
     "enabled": "An",
     "disabled": "Aus"
+  },
+  "sidebar": {
+    "open": "Seitenleiste öffnen",
+    "close": "Seitenleiste schließen",
+    "projectIconAlt": "Projektsymbol"
   }
 }

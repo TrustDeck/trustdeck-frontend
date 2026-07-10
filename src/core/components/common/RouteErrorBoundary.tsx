@@ -1,4 +1,5 @@
 import React from 'react'
+import i18n from '../../configs/i18n'
 
 type Props = {
   children: React.ReactNode
@@ -16,7 +17,10 @@ export default class RouteErrorBoundary extends React.Component<Props, State> {
   static getDerivedStateFromError(error: unknown): State {
     return {
       hasError: true,
-      message: error instanceof Error ? error.message : 'The page could not be rendered.'
+      message:
+        error instanceof Error
+          ? error.message
+          : i18n.t('common:routeError.fallbackMessage')
     }
   }
 
@@ -35,10 +39,10 @@ export default class RouteErrorBoundary extends React.Component<Props, State> {
       return (
         <div className="min-h-[50vh] w-full px-4 py-8 sm:px-8">
           <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-900 shadow-sm dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100">
-            <h1 className="mb-2 text-lg font-semibold">This page could not be displayed</h1>
-            <p className="text-sm">
-              Please reload the page. If the problem persists, check the browser console and backend permissions.
-            </p>
+            <h1 className="mb-2 text-lg font-semibold">
+              {i18n.t('common:routeError.title')}
+            </h1>
+            <p className="text-sm">{i18n.t('common:routeError.description')}</p>
             {this.state.message && (
               <pre className="mt-4 max-w-full overflow-auto rounded-lg bg-white/70 p-3 text-xs text-red-900 dark:bg-black/20 dark:text-red-100">
                 {this.state.message}

@@ -13,12 +13,17 @@ import { findNodeByKey } from '../utils/findNodeByKey.ts'
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 
 export default function RegistrationGroupOption() {
-  const { t } = useTranslation()
+  const { t } = useTranslation(['groups', 'common'])
   const [isCreating, setIsCreating] = useState(false)
   const showToast = useToastStore((state) => state.show)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const { tree, setGroupOption, storeNodeChanges, selectedNodeKey, deleteNode } =
-    useTreeStateStore()
+  const {
+    tree,
+    setGroupOption,
+    storeNodeChanges,
+    selectedNodeKey,
+    deleteNode
+  } = useTreeStateStore()
   const [showSaveAllDialog, setShowSaveAllDialog] = useState(false)
 
   async function handleCreateGroup() {
@@ -49,11 +54,9 @@ export default function RegistrationGroupOption() {
   }
 
   const deleteNodes = () => {
-
     setShowDeleteDialog(false)
     deleteNode(selectedNodeKey)
     setGroupOption('default')
-
   }
 
   const confirmSaveAll = () => {
@@ -73,8 +76,8 @@ export default function RegistrationGroupOption() {
               storeNodeChanges()
               showToast({
                 severity: 'success',
-                summary: 'Success',
-                detail: 'Group created successfully',
+                summary: t('common:success'),
+                detail: t('groups:crud.createSuccessDetail'),
                 life: 4000
               })
               setGroupOption('edit')
@@ -85,8 +88,8 @@ export default function RegistrationGroupOption() {
               setGroupOption('registration')
               showToast({
                 severity: 'error',
-                summary: 'Error',
-                detail: 'Failed to create group',
+                summary: t('common:error'),
+                detail: t('groups:crud.createFailedDetail'),
                 life: 4000
               })
             })
@@ -97,8 +100,8 @@ export default function RegistrationGroupOption() {
           setShowSaveAllDialog(false)
           showToast({
             severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to create groups updates',
+            summary: t('common:error'),
+            detail: t('groups:crud.updateFailedDetail'),
             life: 4000
           })
         })
@@ -115,7 +118,7 @@ export default function RegistrationGroupOption() {
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
             <ProgressSpinner style={{ width: '60px', height: '60px' }} />
           </div>
-          <p>New Group is being created...</p>
+          <p>{t('groups:status.creating')}</p>
         </>
       ) : (
         <>
@@ -123,15 +126,15 @@ export default function RegistrationGroupOption() {
             visible={showDeleteDialog}
             message={t('groups:messages.deleteConfirmation')}
             header={t('groups:messages.confirmDelete')}
-            label="Delete"
+            label={t('groups:buttons.yesDelete')}
             onHide={() => setShowDeleteDialog(false)}
             onAccept={() => deleteNodes()}
           />
           <ConfirmDialog
             visible={showSaveAllDialog}
-            message="Es gibt weitere Änderungen. Diesen müssen ebenanfalls gespeichert werden, bevor eine neue Gruppe angelegt werden kann."
-            header="Weitere Änderungen speichern?"
-            label="Ja, Änderungen speichern"
+            message={t('groups:messages.saveOtherChanges')}
+            header={t('groups:messages.saveOtherChangesHeader')}
+            label={t('groups:messages.saveOtherChangesAction')}
             onHide={() => setShowSaveAllDialog(false)}
             onAccept={() => confirmSaveAll()}
           />

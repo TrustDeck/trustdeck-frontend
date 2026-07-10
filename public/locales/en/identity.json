@@ -52,7 +52,8 @@
     "selectFile": "Select file",
     "upload": "Upload",
     "uploadComplete": "Upload complete.",
-    "uploadFailed": "Upload failed."
+    "uploadFailed": "Upload failed.",
+    "or": "or"
   },
   "duplicate": {
     "header": "Possible Duplicate Detected",

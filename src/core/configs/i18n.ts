@@ -1,7 +1,7 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import HttpApi from 'i18next-http-backend'
-import useUserStore from '../stores/UserStore' // Import the UserStore
+import useUserStore from '../stores/UserStore'
 
 const namespaces = [
   'layout',
@@ -14,33 +14,42 @@ const namespaces = [
   'projects',
   'settings',
   'entityBuilder'
-] // Add all your namespaces here
+]
+
+export function normalizeUiLanguage(locale?: string | null): 'en' | 'de' {
+  return locale?.toLowerCase().startsWith('de') ? 'de' : 'en'
+}
+
+// Change this value whenever locale files are changed. It prevents browsers from
+// continuing to use an older cached translation file after a frontend update.
+const translationVersion = '2026-07-10-i18n-complete-1'
 
 i18n
   .use(HttpApi)
   .use(initReactI18next)
   .init({
-    lng: useUserStore.getState().locale,
+    lng: normalizeUiLanguage(useUserStore.getState().locale),
     fallbackLng: 'en',
-    ns: namespaces, // Load all namespaces
-    defaultNS: 'common', // Set the default namespace to one of your namespaces
+    supportedLngs: ['en', 'de'],
+    nonExplicitSupportedLngs: true,
+    load: 'languageOnly',
+    ns: namespaces,
+    defaultNS: 'common',
+    fallbackNS: 'common',
+    returnEmptyString: false,
     backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json' // Path to your translation files
+      loadPath: `/locales/{{lng}}/{{ns}}.json?v=${translationVersion}`
     },
-    preload: namespaces, // Preload all namespaces
-    debug: false // Enable debug mode to see more information in the console
+    interpolation: {
+      escapeValue: false
+    },
+    debug: false
   })
 
-// Function to update the language
-const updateLanguage = (language: string) => {
-  i18n.changeLanguage(language)
-}
-
-// Subscribe to changes in the UserStore
 useUserStore.subscribe(
   (state) => state.locale,
   (locale: string) => {
-    updateLanguage(locale)
+    void i18n.changeLanguage(normalizeUiLanguage(locale))
   }
 )
 

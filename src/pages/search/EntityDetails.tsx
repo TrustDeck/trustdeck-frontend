@@ -41,7 +41,8 @@ const EntityDetails: React.FC = () => {
     if (!entity) return undefined
     return entityAttributes.find(
       (definition) =>
-        definition.name?.toLowerCase() === entity.entityTypeName?.toLowerCase() ||
+        definition.name?.toLowerCase() ===
+          entity.entityTypeName?.toLowerCase() ||
         definition.name?.toLowerCase() === entity.type?.toLowerCase()
     )
   }, [entity, entityAttributes])
@@ -57,7 +58,7 @@ const EntityDetails: React.FC = () => {
   }, [entity, schema])
 
   if (!entity) {
-    return <p>No result found for ID: {entityId}</p>
+    return <p>{t('search:entityNotFoundById', { id: entityId ?? '—' })}</p>
   }
 
   const setValueAtPath = (
@@ -134,7 +135,9 @@ const EntityDetails: React.FC = () => {
       await TrustDeck.instance().putEntity(entityType, payload, identifier)
       setResults(
         results.map((entry) =>
-          entry.trustdeckID === entity.trustdeckID ? { ...entry, data: dataToSave } : entry
+          entry.trustdeckID === entity.trustdeckID
+            ? { ...entry, data: dataToSave }
+            : entry
         )
       )
       setEditMode(false)
@@ -191,7 +194,8 @@ const EntityDetails: React.FC = () => {
       showToast({
         severity: 'error',
         summary: t('search:deleteEntity'),
-        detail: error instanceof Error ? error.message : t('search:deleteFailed'),
+        detail:
+          error instanceof Error ? error.message : t('search:deleteFailed'),
         life: 5000
       })
     } finally {
@@ -222,12 +226,16 @@ const EntityDetails: React.FC = () => {
           {!editMode ? (
             <>
               <PrimaryButton
-                label={<span className="hidden sm:inline">{t('search:edit')}</span>}
+                label={
+                  <span className="hidden sm:inline">{t('search:edit')}</span>
+                }
                 onClick={() => setEditMode(true)}
                 icon={<PencilIcon className="h-5 w-5 mr-1" />}
               />
               <SecondaryOutlinedButton
-                label={<span className="hidden sm:inline">{t('search:delete')}</span>}
+                label={
+                  <span className="hidden sm:inline">{t('search:delete')}</span>
+                }
                 onClick={() => setDeleteConfirmOpen(true)}
                 icon={<TrashIcon className="h-5 w-5 mr-1" />}
                 loading={deleting}
@@ -236,12 +244,16 @@ const EntityDetails: React.FC = () => {
           ) : (
             <>
               <PrimaryOutlinedButton
-                label={<span className="hidden sm:inline">{t('search:cancel')}</span>}
+                label={
+                  <span className="hidden sm:inline">{t('search:cancel')}</span>
+                }
                 onClick={handleCancel}
                 icon={<XMarkIcon className="h-5 w-5 mr-1" />}
               />
               <PrimaryButton
-                label={<span className="hidden sm:inline">{t('search:save')}</span>}
+                label={
+                  <span className="hidden sm:inline">{t('search:save')}</span>
+                }
                 onClick={handleSave}
                 icon={<CheckIcon className="h-5 w-5 mr-1" />}
               />

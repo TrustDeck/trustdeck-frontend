@@ -35,7 +35,7 @@ function flattenGroupOptions(nodes: any[]): { label: string; value: string }[] {
 }
 
 const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
-  const { t } = useTranslation() 
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [groups, setGroups] = useState<any[]>([])
@@ -98,8 +98,8 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
               />
             </div>
           )}
-          <div className='flex-1 min-w-0'>
-            {psn && <p className='mb-2'>Lorem ipsum dolor sit amet, consetetur sadipscing elitr.</p>}
+          <div className="flex-1 min-w-0">
+            {psn && <p className="mb-2">{t('search:pseudonym.searchHint')}</p>}
             <CustomFloatLabel
               id="pseudonym"
               value={pseudonym}
@@ -110,7 +110,9 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
             />
           </div>
           <PrimaryButton
-            label={<span className="hidden sm:inline">{t('search:submit')}</span>}
+            label={
+              <span className="hidden sm:inline">{t('search:submit')}</span>
+            }
             type="submit"
             loading={loading}
             icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}

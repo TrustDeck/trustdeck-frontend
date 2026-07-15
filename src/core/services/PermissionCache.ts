@@ -375,6 +375,61 @@ export function canUseProjectAction(
   )
 }
 
+
+function tokenRoleAllowsDomainAction(roles: string[], requestedAction: string) {
+  if (hasPrivilegedRole(roles)) return true
+  return roles.some((role) => actionPatternAllows(role, requestedAction))
+}
+
+function permissionAllowsDomainAction(
+  permission: CachedEffectivePermission,
+  domainName: string | undefined,
+  requestedAction: string
+) {
+  if (!permissionDecisionAllows(permission)) return false
+  if (!actionPatternAllows(permissionAction(permission), requestedAction)) {
+    return false
+  }
+
+  const resourceType = normalize(permissionResourceType(permission))
+  const resourceName = normalize(permissionResourceName(permission))
+  const domain = normalize(domainName)
+
+  if (
+    !resourceType ||
+    resourceType === 'global' ||
+    resourceType === '*' ||
+    resourceType === 'all'
+  ) {
+    return true
+  }
+
+  if (resourceType !== 'domain' && resourceType !== 'domains') return false
+
+  if (!domain) {
+    return !resourceName || resourceName === '*' || resourceName === 'all'
+  }
+
+  return (
+    !resourceName ||
+    resourceName === domain ||
+    resourceName === '*' ||
+    resourceName === 'all'
+  )
+}
+
+export function canUseDomainAction(
+  access: CachedUserAccess | null | undefined,
+  domainName: string | undefined,
+  action: string
+) {
+  if (!access) return false
+  if (tokenRoleAllowsDomainAction(access.roles, action)) return true
+  return access.effectivePermissions.some((permission) =>
+    permissionAllowsDomainAction(permission, domainName, action)
+  )
+}
+
 export function canManageProject(
   access: CachedUserAccess | null | undefined,
   projectAbbreviation: string | undefined,

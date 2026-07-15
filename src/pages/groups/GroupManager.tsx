@@ -1,68 +1,116 @@
 import { Tree } from 'primereact/tree'
 import { TreeNode } from 'primereact/treenode'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ProgressSpinner } from 'primereact/progressspinner'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { useAuth } from 'react-oidc-context'
+import { useTranslation } from 'react-i18next'
+import {
+  ArrowPathRoundedSquareIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline'
+
 import Panel from '../../core/components/common/Panel'
 import Divider from '../../core/components/common/Divider'
+import ConfirmDialog from '../../core/components/common/ConfirmDialog'
+import PageHeader from '../../core/components/common/PageHeader'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
-import PrimaryButton from '../../core/components/form/buttons/PrimaryButton.tsx'
-import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton.tsx'
+import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import GroupService from './service/GroupService'
 import GroupOption from './components/GroupOption'
-import { useTranslation } from 'react-i18next'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { Dialog } from 'primereact/dialog'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { useTreeStateStore } from './stores/TreeStateStore'
 import { CustomTreeNode } from './types/CustomTreeNode'
-import ConfirmDialog from '../../core/components/common/ConfirmDialog.tsx'
-import useToastStore from '../../core/stores/ToastStore.ts'
-import { findNodeByKey, findNodeByLabel } from './utils/findNodeByKey.ts'
-import { ProgressSpinner } from 'primereact/progressspinner'
-import TrustDeck from '../../core/services/TrustDeck.ts'
-import type { Domain } from '../../core/types/Domain.ts'
-import PageHeader from '../../core/components/common/PageHeader.tsx'
+import useToastStore from '../../core/stores/ToastStore'
+import { findNodeByKey, findNodeByLabel } from './utils/findNodeByKey'
+import TrustDeck from '../../core/services/TrustDeck'
+import type { Domain } from '../../core/types/Domain'
+import {
+  CachedUserAccess,
+  canUseDomainAction,
+  getCurrentUserAccess
+} from '../../core/services/PermissionCache'
 
-const DOMAIN_DETAIL_FIELDS: Array<keyof Domain> = [
-  'name',
-  'prefix',
-  'validFrom',
-  'validFromInherited',
-  'validTo',
-  'validToInherited',
-  'validityTime',
-  'enforceStartDateValidity',
-  'enforceStartDateValidityInherited',
-  'enforceEndDateValidity',
-  'enforceEndDateValidityInherited',
-  'algorithm',
-  'algorithmInherited',
-  'alphabet',
-  'alphabetInherited',
-  'randomAlgorithmDesiredSize',
-  'randomAlgorithmDesiredSizeInherited',
-  'randomAlgorithmDesiredSuccessProbability',
-  'randomAlgorithmDesiredSuccessProbabilityInherited',
-  'multiplePsnAllowed',
-  'multiplePsnAllowedInherited',
-  'consecutiveValueCounter',
-  'pseudonymLength',
-  'pseudonymLengthInherited',
-  'paddingCharacter',
-  'paddingCharacterInherited',
-  'addCheckDigit',
-  'addCheckDigitInherited',
-  'lengthIncludesCheckDigit',
-  'lengthIncludesCheckDigitInherited',
-  'salt',
-  'saltLength',
-  'description',
-  'superDomainID',
-  'superDomainName'
+type DomainDetailField = {
+  key: keyof Domain
+  inheritedKey?: keyof Domain
+}
+
+const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
+  { key: 'name' },
+  { key: 'prefix' },
+  { key: 'superDomainName' },
+  { key: 'description' },
+  { key: 'algorithm', inheritedKey: 'algorithmInherited' },
+  { key: 'alphabet', inheritedKey: 'alphabetInherited' },
+  { key: 'pseudonymLength', inheritedKey: 'pseudonymLengthInherited' },
+  {
+    key: 'randomAlgorithmDesiredSize',
+    inheritedKey: 'randomAlgorithmDesiredSizeInherited'
+  },
+  {
+    key: 'randomAlgorithmDesiredSuccessProbability',
+    inheritedKey: 'randomAlgorithmDesiredSuccessProbabilityInherited'
+  },
+  { key: 'multiplePsnAllowed', inheritedKey: 'multiplePsnAllowedInherited' },
+  { key: 'paddingCharacter', inheritedKey: 'paddingCharacterInherited' },
+  { key: 'addCheckDigit', inheritedKey: 'addCheckDigitInherited' },
+  {
+    key: 'lengthIncludesCheckDigit',
+    inheritedKey: 'lengthIncludesCheckDigitInherited'
+  },
+  { key: 'validFrom', inheritedKey: 'validFromInherited' },
+  { key: 'validTo', inheritedKey: 'validToInherited' },
+  { key: 'validityTime' },
+  {
+    key: 'enforceStartDateValidity',
+    inheritedKey: 'enforceStartDateValidityInherited'
+  },
+  {
+    key: 'enforceEndDateValidity',
+    inheritedKey: 'enforceEndDateValidityInherited'
+  },
+  { key: 'consecutiveValueCounter' },
+  { key: 'saltLength' },
+  { key: 'salt' }
 ]
 
 type ViewMode = 'details' | 'edit' | 'create'
-
 type GroupScope = 'currentProject' | 'unassigned' | 'otherProject'
+type IconActionButtonProps = {
+  title: string
+  onClick: () => void
+  children: ReactNode
+  variant?: 'primary' | 'danger'
+  disabled?: boolean
+}
+
+function IconActionButton({
+  title,
+  onClick,
+  children,
+  variant = 'primary',
+  disabled = false
+}: IconActionButtonProps) {
+  const colorClasses =
+    variant === 'danger'
+      ? 'border-color-coral text-color-coral hover:bg-red-50 dark:hover:bg-red-950'
+      : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
+
+  return (
+    <button
+      type="button"
+      aria-label={title}
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-950 ${colorClasses}`}
+    >
+      {children}
+    </button>
+  )
+}
 
 function flattenTree(nodes: CustomTreeNode[]): CustomTreeNode[] {
   const out: CustomTreeNode[] = []
@@ -82,19 +130,20 @@ function mergeDomains(primary: Domain[], fallback: Domain[]): Domain[] {
     if (domain.name) map.set(domain.name, domain)
   })
   primary.forEach((domain) => {
-    if (domain.name)
+    if (domain.name) {
       map.set(domain.name, { ...map.get(domain.name), ...domain })
+    }
   })
   return Array.from(map.values()).sort((a, b) =>
     (a.name ?? '').localeCompare(b.name ?? '')
   )
 }
 
-function formatValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '-'
-  if (typeof value === 'boolean') return value ? 'true' : 'false'
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
+function hasVisibleValue(value: unknown) {
+  if (value === null || value === undefined || value === '') return false
+  if (Array.isArray(value)) return value.length > 0
+  if (typeof value === 'object') return Object.keys(value).length > 0
+  return true
 }
 
 export default function GroupManager() {
@@ -110,24 +159,85 @@ export default function GroupManager() {
     deleteNode
   } = useTreeStateStore()
 
+  const auth = useAuth()
   const { justCreated, setJustCreated, selectedProject } = useProjectStore()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation(['groups', 'common'])
   const showToast = useToastStore((state) => state.show)
 
-  const [visible, setVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [groups, setGroups] = useState<Domain[]>([])
   const [selectedGroup, setSelectedGroup] = useState<Domain | null>(null)
-  const [selectedGroupName, setSelectedGroupName] = useState<string>('')
+  const [selectedGroupName, setSelectedGroupName] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('details')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [permissionAccess, setPermissionAccess] =
+    useState<CachedUserAccess | null>(null)
   const [currentProjectGroupNames, setCurrentProjectGroupNames] = useState<
     Set<string>
   >(new Set())
   const [allAssignedGroupNames, setAllAssignedGroupNames] = useState<
     Set<string>
   >(new Set())
+
+  useEffect(() => {
+    let active = true
+    if (!auth.user?.access_token) {
+      setPermissionAccess(null)
+      return () => {
+        active = false
+      }
+    }
+
+    TrustDeck.instance().setToken(auth.user.access_token)
+    getCurrentUserAccess(true)
+      .then((access) => {
+        if (active) setPermissionAccess(access)
+      })
+      .catch((error) => {
+        console.warn('Could not load current-user group permissions.', error)
+        if (active) setPermissionAccess(null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [auth.user?.access_token])
+
+  const canCreateGroups =
+    canUseDomainAction(permissionAccess, undefined, 'domain:create') ||
+    canUseDomainAction(permissionAccess, undefined, 'domain:create-complete')
+
+  const canEditGroup = useCallback(
+    (groupName?: string) =>
+      Boolean(
+        groupName &&
+          (canUseDomainAction(
+            permissionAccess,
+            groupName,
+            'domain:update'
+          ) ||
+            canUseDomainAction(
+              permissionAccess,
+              groupName,
+              'domain:update-complete'
+            ))
+      ),
+    [permissionAccess]
+  )
+
+  const canDeleteGroup = useCallback(
+    (groupName?: string) =>
+      Boolean(
+        groupName &&
+          canUseDomainAction(
+            permissionAccess,
+            groupName,
+            'domain:delete'
+          )
+      ),
+    [permissionAccess]
+  )
 
   const nodeTemplate = useCallback(
     (node: TreeNode) => {
@@ -162,22 +272,15 @@ export default function GroupManager() {
       }
 
       return (
-        <div className="relative inline-block group">
+        <div className="group relative inline-block">
           <button
             type="button"
-            className={`flex items-center px-4 py-2 rounded-md border-2 text-center justify-center
-            w-[180px] overflow-hidden whitespace-nowrap text-ellipsis
-            transition-colors duration-200 ${buttonStyle}`}
+            className={`flex w-[180px] items-center justify-center overflow-hidden whitespace-nowrap text-ellipsis rounded-md border-2 px-4 py-2 text-center text-base transition-colors duration-200 ${buttonStyle}`}
           >
             <span className="font-bold">{shortLabel}</span>
           </button>
-
           {isLong && (
-            <div
-              className="absolute left-0 top-full mt-1 p-2 bg-white border border-gray-300 rounded-md
-              whitespace-normal w-max max-w-xs shadow-lg opacity-0 group-hover:opacity-100
-              pointer-events-none transition-opacity duration-300 z-50"
-            >
+            <div className="pointer-events-none absolute left-0 top-full z-50 mt-1 w-max max-w-xs rounded-md border border-gray-300 bg-white p-2 opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-900">
               <span className="font-bold">{label}</span>
             </div>
           )}
@@ -221,16 +324,17 @@ export default function GroupManager() {
               projectName
             )
             projectTypes.forEach((type) => {
-              if (type.associatedDomainName)
+              if (type.associatedDomainName) {
                 allProjectGroups.add(type.associatedDomainName)
+              }
             })
           } catch {
-            // Project-specific type access may be restricted. Keep the information we can see.
+            // Project-specific entity-type access may be restricted.
           }
         })
       )
     } catch {
-      // Project listing may be restricted. The current-project assignment information is still useful.
+      // Project listing may be restricted.
     }
 
     setCurrentProjectGroupNames(currentProjectGroups)
@@ -263,16 +367,14 @@ export default function GroupManager() {
 
   useEffect(() => {
     fetchGroups()
-    if (justCreated) setVisible(true)
-    setJustCreated(false)
+    if (justCreated) setJustCreated(false)
   }, [fetchGroups, justCreated, setJustCreated])
 
   const selectGroup = useCallback(
     async (groupName: string, mode: ViewMode = 'details') => {
       const node = findNodeByLabel(tree, groupName)
-      if (node) {
-        setSelectedNodeKey(node.key)
-      }
+      if (node) setSelectedNodeKey(node.key)
+
       setSelectedGroupName(groupName)
       setViewMode(mode)
       setGroupOption(mode === 'edit' ? 'edit' : 'default')
@@ -283,7 +385,7 @@ export default function GroupManager() {
         const complete = await GroupService.getGroup(groupName)
         setSelectedGroup(complete)
       } catch {
-        // Keep reduced search result when complete view is not available.
+        // Keep the reduced readable result when complete view is unavailable.
       }
     },
     [groups, setGroupOption, setSelectedNodeKey, tree]
@@ -291,12 +393,11 @@ export default function GroupManager() {
 
   const handleTreeNodeClick = (nodeKey: string) => {
     const node = findNodeByKey(tree, nodeKey)
-    const groupName = node?.label
-    if (!groupName) return
-    selectGroup(groupName, 'details')
+    if (node?.label) selectGroup(node.label, 'details')
   }
 
   const handleNewGroup = () => {
+    if (!canCreateGroups) return
     newNode()
     setViewMode('create')
     setGroupOption('registration')
@@ -305,16 +406,18 @@ export default function GroupManager() {
   }
 
   const handleEdit = (groupName: string) => {
+    if (!canEditGroup(groupName)) return
     selectGroup(groupName, 'edit')
   }
 
   const handleDelete = (groupName: string) => {
+    if (!canDeleteGroup(groupName)) return
     setSelectedGroupName(groupName)
     setShowDeleteDialog(true)
   }
 
   const deleteSelectedGroup = async () => {
-    if (!selectedGroupName) return
+    if (!selectedGroupName || !canDeleteGroup(selectedGroupName)) return
     setIsDeleting(true)
     setShowDeleteDialog(false)
     try {
@@ -380,14 +483,13 @@ export default function GroupManager() {
           : t('groups:crud.scopeOtherProject')
     const className =
       scope === 'currentProject'
-        ? 'bg-green-100 text-green-800'
+        ? 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-200'
         : scope === 'unassigned'
-          ? 'bg-blue-100 text-blue-800'
-          : 'bg-gray-100 text-gray-700'
+          ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200'
+          : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-200'
+
     return (
-      <span
-        className={`rounded-full px-2 py-1 text-xs font-semibold ${className}`}
-      >
+      <span className={`rounded-full px-3 py-1 text-sm font-semibold ${className}`}>
         {label}
       </span>
     )
@@ -397,7 +499,7 @@ export default function GroupManager() {
     if (items.length === 0) {
       return (
         <tr>
-          <td className="px-4 py-3 text-sm text-gray-500" colSpan={5}>
+          <td className="px-5 py-4 text-base text-gray-500" colSpan={5}>
             {t('groups:crud.noGroupsInSection')}
           </td>
         </tr>
@@ -407,9 +509,13 @@ export default function GroupManager() {
     return items.map((group) => (
       <tr
         key={group.name}
-        className={`border-t hover:bg-gray-50 ${selectedGroupName === group.name ? 'bg-blue-50' : ''}`}
+        className={`border-t border-gray-200 text-base hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800 ${
+          selectedGroupName === group.name
+            ? 'bg-blue-50 dark:bg-blue-950/30'
+            : ''
+        }`}
       >
-        <td className="px-4 py-3 font-semibold text-blue-900">
+        <td className="px-5 py-4 font-semibold text-blue-900 dark:text-blue-200">
           <button
             type="button"
             className="text-left hover:underline"
@@ -418,59 +524,83 @@ export default function GroupManager() {
             {group.name}
           </button>
         </td>
-        <td className="px-4 py-3">{group.prefix ?? '-'}</td>
-        <td className="px-4 py-3">{group.superDomainName ?? '-'}</td>
-        <td className="px-4 py-3">{renderScopeBadge(group)}</td>
-        <td className="px-4 py-3">
-          <div className="flex gap-2 justify-end">
-            <PrimaryOutlinedButton
-              label={t('groups:buttons.view')}
+        <td className="px-5 py-4">{group.prefix ?? '-'}</td>
+        <td className="px-5 py-4">{group.superDomainName ?? '-'}</td>
+        <td className="px-5 py-4">{renderScopeBadge(group)}</td>
+        <td className="px-5 py-4">
+          <div className="flex justify-end gap-2">
+            <IconActionButton
+              title={t('groups:buttons.view')}
               onClick={() => selectGroup(group.name, 'details')}
-            />
-            <PrimaryOutlinedButton
-              label={t('groups:buttons.edit')}
-              onClick={() => handleEdit(group.name)}
-            />
-            <SecondaryOutlinedButton
-              label={t('groups:buttons.delete')}
-              onClick={() => handleDelete(group.name)}
-            />
+            >
+              <EyeIcon className="h-5 w-5" />
+            </IconActionButton>
+            {canEditGroup(group.name) && (
+              <IconActionButton
+                title={t('groups:buttons.edit')}
+                onClick={() => handleEdit(group.name)}
+              >
+                <PencilSquareIcon className="h-5 w-5" />
+              </IconActionButton>
+            )}
+            {canDeleteGroup(group.name) && (
+              <IconActionButton
+                title={t('groups:buttons.delete')}
+                onClick={() => handleDelete(group.name)}
+                variant="danger"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </IconActionButton>
+            )}
           </div>
         </td>
       </tr>
     ))
   }
 
-  const renderGroupTable = (title: string, items: Domain[]) => (
-    <div className="space-y-2">
-      <h3 className="td-section-title text-blue-900">{title}</h3>
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-600">
-            <tr>
-              <th className="px-4 py-3">{t('groups:crud.table.name')}</th>
-              <th className="px-4 py-3">{t('groups:crud.table.prefix')}</th>
-              <th className="px-4 py-3">{t('groups:crud.table.parent')}</th>
-              <th className="px-4 py-3">{t('groups:crud.table.assignment')}</th>
-              <th className="px-4 py-3 text-right">
-                {t('groups:crud.table.actions')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>{renderGroupRows(items)}</tbody>
-        </table>
-      </div>
-    </div>
+  const renderScopeSection = (title: string, items: Domain[]) => (
+    <>
+      <tr className="border-t border-gray-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
+        <th
+          colSpan={5}
+          className="px-5 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-200"
+        >
+          {title}
+        </th>
+      </tr>
+      {renderGroupRows(items)}
+    </>
   )
+
+  const formatValue = (value: unknown): string => {
+    if (typeof value === 'boolean') {
+      return value ? t('common:yes') : t('common:no')
+    }
+    if (typeof value === 'number') {
+      return new Intl.NumberFormat(i18n.language || undefined).format(value)
+    }
+    if (typeof value === 'object' && value !== null) return JSON.stringify(value)
+    return String(value)
+  }
+
+  const visibleDetailFields = selectedGroup
+    ? DOMAIN_DETAIL_FIELDS.filter(({ key }) =>
+        hasVisibleValue(selectedGroup[key])
+      )
+    : []
 
   const renderDetails = () => {
     if (!selectedGroup) {
-      return <p className="text-gray-500">{t('groups:crud.selectGroupHint')}</p>
+      return (
+        <p className="py-8 text-center text-base text-gray-500">
+          {t('groups:crud.selectGroupHint')}
+        </p>
+      )
     }
 
     return (
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
+      <div className="space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="td-section-title">{selectedGroup.name}</h2>
             <p className="td-section-subtitle">
@@ -480,33 +610,49 @@ export default function GroupManager() {
           {renderScopeBadge(selectedGroup)}
         </div>
         <Divider />
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full text-sm">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
+          <table className="min-w-full text-base">
             <tbody>
-              {DOMAIN_DETAIL_FIELDS.map((field) => (
-                <tr key={field} className="border-b last:border-b-0">
-                  <th className="w-1/3 bg-gray-50 px-4 py-2 text-left font-semibold text-gray-700">
-                    {t(`groups:details.${field}`)}
-                  </th>
-                  <td className="px-4 py-2 break-all">
-                    {formatValue(selectedGroup[field])}
-                  </td>
-                </tr>
-              ))}
+              {visibleDetailFields.map(({ key, inheritedKey }) => {
+                const inherited = Boolean(
+                  inheritedKey && selectedGroup[inheritedKey]
+                )
+                return (
+                  <tr
+                    key={key}
+                    className={`border-b border-gray-200 last:border-b-0 dark:border-slate-700 ${
+                      inherited
+                        ? 'bg-blue-50/70 dark:bg-blue-950/30'
+                        : 'bg-white dark:bg-slate-900'
+                    }`}
+                  >
+                    <th
+                      className={`w-[42%] px-5 py-4 text-left text-base font-semibold ${
+                        inherited
+                          ? 'text-blue-700 dark:text-blue-300'
+                          : 'text-gray-700 dark:text-gray-200'
+                      }`}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        {t(`groups:details.${key}`)}
+                        {inherited && (
+                          <span
+                            title={t('groups:inputs.inheritedReadonly')}
+                            aria-label={t('groups:inputs.inheritedReadonly')}
+                          >
+                            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                    <td className="break-all px-5 py-4 text-lg text-gray-900 dark:text-gray-100">
+                      {formatValue(selectedGroup[key])}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
-        </div>
-        <div className="flex justify-end gap-2">
-          <PrimaryOutlinedButton
-            label={t('groups:buttons.edit')}
-            onClick={() => selectedGroup.name && handleEdit(selectedGroup.name)}
-          />
-          <SecondaryOutlinedButton
-            label={t('groups:buttons.delete')}
-            onClick={() =>
-              selectedGroup.name && handleDelete(selectedGroup.name)
-            }
-          />
         </div>
       </div>
     )
@@ -523,93 +669,153 @@ export default function GroupManager() {
         onHide={() => setShowDeleteDialog(false)}
         onAccept={() => deleteSelectedGroup()}
       />
+
       <div className="td-page-shell">
         <PageHeader
           title={t('groups:headers.title')}
           description={t('groups:headers.subtitle')}
         />
+
         <div className="w-full space-y-8">
-          <Panel className="w-full">
-            <div className="flex flex-wrap justify-between items-center gap-3">
-              <div className="flex items-center">
-                <h2 className="td-section-title mr-3">
-                  {t('groups:headers.left')}
-                </h2>
-                <QuestionMarkCircleIcon
-                  className="h-5 w-5 mr-1 cursor-pointer"
-                  onClick={() => setVisible(true)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <PrimaryOutlinedButton
-                  label={t('groups:buttons.refresh')}
-                  onClick={() => fetchGroups()}
-                />
-                <PrimaryButton
-                  label={t('groups:buttons.newGroup')}
-                  onClick={() => handleNewGroup()}
-                />
-              </div>
-            </div>
-            <Divider />
-            {isLoading ? (
-              <div className="flex justify-center py-10">
-                <ProgressSpinner style={{ width: '60px', height: '60px' }} />
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {renderGroupTable(
-                  t('groups:crud.assignedToCurrentProject'),
-                  groupedDomains.currentProject
-                )}
-                {renderGroupTable(
-                  t('groups:crud.notAssignedToAnyProject'),
-                  groupedDomains.unassigned
-                )}
-                {groupedDomains.otherProject.length > 0 &&
-                  renderGroupTable(
-                    t('groups:crud.assignedElsewhere'),
-                    groupedDomains.otherProject
-                  )}
-              </div>
-            )}
-          </Panel>
-
-          <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4">
-            <Panel className="w-full basis-2/5">
-              <h2 className="td-section-title">
-                {t('groups:crud.hierarchyTitle')}
-              </h2>
-              <p className="mb-4 text-sm text-gray-600">
-                {t('groups:crud.hierarchySubtitle')}
-              </p>
+          <div className="space-y-4">
+            <Panel className="w-full">
+              <h2 className="td-section-title">{t('groups:headers.left')}</h2>
               <Divider />
-              <Tree
-                value={tree}
-                dragdropScope="groupManagerTree"
-                nodeTemplate={nodeTemplate}
-                expandedKeys={expandedKeys}
-                onToggle={(e) => setExpandedKeys(e.value)}
-                onNodeClick={(e) => handleTreeNodeClick(String(e.node.key))}
-              />
-            </Panel>
-
-            <Panel className="w-full basis-3/5 relative">
-              {isDeleting ? (
-                <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
+              {isLoading ? (
+                <div className="flex justify-center py-10">
                   <ProgressSpinner style={{ width: '60px', height: '60px' }} />
                 </div>
-              ) : null}
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
+                  <table className="w-full table-fixed text-base">
+                    <colgroup>
+                      <col className="w-[24%]" />
+                      <col className="w-[14%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[20%]" />
+                      <col className="w-[20%]" />
+                    </colgroup>
+                    <thead className="bg-gray-50 text-left text-base font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
+                      <tr>
+                        <th className="px-5 py-4">
+                          {t('groups:crud.table.name')}
+                        </th>
+                        <th className="px-5 py-4">
+                          {t('groups:crud.table.prefix')}
+                        </th>
+                        <th className="px-5 py-4">
+                          {t('groups:crud.table.parent')}
+                        </th>
+                        <th className="px-5 py-4">
+                          {t('groups:crud.table.assignment')}
+                        </th>
+                        <th className="px-5 py-4 text-right">
+                          {t('groups:crud.table.actions')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {renderScopeSection(
+                        t('groups:crud.assignedToCurrentProject'),
+                        groupedDomains.currentProject
+                      )}
+                      {renderScopeSection(
+                        t('groups:crud.notAssignedToAnyProject'),
+                        groupedDomains.unassigned
+                      )}
+                      {groupedDomains.otherProject.length > 0 &&
+                        renderScopeSection(
+                          t('groups:crud.assignedElsewhere'),
+                          groupedDomains.otherProject
+                        )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Panel>
+
+            {canCreateGroups && (
+              <div className="flex justify-center">
+                <PrimaryButton
+                  label={t('groups:buttons.addGroups')}
+                  onClick={handleNewGroup}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="grid w-full gap-6 xl:grid-cols-[minmax(20rem,0.8fr)_minmax(0,1.7fr)]">
+            <Panel className="w-full">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="td-section-title">
+                    {t('groups:crud.hierarchyTitle')}
+                  </h2>
+                  <p className="td-section-subtitle">
+                    {t('groups:crud.hierarchySubtitle')}
+                  </p>
+                </div>
+                {selectedGroupName && (
+                  <div className="flex gap-2">
+                    {canEditGroup(selectedGroupName) && (
+                      <IconActionButton
+                        title={t('groups:buttons.edit')}
+                        onClick={() => handleEdit(selectedGroupName)}
+                      >
+                        <PencilSquareIcon className="h-5 w-5" />
+                      </IconActionButton>
+                    )}
+                    {canDeleteGroup(selectedGroupName) && (
+                      <IconActionButton
+                        title={t('groups:buttons.delete')}
+                        onClick={() => handleDelete(selectedGroupName)}
+                        variant="danger"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </IconActionButton>
+                    )}
+                  </div>
+                )}
+              </div>
+              <Divider />
+              <div className="overflow-x-auto">
+                <Tree
+                  value={tree}
+                  dragdropScope="groupManagerTree"
+                  nodeTemplate={nodeTemplate}
+                  expandedKeys={expandedKeys}
+                  onToggle={(event) => setExpandedKeys(event.value)}
+                  onNodeClick={(event) =>
+                    handleTreeNodeClick(String(event.node.key))
+                  }
+                />
+              </div>
+            </Panel>
+
+            <Panel className="relative w-full">
+              {isDeleting && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-slate-950/70">
+                  <ProgressSpinner style={{ width: '60px', height: '60px' }} />
+                </div>
+              )}
+
               {viewMode === 'details' ? (
                 renderDetails()
               ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2>
-                      {viewMode === 'create'
-                        ? t('groups:crud.createTitle')
-                        : t('groups:crud.editTitle')}
-                    </h2>
+                <div className="mx-auto w-full max-w-5xl space-y-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="td-section-title">
+                        {viewMode === 'create'
+                          ? t('groups:crud.createTitle')
+                          : t('groups:crud.editTitle')}
+                      </h2>
+                      <p className="td-section-subtitle">
+                        {viewMode === 'create'
+                          ? t('groups:crud.createSubtitle')
+                          : t('groups:crud.editSubtitle')}
+                      </p>
+                    </div>
                     <PrimaryOutlinedButton
                       label={t('groups:buttons.backToDetails')}
                       onClick={() => {
@@ -618,6 +824,7 @@ export default function GroupManager() {
                         } else {
                           setViewMode('details')
                           setGroupOption('default')
+                          fetchGroups()
                         }
                       }}
                     />
@@ -630,23 +837,6 @@ export default function GroupManager() {
           </div>
         </div>
       </div>
-
-      <Dialog
-        header={t('groups:headers.modalHeader')}
-        visible={visible}
-        style={{ width: '50vw' }}
-        onHide={() => setVisible(false)}
-        footer={
-          <div className="flex justify-end">
-            <PrimaryButton
-              label={t('groups:buttons.okay')}
-              onClick={() => setVisible(false)}
-            />
-          </div>
-        }
-      >
-        <p className="m-0">{t('groups:modal')}</p>
-      </Dialog>
     </>
   )
 }

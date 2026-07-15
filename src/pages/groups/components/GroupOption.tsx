@@ -6,6 +6,7 @@ import { GroupOptionType } from '../types/GroupOptionType'
 
 export default function GroupOption() {
   const { groupOption } = useTreeStateStore()
+
   function renderGroupOption(type: GroupOptionType) {
     switch (type) {
       case 'registration':
@@ -17,5 +18,5 @@ export default function GroupOption() {
     }
   }
 
-  return <div className="p-4">{renderGroupOption(groupOption)}</div>
+  return <div className="w-full">{renderGroupOption(groupOption)}</div>
 }

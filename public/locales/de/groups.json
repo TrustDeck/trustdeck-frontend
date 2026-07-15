@@ -18,7 +18,8 @@
     "okay": "Verstanden!",
     "view": "Anzeigen",
     "refresh": "Aktualisieren",
-    "backToDetails": "Zurück zu den Details"
+    "backToDetails": "Zurück zu den Details",
+    "addGroups": "+ Gruppen hinzufügen"
   },
   "default": {
     "text": "Wählen Sie eine Entität oder Gruppe aus, um deren Einstellungen hier anzuzeigen."
@@ -104,7 +105,14 @@
     "lengthIncludesCheckDigit": {
       "label": "Länge enthält Prüfziffer"
     },
-    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden."
+    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden.",
+    "inheritedReadonly": "Von der übergeordneten Gruppe übernommen.",
+    "enforceStartDateValidity": {
+      "label": "Gültigkeit ab Startdatum erzwingen"
+    },
+    "enforceEndDateValidity": {
+      "label": "Gültigkeit bis Enddatum erzwingen"
+    }
   },
   "savingGroup": "Ihre Gruppe wird erstellt...",
   "groupCreated": "Ihre Gruppe wurde erstellt.",
@@ -149,7 +157,9 @@
     "createSuccessDetail": "Die Gruppe wurde erfolgreich erstellt.",
     "createFailedDetail": "Die Gruppe konnte nicht erstellt werden.",
     "updateSuccessDetail": "Die Gruppenänderungen wurden erfolgreich gespeichert.",
-    "updateFailedDetail": "Die Gruppenänderungen konnten nicht gespeichert werden."
+    "updateFailedDetail": "Die Gruppenänderungen konnten nicht gespeichert werden.",
+    "createSubtitle": "Definieren Sie Hierarchie, Pseudonymregeln, Gültigkeit und optionale erweiterte Einstellungen.",
+    "editSubtitle": "Bearbeiten Sie die änderbare Konfiguration der ausgewählten Pseudonymgruppe."
   },
   "details": {
     "name": "Name",
@@ -192,5 +202,15 @@
     "creating": "Die Gruppe wird erstellt...",
     "updating": "Die Gruppe wird aktualisiert...",
     "deleting": "Die Gruppe wird gelöscht..."
+  },
+  "form": {
+    "basicTitle": "Grundeinstellungen",
+    "basicSubtitle": "Legen Sie Gruppenname, Hierarchie, Präfix, Pseudonymlänge und Beschreibung fest.",
+    "validityTitle": "Gültigkeit",
+    "validitySubtitle": "Definieren Sie, wann erzeugte Pseudonyme gültig sind und wie das Enddatum berechnet wird.",
+    "generationTitle": "Pseudonymgenerierung",
+    "generationSubtitle": "Konfigurieren Sie Algorithmus, Alphabet, Kapazität und Kollisionswahrscheinlichkeit.",
+    "advancedTitle": "Erweiterte Optionen",
+    "advancedSubtitle": "Konfigurieren Sie Salt, Auffüllzeichen, Prüfziffern und die strikte Gültigkeitsprüfung."
   }
 }

@@ -18,7 +18,8 @@
     "okay": "Got it!",
     "view": "View",
     "refresh": "Refresh",
-    "backToDetails": "Back to details"
+    "backToDetails": "Back to details",
+    "addGroups": "+ Add groups"
   },
   "default": {
     "text": "Select an entity or a group to see its settings here."
@@ -104,7 +105,14 @@
     "lengthIncludesCheckDigit": {
       "label": "Length includes check digit"
     },
-    "inheritedEditable": "Inherited from parent group; you can override it."
+    "inheritedEditable": "Inherited from parent group; you can override it.",
+    "inheritedReadonly": "Inherited from the parent group.",
+    "enforceStartDateValidity": {
+      "label": "Enforce start-date validity"
+    },
+    "enforceEndDateValidity": {
+      "label": "Enforce end-date validity"
+    }
   },
   "savingGroup": "New group is being created...",
   "groupCreated": "Your group has been created.",
@@ -149,7 +157,9 @@
     "createSuccessDetail": "The group was created successfully.",
     "createFailedDetail": "The group could not be created.",
     "updateSuccessDetail": "The group changes were saved successfully.",
-    "updateFailedDetail": "The group changes could not be saved."
+    "updateFailedDetail": "The group changes could not be saved.",
+    "createSubtitle": "Define the group hierarchy, pseudonym-generation rules, validity, and optional advanced settings.",
+    "editSubtitle": "Update the editable configuration of the selected pseudonym group."
   },
   "details": {
     "name": "Name",
@@ -192,5 +202,15 @@
     "creating": "The group is being created...",
     "updating": "The group is being updated...",
     "deleting": "The group is being deleted..."
+  },
+  "form": {
+    "basicTitle": "Basic settings",
+    "basicSubtitle": "Set the group name, hierarchy, prefix, pseudonym length, and description.",
+    "validityTitle": "Validity",
+    "validitySubtitle": "Define when generated pseudonyms are valid and how the end date is calculated.",
+    "generationTitle": "Pseudonym generation",
+    "generationSubtitle": "Configure the algorithm, alphabet, capacity, and collision probability.",
+    "advancedTitle": "Advanced options",
+    "advancedSubtitle": "Configure salt handling, padding, check digits, and strict validity enforcement."
   }
 }

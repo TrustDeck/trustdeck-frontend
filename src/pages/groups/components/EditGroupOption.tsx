@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
+import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import Divider from '@component/common/Divider.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
@@ -113,7 +113,7 @@ export default function EditGroupOption() {
   }
 
   return (
-    <div className="w-full space-y-4 pr-4">
+    <div className="relative w-full space-y-6">
       {isCreating || isDeleting ? (
         <>
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
@@ -144,23 +144,23 @@ export default function EditGroupOption() {
             onHide={() => setShowSaveAllDialog(false)}
             onAccept={() => confirmSaveAll()}
           />
-          <div className="flex justify-between items-center">
-            <h2 className="w-full">
+          <div className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-slate-800">
+            <h3 className="td-section-title !mb-0">
               {findNodeByKey(tree, selectedNodeKey)?.label}
-            </h2>
+            </h3>
           </div>
           <Divider />
           <GroupForm />
-          <SecondaryOutlinedButton
-            label={t('groups:buttons.delete')}
-            className="w-full"
-            onClick={handleDelete}
-          />
-          <SecondaryButton
-            label={t('groups:buttons.save')}
-            className="w-full"
-            onClick={() => handleSave()}
-          />
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <SecondaryOutlinedButton
+              label={t('groups:buttons.delete')}
+              onClick={handleDelete}
+            />
+            <PrimaryButton
+              label={t('groups:buttons.save')}
+              onClick={() => handleSave()}
+            />
+          </div>
         </>
       )}
     </div>

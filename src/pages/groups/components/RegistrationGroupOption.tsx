@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
+import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
 import { ProgressSpinner } from 'primereact/progressspinner'
@@ -112,7 +112,7 @@ export default function RegistrationGroupOption() {
     }
   }
   return (
-    <div className="w-full space-y-4 relative pr-4">
+    <div className="relative w-full space-y-6">
       {isCreating ? (
         <>
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
@@ -139,20 +139,20 @@ export default function RegistrationGroupOption() {
             onAccept={() => confirmSaveAll()}
           />
           <GroupForm />
-          <SecondaryOutlinedButton
-            label={t('groups:buttons.delete')}
-            className="w-full"
-            onClick={handleDelete}
-          />
-          <SecondaryButton
-            label={t('groups:buttons.createGroup')}
-            className="w-full"
-            onClick={() => {
-              if (!isCreating) {
-                handleCreateGroup()
-              }
-            }}
-          />
+          <div className="flex flex-wrap justify-center gap-3 pt-2">
+            <SecondaryOutlinedButton
+              label={t('groups:buttons.discardChanges')}
+              onClick={handleDelete}
+            />
+            <PrimaryButton
+              label={t('groups:buttons.createGroup')}
+              onClick={() => {
+                if (!isCreating) {
+                  handleCreateGroup()
+                }
+              }}
+            />
+          </div>
         </>
       )}
     </div>

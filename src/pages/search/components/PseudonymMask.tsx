@@ -70,7 +70,10 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
       const result = await PseudonymService.searchPseudonym(pseudonym, domain)
       if (result) {
         setPseudonymValue(result)
-        navigate(`/search/pseudonym/${pseudonym}`)
+        navigate(
+          `/search/pseudonym/${encodeURIComponent(domain ?? '')}/${encodeURIComponent(pseudonym)}`,
+          { state: { returnTo: '/pseudonym-management' } }
+        )
       } else {
         setShowModal(true)
       }

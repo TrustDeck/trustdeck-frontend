@@ -57,7 +57,6 @@
   }
 }
 
-
 /* Shared bordered floating labels for all form controls. */
 .td-floating-label {
   z-index: 2;
@@ -454,7 +453,10 @@
   visibility: hidden;
   pointer-events: none;
   transform: translateY(0.25rem);
-  transition: opacity 120ms ease, transform 120ms ease, visibility 120ms ease;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
 }
 
 .td-help-tooltip:hover .td-help-tooltip__content,
@@ -468,6 +470,33 @@
   border-color: rgb(71 85 105);
   background: rgb(15 23 42);
   color: rgb(226 232 240);
+}
+
+/* Keep the group hierarchy surface consistent in dark mode. */
+.td-group-hierarchy-tree,
+.td-group-hierarchy-tree .p-tree-container {
+  background: transparent !important;
+}
+
+.dark .td-group-hierarchy-tree {
+  border-color: rgb(51 65 85);
+  background-color: rgb(15 23 42) !important;
+  color: rgb(226 232 240);
+}
+
+.dark .td-group-hierarchy-tree .p-tree-container,
+.dark .td-group-hierarchy-tree .p-treenode-content,
+.dark .td-group-hierarchy-tree .p-treenode-children {
+  background-color: transparent !important;
+  color: inherit;
+}
+
+.dark .td-group-hierarchy-tree .p-treenode-content:hover {
+  background-color: rgb(30 41 59);
+}
+
+.dark .td-group-hierarchy-tree .p-tree-toggler {
+  color: rgb(203 213 225);
 }
 
 /* Group-management titles use one consistent hierarchy level. */
@@ -495,6 +524,7 @@
 
 .td-inherited-field .p-calendar .p-inputtext {
   background-color: transparent !important;
+  padding-right: 5.5rem !important;
 }
 
 .td-inherited-field .p-dropdown-label,

@@ -1,31 +1,38 @@
-import Panel from '../../core/components/common/Panel'
 import { useEffect, useRef, useState } from 'react'
-import useSearchResultsStore from '../search/stores/SearchResultsStore'
-import useGroupStore from './stores/GroupStore'
+import { Checkbox } from 'primereact/checkbox'
+import { Dialog } from 'primereact/dialog'
 import { Stepper } from 'primereact/stepper'
 import { StepperPanel } from 'primereact/stepperpanel'
-import { Dialog } from 'primereact/dialog'
-import { Checkbox } from 'primereact/checkbox'
-import SearchMask from '../search/SearchMask'
-import SearchResult from '../../core/components/common/SearchResult'
-import useStepperControlStore from './stores/StepperControlStore'
-import GroupService from '../groups/service/GroupService'
+import {
+  ArrowLeftIcon,
+  IdentificationIcon,
+  MagnifyingGlassIcon,
+  SparklesIcon,
+  UserIcon
+} from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
+
+import Panel from '../../core/components/common/Panel'
+import PageHeader from '../../core/components/common/PageHeader'
+import SearchResult from '../../core/components/common/SearchResult'
+import CustomCalendar from '@component/form/CustomCalendar'
+import CustomFloatLabel from '@component/form/CustomFloatLabel'
+import CustomTreeSelect from '@component/form/CustomTreeSelect'
+import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
-import CustomTreeSelect from '@component/form/CustomTreeSelect'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
-import CustomCalendar from '@component/form/CustomCalendar'
-import { PseudonymService } from './services/PseudonymService'
-import useSelectedEntityStore from './stores/SelectedEntityStore'
-import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
-import { useNavigate } from 'react-router-dom'
-import usePseudonymStore from '../search/stores/PseudonymSearchResults'
+import EntityMask from '../search/components/EntityMask'
+import PseudonymMask from '../search/components/PseudonymMask'
 import SearchPseudonymService from '../search/services/PseudonymService'
-import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
-import { ArrowUpIcon } from '@heroicons/react/24/outline'
-import PageHeader from '../../core/components/common/PageHeader'
-// import { Toast } from 'primereact/toast'
+import usePseudonymStore from '../search/stores/PseudonymSearchResults'
+import useSearchResultsStore from '../search/stores/SearchResultsStore'
+import GroupService from '../groups/service/GroupService'
+import useGroupStore from './stores/GroupStore'
+import useSelectedEntityStore from './stores/SelectedEntityStore'
+import useStepperControlStore from './stores/StepperControlStore'
+import { PseudonymService } from './services/PseudonymService'
+import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
 
 type StandalonePseudonymForm = {
   group: string
@@ -85,12 +92,16 @@ const firstCreatedPseudonymValue = (
 
 export default function SearchPsn() {
   const { results, clearResults } = useSearchResultsStore()
-  const { stepperRef, setStepperRef, previousStep } = useStepperControlStore()
+  const { setStepperRef, previousStep } = useStepperControlStore()
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
-  const { selectedEntityId } = useSelectedEntityStore()
+  const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { setPseudonymValue } = usePseudonymStore()
+
+  const [entityWorkflowVisible, setEntityWorkflowVisible] = useState(false)
+  const [entityCreating, setEntityCreating] = useState(false)
+  const [entityError, setEntityError] = useState('')
   const [standaloneVisible, setStandaloneVisible] = useState(false)
   const [standaloneAdvancedOpen, setStandaloneAdvancedOpen] = useState(false)
   const [standaloneForm, setStandaloneForm] = useState<StandalonePseudonymForm>(
@@ -113,16 +124,47 @@ export default function SearchPsn() {
     loadGroups()
   }, [setStepperRef, clearResults, setGroups])
 
-  async function handleClick() {
+  const resetEntityWorkflow = () => {
+    clearResults()
+    setSelectedGroup('')
+    setSelectedEntityId({ identifier: '', identifierType: '' })
+    setEntityError('')
+    localStepperRef.current?.setActiveStep?.(0)
+  }
+
+  const openEntityWorkflow = () => {
+    resetEntityWorkflow()
+    setEntityWorkflowVisible(true)
+  }
+
+  const closeEntityWorkflow = () => {
+    setEntityWorkflowVisible(false)
+    resetEntityWorkflow()
+  }
+
+  async function handleEntityPseudonymCreate() {
     const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
-    const identifier = selectedEntityId.identifier || crypto.randomUUID()
-    const idType = selectedEntityId.identifierType || 'standalone-pseudonym'
+    if (selectedGroupNames.length === 0) {
+      setEntityError(t('pseudonyms:entityFlow.validation.groupRequired'))
+      return
+    }
+
+    const identifier = selectedEntityId.identifier
+    const idType = selectedEntityId.identifierType || 'TrustDeckID'
+    if (!identifier) {
+      setEntityError(t('pseudonyms:entityFlow.validation.entityRequired'))
+      return
+    }
+
+    setEntityCreating(true)
+    setEntityError('')
     const payload = {
       identifierItem: {
         identifier: identifier.toString(),
-        idType: idType
+        idType
       }
     }
+
     try {
       const responses = await Promise.all(
         selectedGroupNames.map((groupName) =>
@@ -130,14 +172,12 @@ export default function SearchPsn() {
         )
       )
 
-      // Each response should be an array; extract pseudonyms
       const pseudonyms = responses
         .flat()
-        .map((res: any) => res.psn)
+        .map((response: any) => response.psn)
         .filter(Boolean)
 
-      // Fetch full pseudonym details in the domain where it was created, set store, then navigate
-      if (pseudonyms.length > 0 && selectedGroupNames.length > 0) {
+      if (pseudonyms.length > 0) {
         const firstPsn = pseudonyms[0]
         const firstGroup = selectedGroupNames[0]
         const pseudonymData = await SearchPseudonymService.searchPseudonym(
@@ -145,19 +185,17 @@ export default function SearchPsn() {
           firstGroup
         )
         if (pseudonymData) setPseudonymValue(pseudonymData)
+        setEntityWorkflowVisible(false)
         navigate(
           `/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`,
           { state: { returnTo: '/pseudonym-management' } }
         )
-      } else if (pseudonyms.length > 0) {
-        navigate(`/search/pseudonym/${pseudonyms[0]}`, {
-          state: { returnTo: '/pseudonym-management' }
-        })
       }
-
-      // Optionally: show toast for all created pseudonyms
     } catch (error) {
-      console.error('Error creating pseudonyms:', error)
+      console.error('Error creating pseudonym for entity:', error)
+      setEntityError(t('pseudonyms:entityFlow.validation.createFailed'))
+    } finally {
+      setEntityCreating(false)
     }
   }
 
@@ -169,7 +207,10 @@ export default function SearchPsn() {
   }
 
   async function handleStandaloneCreate() {
-    const selectedGroupNames = getSelectedGroupNames(standaloneForm.group, groups)
+    const selectedGroupNames = getSelectedGroupNames(
+      standaloneForm.group,
+      groups
+    )
     const selectedGroupName = selectedGroupNames[0]
     const identifier = standaloneForm.identifier.trim()
     const idType = standaloneForm.idType.trim()
@@ -232,73 +273,137 @@ export default function SearchPsn() {
     }
   }
 
-  // Typ-sicherer Change-Handler für TreeSelect/CustomTreeSelect
-  const handleGroupChange = (e: any) => {
-    setSelectedGroup(e.value)
-  }
-
   return (
     <div className="td-page-shell">
       <PageHeader
         title={t('pseudonyms:headers.title')}
         description={t('pseudonyms:headers.subtitle')}
       />
-      <Panel className="!w-full">
-        <Stepper ref={stepperRef} orientation="vertical" linear>
-          {/* Step 1 - Search */}
-          <StepperPanel header={t('pseudonyms:headers.stepone')}>
-            <SearchMask psn />
-            <div className="mt-6 rounded-lg border border-dashed border-gray-300 p-4 text-center dark:border-slate-700">
-              <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
-                {t('pseudonyms:standalone.description')}
+
+      <div className="grid w-full gap-6 xl:grid-cols-2">
+        <Panel className="h-full !p-6">
+          <div className="mb-5 flex items-start gap-4">
+            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-color-blue dark:bg-blue-950/50 dark:text-blue-300">
+              <MagnifyingGlassIcon className="h-7 w-7" />
+            </span>
+            <div>
+              <h2 className="td-panel-title">
+                {t('pseudonyms:management.searchTitle')}
+              </h2>
+              <p className="td-section-subtitle mt-1">
+                {t('pseudonyms:management.searchDescription')}
               </p>
-              <div className="flex w-full justify-center">
-                <PrimaryOutlinedButton
-                  label={t('pseudonyms:buttons.generateStandalone')}
-                  onClick={handleStandalonePseudonym}
-                />
-              </div>
+            </div>
+          </div>
+          <PseudonymMask />
+        </Panel>
+
+        <Panel className="h-full !p-6">
+          <div className="mb-5 flex items-start gap-4">
+            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+              <SparklesIcon className="h-7 w-7" />
+            </span>
+            <div>
+              <h2 className="td-panel-title">
+                {t('pseudonyms:management.generateTitle')}
+              </h2>
+              <p className="td-section-subtitle mt-1">
+                {t('pseudonyms:management.generateDescription')}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={openEntityWorkflow}
+              className="group flex min-h-52 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+            >
+              <UserIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
+              <h3 className="td-section-title mt-4">
+                {t('pseudonyms:management.entityTitle')}
+              </h3>
+              <p className="td-section-subtitle mt-2 flex-1">
+                {t('pseudonyms:management.entityDescription')}
+              </p>
+              <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
+                {t('pseudonyms:management.entityAction')}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleStandalonePseudonym}
+              className="group flex min-h-52 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-amber-500 hover:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500 dark:hover:bg-amber-950/20"
+            >
+              <IdentificationIcon className="h-9 w-9 text-amber-700 dark:text-amber-300" />
+              <h3 className="td-section-title mt-4">
+                {t('pseudonyms:management.standaloneTitle')}
+              </h3>
+              <p className="td-section-subtitle mt-2 flex-1">
+                {t('pseudonyms:management.standaloneDescription')}
+              </p>
+              <span className="mt-5 font-semibold text-amber-700 group-hover:underline dark:text-amber-300">
+                {t('pseudonyms:management.standaloneAction')}
+              </span>
+            </button>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-base text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200">
+        {t('pseudonyms:infotext')}
+      </div>
+
+      <Dialog
+        header={t('pseudonyms:entityFlow.modalTitle')}
+        visible={entityWorkflowVisible}
+        onHide={closeEntityWorkflow}
+        dismissableMask
+        className="w-[min(96vw,1100px)]"
+      >
+        <p className="mb-6 text-base text-gray-600 dark:text-gray-300">
+          {t('pseudonyms:entityFlow.modalDescription')}
+        </p>
+
+        <Stepper ref={localStepperRef} linear className="td-pseudonym-stepper">
+          <StepperPanel header={t('pseudonyms:entityFlow.searchStep')}>
+            <div className="pt-4">
+              <EntityMask psn />
             </div>
           </StepperPanel>
 
-          {/* Step 2 - Results */}
-          <StepperPanel header={t('pseudonyms:headers.steptwo')}>
-            {results.map((result) => (
-              <div
-                key={result.trustdeckID}
-                className="my-4 flex justify-center"
-              >
-                <SearchResult pseudonymization result={result} />
+          <StepperPanel header={t('pseudonyms:entityFlow.selectStep')}>
+            <div className="space-y-5 pt-4">
+              <div className="grid gap-4 lg:grid-cols-2">
+                {results.map((result, index) => (
+                  <SearchResult
+                    key={result.trustdeckID ?? result.trustdeckId ?? index}
+                    pseudonymization
+                    result={result}
+                  />
+                ))}
               </div>
-            ))}
-            <PrimaryOutlinedButton
-              label={
-                <span className="flex items-center gap-2">
-                  {t('identity:buttons.back')}
-                  <ArrowUpIcon className="h-5 w-5" />
-                </span>
-              }
-              onClick={() => previousStep()}
-            />
+              <PrimaryOutlinedButton
+                label={t('identity:buttons.back')}
+                icon={<ArrowLeftIcon className="h-5 w-5" />}
+                onClick={() => previousStep()}
+              />
+            </div>
           </StepperPanel>
 
-          {/* Step 3 - Group selection */}
-          <StepperPanel header={t('pseudonyms:headers.stepthree')}>
-            {selectedEntityId.identifierType === 'standalone-pseudonym' ? (
-              <p className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-color-blue dark:bg-blue-950/40 dark:text-blue-100">
-                {t('pseudonyms:standalone.selected')}
-              </p>
-            ) : (
-              <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm text-color-blue dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
-                <div className="font-semibold">
+          <StepperPanel header={t('pseudonyms:entityFlow.groupStep')}>
+            <div className="space-y-5 pt-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-base text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                <h3 className="font-semibold">
                   {t('pseudonyms:selectedEntity.title')}
-                </div>
-                <div className="mt-1 break-all">
+                </h3>
+                <p className="mt-1 break-all text-lg font-medium">
                   {selectedEntityId.displayName ||
                     selectedEntityId.identifier ||
-                    '-'}
-                </div>
-                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    '—'}
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <span>
                     {t('pseudonyms:selectedEntity.identifierType')}:{' '}
                     <strong>
@@ -307,42 +412,51 @@ export default function SearchPsn() {
                   </span>
                   <span className="break-all">
                     {t('pseudonyms:selectedEntity.identifier')}:{' '}
-                    <strong>{selectedEntityId.identifier || '-'}</strong>
+                    <strong>{selectedEntityId.identifier || '—'}</strong>
                   </span>
                 </div>
-                <p className="mt-2 text-xs">
-                  {t('pseudonyms:selectedEntity.trustDeckIdHint')}
-                </p>
               </div>
-            )}
-            <CustomTreeSelect
-              id="group"
-              placeholder={t('pseudonyms:selectGroup')}
-              value={selectedGroup || null}
-              options={groups || []}
-              onChange={handleGroupChange}
-              selectionMode="single"
-              filter
-              filterPlaceholder={t('pseudonyms:standalone.fields.groupSearch')}
-            />
-            <div className="flex justify-between mt-6">
-              <PrimaryOutlinedButton
-                label={
-                  <span className="flex items-center gap-2">
-                    {t('identity:buttons.back')}
-                    <ArrowUpIcon className="h-5 w-5" />
-                  </span>
+
+              <CustomTreeSelect
+                id="entity-pseudonym-group"
+                placeholder={t('pseudonyms:standalone.fields.group')}
+                value={selectedGroup || null}
+                options={groups || []}
+                onChange={(event) =>
+                  setSelectedGroup(String(event.value ?? ''))
                 }
-                onClick={() => previousStep()}
+                selectionMode="single"
+                required
+                filter
+                filterPlaceholder={t(
+                  'pseudonyms:standalone.fields.groupSearch'
+                )}
               />
-              <SecondaryButton
-                label={t('pseudonyms:buttons.generate')}
-                onClick={() => handleClick()}
-              />
+
+              {entityError && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                  {entityError}
+                </p>
+              )}
+
+              <div className="flex flex-wrap justify-between gap-3 pt-2">
+                <PrimaryOutlinedButton
+                  label={t('identity:buttons.back')}
+                  icon={<ArrowLeftIcon className="h-5 w-5" />}
+                  onClick={() => previousStep()}
+                  disabled={entityCreating}
+                />
+                <SecondaryButton
+                  label={t('pseudonyms:buttons.generate')}
+                  onClick={handleEntityPseudonymCreate}
+                  loading={entityCreating}
+                  disabled={entityCreating}
+                />
+              </div>
             </div>
           </StepperPanel>
         </Stepper>
-      </Panel>
+      </Dialog>
 
       <Dialog
         header={t('pseudonyms:standalone.modalTitle')}
@@ -352,7 +466,7 @@ export default function SearchPsn() {
         className="w-[min(92vw,760px)]"
       >
         <div className="space-y-6 pt-2">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <p className="text-base text-gray-600 dark:text-gray-300">
             {t('pseudonyms:standalone.modalDescription')}
           </p>
 
@@ -361,8 +475,11 @@ export default function SearchPsn() {
             placeholder={t('pseudonyms:standalone.fields.group')}
             value={standaloneForm.group || null}
             options={groups || []}
-            onChange={(e) =>
-              setStandaloneForm((current) => ({ ...current, group: String(e.value ?? '') }))
+            onChange={(event) =>
+              setStandaloneForm((current) => ({
+                ...current,
+                group: String(event.value ?? '')
+              }))
             }
             selectionMode="single"
             required
@@ -375,10 +492,10 @@ export default function SearchPsn() {
               id="standalone-identifier"
               placeholder={t('pseudonyms:standalone.fields.identifier')}
               value={standaloneForm.identifier}
-              onChange={(e) =>
+              onChange={(event) =>
                 setStandaloneForm((current) => ({
                   ...current,
-                  identifier: e.target.value
+                  identifier: event.target.value
                 }))
               }
               required
@@ -387,27 +504,25 @@ export default function SearchPsn() {
               id="standalone-id-type"
               placeholder={t('pseudonyms:standalone.fields.idType')}
               value={standaloneForm.idType}
-              onChange={(e) =>
+              onChange={(event) =>
                 setStandaloneForm((current) => ({
                   ...current,
-                  idType: e.target.value
+                  idType: event.target.value
                 }))
               }
               required
             />
           </div>
 
-          <div>
-            <button
-              type="button"
-              className="text-sm font-semibold text-color-blue hover:underline dark:text-blue-300"
-              onClick={() => setStandaloneAdvancedOpen((open) => !open)}
-            >
-              {standaloneAdvancedOpen
-                ? t('pseudonyms:standalone.advanced.hide')
-                : t('pseudonyms:standalone.advanced.show')}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="text-sm font-semibold text-color-blue hover:underline dark:text-blue-300"
+            onClick={() => setStandaloneAdvancedOpen((open) => !open)}
+          >
+            {standaloneAdvancedOpen
+              ? t('pseudonyms:standalone.advanced.hide')
+              : t('pseudonyms:standalone.advanced.show')}
+          </button>
 
           {standaloneAdvancedOpen && (
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
@@ -416,10 +531,10 @@ export default function SearchPsn() {
                   id="standalone-pseudonym"
                   placeholder={t('pseudonyms:standalone.fields.pseudonym')}
                   value={standaloneForm.psn}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
-                      psn: e.target.value
+                      psn: event.target.value
                     }))
                   }
                 />
@@ -427,10 +542,10 @@ export default function SearchPsn() {
                   id="standalone-validity-time"
                   placeholder={t('pseudonyms:standalone.fields.validityTime')}
                   value={standaloneForm.validityTime}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
-                      validityTime: e.target.value
+                      validityTime: event.target.value
                     }))
                   }
                   helpText={t('pseudonyms:standalone.fields.validityTimeHelp')}
@@ -440,37 +555,41 @@ export default function SearchPsn() {
                   id="standalone-valid-from"
                   placeholder={t('pseudonyms:standalone.fields.validFrom')}
                   value={standaloneForm.validFrom}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
-                      validFrom: e.value
+                      validFrom: event.value
                     }))
                   }
                   showTime
+                  showSeconds
                   hourFormat="24"
+                  dateFormat="dd.mm.yy"
                 />
                 <CustomCalendar
                   id="standalone-valid-to"
                   placeholder={t('pseudonyms:standalone.fields.validTo')}
                   value={standaloneForm.validTo}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
-                      validTo: e.value
+                      validTo: event.value
                     }))
                   }
                   showTime
+                  showSeconds
                   hourFormat="24"
+                  dateFormat="dd.mm.yy"
                 />
               </div>
 
               <label className="mt-4 flex cursor-pointer items-center gap-3 text-base text-gray-700 dark:text-gray-200">
                 <Checkbox
                   checked={standaloneForm.omitPrefix}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
-                      omitPrefix: Boolean(e.checked)
+                      omitPrefix: Boolean(event.checked)
                     }))
                   }
                 />

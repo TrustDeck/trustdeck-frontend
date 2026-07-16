@@ -44,6 +44,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
     : typeof value === 'string'
       ? value.length > 0
       : value && typeof value === 'object' && Object.keys(value).length > 0
+  const floatingLabel = (placeholder || label || '').trim()
   const showFloating = isFocused || hasValue
 
   return (
@@ -64,15 +65,17 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
           {...props}
         />
 
-        <label
-          htmlFor={id}
-          className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
-            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          `}
-        >
-          {placeholder || label}
-          {required && <span className="ml-1">*</span>}
-        </label>
+        {floatingLabel && (
+          <label
+            htmlFor={id}
+            className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
+              ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+            `}
+          >
+            {floatingLabel}
+            {required && <span className="ml-1">*</span>}
+          </label>
+        )}
       </div>
 
       {helpText && <HelpTooltip text={helpText} className="mt-3 shrink-0" />}

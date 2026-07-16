@@ -1,10 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import SingleProject from './components/SingleProject'
 import ProjectService from './services/ProjectService'
 import TrustDeck from '../../core/services/TrustDeck'
 import { ProjectType } from './types/ProjectType'
-import CustomDropdown from '@component/form/CustomDropdown'
-import CustomFloatLabel from '../../core/components/form/CustomFloatLabel'
 import { useTranslation } from 'react-i18next'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
@@ -12,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from 'react-oidc-context'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Dialog } from 'primereact/dialog'
-import { FunnelIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
@@ -29,12 +27,6 @@ export default function ProjectOverview() {
     Record<string, string | undefined>
   >({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [projectStatus, setProjectStatus] = useState<
-    'all' | 'active' | 'completed'
-  >('all')
-  const [dateOrder, setDateOrder] = useState<'newest' | 'oldest'>('newest')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const [deletingProject, setDeletingProject] = useState<ProjectType | null>(
     null
   )
@@ -169,43 +161,7 @@ export default function ProjectOverview() {
     }
   }, [projects])
 
-  const filteredProjects = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase()
-    return projects
-      .filter((project) => {
-        if (projectStatus === 'all') return true
-        const isActive = new Date(project.endDate) > new Date()
-        return projectStatus === 'active' ? isActive : !isActive
-      })
-      .filter((project) => {
-        if (!search) return true
-        return [project.name, project.abbreviation, project.description]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(search))
-      })
-      .sort((a, b) => {
-        const left = new Date(a.startDate).getTime()
-        const right = new Date(b.startDate).getTime()
-        return dateOrder === 'newest' ? right - left : left - right
-      })
-  }, [dateOrder, projectStatus, projects, searchTerm])
-
-  const activeFilterCount = [
-    searchTerm.trim() !== '',
-    projectStatus !== 'all',
-    dateOrder !== 'newest'
-  ].filter(Boolean).length
-
-  const resetFilters = () => {
-    setSearchTerm('')
-    setProjectStatus('all')
-    setDateOrder('newest')
-  }
-
-  const openProjectDetails = (
-    project: ProjectType,
-    mode: 'view' | 'edit'
-  ) => {
+  const openProjectDetails = (project: ProjectType, mode: 'view' | 'edit') => {
     setExpandedProject((current) =>
       current?.abbreviation === project.abbreviation && current.mode === mode
         ? null
@@ -234,7 +190,6 @@ export default function ProjectOverview() {
       mode: 'view'
     })
   }
-
 
   const handleDeleteProject = async () => {
     if (!deletingProject) return
@@ -298,24 +253,6 @@ export default function ProjectOverview() {
         title={t('projects:title')}
         description={t('projects:subtitle')}
       />
-      <div className="mb-6 flex w-full justify-center">
-        {projects.length > 0 && !isLoading && (
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((open) => !open)}
-            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-color-blue hover:text-color-blue dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 dark:hover:border-blue-400 dark:hover:text-blue-200"
-            aria-expanded={filtersOpen}
-          >
-            <FunnelIcon className="h-5 w-5" />
-            {t('projects:filters')}
-            {activeFilterCount > 0 && (
-              <span className="rounded-full bg-color-blue px-2 py-0.5 text-xs text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        )}
-      </div>
 
       {isLoading ? (
         <div className="w-full flex justify-center py-10">
@@ -323,69 +260,8 @@ export default function ProjectOverview() {
         </div>
       ) : (
         <>
-          {projects.length > 0 && filtersOpen && (
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="td-section-title">
-                    {t('projects:filterProjects')}
-                  </h2>
-                  <p className="td-section-subtitle">
-                    {t('projects:filterHelp')}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    className="reset-filter-button text-sm font-medium text-color-blue hover:underline"
-                    onClick={resetFilters}
-                  >
-                    {t('projects:reset')}
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                    onClick={() => setFiltersOpen(false)}
-                    aria-label={t('projects:collapseFilters')}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="grid gap-3 md:grid-cols-3">
-                <CustomFloatLabel
-                  id="projectSearch"
-                  value={searchTerm}
-                  placeholder={t('projects:searchProjects')}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <CustomDropdown
-                  id="projectStatus"
-                  placeholder={t('projects:projectStatus')}
-                  value={projectStatus}
-                  onChange={(e) => setProjectStatus(e.value)}
-                  options={[
-                    { label: t('projects:all'), value: 'all' },
-                    { label: t('projects:active'), value: 'active' },
-                    { label: t('projects:completed'), value: 'completed' }
-                  ]}
-                />
-                <CustomDropdown
-                  id="dateOrder"
-                  placeholder={t('projects:sortOrder')}
-                  value={dateOrder}
-                  onChange={(e) => setDateOrder(e.value)}
-                  options={[
-                    { label: t('projects:newestFirst'), value: 'newest' },
-                    { label: t('projects:oldestFirst'), value: 'oldest' }
-                  ]}
-                />
-              </div>
-            </div>
-          )}
-
           <div className="flex w-full flex-col items-center gap-6 mb-8">
-            {filteredProjects.map((project) => (
+            {projects.map((project) => (
               <SingleProject
                 key={project.abbreviation}
                 project={project}
@@ -436,15 +312,9 @@ export default function ProjectOverview() {
             </div>
           )}
 
-          {projects.length > 0 && filteredProjects.length === 0 && (
-            <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-white p-6 text-center text-gray-600">
-              {t('projects:noFilterMatches')}
-            </div>
-          )}
-
           {projects.length > 0 && (
-            <div className="sticky bottom-0 z-30 -mx-4 mt-8 border-t border-gray-200 bg-surface/95 px-4 py-3 backdrop-blur">
-              <div className="mx-auto flex max-w-7xl justify-center">
+            <div className="mt-8 flex w-full justify-center">
+              <div className="flex justify-center">
                 <PrimaryButton
                   label={t('projects:newProject')}
                   icon={<PlusIcon className="h-5 w-5" />}

@@ -5,9 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Divider from '../../../core/components/common/Divider'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import {
-  MagnifyingGlassIcon
-} from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Dialog } from 'primereact/dialog'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
@@ -56,12 +54,13 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
 
   const { setResults } = useSearchResultsStore()
 
-
   const normalizeEntityResult = (result: any) => {
     if (!result || !result.data) return result
 
     const data = result.data
-    const firstAddress = Array.isArray(data.address) ? data.address[0] : undefined
+    const firstAddress = Array.isArray(data.address)
+      ? data.address[0]
+      : undefined
 
     return {
       ...result,
@@ -72,9 +71,18 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
         dateOfBirth: data.dateOfBirth ?? data.birthdate ?? '',
         id: data.id ?? result.trustdeckID ?? '',
         street: data.street ?? firstAddress?.street ?? '',
-        houseNumber: data.houseNumber ?? data.housenumber ?? firstAddress?.housenumber ?? '',
+        houseNumber:
+          data.houseNumber ??
+          data.housenumber ??
+          firstAddress?.housenumber ??
+          '',
         postalCode:
-          data.postalCode ?? data.postalcode ?? data.zip ?? data.plz ?? firstAddress?.postalcode ?? '',
+          data.postalCode ??
+          data.postalcode ??
+          data.zip ??
+          data.plz ??
+          firstAddress?.postalcode ??
+          '',
         city: data.city ?? firstAddress?.city ?? '',
         country: data.country ?? firstAddress?.country ?? ''
       }
@@ -107,7 +115,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
       setSelectedType(entities[0])
     }
   }, [entities, selectedType])
-
 
   useEffect(() => {
     const hasRowLayout = (attrs: any[] | undefined): boolean => {
@@ -169,7 +176,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
     await runEntitySearch(quick)
   }
 
-
   // Dropdown options for selecting entity type
   const entityDropdownOptions = entities.map((entity) => ({
     label: entity,
@@ -185,16 +191,14 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="flex items-center gap-2 mt-4">
-          <p className="text-base">{t('search:entity.entityType.title')}</p>
-          <div className="flex-1 min-w-0">
-            <CustomDropdown
-              id="selectedType"
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              options={entityDropdownOptions}
-            />
-          </div>
+        <div className="mt-4">
+          <CustomDropdown
+            id="selectedType"
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            options={entityDropdownOptions}
+            placeholder={t('search:entity.entityType.title')}
+          />
         </div>
 
         <Divider />

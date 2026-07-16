@@ -59,7 +59,9 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         value={String(value)}
         onChange={onChange}
         onFocus={() => setFocused(true)}
-        placeholder={inputPlaceholder}
+        placeholder={
+          focused && !readOnly && !disabled ? inputPlaceholder : undefined
+        }
         onBlur={handleBlur}
         onKeyDown={onKeyDown}
         readOnly={readOnly}

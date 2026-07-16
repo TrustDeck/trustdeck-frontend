@@ -478,7 +478,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.validFromInherited)}
             title={inheritedTitle}
-            iconClassName="right-12 top-1/2 -translate-y-1/2"
+            iconClassName="right-[4.5rem] top-1/2 -translate-y-1/2"
           >
             <CustomCalendar
               id="startdate"
@@ -502,7 +502,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.validToInherited)}
             title={inheritedTitle}
-            iconClassName="right-12 top-1/2 -translate-y-1/2"
+            iconClassName="right-[4.5rem] top-1/2 -translate-y-1/2"
           >
             <CustomCalendar
               id="enddate"

@@ -45,5 +45,29 @@
     "identifierType": "Kennungstyp",
     "identifier": "Kennung",
     "trustDeckIdHint": "Entitätsbezogene Pseudonyme verwenden die TrustDeckID der Entität mit dem Kennungstyp TrustDeckID, damit das Pseudonym später als Verknüpfung der Entitätsinstanz angezeigt werden kann."
+  },
+  "management": {
+    "searchTitle": "Pseudonym suchen",
+    "searchDescription": "Suchen Sie ein vorhandenes Pseudonym in einer bestimmten Gruppe und öffnen Sie die Detailansicht.",
+    "generateTitle": "Pseudonym generieren",
+    "generateDescription": "Erzeugen Sie ein Pseudonym für eine vorhandene Entität oder unabhängig davon.",
+    "entityTitle": "Für eine vorhandene Entität",
+    "entityDescription": "Suchen und wählen Sie eine Entität aus und bestimmen Sie anschließend die Pseudonymgruppe.",
+    "entityAction": "Entitätsbasierte Generierung starten",
+    "standaloneTitle": "Ohne vorhandene Entität",
+    "standaloneDescription": "Geben Sie Kennung und ID-Typ direkt an und wählen Sie anschließend Gruppe und optionale Gültigkeitseinstellungen.",
+    "standaloneAction": "Ohne Entität generieren"
+  },
+  "entityFlow": {
+    "modalTitle": "Pseudonym für eine Entität generieren",
+    "modalDescription": "Suchen Sie die Entität, wählen Sie den richtigen Treffer aus und bestimmen Sie die Zielgruppe.",
+    "searchStep": "Entität suchen",
+    "selectStep": "Entität auswählen",
+    "groupStep": "Gruppe auswählen",
+    "validation": {
+      "groupRequired": "Bitte wählen Sie eine Gruppe aus.",
+      "entityRequired": "Bitte wählen Sie zuerst eine Entität aus.",
+      "createFailed": "Das Pseudonym konnte nicht generiert werden."
+    }
   }
 }

@@ -24,6 +24,7 @@ type CustomDropdownProps = {
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
   id,
+  label,
   value,
   options,
   onChange,
@@ -37,6 +38,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   errorMessage,
   ...props
 }) => {
+  const floatingLabel = (placeholder || label || '').trim()
   const showFloating = value !== ''
 
   return (
@@ -65,16 +67,18 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           {...props}
         />
 
-        <label
-          htmlFor={id}
-          className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
-            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-            ${invalid ? 'td-floating-label--error font-semibold text-red-600' : ''}
-          `}
-        >
-          {placeholder}
-          {required && <span className="ml-1">*</span>}
-        </label>
+        {floatingLabel && (
+          <label
+            htmlFor={id}
+            className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
+              ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+              ${invalid ? 'td-floating-label--error font-semibold text-red-600' : ''}
+            `}
+          >
+            {floatingLabel}
+            {required && <span className="ml-1">*</span>}
+          </label>
+        )}
       </div>
 
       {invalid && errorMessage && (

@@ -45,5 +45,29 @@
     "identifierType": "Identifier type",
     "identifier": "Identifier",
     "trustDeckIdHint": "Entity-based pseudonyms use the entity TrustDeckID with identifier type TrustDeckID, so the pseudonym can be listed as a link of the entity instance later."
+  },
+  "management": {
+    "searchTitle": "Find a pseudonym",
+    "searchDescription": "Search for an existing pseudonym in a specific group and open its detail view.",
+    "generateTitle": "Generate a pseudonym",
+    "generateDescription": "Create a pseudonym for an existing entity or generate one independently.",
+    "entityTitle": "For an existing entity",
+    "entityDescription": "Search for an entity, select it, and choose the pseudonym group in which the pseudonym should be generated.",
+    "entityAction": "Start entity-based generation",
+    "standaloneTitle": "Without an existing entity",
+    "standaloneDescription": "Provide an identifier and ID Type directly, then choose the group and optional validity settings.",
+    "standaloneAction": "Generate without entity"
+  },
+  "entityFlow": {
+    "modalTitle": "Generate pseudonym for an entity",
+    "modalDescription": "Search for the entity, select the correct result, and choose the target pseudonym group.",
+    "searchStep": "Search entity",
+    "selectStep": "Select entity",
+    "groupStep": "Choose group",
+    "validation": {
+      "groupRequired": "Please select a group.",
+      "entityRequired": "Please select an entity first.",
+      "createFailed": "The pseudonym could not be generated."
+    }
   }
 }

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import {
   EyeIcon,
   PencilSquareIcon,
+  PlusIcon,
   TrashIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
@@ -259,12 +260,12 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-        (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
-          canUseDomainAction(
-            permissionAccess,
-            groupName,
-            'domain:update-complete'
-          ))
+          (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
+            canUseDomainAction(
+              permissionAccess,
+              groupName,
+              'domain:update-complete'
+            ))
       ),
     [permissionAccess]
   )
@@ -273,7 +274,7 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-        canUseDomainAction(permissionAccess, groupName, 'domain:delete')
+          canUseDomainAction(permissionAccess, groupName, 'domain:delete')
       ),
     [permissionAccess]
   )
@@ -832,6 +833,8 @@ export default function GroupManager() {
               <div className="flex justify-center">
                 <PrimaryButton
                   label={t('groups:buttons.addGroups')}
+                  icon={<PlusIcon className="h-5 w-5" />}
+                  iconPos="left"
                   onClick={handleNewGroup}
                 />
               </div>
@@ -847,6 +850,7 @@ export default function GroupManager() {
               <div className="overflow-x-auto">
                 <Tree
                   value={tree}
+                  className="td-group-hierarchy-tree"
                   dragdropScope="groupManagerTree"
                   nodeTemplate={nodeTemplate}
                   expandedKeys={expandedKeys}

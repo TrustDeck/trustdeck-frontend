@@ -39,6 +39,10 @@ export default function ProjectOverview() {
     null
   )
   const [deleting, setDeleting] = useState(false)
+  const [expandedProject, setExpandedProject] = useState<{
+    abbreviation: string
+    mode: 'view' | 'edit'
+  } | null>(null)
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
   const [permissionsReady, setPermissionsReady] = useState(false)
@@ -47,10 +51,6 @@ export default function ProjectOverview() {
   const auth = useAuth()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
   const showToast = useToastStore((state) => state.show)
-  const setSelectedProject = useProjectStore(
-    (state) => state.setSelectedProject
-  )
-  const setProjectImage = useProjectStore((state) => state.setProjectImage)
   const clearSelectedProject = useProjectStore(
     (state) => state.clearSelectedProject
   )
@@ -202,15 +202,39 @@ export default function ProjectOverview() {
     setDateOrder('newest')
   }
 
-  const openProjectSettings = (project: ProjectType) => {
-    setSelectedProject({
-      abbreviation: project.abbreviation,
-      name: project.name
-    })
-    const image = projectImages[project.abbreviation]
-    if (image) setProjectImage(image)
-    navigate('/project-settings', { state: { edit: true } })
+  const openProjectDetails = (
+    project: ProjectType,
+    mode: 'view' | 'edit'
+  ) => {
+    setExpandedProject((current) =>
+      current?.abbreviation === project.abbreviation && current.mode === mode
+        ? null
+        : { abbreviation: project.abbreviation, mode }
+    )
   }
+
+  const handleProjectSaved = (
+    originalAbbreviation: string,
+    updatedProject: ProjectType,
+    updatedImage?: string
+  ) => {
+    setProjects((current) =>
+      current.map((project) =>
+        project.abbreviation === originalAbbreviation ? updatedProject : project
+      )
+    )
+    setProjectImages((current) => {
+      const next = { ...current }
+      delete next[originalAbbreviation]
+      next[updatedProject.abbreviation] = updatedImage
+      return next
+    })
+    setExpandedProject({
+      abbreviation: updatedProject.abbreviation,
+      mode: 'view'
+    })
+  }
+
 
   const handleDeleteProject = async () => {
     if (!deletingProject) return
@@ -237,6 +261,14 @@ export default function ProjectOverview() {
         prev.filter(
           (project) => project.abbreviation !== deletingProject.abbreviation
         )
+      )
+      setProjectImages((prev) => {
+        const next = { ...prev }
+        delete next[deletingProject.abbreviation]
+        return next
+      })
+      setExpandedProject((current) =>
+        current?.abbreviation === deletingProject.abbreviation ? null : current
       )
       showToast({
         severity: 'success',
@@ -358,13 +390,31 @@ export default function ProjectOverview() {
                 key={project.abbreviation}
                 project={project}
                 permissionsReady={permissionsReady}
-                canUpdate
+                canUpdate={canManageProject(
+                  permissionAccess,
+                  project.abbreviation,
+                  'update'
+                )}
                 canDelete={canManageProject(
                   permissionAccess,
                   project.abbreviation,
                   'delete'
                 )}
-                onEdit={openProjectSettings}
+                expandedMode={
+                  expandedProject?.abbreviation === project.abbreviation
+                    ? expandedProject.mode
+                    : null
+                }
+                onView={(selected) => openProjectDetails(selected, 'view')}
+                onEdit={(selected) => openProjectDetails(selected, 'edit')}
+                onCloseDetails={() => setExpandedProject(null)}
+                onModeChange={(mode) =>
+                  setExpandedProject({
+                    abbreviation: project.abbreviation,
+                    mode
+                  })
+                }
+                onSaved={handleProjectSaved}
                 onDelete={setDeletingProject}
                 projectImage={projectImages[project.abbreviation]}
               />

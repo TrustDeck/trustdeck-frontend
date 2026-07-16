@@ -18,6 +18,8 @@ type CustomDropdownProps = {
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
   disabled?: boolean
+  invalid?: boolean
+  errorMessage?: string
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -31,6 +33,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   textColor = 'text-gray-500',
   required,
   disabled,
+  invalid = false,
+  errorMessage,
   ...props
 }) => {
   const showFloating = value !== ''
@@ -47,7 +51,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           onChange={onChange}
           placeholder=""
           disabled={disabled}
-          className="flex h-[44px] w-full items-center rounded-lg border border-color-light-gray font-font-text text-xl font-normal"
+          className={`flex h-[44px] w-full items-center rounded-lg border font-font-text text-xl font-normal ${
+            invalid ? 'border-red-500' : 'border-color-light-gray'
+          }`}
           pt={{
             input: {
               className: `flex h-[44px] items-center px-3 font-font-text text-xl font-normal ${textColor}`
@@ -63,12 +69,19 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           htmlFor={id}
           className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text text-gray-500 transition-all dark:bg-slate-950 dark:text-gray-300
             ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+            ${invalid ? 'font-semibold text-red-600' : ''}
           `}
         >
           {placeholder}
           {required && <span className="ml-1">*</span>}
         </label>
       </div>
+
+      {invalid && errorMessage && (
+        <p className="mt-1 text-sm font-medium text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
+      )}
 
       {helpText && (
         <HelpTooltip

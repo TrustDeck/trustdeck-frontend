@@ -316,20 +316,22 @@ export const useTreeStateStore = create<TreeState>((set) => ({
       const prefix = 'NG-'
       const psnlength = '8'
 
+      const formatLocalDateTime = (date: Date) => {
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = String(date.getFullYear())
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        const seconds = String(date.getSeconds()).padStart(2, '0')
+        return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`
+      }
+
       const currentDate = new Date()
-      const currentYear = String(currentDate.getFullYear())
-      const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0')
-      const currentDay = String(currentDate.getDate()).padStart(2, '0')
+      const validFrom = formatLocalDateTime(currentDate)
 
-      const validFrom = `${currentMonth}-${currentDay}-${currentYear}`
-
-      const date30Year = new Date()
+      const date30Year = new Date(currentDate)
       date30Year.setFullYear(date30Year.getFullYear() + 30)
-      const year30 = String(date30Year.getFullYear())
-      const month30 = String(date30Year.getMonth() + 1).padStart(2, '0')
-      const day30 = String(date30Year.getDate()).padStart(2, '0')
-
-      const validTo = `${month30}-${day30}-${year30}`
+      const validTo = formatLocalDateTime(date30Year)
 
       // generate a key based on current total nodes (as in your example)
       const newNode: CustomTreeNode = {
@@ -364,8 +366,18 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             validFromInherited: false,
             validToInherited: false,
             algorithmInherited: false,
+            alphabetInherited: false,
+            randomAlgorithmDesiredSizeInherited: false,
+            randomAlgorithmDesiredSuccessProbabilityInherited: false,
+            multiplePsnAllowedInherited: false,
             pseudonymLengthInherited: false,
-            paddingCharacterInherited: false
+            paddingCharacterInherited: false,
+            addCheckDigitInherited: false,
+            lengthIncludesCheckDigitInherited: false,
+            enforceStartDateValidity: false,
+            enforceStartDateValidityInherited: false,
+            enforceEndDateValidity: false,
+            enforceEndDateValidityInherited: false
           }
         },
         children: []

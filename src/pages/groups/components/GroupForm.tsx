@@ -33,6 +33,14 @@ import InheritanceIndicator from '../../../core/components/common/InheritanceInd
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
 
+const FIXED_RANDOM_ALGORITHMS = new Set([
+  'RANDOM_NUM',
+  'RANDOM_HEX',
+  'RANDOM_LET',
+  'RANDOM_SYM',
+  'RANDOM_SYM_BIOS'
+])
+
 const formatIntegerForLocale = (locale: string | undefined, value: number) =>
   new Intl.NumberFormat(locale || undefined, {
     maximumFractionDigits: 0
@@ -124,6 +132,7 @@ function InheritedField({
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [alphabetSelectionError, setAlphabetSelectionError] = useState(false)
   const showToast = useToastStore((state) => state.show)
 
   const { tree, selectedNodeKey, updateNodeAttribute, moveNode } =
@@ -141,6 +150,12 @@ export default function GroupForm() {
 
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
+  const normalizedAlgorithm = String(temporal.algorithm ?? '').toUpperCase()
+  const fixedRandomAlphabet = FIXED_RANDOM_ALGORITHMS.has(normalizedAlgorithm)
+    ? defaultAlphabetForAlgorithm(normalizedAlgorithm)
+    : null
+  const alphabetIsCompatible =
+    !fixedRandomAlphabet || temporal.alphabet === fixedRandomAlphabet
 
   const markFieldOverridden = (flag: keyof GroupStoredAttributes) => {
     updateNodeAttribute(selectedNodeKey, flag, false)
@@ -237,20 +252,46 @@ export default function GroupForm() {
     }
   }, [selectedNodeKey, temporal, updateNodeAttribute])
 
-  const formatDate = (date: Date | null): string | null => {
-    if (!date) return null
-    const mm = String(date.getMonth() + 1).padStart(2, '0')
-    const dd = String(date.getDate()).padStart(2, '0')
-    const yyyy = String(date.getFullYear())
-    return `${mm}-${dd}-${yyyy}`
+  useEffect(() => {
+    if (alphabetIsCompatible) setAlphabetSelectionError(false)
+  }, [alphabetIsCompatible])
+
+  const formatDate = (date: Date | null): string => {
+    if (!date) return ''
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = String(date.getFullYear())
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`
   }
 
   const parseDate = (value?: string | null): Date | null => {
     if (!value) return null
-    const parts = value.split(/[-/]/)
-    if (parts.length !== 3) return null
-    const [mm, dd, yyyy] = parts
-    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd))
+
+    const isoDate = new Date(value)
+    if (!Number.isNaN(isoDate.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      return isoDate
+    }
+
+    const match = value
+      .trim()
+      .match(
+        /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+      )
+    if (!match) return null
+
+    const [, day, month, year, hours = '0', minutes = '0', seconds = '0'] =
+      match
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes),
+      Number(seconds)
+    )
     return Number.isNaN(date.getTime()) ? null : date
   }
 
@@ -353,11 +394,11 @@ export default function GroupForm() {
       className="w-full space-y-6"
       onSubmit={(event) => event.preventDefault()}
     >
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-5 text-center dark:border-blue-900 dark:bg-blue-950/30">
-        <p className="text-base font-semibold text-blue-800 dark:text-blue-200">
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-5 text-center dark:border-amber-800 dark:bg-amber-950/30">
+        <p className="text-base font-semibold text-amber-800 dark:text-amber-200">
           {t('groups:inputs.psnexampleNew')}
         </p>
-        <p className="mt-2 break-all font-mono text-2xl font-bold text-blue-950 dark:text-blue-100">
+        <p className="mt-2 break-all font-mono text-2xl font-bold text-amber-950 dark:text-amber-100">
           {examplePsn || '—'}
         </p>
       </div>
@@ -424,8 +465,6 @@ export default function GroupForm() {
                   event.target.value
                 )
               }
-              errorMessage={t('groups:inputs.description.error')}
-              validate={validation.isValidRegistrationDescription}
             />
           </div>
         </div>
@@ -443,7 +482,7 @@ export default function GroupForm() {
           >
             <CustomCalendar
               id="startdate"
-              dateFormat="mm-dd-yy"
+              dateFormat="dd.mm.yy"
               value={parseDate(temporal.validFrom)}
               onChange={(event) => {
                 updateNodeAttribute(
@@ -455,6 +494,9 @@ export default function GroupForm() {
               }}
               placeholder={t('groups:inputs.startdate.label')}
               className="w-full"
+              showTime
+              showSeconds
+              hourFormat="24"
             />
           </InheritedField>
           <InheritedField
@@ -464,7 +506,7 @@ export default function GroupForm() {
           >
             <CustomCalendar
               id="enddate"
-              dateFormat="mm-dd-yy"
+              dateFormat="dd.mm.yy"
               value={parseDate(temporal.validTo)}
               onChange={(event) => {
                 updateNodeAttribute(
@@ -476,6 +518,9 @@ export default function GroupForm() {
               }}
               placeholder={t('groups:inputs.enddate.label')}
               className="w-full"
+              showTime
+              showSeconds
+              hourFormat="24"
             />
           </InheritedField>
           <div className="md:col-span-2">
@@ -514,6 +559,7 @@ export default function GroupForm() {
               value={temporal.algorithm ?? ''}
               onChange={(event) => {
                 const newAlgorithm = event.value
+                setAlphabetSelectionError(false)
                 updateNodeAttribute(selectedNodeKey, 'algorithm', newAlgorithm)
                 updateNodeAttribute(
                   selectedNodeKey,
@@ -547,11 +593,21 @@ export default function GroupForm() {
                   : (temporal.alphabet ?? '')
               }
               onChange={(event) => {
+                if (
+                  fixedRandomAlphabet &&
+                  event.value !== fixedRandomAlphabet
+                ) {
+                  setAlphabetSelectionError(true)
+                  return
+                }
+                setAlphabetSelectionError(false)
                 updateNodeAttribute(selectedNodeKey, 'alphabet', event.value)
                 markFieldOverridden('alphabetInherited')
               }}
               options={alphabetOptions}
               helpText={t('groups:inputs.alphabet.help')}
+              invalid={alphabetSelectionError || !alphabetIsCompatible}
+              errorMessage={t('groups:inputs.alphabet.fixedAlgorithmError')}
               disabled={isHashAlgorithm(temporal.algorithm)}
             />
           </InheritedField>

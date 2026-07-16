@@ -7,6 +7,7 @@ import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
 import { useTranslation } from 'react-i18next'
 import PersonService from './services/PersonService'
+import { formatDate } from '../../core/utils/date'
 
 export default function Duplicate() {
   const { duplicateId } = useParams()
@@ -41,9 +42,7 @@ export default function Duplicate() {
       },
       {
         code: t('search:entity.person.birthdate.placeholder'),
-        name: person.birthdate
-          ? new Date(person.birthdate).toLocaleDateString()
-          : ''
+        name: person.birthdate ? formatDate(person.birthdate) : ''
       },
       {
         code: t('search:entity.person.gender.placeholder'),

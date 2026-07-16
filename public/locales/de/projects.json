@@ -24,7 +24,7 @@
   "creationFailed": "Projekterstellung fehlgeschlagen",
   "noProjects": "Derzeit sind für Sie keine Projekte verfügbar. Sie können ein neues Projekt erstellen oder Ihre PI bzw. Projektleitung bitten, Ihnen Zugriff auf ein bestehendes Projekt zu gewähren.",
   "title": "Projekte",
-  "subtitle": "Wählen Sie ein Projekt aus, um fortzufahren.",
+  "subtitle": "Wählen Sie ein Projekt aus, prüfen Sie seine Details oder bearbeiten Sie seine Einstellungen direkt in der Übersicht.",
   "filters": "Filter",
   "filterProjects": "Projekte filtern",
   "filterHelp": "Grenzen Sie die Liste nach Name, Status oder Startdatum ein.",
@@ -54,11 +54,13 @@
   "creationInvalid": "Das Backend hat die Projektdaten abgelehnt. Bitte prüfen Sie Name, Kürzel, Zeiträume und Einstellungen.",
   "creationBackendError": "Das Backend konnte das Projekt nicht erstellen. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut.",
   "actions": {
-    "openSettings": "Projekteinstellungen öffnen",
+    "openSettings": "Projektdetails bearbeiten",
     "checkingPermissions": "Projektberechtigungen werden geprüft...",
     "deleteProject": "Projekt löschen",
     "deleteNotAllowed": "Sie haben keine Berechtigung, dieses Projekt zu löschen.",
-    "updateProject": "Projekt aktualisieren"
+    "updateProject": "Projekt aktualisieren",
+    "viewProject": "Projektdetails anzeigen",
+    "closeDetails": "Projektdetails schließen"
   },
   "projectIconAlt": "Projektsymbol für {{name}}",
   "subgroups_one": "Untergruppe",

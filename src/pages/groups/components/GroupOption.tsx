@@ -4,7 +4,11 @@ import RegistrationGroupOption from './RegistrationGroupOption'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import { GroupOptionType } from '../types/GroupOptionType'
 
-export default function GroupOption() {
+type GroupOptionProps = {
+  onClose?: () => void
+}
+
+export default function GroupOption({ onClose }: GroupOptionProps) {
   const { groupOption } = useTreeStateStore()
 
   function renderGroupOption(type: GroupOptionType) {
@@ -12,7 +16,7 @@ export default function GroupOption() {
       case 'registration':
         return <RegistrationGroupOption />
       case 'edit':
-        return <EditGroupOption />
+        return <EditGroupOption onCancel={onClose} />
       default:
         return <DefaultGroupOption />
     }

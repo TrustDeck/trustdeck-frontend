@@ -7,7 +7,6 @@ import SearchMask from '../../pages/search/SearchMask'
 import SearchPsn from '../../pages/pseudonym/SearchPsn'
 import PreReg from '../../pages/identity/PreReg'
 import GroupManager from '../../pages/groups/GroupManager'
-import Settings from '../../pages/project/Settings'
 import EntityDetails from '../../pages/search/EntityDetails'
 import {
   Bars3Icon,
@@ -15,7 +14,6 @@ import {
   IdentificationIcon,
   EyeSlashIcon,
   ArchiveBoxIcon,
-  Cog8ToothIcon,
   ShieldCheckIcon,
   FolderPlusIcon,
   FolderIcon,
@@ -197,15 +195,6 @@ export const routes: RouteConfig[] = [
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 3
-  },
-  {
-    path: '/project-settings',
-    titleKey: 'layout:menu.projectSettings',
-    component: Settings,
-    Icon: Cog8ToothIcon,
-    isProtected: true,
-    isSidebar: true,
-    sideboardOrder: 1
   },
   {
     path: '/search/results',

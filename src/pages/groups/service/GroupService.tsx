@@ -12,14 +12,17 @@ type DomainTreeDto = {
   children?: DomainTreeDto[]
 }
 
-const formatDate = (dateString?: string | null): string | undefined => {
-  if (!dateString) return undefined
+const formatDate = (dateString?: string | null): string => {
+  if (!dateString) return ''
   const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return undefined
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
+  if (Number.isNaN(date.getTime())) return ''
   const day = String(date.getDate()).padStart(2, '0')
-  return `${month}-${day}-${year}`
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`
 }
 
 const numberToString = (value?: number | string | null): string | undefined => {
@@ -37,7 +40,7 @@ const normalizeDomain = (
     validFrom: formatDate(g.validFrom),
     validFromInherited: g.validFromInherited,
     validTo: formatDate(g.validTo),
-    validityTime: g.validityTime,
+    validityTime: g.validityTime ?? '',
     validToInherited: g.validToInherited,
     prefix: g.prefix ?? '',
     psnlength: numberToString(g.pseudonymLength),
@@ -49,16 +52,15 @@ const normalizeDomain = (
       : {}),
     algorithm: g.algorithm ?? '',
     algorithmInherited: g.algorithmInherited,
-    maxnumpsn: numberToString(g.randomAlgorithmDesiredSize),
+    maxnumpsn: numberToString(g.randomAlgorithmDesiredSize) ?? '',
     randomAlgorithmDesiredSizeInherited: g.randomAlgorithmDesiredSizeInherited,
-    randomAlgorithmDesiredSuccessProbability: numberToString(
-      g.randomAlgorithmDesiredSuccessProbability
-    ),
+    randomAlgorithmDesiredSuccessProbability:
+      numberToString(g.randomAlgorithmDesiredSuccessProbability) ?? '',
     randomAlgorithmDesiredSuccessProbabilityInherited:
       g.randomAlgorithmDesiredSuccessProbabilityInherited,
     multiplepsn: Boolean(g.multiplePsnAllowed ?? false),
     multiplePsnAllowedInherited: g.multiplePsnAllowedInherited,
-    consecutiveValueCounter: numberToString(g.consecutiveValueCounter),
+    consecutiveValueCounter: numberToString(g.consecutiveValueCounter) ?? '1',
     paddingchar: g.paddingCharacter ?? '',
     paddingCharacterInherited: g.paddingCharacterInherited,
     checkdigit: Boolean(g.addCheckDigit ?? false),
@@ -70,7 +72,7 @@ const normalizeDomain = (
     enforceEndDateValidity: Boolean(g.enforceEndDateValidity ?? false),
     enforceEndDateValidityInherited: g.enforceEndDateValidityInherited,
     salt: g.salt ?? '',
-    saltLength: numberToString(g.saltLength),
+    saltLength: numberToString(g.saltLength) ?? '32',
     description: g.description ?? '',
     parentgroup: superDomainName || g.superDomainName || 'ROOT'
   }
@@ -78,28 +80,37 @@ const normalizeDomain = (
 
 const toLocalDateTime = (input?: string | null): string | null => {
   if (!input) return null
-  const parts = input.split(/[-/]/).map((p) => p.trim())
-  if (parts.length !== 3) return null
+  const raw = input.trim()
 
-  let year: string, month: string, day: string
-  if (parts[0].length === 4) {
-    year = parts[0]
-    month = parts[1]
-    day = parts[2]
-  } else {
-    month = parts[0]
-    day = parts[1]
-    year = parts[2]
+  // ISO input can be forwarded after validating it.
+  if (/^\d{4}-\d{2}-\d{2}(?:T|\s)/.test(raw)) {
+    const normalized = raw.replace(' ', 'T')
+    return Number.isNaN(new Date(normalized).getTime()) ? null : normalized
   }
 
-  month = month.padStart(2, '0')
-  day = day.padStart(2, '0')
+  // UI format: DD.MM.YYYY HH:mm:ss (time is optional).
+  const match = raw.match(
+    /^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/
+  )
+  if (!match) return null
 
-  if (!/^\d{4}$/.test(year) || !/^\d{2}$/.test(month) || !/^\d{2}$/.test(day)) {
-    return null
-  }
+  const [
+    ,
+    dayRaw,
+    monthRaw,
+    year,
+    hourRaw = '0',
+    minuteRaw = '0',
+    secondRaw = '0'
+  ] = match
+  const day = dayRaw.padStart(2, '0')
+  const month = monthRaw.padStart(2, '0')
+  const hour = hourRaw.padStart(2, '0')
+  const minute = minuteRaw.padStart(2, '0')
+  const second = secondRaw.padStart(2, '0')
 
-  return `${year}-${month}-${day}T00:00:00`
+  const candidate = `${year}-${month}-${day}T${hour}:${minute}:${second}`
+  return Number.isNaN(new Date(candidate).getTime()) ? null : candidate
 }
 
 const toNumberOrNull = (value: unknown): number | null => {
@@ -115,6 +126,22 @@ const toNumberOrNull = (value: unknown): number | null => {
     .replace(',', '.')
   const parsed = Number(normalized)
   return Number.isNaN(parsed) ? null : parsed
+}
+
+const toDecimalNumberOrNull = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null
+
+  const raw = String(value).trim().replace(/\s/g, '')
+  if (!raw) return null
+
+  // Decimal probabilities accept either a comma or a dot as separator.
+  const normalized =
+    raw.includes(',') && !raw.includes('.')
+      ? raw.replace(',', '.')
+      : raw.replace(/,/g, '')
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 const mapDomain = (payload: GroupStoredAttributes): any => {
@@ -134,11 +161,13 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
     paddingCharacter: payload.paddingchar,
     pseudonymLength: toNumberOrNull(payload.psnlength),
     randomAlgorithmDesiredSize: toNumberOrNull(payload.maxnumpsn),
-    randomAlgorithmDesiredSuccessProbability: toNumberOrNull(
+    randomAlgorithmDesiredSuccessProbability: toDecimalNumberOrNull(
       payload.randomAlgorithmDesiredSuccessProbability
     ),
     consecutiveValueCounter:
-      String(payload.algorithm ?? '').trim().toUpperCase() === 'CONSECUTIVE'
+      String(payload.algorithm ?? '')
+        .trim()
+        .toUpperCase() === 'CONSECUTIVE'
         ? toNumberOrNull(payload.consecutiveValueCounter)
         : 1,
     salt: payload.salt || undefined,
@@ -181,9 +210,9 @@ const mapTree = (
       raw: domain
     },
     children: Array.isArray(item.children)
-      ? item.children
+      ? (item.children
           .map((child, i) => mapTree(child, `${idx}-${i}`, domain.name))
-          .filter(Boolean) as CustomTreeNode[]
+          .filter(Boolean) as CustomTreeNode[])
       : []
   }
 }
@@ -216,6 +245,8 @@ const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
 }
 
 const GroupService = {
+  normalizeGroup: (group: Domain, superDomainName?: string | null) =>
+    normalizeDomain(group, superDomainName),
   getGroups: async (): Promise<CustomTreeNode[]> => {
     try {
       const remoteTrees = await TrustDeck.instance().getDomainsHierarchy()
@@ -229,7 +260,9 @@ const GroupService = {
     }
 
     const domains = await TrustDeck.instance().searchReadableDomains('*')
-    return domains.map((domain, index) => mapFlatDomainToNode(domain, String(index)))
+    return domains.map((domain, index) =>
+      mapFlatDomainToNode(domain, String(index))
+    )
   },
 
   getReadableGroups: async (): Promise<Domain[]> => {

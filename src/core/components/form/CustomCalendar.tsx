@@ -15,6 +15,7 @@ type CustomCalendarProps = {
   required?: boolean
   dateFormat?: string
   showTime?: boolean
+  showSeconds?: boolean
   hourFormat?: '12' | '24'
 }
 
@@ -31,6 +32,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   required,
   dateFormat = 'yy-mm-dd',
   showTime = false,
+  showSeconds = false,
   hourFormat = '24'
 }) => {
   const [focused, setFocused] = useState(false)
@@ -64,6 +66,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         inputClassName={`m-0 h-full w-full border-none bg-transparent p-0 pb-1 font-font-text text-xl focus:ring-0 ${helpText ? 'pr-16' : 'pr-10'}`}
         dateFormat={dateFormat}
         showTime={showTime}
+        showSeconds={showSeconds}
         hourFormat={hourFormat}
         showIcon
       />

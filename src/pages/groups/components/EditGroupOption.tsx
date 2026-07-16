@@ -3,6 +3,7 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import Divider from '@component/common/Divider.tsx'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
+import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton.tsx'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog.tsx'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import GroupForm from './GroupForm.tsx'
@@ -11,7 +12,11 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 import GroupService from '../service/GroupService.tsx'
 import useToastStore from '../../../core/stores/ToastStore.ts'
 
-export default function EditGroupOption() {
+type EditGroupOptionProps = {
+  onCancel?: () => void
+}
+
+export default function EditGroupOption({ onCancel }: EditGroupOptionProps) {
   const {
     tree,
     selectedNodeKey,
@@ -151,14 +156,18 @@ export default function EditGroupOption() {
           </div>
           <Divider />
           <GroupForm />
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <SecondaryOutlinedButton
-              label={t('groups:buttons.delete')}
-              onClick={handleDelete}
-            />
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <PrimaryButton
               label={t('groups:buttons.save')}
               onClick={() => handleSave()}
+            />
+            <PrimaryOutlinedButton
+              label={t('groups:buttons.cancel')}
+              onClick={() => onCancel?.()}
+            />
+            <SecondaryOutlinedButton
+              label={t('groups:buttons.delete')}
+              onClick={handleDelete}
             />
           </div>
         </>

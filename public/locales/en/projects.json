@@ -24,7 +24,7 @@
   "creationFailed": "Project creation failed",
   "noProjects": "No projects are currently available to you. You can create a new project, or ask your PI or project lead to grant you access to an existing project.",
   "title": "Projects",
-  "subtitle": "Select a project to continue.",
+  "subtitle": "Select a project, review its details, or edit its settings directly in the overview.",
   "filters": "Filters",
   "filterProjects": "Filter projects",
   "filterHelp": "Narrow the list by name, status, or start date.",
@@ -54,11 +54,13 @@
   "creationInvalid": "The backend rejected the project data. Please check the name, abbreviation, dates, and settings.",
   "creationBackendError": "The backend could not create the project. Please check the backend logs or try again later.",
   "actions": {
-    "openSettings": "Open project settings",
+    "openSettings": "Edit project details",
     "checkingPermissions": "Checking your project permissions...",
     "deleteProject": "Delete project",
     "deleteNotAllowed": "You do not have permission to delete this project.",
-    "updateProject": "Update project"
+    "updateProject": "Update project",
+    "viewProject": "View project details",
+    "closeDetails": "Close project details"
   },
   "projectIconAlt": "Project icon for {{name}}",
   "subgroups_one": "subgroup",

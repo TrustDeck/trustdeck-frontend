@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next'
 import {
   EyeIcon,
   PencilSquareIcon,
-  TrashIcon
+  TrashIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 
 import Panel from '../../core/components/common/Panel'
@@ -15,7 +16,6 @@ import InheritanceIndicator from '../../core/components/common/InheritanceIndica
 import Divider from '../../core/components/common/Divider'
 import ConfirmDialog from '../../core/components/common/ConfirmDialog'
 import PageHeader from '../../core/components/common/PageHeader'
-import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import GroupService from './service/GroupService'
 import GroupOption from './components/GroupOption'
@@ -26,6 +26,7 @@ import useToastStore from '../../core/stores/ToastStore'
 import { findNodeByKey, findNodeByLabel } from './utils/findNodeByKey'
 import TrustDeck from '../../core/services/TrustDeck'
 import type { Domain } from '../../core/types/Domain'
+import { formatDateTime } from '../../core/utils/date'
 import {
   CachedUserAccess,
   canUseDomainAction,
@@ -162,11 +163,34 @@ function mergeDomains(primary: Domain[], fallback: Domain[]): Domain[] {
   )
 }
 
-function hasVisibleValue(value: unknown) {
-  if (value === null || value === undefined || value === '') return false
-  if (Array.isArray(value)) return value.length > 0
-  if (typeof value === 'object') return Object.keys(value).length > 0
-  return true
+function hydrateGroupNode(
+  nodes: CustomTreeNode[],
+  groupName: string,
+  group: Domain
+): CustomTreeNode[] {
+  return nodes.map((node) => {
+    const children = Array.isArray(node.children)
+      ? hydrateGroupNode(node.children as CustomTreeNode[], groupName, group)
+      : node.children
+
+    if (node.label !== groupName) return { ...node, children }
+
+    const normalized = GroupService.normalizeGroup(
+      group,
+      group.superDomainName ?? null
+    )
+    return {
+      ...node,
+      label: group.name ?? node.label,
+      hasChanges: false,
+      data: {
+        stored: normalized,
+        temporal: { ...normalized },
+        raw: group
+      },
+      children
+    }
+  })
 }
 
 export default function GroupManager() {
@@ -235,12 +259,12 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-          (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
-            canUseDomainAction(
-              permissionAccess,
-              groupName,
-              'domain:update-complete'
-            ))
+        (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
+          canUseDomainAction(
+            permissionAccess,
+            groupName,
+            'domain:update-complete'
+          ))
       ),
     [permissionAccess]
   )
@@ -249,7 +273,7 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-          canUseDomainAction(permissionAccess, groupName, 'domain:delete')
+        canUseDomainAction(permissionAccess, groupName, 'domain:delete')
       ),
     [permissionAccess]
   )
@@ -422,11 +446,15 @@ export default function GroupManager() {
       try {
         const complete = await GroupService.getGroup(groupName)
         setSelectedGroup(complete)
+        if (mode === 'edit') {
+          const currentTree = useTreeStateStore.getState().tree
+          setTree(hydrateGroupNode(currentTree, groupName, complete))
+        }
       } catch {
         // Keep the reduced readable result when complete view is unavailable.
       }
     },
-    [groups, revealGroupInHierarchy, setGroupOption]
+    [groups, revealGroupInHierarchy, setGroupOption, setTree]
   )
 
   useEffect(() => {
@@ -450,6 +478,12 @@ export default function GroupManager() {
   const handleEdit = (groupName: string) => {
     if (!canEditGroup(groupName)) return
     selectGroup(groupName, 'edit')
+  }
+
+  const closeEditor = () => {
+    setViewMode('details')
+    setGroupOption('default')
+    fetchGroups()
   }
 
   const handleDelete = (groupName: string) => {
@@ -619,35 +653,10 @@ export default function GroupManager() {
     </>
   )
 
-  const formatDateTime = (value: unknown): string => {
-    const text = String(value)
-    let date = new Date(text)
-
-    if (Number.isNaN(date.getTime())) {
-      const match = text.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/)
-      if (match) {
-        date = new Date(
-          Number(match[3]),
-          Number(match[1]) - 1,
-          Number(match[2])
-        )
-      }
-    }
-
-    if (Number.isNaN(date.getTime())) return text
-    return new Intl.DateTimeFormat(i18n.language || undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(date)
-  }
-
   const formatValue = (key: keyof Domain, value: unknown): string => {
+    if (value === null || value === undefined || value === '') return '—'
     if (key === 'validFrom' || key === 'validTo') {
-      return formatDateTime(value)
+      return formatDateTime(String(value)) || '—'
     }
     if (key === 'randomAlgorithmDesiredSuccessProbability') {
       const probability = Number(value)
@@ -672,11 +681,7 @@ export default function GroupManager() {
     return String(value)
   }
 
-  const visibleDetailFields = selectedGroup
-    ? DOMAIN_DETAIL_FIELDS.filter(({ key }) =>
-        hasVisibleValue(selectedGroup[key])
-      )
-    : []
+  const visibleDetailFields = selectedGroup ? DOMAIN_DETAIL_FIELDS : []
 
   const renderDetails = () => {
     if (!selectedGroup) {
@@ -877,21 +882,26 @@ export default function GroupManager() {
                           : t('groups:crud.editSubtitle')}
                       </p>
                     </div>
-                    <PrimaryOutlinedButton
-                      label={t('groups:buttons.backToDetails')}
-                      onClick={() => {
-                        if (selectedGroupName) {
-                          selectGroup(selectedGroupName, 'details')
-                        } else {
-                          setViewMode('details')
-                          setGroupOption('default')
-                          fetchGroups()
-                        }
-                      }}
-                    />
+                    <button
+                      type="button"
+                      title={
+                        viewMode === 'edit'
+                          ? t('groups:buttons.closeEditView')
+                          : t('groups:buttons.closeCreateView')
+                      }
+                      aria-label={
+                        viewMode === 'edit'
+                          ? t('groups:buttons.closeEditView')
+                          : t('groups:buttons.closeCreateView')
+                      }
+                      onClick={closeEditor}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 border-color-blue bg-white text-color-blue transition hover:bg-blue-50 dark:bg-slate-950 dark:hover:bg-slate-800"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
                   </div>
                   <Divider />
-                  <GroupOption />
+                  <GroupOption onClose={closeEditor} />
                 </div>
               )}
             </Panel>

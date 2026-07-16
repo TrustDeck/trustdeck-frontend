@@ -330,11 +330,11 @@ class TrustDeck {
   }
 
   // Project image
-  public async createImage(file: File) {
-    const projectName = this.getSelectedProjectName()
+  public async createImage(file: File, projectAbbreviation?: string) {
+    const projectName = projectAbbreviation ?? this.getSelectedProjectName()
     let method: 'POST' | 'PUT' = 'POST'
     try {
-      await this.getImage()
+      await this.getImage(projectName)
       method = 'PUT'
     } catch {
       method = 'POST'

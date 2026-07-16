@@ -19,7 +19,10 @@
     "view": "View",
     "refresh": "Refresh",
     "backToDetails": "Back to details",
-    "addGroups": "+ Add groups"
+    "addGroups": "+ Add groups",
+    "cancel": "Cancel",
+    "closeEditView": "Close edit-view.",
+    "closeCreateView": "Close create-view."
   },
   "default": {
     "text": "Select an entity or a group to see its settings here."
@@ -41,7 +44,8 @@
     },
     "alphabet": {
       "label": "Alphabet",
-      "help": "Select an alphabet for the pseudonyms."
+      "help": "Select an alphabet for the pseudonyms.",
+      "fixedAlgorithmError": "This algorithm requires its predefined alphabet; changing the alphabet is not possible."
     },
     "customAlphabetChars": {
       "label": "Custom alphabet characters",
@@ -68,7 +72,7 @@
     "maxnumpsn": {
       "label": "Max. number of pseudonyms",
       "error": "Please enter a number",
-      "help": "Enter 0 for an unlimited number of pseudonyms."
+      "help": "Estimated upper bound for the maximum number of pseudonyms needed in this group. This value is used to calculate an optimal pseudonym length."
     },
     "multiplepsn": {
       "label": "Allow multiple pseudonyms for the same value?"
@@ -88,7 +92,7 @@
     },
     "randomAlgorithmDesiredSuccessProbability": {
       "label": "Desired success probability",
-      "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999 in English or 0,999 in German."
+      "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.99999998."
     },
     "consecutiveValueCounter": {
       "label": "Consecutive numbering counter",
@@ -96,7 +100,7 @@
     },
     "saltLength": {
       "label": "Salt length",
-      "help": "Backend default is 32. Increase this only when you need a longer generated salt."
+      "help": "The default is 32. Increase this only when you need a longer generated salt."
     },
     "salt": {
       "label": "Salt",
@@ -142,7 +146,7 @@
     "scopeOtherProject": "Other project",
     "noGroupsInSection": "No groups in this section.",
     "selectGroupHint": "Select a group from the list or hierarchy to see its details.",
-    "detailSubtitle": "All available group attributes are shown below. Missing values may be hidden because of missing permissions or not being configured.",
+    "detailSubtitle": "All available group attributes are shown below. Values that are not configured are shown as —.",
     "hierarchyTitle": "Group hierarchy",
     "hierarchySubtitle": "The hierarchy viewer is kept for understanding parent and child group relationships.",
     "createTitle": "Create group",

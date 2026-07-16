@@ -13,7 +13,7 @@ export default function InheritanceIndicator({
       aria-label={title}
       className={`inline-flex items-center justify-center font-semibold leading-none text-blue-700 dark:text-blue-300 ${className}`}
     >
-      ⇑
+      ⇣
     </span>
   )
 }

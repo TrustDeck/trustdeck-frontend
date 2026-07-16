@@ -2458,7 +2458,7 @@ export default function Builder({
                     )}
                     info={t(
                       'groupCreateHelp.randomAlgorithmDesiredSize',
-                      'Expected maximum number of pseudonyms for random generation. This helps evaluate collision risk.'
+                      'Estimated upper bound for the maximum number of pseudonyms needed in this group. This value is used to calculate an optimal pseudonym length.'
                     )}
                     placeholder={desiredPoolSizePlaceholder}
                     inputMode="numeric"
@@ -2485,7 +2485,7 @@ export default function Builder({
                     )}
                     info={t(
                       'groupCreateHelp.randomAlgorithmDesiredSuccessProbability',
-                      'Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.99999998 in English or 0,99999998 in German.'
+                      'Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.99999998.'
                     )}
                     placeholder={desiredSuccessProbabilityPlaceholder}
                     inputMode="decimal"
@@ -2587,7 +2587,7 @@ export default function Builder({
                     label={t('groupCreate.saltLength', 'Salt length')}
                     info={t(
                       'groupCreateHelp.saltLength',
-                      'Backend default is 32. Increase this only when you need a longer generated salt.'
+                      'The default is 32. Increase this only when you need a longer generated salt.'
                     )}
                     placeholder={BACKEND_DEFAULT_SALT_LENGTH}
                     type="number"

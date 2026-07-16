@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import { Calendar } from 'primereact/calendar'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import HelpTooltip from '../common/HelpTooltip'
 
 type CustomCalendarProps = {
   id: string
@@ -35,30 +33,19 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   showTime = false,
   hourFormat = '24'
 }) => {
-  const [visible, setVisible] = useState(false)
   const [focused, setFocused] = useState(false)
   const [isValid, setIsValid] = useState(true)
 
-  const { t } = useTranslation()
-
   const handleBlur = () => {
     setFocused(false)
-    if (validate) {
-      setIsValid(validate(value))
-    }
+    if (validate) setIsValid(validate(value))
   }
 
-  const handleFocus = () => {
-    setFocused(true)
+  const handleChange = (event: { value?: Date | null }) => {
+    onChange?.({ value: event?.value ?? null })
   }
 
-  // Normalisiere das PrimeReact-Event (Nullable<Date>) zu { value: Date | null }
-  const handleChange = (e: any) => {
-    const next: Date | null = (e && 'value' in e ? e.value : null) ?? null
-    onChange?.({ value: next })
-  }
-
-  const showFloating = focused || !!value || !isValid
+  const showFloating = focused || Boolean(value) || !isValid
 
   return (
     <div className="relative w-full">
@@ -66,15 +53,15 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         id={id}
         value={value}
         onChange={handleChange}
-        onFocus={handleFocus}
+        onFocus={() => setFocused(true)}
         onBlur={handleBlur}
         readOnlyInput={readOnly}
         disabled={readOnly}
-        className={`w-full h-[44px] rounded-lg text-xl font-normal px-3 pt-3 pb-2 ${className} ${
+        className={`h-[44px] w-full rounded-lg px-3 pb-2 pt-3 text-xl font-normal ${className} ${
           !isValid ? 'border border-red-500' : 'border border-color-light-gray'
         }`}
-        panelClassName="z-[9999]" // Ensure the calendar popup is above modals
-        inputClassName="w-full pb-1 h-full border-none font-font-text text-xl focus:ring-0 p-0 m-0 bg-transparent"
+        panelClassName="z-[9999]"
+        inputClassName={`m-0 h-full w-full border-none bg-transparent p-0 pb-1 font-font-text text-xl focus:ring-0 ${helpText ? 'pr-16' : 'pr-10'}`}
         dateFormat={dateFormat}
         showTime={showTime}
         hourFormat={hourFormat}
@@ -83,9 +70,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
       <label
         htmlFor={id}
-        className={`absolute left-3 px-1 transition-all font-font-text bg-white pointer-events-none
+        className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text transition-all dark:bg-slate-950
           ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'text-red-600 font-semibold' : 'text-gray-500'}
+          ${!isValid ? 'font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
         `}
       >
         {!isValid && errorMessage ? errorMessage : placeholder}
@@ -93,22 +80,10 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
       </label>
 
       {helpText && (
-        <>
-          <QuestionMarkCircleIcon
-            id={`${id}-help`}
-            className="h-5 w-5 absolute top-2 right-2 text-gray-500 cursor-pointer"
-            onClick={() => setVisible(true)}
-          />
-          <Dialog
-            header={t('common:help')}
-            visible={visible}
-            onHide={() => setVisible(false)}
-            dismissableMask
-            className="w-full md:w-3/4 xl:w-1/2"
-          >
-            <p>{helpText}</p>
-          </Dialog>
-        </>
+        <HelpTooltip
+          text={helpText}
+          className="absolute right-11 top-1/2 z-30 -translate-y-1/2"
+        />
       )}
     </div>
   )

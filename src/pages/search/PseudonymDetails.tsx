@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowLeftIcon,
-  ArrowPathRoundedSquareIcon,
   CheckIcon,
   PencilIcon,
   TrashIcon,
@@ -24,6 +23,7 @@ import TrustDeck, {
 } from '../../core/services/TrustDeck'
 import type { Pseudonym } from '../../core/types/Pseudonym'
 import useToastStore from '../../core/stores/ToastStore'
+import InheritanceIndicator from '../../core/components/common/InheritanceIndicator'
 
 type PseudonymForm = {
   domainName: string
@@ -94,9 +94,10 @@ function FieldCard({
       >
         <span>{label}</span>
         {inherited && (
-          <span title={inheritedTooltip} aria-label={inheritedTooltip}>
-            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-          </span>
+          <InheritanceIndicator
+            title={inheritedTooltip ?? ''}
+            className="text-lg"
+          />
         )}
       </div>
       <div className="break-all text-xl text-gray-900 dark:text-gray-100">
@@ -378,13 +379,10 @@ const PseudonymDetails: React.FC = () => {
         }`}
       >
         {inherited && (
-          <span
+          <InheritanceIndicator
             title={inheritanceTooltip}
-            aria-label={inheritanceTooltip}
-            className="absolute right-3 top-3 text-blue-700 dark:text-blue-300"
-          >
-            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-          </span>
+            className="absolute right-3 top-3 text-lg"
+          />
         )}
         <CustomFloatLabel
           id={`pseudonym-${id}`}

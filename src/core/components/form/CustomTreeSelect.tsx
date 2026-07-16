@@ -1,28 +1,28 @@
 import React, { useState } from 'react'
 import { TreeSelect, TreeSelectChangeEvent } from 'primereact/treeselect'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
-
 import type { TreeSelectSelectionKeysType } from 'primereact/treeselect'
+import HelpTooltip from '../common/HelpTooltip'
 
 interface CustomTreeSelectProps {
   id: string
   label?: string
-  value: TreeSelectSelectionKeysType | TreeSelectSelectionKeysType[] | null | undefined | any
-  options: any //avoids import issues with TreeNode[]
+  value:
+    | TreeSelectSelectionKeysType
+    | TreeSelectSelectionKeysType[]
+    | null
+    | undefined
+    | any
+  options: any
   onChange: (e: TreeSelectChangeEvent) => void
   placeholder?: string
   className?: string
   helpText?: string
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
-  /** 'single' = one node only, no parent/child cascade; 'checkbox' = multiple with cascade */
   selectionMode?: 'single' | 'multiple' | 'checkbox'
   filter?: boolean
   filterPlaceholder?: string
 }
-
 
 const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   id,
@@ -37,22 +37,17 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   selectionMode = 'checkbox',
   ...props
 }) => {
-  const [visible, setVisible] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  const { t } = useTranslation()
 
-  // Show floating label if focused or has any selection
-  const hasValue =
-    Array.isArray(value)
+  const hasValue = Array.isArray(value)
+    ? value.length > 0
+    : typeof value === 'string'
       ? value.length > 0
-      : typeof value === 'string'
-        ? value.length > 0
-        : value && typeof value === 'object' && Object.keys(value).length > 0
+      : value && typeof value === 'object' && Object.keys(value).length > 0
   const showFloating = isFocused || hasValue
 
   return (
-    <div className={`flex items-start gap-2 w-full ${className}`}>
-      {/* TreeSelect + floating label wrapper */}
+    <div className={`flex w-full items-start gap-2 ${className}`}>
       <div className="relative flex-1">
         <TreeSelect
           id={id}
@@ -61,7 +56,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
           onChange={onChange}
           placeholder=""
           selectionMode={selectionMode}
-          className="w-full rounded-lg border font-font-text border-color-light-gray text-xl"
+          className="w-full rounded-lg border border-color-light-gray font-font-text text-xl"
           panelStyle={{ maxHeight: '300px', overflowY: 'auto' }}
           display="chip"
           onShow={() => setIsFocused(true)}
@@ -69,12 +64,10 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
           {...props}
         />
 
-        {/* Floating label */}
         <label
           htmlFor={id}
-          className={`absolute left-3 px-1 font-font-text transition-all bg-white pointer-events-none
+          className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text text-gray-500 transition-all dark:bg-slate-950 dark:text-gray-300
             ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-            text-gray-500
           `}
         >
           {placeholder || label}
@@ -82,25 +75,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
         </label>
       </div>
 
-      {/* Help icon positioned outside */}
-      {helpText && (
-        <>
-          <QuestionMarkCircleIcon
-            id={`${id}-help`}
-            className="h-5 w-5 mt-3 text-gray-500 cursor-pointer shrink-0"
-            onClick={() => setVisible(true)}
-          />
-          <Dialog
-            header={t('common:help')}
-            visible={visible}
-            onHide={() => setVisible(false)}
-            dismissableMask
-            className="w-full md:w-3/4 xl:w-1/2"
-          >
-            <p>{helpText}</p>
-          </Dialog>
-        </>
-      )}
+      {helpText && <HelpTooltip text={helpText} className="mt-3 shrink-0" />}
     </div>
   )
 }

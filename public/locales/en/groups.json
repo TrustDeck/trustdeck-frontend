@@ -91,7 +91,7 @@
       "help": "Target probability that a random pseudonym can be generated without collision. Use a value between 0 and 1, for example 0.999 in English or 0,999 in German."
     },
     "consecutiveValueCounter": {
-      "label": "Consecutive start counter",
+      "label": "Consecutive numbering counter",
       "help": "Starting counter used only when the consecutive-number algorithm is selected. Other algorithms internally use 1."
     },
     "saltLength": {
@@ -142,7 +142,7 @@
     "scopeOtherProject": "Other project",
     "noGroupsInSection": "No groups in this section.",
     "selectGroupHint": "Select a group from the list or hierarchy to see its details.",
-    "detailSubtitle": "All available group attributes and flags are shown below. Missing values may be hidden because of permissions or not configured.",
+    "detailSubtitle": "All available group attributes are shown below. Missing values may be hidden because of missing permissions or not being configured.",
     "hierarchyTitle": "Group hierarchy",
     "hierarchySubtitle": "The hierarchy viewer is kept for understanding parent and child group relationships.",
     "createTitle": "Create group",
@@ -183,7 +183,7 @@
     "randomAlgorithmDesiredSuccessProbabilityInherited": "Desired success probability inherited",
     "multiplePsnAllowed": "Multiple pseudonyms allowed",
     "multiplePsnAllowedInherited": "Multiple pseudonyms setting inherited",
-    "consecutiveValueCounter": "Consecutive counter",
+    "consecutiveValueCounter": "Consecutive numbering counter",
     "pseudonymLength": "Pseudonym length",
     "pseudonymLengthInherited": "Pseudonym length inherited",
     "paddingCharacter": "Padding character",

@@ -5,13 +5,13 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowPathRoundedSquareIcon,
   EyeIcon,
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/react/24/outline'
 
 import Panel from '../../core/components/common/Panel'
+import InheritanceIndicator from '../../core/components/common/InheritanceIndicator'
 import Divider from '../../core/components/common/Divider'
 import ConfirmDialog from '../../core/components/common/ConfirmDialog'
 import PageHeader from '../../core/components/common/PageHeader'
@@ -103,13 +103,36 @@ function IconActionButton({
       type="button"
       aria-label={title}
       title={title}
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClick()
+      }}
       disabled={disabled}
       className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-950 ${colorClasses}`}
     >
       {children}
     </button>
   )
+}
+
+function findPathToLabel(
+  nodes: CustomTreeNode[],
+  label: string,
+  path: string[] = []
+): string[] | null {
+  for (const node of nodes) {
+    const currentPath = [...path, String(node.key)]
+    if (node.label === label) return currentPath
+    if (Array.isArray(node.children)) {
+      const childPath = findPathToLabel(
+        node.children as CustomTreeNode[],
+        label,
+        currentPath
+      )
+      if (childPath) return childPath
+    }
+  }
+  return null
 }
 
 function flattenTree(nodes: CustomTreeNode[]): CustomTreeNode[] {
@@ -212,11 +235,7 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-          (canUseDomainAction(
-            permissionAccess,
-            groupName,
-            'domain:update'
-          ) ||
+          (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
             canUseDomainAction(
               permissionAccess,
               groupName,
@@ -230,11 +249,7 @@ export default function GroupManager() {
     (groupName?: string) =>
       Boolean(
         groupName &&
-          canUseDomainAction(
-            permissionAccess,
-            groupName,
-            'domain:delete'
-          )
+          canUseDomainAction(permissionAccess, groupName, 'domain:delete')
       ),
     [permissionAccess]
   )
@@ -275,6 +290,7 @@ export default function GroupManager() {
         <div className="group relative inline-block">
           <button
             type="button"
+            data-group-tree-key={String(node.key)}
             className={`flex w-[180px] items-center justify-center overflow-hidden whitespace-nowrap text-ellipsis rounded-md border-2 px-4 py-2 text-center text-base transition-colors duration-200 ${buttonStyle}`}
           >
             <span className="font-bold">{shortLabel}</span>
@@ -370,10 +386,32 @@ export default function GroupManager() {
     if (justCreated) setJustCreated(false)
   }, [fetchGroups, justCreated, setJustCreated])
 
+  const revealGroupInHierarchy = useCallback(
+    (groupName: string) => {
+      const path = findPathToLabel(tree, groupName)
+      if (!path?.length) return
+
+      const selectedKey = path[path.length - 1]!
+      setSelectedNodeKey(selectedKey)
+      const nextExpanded = { ...useTreeStateStore.getState().expandedKeys }
+      path.slice(0, -1).forEach((key) => {
+        nextExpanded[key] = true
+      })
+      setExpandedKeys(nextExpanded)
+
+      window.requestAnimationFrame(() => {
+        const target = Array.from(
+          document.querySelectorAll<HTMLElement>('[data-group-tree-key]')
+        ).find((element) => element.dataset.groupTreeKey === selectedKey)
+        target?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      })
+    },
+    [setExpandedKeys, setSelectedNodeKey, tree]
+  )
+
   const selectGroup = useCallback(
     async (groupName: string, mode: ViewMode = 'details') => {
-      const node = findNodeByLabel(tree, groupName)
-      if (node) setSelectedNodeKey(node.key)
+      revealGroupInHierarchy(groupName)
 
       setSelectedGroupName(groupName)
       setViewMode(mode)
@@ -388,8 +426,12 @@ export default function GroupManager() {
         // Keep the reduced readable result when complete view is unavailable.
       }
     },
-    [groups, setGroupOption, setSelectedNodeKey, tree]
+    [groups, revealGroupInHierarchy, setGroupOption]
   )
+
+  useEffect(() => {
+    if (selectedGroupName) revealGroupInHierarchy(selectedGroupName)
+  }, [revealGroupInHierarchy, selectedGroupName])
 
   const handleTreeNodeClick = (nodeKey: string) => {
     const node = findNodeByKey(tree, nodeKey)
@@ -489,7 +531,9 @@ export default function GroupManager() {
           : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-200'
 
     return (
-      <span className={`rounded-full px-3 py-1 text-sm font-semibold ${className}`}>
+      <span
+        className={`rounded-full px-3 py-1 text-sm font-semibold ${className}`}
+      >
         {label}
       </span>
     )
@@ -499,7 +543,7 @@ export default function GroupManager() {
     if (items.length === 0) {
       return (
         <tr>
-          <td className="px-5 py-4 text-base text-gray-500" colSpan={5}>
+          <td className="px-5 py-4 text-lg text-gray-500" colSpan={5}>
             {t('groups:crud.noGroupsInSection')}
           </td>
         </tr>
@@ -509,20 +553,23 @@ export default function GroupManager() {
     return items.map((group) => (
       <tr
         key={group.name}
-        className={`border-t border-gray-200 text-base hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800 ${
+        role="button"
+        tabIndex={0}
+        onClick={() => selectGroup(group.name, 'details')}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            selectGroup(group.name, 'details')
+          }
+        }}
+        className={`cursor-pointer border-t border-gray-200 text-lg transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:border-slate-700 dark:hover:bg-slate-800 ${
           selectedGroupName === group.name
             ? 'bg-blue-50 dark:bg-blue-950/30'
             : ''
         }`}
       >
-        <td className="px-5 py-4 font-semibold text-blue-900 dark:text-blue-200">
-          <button
-            type="button"
-            className="text-left hover:underline"
-            onClick={() => selectGroup(group.name, 'details')}
-          >
-            {group.name}
-          </button>
+        <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-100">
+          {group.name}
         </td>
         <td className="px-5 py-4">{group.prefix ?? '-'}</td>
         <td className="px-5 py-4">{group.superDomainName ?? '-'}</td>
@@ -572,14 +619,56 @@ export default function GroupManager() {
     </>
   )
 
-  const formatValue = (value: unknown): string => {
+  const formatDateTime = (value: unknown): string => {
+    const text = String(value)
+    let date = new Date(text)
+
+    if (Number.isNaN(date.getTime())) {
+      const match = text.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/)
+      if (match) {
+        date = new Date(
+          Number(match[3]),
+          Number(match[1]) - 1,
+          Number(match[2])
+        )
+      }
+    }
+
+    if (Number.isNaN(date.getTime())) return text
+    return new Intl.DateTimeFormat(i18n.language || undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date)
+  }
+
+  const formatValue = (key: keyof Domain, value: unknown): string => {
+    if (key === 'validFrom' || key === 'validTo') {
+      return formatDateTime(value)
+    }
+    if (key === 'randomAlgorithmDesiredSuccessProbability') {
+      const probability = Number(value)
+      if (Number.isFinite(probability)) {
+        const percentage = new Intl.NumberFormat(i18n.language || undefined, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 20
+        }).format(probability * 100)
+        return `${percentage}%`
+      }
+    }
     if (typeof value === 'boolean') {
       return value ? t('common:yes') : t('common:no')
     }
     if (typeof value === 'number') {
-      return new Intl.NumberFormat(i18n.language || undefined).format(value)
+      return new Intl.NumberFormat(i18n.language || undefined, {
+        maximumFractionDigits: 20
+      }).format(value)
     }
-    if (typeof value === 'object' && value !== null) return JSON.stringify(value)
+    if (typeof value === 'object' && value !== null)
+      return JSON.stringify(value)
     return String(value)
   }
 
@@ -602,7 +691,7 @@ export default function GroupManager() {
       <div className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="td-section-title">{selectedGroup.name}</h2>
+            <h2 className="td-group-panel-title">{selectedGroup.name}</h2>
             <p className="td-section-subtitle">
               {t('groups:crud.detailSubtitle')}
             </p>
@@ -611,7 +700,7 @@ export default function GroupManager() {
         </div>
         <Divider />
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
-          <table className="min-w-full text-base">
+          <table className="min-w-full text-lg">
             <tbody>
               {visibleDetailFields.map(({ key, inheritedKey }) => {
                 const inherited = Boolean(
@@ -627,7 +716,7 @@ export default function GroupManager() {
                     }`}
                   >
                     <th
-                      className={`w-[42%] px-5 py-4 text-left text-base font-semibold ${
+                      className={`w-[42%] px-5 py-4 text-left text-lg font-semibold ${
                         inherited
                           ? 'text-blue-700 dark:text-blue-300'
                           : 'text-gray-700 dark:text-gray-200'
@@ -636,17 +725,15 @@ export default function GroupManager() {
                       <span className="inline-flex items-center gap-2">
                         {t(`groups:details.${key}`)}
                         {inherited && (
-                          <span
+                          <InheritanceIndicator
                             title={t('groups:inputs.inheritedReadonly')}
-                            aria-label={t('groups:inputs.inheritedReadonly')}
-                          >
-                            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-                          </span>
+                            className="text-lg"
+                          />
                         )}
                       </span>
                     </th>
-                    <td className="break-all px-5 py-4 text-lg text-gray-900 dark:text-gray-100">
-                      {formatValue(selectedGroup[key])}
+                    <td className="break-all px-5 py-4 text-xl text-gray-900 dark:text-gray-100">
+                      {formatValue(key, selectedGroup[key])}
                     </td>
                   </tr>
                 )
@@ -679,7 +766,9 @@ export default function GroupManager() {
         <div className="w-full space-y-8">
           <div className="space-y-4">
             <Panel className="w-full">
-              <h2 className="td-section-title">{t('groups:headers.left')}</h2>
+              <h2 className="td-group-panel-title">
+                {t('groups:headers.left')}
+              </h2>
               <Divider />
               {isLoading ? (
                 <div className="flex justify-center py-10">
@@ -687,7 +776,7 @@ export default function GroupManager() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
-                  <table className="w-full table-fixed text-base">
+                  <table className="w-full table-fixed text-lg">
                     <colgroup>
                       <col className="w-[24%]" />
                       <col className="w-[14%]" />
@@ -695,7 +784,7 @@ export default function GroupManager() {
                       <col className="w-[20%]" />
                       <col className="w-[20%]" />
                     </colgroup>
-                    <thead className="bg-gray-50 text-left text-base font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
+                    <thead className="bg-gray-50 text-left text-lg font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
                       <tr>
                         <th className="px-5 py-4">
                           {t('groups:crud.table.name')}
@@ -746,37 +835,9 @@ export default function GroupManager() {
 
           <div className="grid w-full gap-6 xl:grid-cols-[minmax(20rem,0.8fr)_minmax(0,1.7fr)]">
             <Panel className="w-full">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="td-section-title">
-                    {t('groups:crud.hierarchyTitle')}
-                  </h2>
-                  <p className="td-section-subtitle">
-                    {t('groups:crud.hierarchySubtitle')}
-                  </p>
-                </div>
-                {selectedGroupName && (
-                  <div className="flex gap-2">
-                    {canEditGroup(selectedGroupName) && (
-                      <IconActionButton
-                        title={t('groups:buttons.edit')}
-                        onClick={() => handleEdit(selectedGroupName)}
-                      >
-                        <PencilSquareIcon className="h-5 w-5" />
-                      </IconActionButton>
-                    )}
-                    {canDeleteGroup(selectedGroupName) && (
-                      <IconActionButton
-                        title={t('groups:buttons.delete')}
-                        onClick={() => handleDelete(selectedGroupName)}
-                        variant="danger"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </IconActionButton>
-                    )}
-                  </div>
-                )}
-              </div>
+              <h2 className="td-group-panel-title">
+                {t('groups:crud.hierarchyTitle')}
+              </h2>
               <Divider />
               <div className="overflow-x-auto">
                 <Tree

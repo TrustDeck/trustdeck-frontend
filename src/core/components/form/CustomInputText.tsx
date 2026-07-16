@@ -1,12 +1,10 @@
 import React, { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import HelpTooltip from '../common/HelpTooltip'
 
 type CustomInputTextProps = {
   id: string
-  value: string 
+  value: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   placeholder: string
   helpText?: string
@@ -23,23 +21,20 @@ const CustomInputText: React.FC<CustomInputTextProps> = ({
   placeholder,
   helpText,
   errorMessage = '',
+  onBlur,
   validate,
   className
 }) => {
-  const [visible, setVisible] = useState(false)
   const [isValid, setIsValid] = useState(true)
 
-  const { t } = useTranslation()
-
   const handleBlur = () => {
-    if (validate) {
-      setIsValid(validate(value))
-    }
+    if (validate) setIsValid(validate(value))
+    onBlur?.()
   }
 
   return (
     <div className="relative flex flex-col items-start">
-      <div className="relative flex items-center w-full">
+      <div className="relative flex w-full items-center">
         <InputText
           id={id}
           value={value}
@@ -47,26 +42,9 @@ const CustomInputText: React.FC<CustomInputTextProps> = ({
           placeholder={placeholder}
           onBlur={handleBlur}
           invalid={!isValid}
-          className={`flex-1 min-w-0 rounded-lg border-color-light-gray text-xl font-normal ${className}`}
+          className={`min-w-0 flex-1 rounded-lg border-color-light-gray text-xl font-normal ${className ?? ''}`}
         />
-        {helpText && (
-          <>
-            <QuestionMarkCircleIcon
-              id={`${id}-help`}
-              className="h-5 w-5 ml-2 text-gray-500 cursor-pointer"
-              onClick={() => setVisible(true)}
-            />
-            <Dialog
-              header={t('common:help')}
-              visible={visible}
-              onHide={() => setVisible(false)}
-              dismissableMask
-              className="w-full md:w-3/4 xl:w-1/2"
-            >
-              <p>{helpText}</p>
-            </Dialog>
-          </>
-        )}
+        {helpText && <HelpTooltip text={helpText} className="ml-2 shrink-0" />}
       </div>
       {!isValid && errorMessage && (
         <small id={`${id}-error`} className="p-error">

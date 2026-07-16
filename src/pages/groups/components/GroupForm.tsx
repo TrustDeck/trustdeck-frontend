@@ -1,11 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  ArrowPathRoundedSquareIcon,
-  ChevronDownIcon,
-  ChevronUpIcon
-} from '@heroicons/react/24/outline'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
@@ -23,7 +19,6 @@ import {
   defaultAlphabetForAlgorithm
 } from '../utils/algorithmOptions'
 import {
-  getAlgorithmOutputLength,
   isConsecutiveAlgorithm,
   isHashAlgorithm,
   isRandomnessAlgorithm
@@ -33,6 +28,7 @@ import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
 import useToastStore from '../../../core/stores/ToastStore'
+import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
@@ -104,29 +100,22 @@ function SectionCard({
 function InheritedField({
   inherited,
   title,
-  children
+  children,
+  iconClassName = 'right-3 top-1/2 -translate-y-1/2'
 }: {
   inherited: boolean
   title: string
   children: ReactNode
+  iconClassName?: string
 }) {
   return (
-    <div
-      className={`relative rounded-xl ${
-        inherited
-          ? 'bg-blue-50/70 p-2 ring-1 ring-blue-100 dark:bg-blue-950/30 dark:ring-blue-900'
-          : ''
-      }`}
-    >
+    <div className={`relative ${inherited ? 'td-inherited-field' : ''}`}>
       {children}
       {inherited && (
-        <span
+        <InheritanceIndicator
           title={title}
-          aria-label={title}
-          className="absolute right-3 top-1 z-20 text-blue-700 dark:text-blue-300"
-        >
-          <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-        </span>
+          className={`absolute z-30 text-lg ${iconClassName}`}
+        />
       )}
     </div>
   )
@@ -134,8 +123,6 @@ function InheritedField({
 
 export default function GroupForm() {
   const [examplePsn, setExamplePsn] = useState('')
-  const [parentGroupData, setParentGroupData] =
-    useState<GroupStoredAttributes | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const showToast = useToastStore((state) => state.show)
 
@@ -154,16 +141,6 @@ export default function GroupForm() {
 
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
-  const currentParentGroup = temporal.parentgroup
-
-  useEffect(() => {
-    if (!currentParentGroup || currentParentGroup === 'ROOT') {
-      setParentGroupData(null)
-      return
-    }
-    const parentNode = findNodeByLabel(tree, currentParentGroup)
-    setParentGroupData(parentNode?.data?.stored ?? null)
-  }, [tree, currentParentGroup])
 
   const markFieldOverridden = (flag: keyof GroupStoredAttributes) => {
     updateNodeAttribute(selectedNodeKey, flag, false)
@@ -296,7 +273,8 @@ export default function GroupForm() {
       if (selectedLabel !== candidate.label) {
         options.push({ label: candidate.label, value: candidate.label })
       }
-      if (Array.isArray(candidate.children)) candidate.children.forEach(traverse)
+      if (Array.isArray(candidate.children))
+        candidate.children.forEach(traverse)
     }
 
     traverse(tree)
@@ -306,7 +284,7 @@ export default function GroupForm() {
   useEffect(() => {
     if (!temporal) return
 
-    const randomLetter = (size: number, charSet: string) => {
+    const randomCharacters = (size: number, charSet: string) => {
       if (size <= 0 || !charSet) return ''
       let result = ''
       for (let index = 0; index < size; index += 1) {
@@ -320,19 +298,18 @@ export default function GroupForm() {
         ? (temporal.customAlphabetCharacters ?? '')
         : (characters[temporal.alphabet as AlphabetKey] ??
           characters.HEXADECIMAL_ALPHABET)
-    const psnLength = Number(temporal.psnlength) || 0
-    const prefix = temporal.prefix ?? ''
-    const paddingCharacter = temporal.paddingchar ?? ''
-    const fixedLength = getAlgorithmOutputLength(temporal.algorithm)
-    let bodyLength = psnLength
-    let padding = ''
+    const selectedLength = Math.max(Number(temporal.psnlength) || 0, 0)
+    const includesCheckDigit =
+      Boolean(temporal.checkdigit) &&
+      Boolean(temporal.lengthIncludesCheckDigit) &&
+      selectedLength > 0
+    const bodyLength = includesCheckDigit ? selectedLength - 1 : selectedLength
+    const body = randomCharacters(bodyLength, charSet)
+    const fakeCheckDigit = temporal.checkdigit
+      ? randomCharacters(1, charSet)
+      : ''
 
-    if (fixedLength !== null && fixedLength < psnLength) {
-      padding = paddingCharacter.repeat(psnLength - fixedLength)
-      bodyLength = fixedLength
-    }
-
-    setExamplePsn(`${prefix}${padding}${randomLetter(bodyLength, charSet)}`)
+    setExamplePsn(`${temporal.prefix ?? ''}${body}${fakeCheckDigit}`)
   }, [temporal])
 
   const changeParent = (parentValue: string) => {
@@ -359,20 +336,14 @@ export default function GroupForm() {
       return
     }
 
-    updateNodeAttribute(
-      selectedNodeKey,
-      'parentgroup',
-      parentName || 'ROOT'
-    )
+    updateNodeAttribute(selectedNodeKey, 'parentgroup', parentName || 'ROOT')
     moveNode(selectedNodeKey, parentName)
 
     if (parentName) {
       const parentNode = findNodeByLabel(tree, parentName)
       const parentData = parentNode?.data?.stored ?? null
-      setParentGroupData(parentData)
       applyParentDefaults(parentData)
     } else {
-      setParentGroupData(null)
       clearInheritedFlags()
     }
   }
@@ -428,6 +399,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.pseudonymLengthInherited)}
             title={inheritedTitle}
+            iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
             <CustomDropdown
               id="psnlength"
@@ -457,12 +429,6 @@ export default function GroupForm() {
             />
           </div>
         </div>
-        {parentGroupData && (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950/30 dark:text-blue-200">
-            <ArrowPathRoundedSquareIcon className="h-4 w-4" />
-            {t('groups:inputs.inheritedEditable')}
-          </p>
-        )}
       </SectionCard>
 
       <SectionCard
@@ -473,6 +439,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.validFromInherited)}
             title={inheritedTitle}
+            iconClassName="right-12 top-1/2 -translate-y-1/2"
           >
             <CustomCalendar
               id="startdate"
@@ -493,6 +460,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.validToInherited)}
             title={inheritedTitle}
+            iconClassName="right-12 top-1/2 -translate-y-1/2"
           >
             <CustomCalendar
               id="enddate"
@@ -538,6 +506,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.algorithmInherited)}
             title={inheritedTitle}
+            iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
             <CustomDropdown
               id="algo"
@@ -567,6 +536,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.alphabetInherited)}
             title={inheritedTitle}
+            iconClassName="right-[4.75rem] top-1/2 -translate-y-1/2"
           >
             <CustomDropdown
               id="alphabet"
@@ -591,6 +561,7 @@ export default function GroupForm() {
               <InheritedField
                 inherited={Boolean(temporal.alphabetInherited)}
                 title={inheritedTitle}
+                iconClassName="right-10 top-1/2 -translate-y-1/2"
               >
                 <CustomFloatLabel
                   id="customAlphabetCharacters"
@@ -617,6 +588,7 @@ export default function GroupForm() {
           <InheritedField
             inherited={Boolean(temporal.randomAlgorithmDesiredSizeInherited)}
             title={inheritedTitle}
+            iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
             <CustomFloatLabel
               id="maxnumpsn"
@@ -643,12 +615,11 @@ export default function GroupForm() {
               temporal.randomAlgorithmDesiredSuccessProbabilityInherited
             )}
             title={inheritedTitle}
+            iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
             <CustomFloatLabel
               id="randomAlgorithmDesiredSuccessProbability"
-              value={
-                temporal.randomAlgorithmDesiredSuccessProbability ?? ''
-              }
+              value={temporal.randomAlgorithmDesiredSuccessProbability ?? ''}
               onChange={(event) => {
                 updateNodeAttribute(
                   selectedNodeKey,
@@ -740,42 +711,33 @@ export default function GroupForm() {
               />
 
               {!isRandomnessAlgorithm(temporal.algorithm) && (
-                <InheritedField
-                  inherited={Boolean(temporal.paddingCharacterInherited)}
-                  title={inheritedTitle}
-                >
-                  <CustomFloatLabel
-                    id="paddingCharacter"
-                    placeholder={t('groups:inputs.paddingchar.label')}
-                    value={(temporal.paddingchar ?? '').slice(0, 1)}
-                    onChange={(event) => {
-                      updateNodeAttribute(
-                        selectedNodeKey,
-                        'paddingchar',
-                        event.target.value.slice(0, 1)
-                      )
-                      markFieldOverridden('paddingCharacterInherited')
-                    }}
-                  />
-                </InheritedField>
+                <div className="md:col-span-2">
+                  <InheritedField
+                    inherited={Boolean(temporal.paddingCharacterInherited)}
+                    title={inheritedTitle}
+                    iconClassName="right-3 top-1/2 -translate-y-1/2"
+                  >
+                    <CustomFloatLabel
+                      id="paddingCharacter"
+                      placeholder={t('groups:inputs.paddingchar.label')}
+                      value={(temporal.paddingchar ?? '').slice(0, 1)}
+                      onChange={(event) => {
+                        updateNodeAttribute(
+                          selectedNodeKey,
+                          'paddingchar',
+                          event.target.value.slice(0, 1)
+                        )
+                        markFieldOverridden('paddingCharacterInherited')
+                      }}
+                    />
+                  </InheritedField>
+                </div>
               )}
 
               <InheritedField
-                inherited={Boolean(temporal.multiplePsnAllowedInherited)}
-                title={inheritedTitle}
-              >
-                <RockerToggle
-                  label={t('groups:inputs.multiplepsn.label')}
-                  value={Boolean(temporal.multiplepsn)}
-                  onChange={(value) => {
-                    updateNodeAttribute(selectedNodeKey, 'multiplepsn', value)
-                    markFieldOverridden('multiplePsnAllowedInherited')
-                  }}
-                />
-              </InheritedField>
-              <InheritedField
                 inherited={Boolean(temporal.addCheckDigitInherited)}
                 title={inheritedTitle}
+                iconClassName="right-3 top-3"
               >
                 <RockerToggle
                   label={t('groups:inputs.checkdigit.label')}
@@ -789,6 +751,7 @@ export default function GroupForm() {
               <InheritedField
                 inherited={Boolean(temporal.lengthIncludesCheckDigitInherited)}
                 title={inheritedTitle}
+                iconClassName="right-3 top-3"
               >
                 <RockerToggle
                   label={t('groups:inputs.lengthIncludesCheckDigit.label')}
@@ -803,11 +766,11 @@ export default function GroupForm() {
                   }}
                 />
               </InheritedField>
+
               <InheritedField
-                inherited={Boolean(
-                  temporal.enforceStartDateValidityInherited
-                )}
+                inherited={Boolean(temporal.enforceStartDateValidityInherited)}
                 title={inheritedTitle}
+                iconClassName="right-3 top-3"
               >
                 <RockerToggle
                   label={t('groups:inputs.enforceStartDateValidity.label')}
@@ -818,15 +781,14 @@ export default function GroupForm() {
                       'enforceStartDateValidity',
                       value
                     )
-                    markFieldOverridden(
-                      'enforceStartDateValidityInherited'
-                    )
+                    markFieldOverridden('enforceStartDateValidityInherited')
                   }}
                 />
               </InheritedField>
               <InheritedField
                 inherited={Boolean(temporal.enforceEndDateValidityInherited)}
                 title={inheritedTitle}
+                iconClassName="right-3 top-3"
               >
                 <RockerToggle
                   label={t('groups:inputs.enforceEndDateValidity.label')}
@@ -841,6 +803,23 @@ export default function GroupForm() {
                   }}
                 />
               </InheritedField>
+
+              <div className="md:col-span-2">
+                <InheritedField
+                  inherited={Boolean(temporal.multiplePsnAllowedInherited)}
+                  title={inheritedTitle}
+                  iconClassName="right-3 top-3"
+                >
+                  <RockerToggle
+                    label={t('groups:inputs.multiplepsn.label')}
+                    value={Boolean(temporal.multiplepsn)}
+                    onChange={(value) => {
+                      updateNodeAttribute(selectedNodeKey, 'multiplepsn', value)
+                      markFieldOverridden('multiplePsnAllowedInherited')
+                    }}
+                  />
+                </InheritedField>
+              </div>
             </div>
           </div>
         )}
@@ -859,9 +838,7 @@ function formatLocalizedInteger(
 ) {
   if (value === undefined || value === null || value === '') return ''
   const numberValue =
-    typeof value === 'number'
-      ? value
-      : Number(String(value).replace(/\D/g, ''))
+    typeof value === 'number' ? value : Number(String(value).replace(/\D/g, ''))
   return Number.isNaN(numberValue)
     ? String(value)
     : numberValue.toLocaleString(locale || undefined)

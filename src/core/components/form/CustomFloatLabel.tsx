@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import HelpTooltip from '../common/HelpTooltip'
 
 type CustomFloatLabelProps = {
   id: string
@@ -30,6 +28,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   inputPlaceholder,
   helpText,
   helpIconInside = false,
+  onBlur,
   onKeyDown,
   errorMessage = '',
   validate,
@@ -38,11 +37,8 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   disabled,
   required
 }) => {
-  const [visible, setVisible] = useState(false)
   const [isValid, setIsValid] = useState(true)
   const [focused, setFocused] = useState(false)
-
-  const { t } = useTranslation()
 
   const handleBlur = () => {
     setFocused(false)
@@ -51,10 +47,7 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
     } else if (required) {
       setIsValid(String(value).trim().length > 0)
     }
-  }
-
-  const handleFocus = () => {
-    setFocused(true)
+    onBlur?.()
   }
 
   const showFloating = focused || String(value).length > 0 || !isValid
@@ -65,23 +58,22 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
         id={id}
         value={String(value)}
         onChange={onChange}
-        onFocus={handleFocus}
+        onFocus={() => setFocused(true)}
         placeholder={inputPlaceholder}
         onBlur={handleBlur}
         onKeyDown={onKeyDown}
         readOnly={readOnly}
         disabled={disabled}
-        className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
+        className={`h-[44px] w-full rounded-lg px-3 font-font-text text-xl font-normal ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
           !isValid ? 'border border-red-500' : 'border border-color-light-gray'
-        } ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
+        } ${disabled ? 'cursor-not-allowed text-gray-400' : ''}`}
       />
 
-      {/* Floating label or error inside input */}
       <label
         htmlFor={id}
-        className={`absolute left-3 px-1 transition-all font-font-text bg-white pointer-events-none
+        className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text transition-all dark:bg-slate-950
           ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'text-red-600 font-semibold' : 'text-gray-500'}
+          ${!isValid ? 'font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
         `}
       >
         {!isValid && errorMessage ? errorMessage : placeholder}
@@ -89,22 +81,12 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
       </label>
 
       {helpText && (
-        <>
-          <QuestionMarkCircleIcon
-            id={`${id}-help`}
-            className={`h-5 w-5 absolute top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer z-10 ${helpIconInside ? 'right-3' : '-right-8'}`}
-            onClick={() => setVisible(true)}
-          />
-          <Dialog
-            header={t('common:help')}
-            visible={visible}
-            onHide={() => setVisible(false)}
-            dismissableMask
-            className="w-full md:w-3/4 xl:w-1/2"
-          >
-            <p>{helpText}</p>
-          </Dialog>
-        </>
+        <HelpTooltip
+          text={helpText}
+          className={`absolute top-1/2 z-30 -translate-y-1/2 ${
+            helpIconInside ? 'right-3' : '-right-8'
+          }`}
+        />
       )}
     </div>
   )

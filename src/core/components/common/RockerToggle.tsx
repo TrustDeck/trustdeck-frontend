@@ -14,20 +14,26 @@ export const RockerToggle: React.FC<RockerProps> = ({
   const { t } = useTranslation()
 
   return (
-    <div>
-      <label className="block font-semibold mb-2">{label}</label>
-      <div className="flex rounded-md overflow-hidden border border-gray-300">
+    <div className="td-rocker-toggle rounded-lg border border-transparent p-3">
+      <label className="mb-2 block pr-7 font-semibold">{label}</label>
+      <div className="flex overflow-hidden rounded-md border border-gray-300 dark:border-slate-700">
         <button
-          className={`basis-1/2 py-3 font-semibold text-center ${
-            !value ? 'bg-color-blue text-white' : 'bg-white text-black'
+          type="button"
+          className={`basis-1/2 py-3 text-center font-semibold ${
+            !value
+              ? 'bg-color-blue text-white'
+              : 'bg-white text-black dark:bg-slate-950 dark:text-gray-100'
           }`}
           onClick={() => onChange?.(false)}
         >
           {t('common:no')}
         </button>
         <button
-          className={`basis-1/2 py-3 font-semibold text-center ${
-            value ? 'bg-color-blue text-white' : 'bg-white text-black'
+          type="button"
+          className={`basis-1/2 py-3 text-center font-semibold ${
+            value
+              ? 'bg-color-blue text-white'
+              : 'bg-white text-black dark:bg-slate-950 dark:text-gray-100'
           }`}
           onClick={() => onChange?.(true)}
         >

@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { InputNumber, InputNumberValueChangeEvent } from 'primereact/inputnumber'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import {
+  InputNumber,
+  InputNumberValueChangeEvent
+} from 'primereact/inputnumber'
+import HelpTooltip from '../common/HelpTooltip'
 
 type CustomInputNumberProps = {
   id: string
@@ -39,26 +40,19 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
   showButtons = false,
   step = 1,
   suffix,
-  prefix,
+  prefix
 }) => {
-  const [visible, setVisible] = useState(false)
   const [isValid, setIsValid] = useState(true)
 
-  const { t } = useTranslation()
-
   const handleBlur = () => {
-    if (validate) {
-      setIsValid(validate(value))
-    }
-    if (onBlur) {
-      onBlur()
-    }
+    if (validate) setIsValid(validate(value))
+    onBlur?.()
   }
 
   return (
     <div className="relative flex flex-col items-start">
-      <div className="relative flex items-center w-full">
-        <div className="flex-1 min-w-0">
+      <div className="relative flex w-full items-center">
+        <div className="min-w-0 flex-1">
           <InputNumber
             id={id}
             value={value}
@@ -77,24 +71,7 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
             className={`w-full ${className ?? ''}`}
           />
         </div>
-        {helpText && (
-          <>
-            <QuestionMarkCircleIcon
-              id={`${id}-help`}
-              className="h-5 w-5 ml-2 text-gray-500 cursor-pointer"
-              onClick={() => setVisible(true)}
-            />
-            <Dialog
-              header={t('common:help')}
-              visible={visible}
-              onHide={() => setVisible(false)}
-              dismissableMask
-              className="w-full md:w-3/4 xl:w-1/2"
-            >
-              <p>{helpText}</p>
-            </Dialog>
-          </>
-        )}
+        {helpText && <HelpTooltip text={helpText} className="ml-2 shrink-0" />}
       </div>
       {!isValid && errorMessage && (
         <small id={`${id}-error`} className="p-error">

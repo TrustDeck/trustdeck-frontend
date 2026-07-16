@@ -91,7 +91,7 @@
       "help": "Zielwahrscheinlichkeit, mit der ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0.999 auf Englisch oder 0,999 auf Deutsch."
     },
     "consecutiveValueCounter": {
-      "label": "Startzähler für fortlaufende Nummern",
+      "label": "Zähler für fortlaufende Nummerierung",
       "help": "Startzähler, der nur beim Algorithmus für fortlaufende Nummern verwendet wird. Andere Algorithmen verwenden intern 1."
     },
     "saltLength": {
@@ -142,7 +142,7 @@
     "scopeOtherProject": "Anderes Projekt",
     "noGroupsInSection": "Keine Gruppen in diesem Bereich.",
     "selectGroupHint": "Wähle eine Gruppe aus der Liste oder Hierarchie aus, um Details zu sehen.",
-    "detailSubtitle": "Unten werden alle verfügbaren Gruppenattribute und Flags angezeigt. Fehlende Werte können aufgrund fehlender Berechtigungen ausgeblendet oder nicht konfiguriert sein.",
+    "detailSubtitle": "Alle verfügbaren Gruppenattribute werden unten angezeigt. Fehlende Werte können wegen fehlender Berechtigungen ausgeblendet oder nicht konfiguriert sein.",
     "hierarchyTitle": "Gruppenhierarchie",
     "hierarchySubtitle": "Die Hierarchieansicht bleibt erhalten, um über- und untergeordnete Gruppen nachvollziehen zu können.",
     "createTitle": "Gruppe erstellen",
@@ -183,7 +183,7 @@
     "randomAlgorithmDesiredSuccessProbabilityInherited": "Erfolgswahrscheinlichkeit geerbt",
     "multiplePsnAllowed": "Mehrere Pseudonyme erlaubt",
     "multiplePsnAllowedInherited": "Einstellung mehrere Pseudonyme geerbt",
-    "consecutiveValueCounter": "Fortlaufender Zähler",
+    "consecutiveValueCounter": "Zähler für fortlaufende Nummerierung",
     "pseudonymLength": "Pseudonymlänge",
     "pseudonymLengthInherited": "Pseudonymlänge geerbt",
     "paddingCharacter": "Füllzeichen",

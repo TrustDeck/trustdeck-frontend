@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowLeftIcon,
-  ArrowPathRoundedSquareIcon,
   ArrowsUpDownIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -15,6 +14,7 @@ import { Dialog } from 'primereact/dialog'
 import Panel from '../../core/components/common/Panel'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '../../core/components/form/CustomDropdown'
+import InheritanceIndicator from '../../core/components/common/InheritanceIndicator'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import TrustDeck from '../../core/services/TrustDeck'
@@ -101,10 +101,15 @@ function isConsecutiveAlgorithm(algorithm?: string) {
 }
 
 function formatIntegerForLocale(locale: string | undefined, value: number) {
-  return new Intl.NumberFormat(locale || undefined, { maximumFractionDigits: 0 }).format(value)
+  return new Intl.NumberFormat(locale || undefined, {
+    maximumFractionDigits: 0
+  }).format(value)
 }
 
-function formatIntegerInputForLocale(locale: string | undefined, value: string) {
+function formatIntegerInputForLocale(
+  locale: string | undefined,
+  value: string
+) {
   const digits = value.replace(/[^0-9]/g, '')
   if (!digits) return ''
 
@@ -841,13 +846,14 @@ export default function Builder({
   >({})
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
   const [showGroupAdvanced, setShowGroupAdvanced] = useState(false)
-  const [newGroupDraft, setNewGroupDraft] = useState<NewGroupDraft>(
-    defaultNewGroupDraft
-  )
+  const [newGroupDraft, setNewGroupDraft] =
+    useState<NewGroupDraft>(defaultNewGroupDraft)
   const [newGroupParentOptions, setNewGroupParentOptions] = useState<
     { label: string; value: string }[]
   >([])
-  const [newGroupInheritedFields, setNewGroupInheritedFields] = useState<string[]>([])
+  const [newGroupInheritedFields, setNewGroupInheritedFields] = useState<
+    string[]
+  >([])
   const [creatingGroup, setCreatingGroup] = useState(false)
   const desiredPoolSizePlaceholder = useMemo(
     () => formatIntegerForLocale(i18n.language, 1000000),
@@ -857,7 +863,6 @@ export default function Builder({
     () => formatDecimalForLocale(i18n.language, 0.99999998),
     [i18n.language]
   )
-
 
   useEffect(() => {
     setSaveTarget(scope)
@@ -967,7 +972,10 @@ export default function Builder({
     let active = true
     const handle = window.setTimeout(async () => {
       setGroupSearchLoading(true)
-      const localMatches = filterGroupOptions(allGroupOptions, associatedGroupName)
+      const localMatches = filterGroupOptions(
+        allGroupOptions,
+        associatedGroupName
+      )
       try {
         const query = associatedGroupName.trim() || '*'
         const domains = await TrustDeck.instance().searchReadableDomains(query)
@@ -994,7 +1002,8 @@ export default function Builder({
         i18n.language,
         current.randomAlgorithmDesiredSize
       )
-      if (formattedDesiredSize === current.randomAlgorithmDesiredSize) return current
+      if (formattedDesiredSize === current.randomAlgorithmDesiredSize)
+        return current
       return {
         ...current,
         randomAlgorithmDesiredSize: formattedDesiredSize
@@ -1004,7 +1013,9 @@ export default function Builder({
 
   const updateNewGroupDraft = (patch: Partial<NewGroupDraft>) => {
     setNewGroupDraft((current) => ({ ...current, ...patch }))
-    const touched = Object.keys(patch).filter((key) => key !== 'parentGroupName')
+    const touched = Object.keys(patch).filter(
+      (key) => key !== 'parentGroupName'
+    )
     if (touched.length > 0) {
       setNewGroupInheritedFields((current) =>
         current.filter((key) => !touched.includes(key))
@@ -1020,26 +1031,32 @@ export default function Builder({
     }
 
     try {
-      const parent = (await TrustDeck.instance().getDomain(parentGroupName)) as Domain
+      const parent = (await TrustDeck.instance().getDomain(
+        parentGroupName
+      )) as Domain
       const alphabetKey = getAlphabetKeyByCharacters(parent.alphabet)
       const inheritedPatch: Partial<NewGroupDraft> = {
         parentGroupName,
         pseudonymLength:
-          parent.pseudonymLength !== undefined && parent.pseudonymLength !== null
+          parent.pseudonymLength !== undefined &&
+          parent.pseudonymLength !== null
             ? String(parent.pseudonymLength)
             : '',
         algorithm: parent.algorithm ?? 'RANDOM_LET',
         alphabet: alphabetKey ?? CUSTOM_ALPHABET_VALUE,
-        customAlphabetCharacters: alphabetKey === null ? parent.alphabet ?? '' : '',
+        customAlphabetCharacters:
+          alphabetKey === null ? (parent.alphabet ?? '') : '',
         randomAlgorithmDesiredSize:
-          parent.randomAlgorithmDesiredSize !== undefined && parent.randomAlgorithmDesiredSize !== null
+          parent.randomAlgorithmDesiredSize !== undefined &&
+          parent.randomAlgorithmDesiredSize !== null
             ? formatIntegerInputForLocale(
                 i18n.language,
                 String(parent.randomAlgorithmDesiredSize)
               )
             : '',
         randomAlgorithmDesiredSuccessProbability:
-          parent.randomAlgorithmDesiredSuccessProbability !== undefined && parent.randomAlgorithmDesiredSuccessProbability !== null
+          parent.randomAlgorithmDesiredSuccessProbability !== undefined &&
+          parent.randomAlgorithmDesiredSuccessProbability !== null
             ? String(parent.randomAlgorithmDesiredSuccessProbability)
             : '',
         paddingCharacter: parent.paddingCharacter ?? '0',
@@ -1091,20 +1108,27 @@ export default function Builder({
     const name = newGroupDraft.name.trim()
     const prefix = newGroupDraft.prefix.trim()
     const pseudonymLength = Number(newGroupDraft.pseudonymLength)
-    const randomAlgorithmDesiredSize = newGroupDraft.randomAlgorithmDesiredSize.trim()
-      ? Number(newGroupDraft.randomAlgorithmDesiredSize.replace(/[^0-9]/g, ''))
-      : Number.NaN
+    const randomAlgorithmDesiredSize =
+      newGroupDraft.randomAlgorithmDesiredSize.trim()
+        ? Number(
+            newGroupDraft.randomAlgorithmDesiredSize.replace(/[^0-9]/g, '')
+          )
+        : Number.NaN
     const randomAlgorithmDesiredSuccessProbability = parseLocalizedDecimal(
       newGroupDraft.randomAlgorithmDesiredSuccessProbability
     )
-    const consecutiveValueCounter = isConsecutiveAlgorithm(newGroupDraft.algorithm)
+    const consecutiveValueCounter = isConsecutiveAlgorithm(
+      newGroupDraft.algorithm
+    )
       ? Number(newGroupDraft.consecutiveValueCounter)
       : 1
-    const saltLength = Number(newGroupDraft.saltLength || BACKEND_DEFAULT_SALT_LENGTH)
+    const saltLength = Number(
+      newGroupDraft.saltLength || BACKEND_DEFAULT_SALT_LENGTH
+    )
     const isCustomAlphabet = newGroupDraft.alphabet === CUSTOM_ALPHABET_VALUE
     const selectedAlphabet = isCustomAlphabet
       ? newGroupDraft.customAlphabetCharacters.trim()
-      : characters[newGroupDraft.alphabet] ?? newGroupDraft.alphabet
+      : (characters[newGroupDraft.alphabet] ?? newGroupDraft.alphabet)
 
     if (
       !name ||
@@ -1189,27 +1213,70 @@ export default function Builder({
         payloadField: string,
         value: unknown
       ) => {
-        if (!newGroupInheritedFields.includes(draftField) && value !== undefined) {
+        if (
+          !newGroupInheritedFields.includes(draftField) &&
+          value !== undefined
+        ) {
           createGroupPayload[payloadField] = value
         }
       }
 
-      addIfNotInherited('multiplePsnAllowed', 'multiplePsnAllowed', newGroupDraft.multiplePsnAllowed)
-      addIfNotInherited('paddingCharacter', 'paddingCharacter', newGroupDraft.paddingCharacter.slice(0, 1))
+      addIfNotInherited(
+        'multiplePsnAllowed',
+        'multiplePsnAllowed',
+        newGroupDraft.multiplePsnAllowed
+      )
+      addIfNotInherited(
+        'paddingCharacter',
+        'paddingCharacter',
+        newGroupDraft.paddingCharacter.slice(0, 1)
+      )
       addIfNotInherited('pseudonymLength', 'pseudonymLength', pseudonymLength)
-      addIfNotInherited('randomAlgorithmDesiredSize', 'randomAlgorithmDesiredSize', optionalNumber(randomAlgorithmDesiredSize))
+      addIfNotInherited(
+        'randomAlgorithmDesiredSize',
+        'randomAlgorithmDesiredSize',
+        optionalNumber(randomAlgorithmDesiredSize)
+      )
       addIfNotInherited(
         'randomAlgorithmDesiredSuccessProbability',
         'randomAlgorithmDesiredSuccessProbability',
         optionalNumber(randomAlgorithmDesiredSuccessProbability)
       )
-      addIfNotInherited('addCheckDigit', 'addCheckDigit', newGroupDraft.addCheckDigit)
-      addIfNotInherited('lengthIncludesCheckDigit', 'lengthIncludesCheckDigit', newGroupDraft.lengthIncludesCheckDigit)
-      addIfNotInherited('validFrom', 'validFrom', optionalString(newGroupDraft.validFrom))
-      addIfNotInherited('validTo', 'validTo', optionalString(newGroupDraft.validTo))
-      addIfNotInherited('validityTime', 'validityTime', optionalString(newGroupDraft.validityTime))
-      addIfNotInherited('enforceStartDateValidity', 'enforceStartDateValidity', newGroupDraft.enforceStartDateValidity)
-      addIfNotInherited('enforceEndDateValidity', 'enforceEndDateValidity', newGroupDraft.enforceEndDateValidity)
+      addIfNotInherited(
+        'addCheckDigit',
+        'addCheckDigit',
+        newGroupDraft.addCheckDigit
+      )
+      addIfNotInherited(
+        'lengthIncludesCheckDigit',
+        'lengthIncludesCheckDigit',
+        newGroupDraft.lengthIncludesCheckDigit
+      )
+      addIfNotInherited(
+        'validFrom',
+        'validFrom',
+        optionalString(newGroupDraft.validFrom)
+      )
+      addIfNotInherited(
+        'validTo',
+        'validTo',
+        optionalString(newGroupDraft.validTo)
+      )
+      addIfNotInherited(
+        'validityTime',
+        'validityTime',
+        optionalString(newGroupDraft.validityTime)
+      )
+      addIfNotInherited(
+        'enforceStartDateValidity',
+        'enforceStartDateValidity',
+        newGroupDraft.enforceStartDateValidity
+      )
+      addIfNotInherited(
+        'enforceEndDateValidity',
+        'enforceEndDateValidity',
+        newGroupDraft.enforceEndDateValidity
+      )
       addIfNotInherited('algorithm', 'algorithm', newGroupDraft.algorithm)
       addIfNotInherited('alphabet', 'alphabet', selectedAlphabet)
 
@@ -2259,8 +2326,14 @@ export default function Builder({
                     <ChevronRightIcon className="h-4 w-4" />
                   )}
                   {showGroupAdvanced
-                    ? t('groupCreate.advancedHide', 'Hide advanced configuration')
-                    : t('groupCreate.advancedShow', 'Show advanced configuration')}
+                    ? t(
+                        'groupCreate.advancedHide',
+                        'Hide advanced configuration'
+                      )
+                    : t(
+                        'groupCreate.advancedShow',
+                        'Show advanced configuration'
+                      )}
                 </button>
               </div>
               {showGroupAdvanced && (
@@ -2291,7 +2364,9 @@ export default function Builder({
                   <InputWithInfo
                     id="newGroupLength"
                     value={newGroupDraft.pseudonymLength}
-                    inherited={newGroupInheritedFields.includes('pseudonymLength')}
+                    inherited={newGroupInheritedFields.includes(
+                      'pseudonymLength'
+                    )}
                     label={t('groupCreate.pseudonymLength', 'Pseudonym length')}
                     info={t(
                       'groupCreateHelp.pseudonymLength',
@@ -2347,7 +2422,9 @@ export default function Builder({
                       <InputWithInfo
                         id="newGroupCustomAlphabet"
                         value={newGroupDraft.customAlphabetCharacters}
-                        inherited={newGroupInheritedFields.includes('customAlphabetCharacters')}
+                        inherited={newGroupInheritedFields.includes(
+                          'customAlphabetCharacters'
+                        )}
                         label={t(
                           'groupCreate.customAlphabetCharacters',
                           'Allowed characters'
@@ -2372,7 +2449,9 @@ export default function Builder({
                   <InputWithInfo
                     id="newGroupDesiredSize"
                     value={newGroupDraft.randomAlgorithmDesiredSize}
-                    inherited={newGroupInheritedFields.includes('randomAlgorithmDesiredSize')}
+                    inherited={newGroupInheritedFields.includes(
+                      'randomAlgorithmDesiredSize'
+                    )}
                     label={t(
                       'groupCreate.randomAlgorithmDesiredSize',
                       'Desired pseudonym pool size'
@@ -2394,8 +2473,12 @@ export default function Builder({
                   />
                   <InputWithInfo
                     id="newGroupDesiredSuccessProbability"
-                    value={newGroupDraft.randomAlgorithmDesiredSuccessProbability}
-                    inherited={newGroupInheritedFields.includes('randomAlgorithmDesiredSuccessProbability')}
+                    value={
+                      newGroupDraft.randomAlgorithmDesiredSuccessProbability
+                    }
+                    inherited={newGroupInheritedFields.includes(
+                      'randomAlgorithmDesiredSuccessProbability'
+                    )}
                     label={t(
                       'groupCreate.randomAlgorithmDesiredSuccessProbability',
                       'Desired generation success probability'
@@ -2416,7 +2499,9 @@ export default function Builder({
                     <InputWithInfo
                       id="newGroupConsecutiveCounter"
                       value={newGroupDraft.consecutiveValueCounter}
-                      inherited={newGroupInheritedFields.includes('consecutiveValueCounter')}
+                      inherited={newGroupInheritedFields.includes(
+                        'consecutiveValueCounter'
+                      )}
                       label={t(
                         'groupCreate.consecutiveValueCounter',
                         'Consecutive start counter'
@@ -2434,15 +2519,22 @@ export default function Builder({
                   <InputWithInfo
                     id="newGroupPadding"
                     value={newGroupDraft.paddingCharacter}
-                    inherited={newGroupInheritedFields.includes('paddingCharacter')}
-                    label={t('groupCreate.paddingCharacter', 'Padding character')}
+                    inherited={newGroupInheritedFields.includes(
+                      'paddingCharacter'
+                    )}
+                    label={t(
+                      'groupCreate.paddingCharacter',
+                      'Padding character'
+                    )}
                     info={t(
                       'groupCreateHelp.paddingCharacter',
                       'Single character used to pad shorter generated values up to the configured pseudonym length.'
                     )}
                     maxLength={1}
                     onChange={(value) =>
-                      updateNewGroupDraft({ paddingCharacter: value.slice(0, 1) })
+                      updateNewGroupDraft({
+                        paddingCharacter: value.slice(0, 1)
+                      })
                     }
                   />
                   <div className="md:col-span-2 grid gap-4 md:grid-cols-2">
@@ -2456,7 +2548,9 @@ export default function Builder({
                         'Optional start date and time for values created in this group. Leave empty to use the backend default or the parent group setting.'
                       )}
                       type="datetime-local"
-                      onChange={(value) => updateNewGroupDraft({ validFrom: value })}
+                      onChange={(value) =>
+                        updateNewGroupDraft({ validFrom: value })
+                      }
                     />
                     <InputWithInfo
                       id="newGroupValidTo"
@@ -2468,7 +2562,9 @@ export default function Builder({
                         'Optional end date and time for values created in this group. Leave empty to use the validity period or the parent group setting.'
                       )}
                       type="datetime-local"
-                      onChange={(value) => updateNewGroupDraft({ validTo: value })}
+                      onChange={(value) =>
+                        updateNewGroupDraft({ validTo: value })
+                      }
                     />
                   </div>
                   <InputWithInfo
@@ -2480,7 +2576,9 @@ export default function Builder({
                       'groupCreateHelp.validityTime',
                       'Optional backend validity period used to calculate the end date when no explicit valid-to date is entered. Examples: 3days, 1 day, 50 day, 7w, or 5 y. If a valid-to date is provided, the validity period is ignored.'
                     )}
-                    onChange={(value) => updateNewGroupDraft({ validityTime: value })}
+                    onChange={(value) =>
+                      updateNewGroupDraft({ validityTime: value })
+                    }
                   />
                   <InputWithInfo
                     id="newGroupSaltLength"
@@ -2493,7 +2591,9 @@ export default function Builder({
                     )}
                     placeholder={BACKEND_DEFAULT_SALT_LENGTH}
                     type="number"
-                    onChange={(value) => updateNewGroupDraft({ saltLength: value })}
+                    onChange={(value) =>
+                      updateNewGroupDraft({ saltLength: value })
+                    }
                   />
                   <div className="md:col-span-2">
                     <InputWithInfo
@@ -2511,9 +2611,14 @@ export default function Builder({
                   <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
                     <CheckboxWithInfo
                       id="newGroupMultiplePsn"
-                      inherited={newGroupInheritedFields.includes('multiplePsnAllowed')}
+                      inherited={newGroupInheritedFields.includes(
+                        'multiplePsnAllowed'
+                      )}
                       checked={newGroupDraft.multiplePsnAllowed}
-                      label={t('groupCreate.multiplePsnAllowed', 'Allow multiple pseudonyms')}
+                      label={t(
+                        'groupCreate.multiplePsnAllowed',
+                        'Allow multiple pseudonyms'
+                      )}
                       info={t(
                         'groupCreateHelp.multiplePsnAllowed',
                         'Allows the same identifier to receive more than one pseudonym in this group.'
@@ -2524,7 +2629,9 @@ export default function Builder({
                     />
                     <CheckboxWithInfo
                       id="newGroupCheckDigit"
-                      inherited={newGroupInheritedFields.includes('addCheckDigit')}
+                      inherited={newGroupInheritedFields.includes(
+                        'addCheckDigit'
+                      )}
                       checked={newGroupDraft.addCheckDigit}
                       label={t('groupCreate.addCheckDigit', 'Add check digit')}
                       info={t(
@@ -2537,7 +2644,9 @@ export default function Builder({
                     />
                     <CheckboxWithInfo
                       id="newGroupLengthIncludesCheckDigit"
-                      inherited={newGroupInheritedFields.includes('lengthIncludesCheckDigit')}
+                      inherited={newGroupInheritedFields.includes(
+                        'lengthIncludesCheckDigit'
+                      )}
                       checked={newGroupDraft.lengthIncludesCheckDigit}
                       label={t(
                         'groupCreate.lengthIncludesCheckDigit',
@@ -2548,12 +2657,16 @@ export default function Builder({
                         'When enabled, the check digit counts as part of the configured pseudonym length instead of being added on top.'
                       )}
                       onChange={(checked) =>
-                        updateNewGroupDraft({ lengthIncludesCheckDigit: checked })
+                        updateNewGroupDraft({
+                          lengthIncludesCheckDigit: checked
+                        })
                       }
                     />
                     <CheckboxWithInfo
                       id="newGroupEnforceStartDate"
-                      inherited={newGroupInheritedFields.includes('enforceStartDateValidity')}
+                      inherited={newGroupInheritedFields.includes(
+                        'enforceStartDateValidity'
+                      )}
                       checked={newGroupDraft.enforceStartDateValidity}
                       label={t(
                         'groupCreate.enforceStartDateValidity',
@@ -2564,12 +2677,16 @@ export default function Builder({
                         'Requires created values to start no earlier than this group allows.'
                       )}
                       onChange={(checked) =>
-                        updateNewGroupDraft({ enforceStartDateValidity: checked })
+                        updateNewGroupDraft({
+                          enforceStartDateValidity: checked
+                        })
                       }
                     />
                     <CheckboxWithInfo
                       id="newGroupEnforceEndDate"
-                      inherited={newGroupInheritedFields.includes('enforceEndDateValidity')}
+                      inherited={newGroupInheritedFields.includes(
+                        'enforceEndDateValidity'
+                      )}
                       checked={newGroupDraft.enforceEndDateValidity}
                       label={t(
                         'groupCreate.enforceEndDateValidity',
@@ -2589,9 +2706,14 @@ export default function Builder({
                       <textarea
                         className="min-h-24 w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
                         value={newGroupDraft.description}
-                        placeholder={t('groupCreate.groupDescription', 'Description')}
+                        placeholder={t(
+                          'groupCreate.groupDescription',
+                          'Description'
+                        )}
                         onChange={(event) =>
-                          updateNewGroupDraft({ description: event.target.value })
+                          updateNewGroupDraft({
+                            description: event.target.value
+                          })
                         }
                       />
                       <FieldInfo
@@ -2772,14 +2894,14 @@ function InputWithInfo({
       <label
         htmlFor={id}
         className={`absolute -top-2 left-3 inline-flex items-center gap-1 bg-white px-1 text-sm dark:bg-slate-950 ${
-          inherited ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-300'
+          inherited
+            ? 'text-blue-700 dark:text-blue-300'
+            : 'text-gray-500 dark:text-gray-300'
         }`}
       >
         {label}
         {inherited && (
-          <span title={inheritedTitle} aria-label={inheritedTitle}>
-            <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
-          </span>
+          <InheritanceIndicator title={inheritedTitle} className="text-base" />
         )}
       </label>
       <FieldInfo title={info} />
@@ -2830,13 +2952,10 @@ function DropdownWithInfo({
         className={inherited ? 'td-custom-dropdown--inherited' : ''}
       />
       {inherited && (
-        <span
+        <InheritanceIndicator
           title={inheritedTitle}
-          aria-label={inheritedTitle}
-          className="absolute right-[4.75rem] top-1/2 z-20 -translate-y-1/2 text-blue-700 dark:text-blue-300"
-        >
-          <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
-        </span>
+          className="absolute right-[4.75rem] top-1/2 z-20 -translate-y-1/2 text-base"
+        />
       )}
       <span
         title={info}
@@ -2847,7 +2966,6 @@ function DropdownWithInfo({
     </div>
   )
 }
-
 
 function CheckboxWithInfo({
   id,
@@ -2888,9 +3006,7 @@ function CheckboxWithInfo({
       />
       <span>{label}</span>
       {inherited && (
-        <span title={inheritedTitle} aria-label={inheritedTitle} className="text-blue-700 dark:text-blue-300">
-          <ArrowPathRoundedSquareIcon className="h-3.5 w-3.5" />
-        </span>
+        <InheritanceIndicator title={inheritedTitle} className="text-base" />
       )}
       <InfoIcon title={info} />
     </label>
@@ -2964,7 +3080,9 @@ function GroupSearchInput({
             }}
           >
             <PlusIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('groupCreate.openButtonShort', 'New group')}</span>
+            <span className="hidden sm:inline">
+              {t('groupCreate.openButtonShort', 'New group')}
+            </span>
           </button>
         )}
         <label

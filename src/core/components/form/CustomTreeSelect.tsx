@@ -66,8 +66,8 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
 
         <label
           htmlFor={id}
-          className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text text-gray-500 transition-all dark:bg-slate-950 dark:text-gray-300
-            ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+          className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
+            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
           `}
         >
           {placeholder || label}

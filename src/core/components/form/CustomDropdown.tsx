@@ -67,9 +67,9 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
         <label
           htmlFor={id}
-          className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text text-gray-500 transition-all dark:bg-slate-950 dark:text-gray-300
-            ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-            ${invalid ? 'font-semibold text-red-600' : ''}
+          className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
+            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+            ${invalid ? 'td-floating-label--error font-semibold text-red-600' : ''}
           `}
         >
           {placeholder}

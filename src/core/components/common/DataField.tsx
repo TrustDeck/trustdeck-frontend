@@ -25,7 +25,9 @@ export default function DataField({ id, value, label, className }: DataFieldProp
   const classes = `w-full rounded-lg border-color-light-gray text-xl font-normal ${className}`
   const stringValue = typeof value === 'number' ? value.toString() : value ?? ''
   return (
-    <FloatLabel className="mt-8 w-full">
+    <FloatLabel
+      className={`td-prime-float-label ${stringValue ? 'td-prime-float-label--active' : ''} mt-8 w-full`}
+    >
       <InputText
         id={id}
         value={stringValue}

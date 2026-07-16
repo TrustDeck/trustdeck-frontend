@@ -73,9 +73,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
 
       <label
         htmlFor={id}
-        className={`pointer-events-none absolute left-3 bg-white px-1 font-font-text transition-all dark:bg-slate-950
-          ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
+        className={`td-floating-label pointer-events-none absolute left-3 font-font-text transition-all
+          ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+          ${!isValid ? 'td-floating-label--error font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
         `}
       >
         {!isValid && errorMessage ? errorMessage : placeholder}

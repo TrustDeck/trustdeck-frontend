@@ -31,20 +31,23 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
   const [loading, setLoading] = useState(false)
   const [queryError, setQueryError] = useState('')
   const [groups, setGroups] = useState<any[]>([])
-  const [selectedDomain, setSelectedDomain] = useState<string>('')
   const initialDomainSet = useRef(false)
 
   const { selectedProject } = useProjectStore()
-  const { pseudonym, setPseudonym } = useSearchStore()
-  const { setResults } = usePseudonymStore()
+  const { pseudonym, setPseudonym, group, setGroup } = useSearchStore()
+  const { setResults, clearSelectedResult } = usePseudonymStore()
 
   useEffect(() => {
     initialDomainSet.current = false
     GroupService.getGroups()
       .then((data) => {
         setGroups(data ?? [])
-        if (!initialDomainSet.current && selectedProject?.abbreviation) {
-          setSelectedDomain(selectedProject.abbreviation)
+        if (
+          !initialDomainSet.current &&
+          !group &&
+          selectedProject?.abbreviation
+        ) {
+          setGroup(selectedProject.abbreviation)
           initialDomainSet.current = true
         }
       })
@@ -52,14 +55,14 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
         console.error('Failed to load searchable groups', error)
         setGroups([])
       })
-  }, [selectedProject?.abbreviation])
+  }, [group, selectedProject?.abbreviation, setGroup])
 
   const groupOptions = flattenGroupOptions(groups)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const normalizedQuery = pseudonym.trim()
-    const domain = selectedDomain || selectedProject?.abbreviation || ''
+    const domain = group || selectedProject?.abbreviation || ''
 
     if (!normalizedQuery) {
       setQueryError(t('queryRequired'))
@@ -69,6 +72,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
 
     setQueryError('')
     setLoading(true)
+    clearSelectedResult()
     try {
       const result = await PseudonymService.searchPseudonyms(
         domain,
@@ -103,10 +107,8 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
             </span>
             <CustomDropdown
               id="pseudonym-search-domain"
-              value={selectedDomain}
-              onChange={(event) =>
-                setSelectedDomain(String(event.value ?? ''))
-              }
+              value={group}
+              onChange={(event) => setGroup(String(event.value ?? ''))}
               options={groupOptions}
               className="w-full"
               filter
@@ -150,7 +152,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
 
       {inlineResults && (
         <InlinePseudonymResults
-          fallbackDomain={selectedDomain || selectedProject?.abbreviation || ''}
+          fallbackDomain={group || selectedProject?.abbreviation || ''}
         />
       )}
     </div>

@@ -368,24 +368,24 @@ export function InlinePseudonymResults({
     hasSearched,
     setResults,
     setPseudonymValue,
+    selectedResult,
+    selectResult,
+    clearSelectedResult,
     removeResult
   } = usePseudonymStore()
   const [pendingDelete, setPendingDelete] = useState<Pseudonym | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
-  const [selectedKey, setSelectedKey] = useState('')
-  const [selectedEditMode, setSelectedEditMode] = useState(false)
-
-  const makeKey = (result: Pseudonym) =>
-    `${result.domainName || fallbackDomain}:${result.psn}`
-
   const selectedPseudonym = useMemo(
     () =>
       results.find(
         (result) =>
-          `${result.domainName || fallbackDomain}:${result.psn}` === selectedKey
+          Boolean(selectedResult) &&
+          (result.domainName || fallbackDomain) ===
+            selectedResult?.domainName &&
+          result.psn === selectedResult?.psn
       ),
-    [fallbackDomain, results, selectedKey]
+    [fallbackDomain, results, selectedResult]
   )
 
   useEffect(() => {
@@ -400,10 +400,9 @@ export function InlinePseudonymResults({
       <InlinePseudonymDetail
         pseudonym={selectedPseudonym}
         fallbackDomain={fallbackDomain}
-        initialEditMode={selectedEditMode}
-        onClose={() => setSelectedKey('')}
+        initialEditMode={Boolean(selectedResult?.editMode)}
+        onClose={clearSelectedResult}
         onUpdated={(previousDomain, previousPseudonym, updated) => {
-          setSelectedEditMode(false)
           const normalized = {
             ...updated,
             domainName: updated.domainName || previousDomain
@@ -411,17 +410,22 @@ export function InlinePseudonymResults({
           setResults(
             results.map((result) => {
               const domain = result.domainName || fallbackDomain
-              return domain === previousDomain && result.psn === previousPseudonym
+              return domain === previousDomain &&
+                result.psn === previousPseudonym
                 ? normalized
                 : result
             })
           )
           setPseudonymValue(normalized)
-          setSelectedKey(makeKey(normalized))
+          selectResult(
+            normalized.domainName || previousDomain,
+            normalized.psn,
+            false
+          )
         }}
         onDeleted={(domain, pseudonym) => {
           removeResult(domain, pseudonym)
-          setSelectedKey('')
+          clearSelectedResult()
         }}
       />
     )
@@ -429,8 +433,7 @@ export function InlinePseudonymResults({
 
   const openResult = (result: Pseudonym, edit: boolean) => {
     setPseudonymValue(result)
-    setSelectedEditMode(edit)
-    setSelectedKey(makeKey(result))
+    selectResult(result.domainName || fallbackDomain, result.psn, edit)
   }
 
   const deleteResult = async () => {

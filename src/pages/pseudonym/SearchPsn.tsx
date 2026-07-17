@@ -11,7 +11,6 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 
 import Panel from '../../core/components/common/Panel'
 import PageHeader from '../../core/components/common/PageHeader'
@@ -26,6 +25,13 @@ import PseudonymMask from '../search/components/PseudonymMask'
 import SearchPseudonymService from '../search/services/PseudonymService'
 import usePseudonymStore from '../search/stores/PseudonymSearchResults'
 import useSearchResultsStore from '../search/stores/SearchResultsStore'
+import useSearchStore from '../search/stores/SearchStore'
+import useProjectStore from '../../core/stores/ProjectStore'
+import {
+  collectDisplayAttributes,
+  formatDisplayValue,
+  readDisplayValue
+} from '../search/utils/entityDisplay'
 import GroupService from '../groups/service/GroupService'
 import useGroupStore from './stores/GroupStore'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
@@ -116,14 +122,22 @@ function flattenEntityData(
 }
 
 export default function SearchPsn() {
-  const { results, clearResults: clearEntityResults } = useSearchResultsStore()
+  const {
+    results,
+    entityTypeName: searchedEntityTypeName,
+    clearResults: clearEntityResults
+  } = useSearchResultsStore()
   const { setStepperRef, previousStep } = useStepperControlStore()
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
   const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
-  const { t } = useTranslation()
-  const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
+  const entityDefinitions = useProjectStore((state) => state.entityAttributes)
+  const { setPseudonym: setPseudonymQuery, setGroup: setPseudonymGroup } =
+    useSearchStore()
   const {
     setPseudonymValue,
+    setResults: setPseudonymResults,
+    selectResult: selectPseudonymResult,
     clearResults: clearPseudonymResults
   } = usePseudonymStore()
 
@@ -139,10 +153,41 @@ export default function SearchPsn() {
   const [standaloneCreating, setStandaloneCreating] = useState(false)
 
   const localStepperRef = useRef<any | null>(null)
-  const viewedEntityFields = useMemo(
-    () => flattenEntityData(viewedEntity?.data ?? viewedEntity ?? {}),
-    [viewedEntity]
-  )
+  const searchPanelRef = useRef<HTMLDivElement | null>(null)
+  const viewedEntityFields = useMemo(() => {
+    if (!viewedEntity) return []
+
+    const typeName = String(
+      viewedEntity.entityTypeName ??
+        viewedEntity.typeName ??
+        viewedEntity.type ??
+        searchedEntityTypeName ??
+        ''
+    )
+    const definition = entityDefinitions.find(
+      (candidate) => candidate.name?.toLowerCase() === typeName.toLowerCase()
+    )
+    const schemaFields = collectDisplayAttributes(
+      definition?.typeDefinition?.attributes ?? [],
+      i18n.resolvedLanguage ?? i18n.language
+    )
+    const data = viewedEntity.data ?? viewedEntity
+
+    if (schemaFields.length > 0) {
+      return schemaFields.map((field) => ({
+        label: field.label,
+        value: formatDisplayValue(readDisplayValue(data, field.path))
+      }))
+    }
+
+    return flattenEntityData(data)
+  }, [
+    entityDefinitions,
+    i18n.language,
+    i18n.resolvedLanguage,
+    searchedEntityTypeName,
+    viewedEntity
+  ])
 
   useEffect(() => {
     setStepperRef(localStepperRef)
@@ -185,6 +230,35 @@ export default function SearchPsn() {
     setGenerationMode(null)
   }
 
+  const showCreatedPseudonym = async (
+    groupName: string,
+    pseudonymValue: string
+  ) => {
+    const pseudonymData = await SearchPseudonymService.searchPseudonym(
+      pseudonymValue,
+      groupName
+    )
+    if (!pseudonymData) return
+
+    const normalized = {
+      ...pseudonymData,
+      domainName: pseudonymData.domainName || groupName
+    }
+    setPseudonymQuery(normalized.psn)
+    setPseudonymGroup(normalized.domainName)
+    setPseudonymValue(normalized)
+    setPseudonymResults([normalized])
+    selectPseudonymResult(normalized.domainName, normalized.psn, false)
+    setGenerationMode(null)
+
+    window.requestAnimationFrame(() => {
+      searchPanelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    })
+  }
+
   async function handleEntityPseudonymCreate() {
     const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
     if (selectedGroupNames.length === 0) {
@@ -223,16 +297,7 @@ export default function SearchPsn() {
       if (pseudonyms.length > 0) {
         const firstPsn = pseudonyms[0]
         const firstGroup = selectedGroupNames[0]
-        const pseudonymData = await SearchPseudonymService.searchPseudonym(
-          firstPsn,
-          firstGroup
-        )
-        if (pseudonymData) setPseudonymValue(pseudonymData)
-        setGenerationMode(null)
-        navigate(
-          `/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`,
-          { state: { returnTo: '/pseudonym-management' } }
-        )
+        await showCreatedPseudonym(firstGroup, firstPsn)
       }
     } catch (error) {
       console.error('Error creating pseudonym for entity:', error)
@@ -286,16 +351,7 @@ export default function SearchPsn() {
       const createdPsn = firstCreatedPseudonymValue(response, requestedPsn)
 
       if (createdPsn) {
-        const pseudonymData = await SearchPseudonymService.searchPseudonym(
-          createdPsn,
-          selectedGroupName
-        )
-        if (pseudonymData) setPseudonymValue(pseudonymData)
-        setGenerationMode(null)
-        navigate(
-          `/search/pseudonym/${encodeURIComponent(selectedGroupName)}/${encodeURIComponent(createdPsn)}`,
-          { state: { returnTo: '/pseudonym-management' } }
-        )
+        await showCreatedPseudonym(selectedGroupName, createdPsn)
       }
     } catch (error) {
       console.error('Error creating standalone pseudonym:', error)
@@ -317,22 +373,24 @@ export default function SearchPsn() {
       />
 
       <div className="flex w-full flex-col gap-6">
-        <Panel noMaxWidth className="w-full !p-6">
-          <div className="mb-5 flex items-start gap-4">
-            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-color-blue dark:bg-blue-950/50 dark:text-blue-300">
-              <MagnifyingGlassIcon className="h-7 w-7" />
-            </span>
-            <div>
-              <h2 className="td-panel-title">
-                {t('pseudonyms:management.searchTitle')}
-              </h2>
-              <p className="td-section-subtitle mt-1">
-                {t('pseudonyms:management.searchDescription')}
-              </p>
+        <div ref={searchPanelRef}>
+          <Panel noMaxWidth className="w-full !p-6">
+            <div className="mb-5 flex items-start gap-4">
+              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-color-blue dark:bg-blue-950/50 dark:text-blue-300">
+                <MagnifyingGlassIcon className="h-7 w-7" />
+              </span>
+              <div>
+                <h2 className="td-panel-title">
+                  {t('pseudonyms:management.searchTitle')}
+                </h2>
+                <p className="td-section-subtitle mt-1">
+                  {t('pseudonyms:management.searchDescription')}
+                </p>
+              </div>
             </div>
-          </div>
-          <PseudonymMask inlineResults />
-        </Panel>
+            <PseudonymMask inlineResults />
+          </Panel>
+        </div>
 
         <Panel noMaxWidth className="w-full !p-6">
           <div className="mb-5 flex items-start gap-4">

@@ -772,9 +772,19 @@ export default function GroupManager() {
         <div className="w-full space-y-8">
           <div className="space-y-4">
             <Panel className="w-full">
-              <h2 className="td-group-panel-title">
-                {t('groups:headers.left')}
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="td-group-panel-title">
+                  {t('groups:headers.left')}
+                </h2>
+                {canCreateGroups && (
+                  <PrimaryButton
+                    label={t('groups:buttons.addGroups')}
+                    icon={<PlusIcon className="h-5 w-5" />}
+                    iconPos="left"
+                    onClick={handleNewGroup}
+                  />
+                )}
+              </div>
               <Divider />
               {isLoading ? (
                 <div className="flex justify-center py-10">
@@ -828,17 +838,6 @@ export default function GroupManager() {
                 </div>
               )}
             </Panel>
-
-            {canCreateGroups && (
-              <div className="flex justify-center">
-                <PrimaryButton
-                  label={t('groups:buttons.addGroups')}
-                  icon={<PlusIcon className="h-5 w-5" />}
-                  iconPos="left"
-                  onClick={handleNewGroup}
-                />
-              </div>
-            )}
           </div>
 
           <div className="grid w-full gap-6 xl:grid-cols-[minmax(20rem,0.8fr)_minmax(0,1.7fr)]">

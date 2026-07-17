@@ -17,7 +17,6 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
-import Divider from '../../../core/components/common/Divider'
 import useToastStore from '../../../core/stores/ToastStore'
 import { formatDateTime } from '../../../core/utils/date'
 import PseudonymTable from './PseudonymTable'
@@ -43,7 +42,10 @@ type InheritedField = Extract<
   'validFromInherited' | 'validToInherited'
 >
 
-function asFormValue(pseudonym: Pseudonym, fallbackDomain: string): PseudonymForm {
+function asFormValue(
+  pseudonym: Pseudonym,
+  fallbackDomain: string
+): PseudonymForm {
   return {
     domainName: pseudonym.domainName || fallbackDomain,
     psn: pseudonym.psn ?? '',
@@ -361,24 +363,19 @@ export default function InlinePseudonymDetail({
       </div>
 
       <div className="flex w-full justify-center px-5 py-5">
-        <div className="grid w-full max-w-[1120px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
+        <div className="grid w-full max-w-[1440px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <section className="rounded-xl border border-gray-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
             <h2 className="td-panel-title">{t('search:pseudonym.data')}</h2>
-            <Divider />
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {renderField(
-                'domainName',
-                t('search:pseudonym.group'),
-                undefined,
-                true
-              )}
-              {renderField(
-                'psn',
-                t('search:pseudonym.value'),
-                undefined,
-                false,
-                true
-              )}
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="md:col-span-2">
+                {renderField(
+                  'psn',
+                  t('search:pseudonym.value'),
+                  undefined,
+                  false,
+                  true
+                )}
+              </div>
               {renderField('identifier', t('search:pseudonym.id'))}
               {renderField('idType', t('search:pseudonym.idType'))}
               {renderField(
@@ -391,6 +388,14 @@ export default function InlinePseudonymDetail({
                 t('search:pseudonym.validTo'),
                 'validToInherited'
               )}
+              <div className="md:col-span-2">
+                {renderField(
+                  'domainName',
+                  t('search:pseudonym.group'),
+                  undefined,
+                  true
+                )}
+              </div>
             </div>
           </section>
 
@@ -398,8 +403,9 @@ export default function InlinePseudonymDetail({
             <h2 className="td-panel-title">
               {t('search:pseudonym.linkedPseudonyms')}
             </h2>
-            <Divider />
-            <PseudonymTable pseudonym={pseudonym} />
+            <div className="mt-4">
+              <PseudonymTable pseudonym={pseudonym} />
+            </div>
           </section>
         </div>
       </div>

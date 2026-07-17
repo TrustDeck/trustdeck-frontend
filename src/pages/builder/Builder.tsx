@@ -1578,7 +1578,7 @@ export default function Builder({
         </div>
 
         {config.privacyMode === 'pprl' && (
-          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 dark:border-blue-900/60 dark:bg-blue-950/20">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-950">
             <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               {t('linkageConfig.pprlSettings')}
             </h4>
@@ -1698,6 +1698,7 @@ export default function Builder({
             checked={config.autoLinkOnCreate}
             disabled={settingsDisabled}
             inherited={isEntityLinkageSettingInherited('autoLinkOnCreate')}
+            compact
             onChange={(checked) =>
               updateEntityLinkageConfig({ autoLinkOnCreate: checked })
             }
@@ -1731,10 +1732,10 @@ export default function Builder({
     const isCollapsed = collapsedLinkageKeys[attribute.key] ?? true
     const locked = readOnly || Boolean(attribute.locked)
     return (
-      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 text-left dark:border-blue-900/60 dark:bg-blue-950/30">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white text-left dark:border-slate-700 dark:bg-slate-950">
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-3 rounded-t-xl px-4 py-3 text-left hover:bg-blue-100/60 dark:hover:bg-blue-900/30"
+          className="flex w-full items-center justify-between gap-3 rounded-t-xl px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800"
           onClick={() =>
             setCollapsedLinkageKeys((current) => ({
               ...current,
@@ -1743,7 +1744,7 @@ export default function Builder({
           }
         >
           <span>
-            <span className="block font-semibold text-color-blue dark:text-blue-100">
+            <span className="block font-semibold text-gray-900 dark:text-gray-100">
               {t('linkageConfig.attributeTitle')}
             </span>
             <span className="mt-1 block text-sm font-normal text-gray-600 dark:text-gray-300">
@@ -1751,9 +1752,9 @@ export default function Builder({
             </span>
           </span>
           {isCollapsed ? (
-            <ChevronRightIcon className="h-5 w-5 flex-none text-color-blue dark:text-blue-100" />
+            <ChevronRightIcon className="h-5 w-5 flex-none text-gray-600 dark:text-gray-300" />
           ) : (
-            <ChevronDownIcon className="h-5 w-5 flex-none text-color-blue dark:text-blue-100" />
+            <ChevronDownIcon className="h-5 w-5 flex-none text-gray-600 dark:text-gray-300" />
           )}
         </button>
         {!isCollapsed && (
@@ -2319,18 +2320,21 @@ function FloatingTextInput({
 }) {
   return (
     <div>
-      <FieldLabel htmlFor={id} label={label} required={required} info={info} />
-      <input
-        id={id}
-        className={`h-[44px] w-full rounded-lg border px-3 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400 ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-slate-700'}`}
-        disabled={disabled}
-        value={value}
-        maxLength={maxLength}
-        placeholder={placeholder ?? ''}
-        onFocus={onFocus}
-        onBlur={onBlur}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      <FieldLabel htmlFor={id} label={label} required={required} />
+      <div className="relative">
+        <input
+          id={id}
+          className={`h-[44px] w-full rounded-lg border px-3 ${info ? 'pr-10' : ''} text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400 ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-slate-700'}`}
+          disabled={disabled}
+          value={value}
+          maxLength={maxLength}
+          placeholder={placeholder ?? ''}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        {info && <FieldInfo title={info} />}
+      </div>
       {error && (
         <p className="mt-1 text-xs text-red-600 dark:text-red-300">{error}</p>
       )}
@@ -2349,13 +2353,19 @@ function InfoIcon({ title }: { title: string }) {
   )
 }
 
-function FieldInfo({ title }: { title: string }) {
+function FieldInfo({
+  title,
+  className = 'right-2'
+}: {
+  title: string
+  className?: string
+}) {
   return (
     <span
       title={title}
       role="img"
       aria-label={title}
-      className="absolute right-2 top-1/2 z-10 -translate-y-1/2 cursor-help text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200"
+      className={`absolute top-1/2 z-10 -translate-y-1/2 cursor-help text-gray-500 hover:text-color-blue dark:text-gray-300 dark:hover:text-blue-200 ${className}`}
     >
       <InformationCircleIcon className="h-5 w-5" />
     </span>
@@ -2387,17 +2397,21 @@ function LabeledDropdown({
 }) {
   return (
     <div>
-      <FieldLabel htmlFor={id} label={label} required={required} info={info} />
-      <CustomDropdown
-        id={id}
-        value={value}
-        onChange={(event) => onChange(String(event.value ?? ''))}
-        options={options}
-        disabled={disabled}
-        placeholder=""
-        filter={filter}
-        filterPlaceholder={filterPlaceholder}
-      />
+      <FieldLabel htmlFor={id} label={label} required={required} />
+      <div className="relative">
+        <CustomDropdown
+          id={id}
+          value={value}
+          onChange={(event) => onChange(String(event.value ?? ''))}
+          options={options}
+          disabled={disabled}
+          placeholder=""
+          filter={filter}
+          filterPlaceholder={filterPlaceholder}
+          className={info ? 'td-dropdown-with-info' : ''}
+        />
+        {info && <FieldInfo title={info} className="right-2" />}
+      </div>
     </div>
   )
 }
@@ -2441,7 +2455,7 @@ function InputWithInfo({
 
   return (
     <div>
-      <FieldLabel htmlFor={id} label={label} info={info} />
+      <FieldLabel htmlFor={id} label={label} />
       <div className="relative">
         <input
           id={id}
@@ -2500,7 +2514,7 @@ function DropdownWithInfo({
 
   return (
     <div>
-      <FieldLabel htmlFor={id} label={label} info={info} />
+      <FieldLabel htmlFor={id} label={label} />
       <div
         className={`relative rounded-lg ${
           inherited
@@ -2515,14 +2529,15 @@ function DropdownWithInfo({
           options={options}
           placeholder=""
           disabled={disabled}
-          className={inherited ? 'td-custom-dropdown--inherited' : ''}
+          className={`${inherited ? 'td-custom-dropdown--inherited' : ''} td-dropdown-with-info`}
         />
         {inherited && (
           <InheritanceIndicator
             title={inheritedTitle}
-            className="absolute right-12 top-1/2 z-20 -translate-y-1/2 text-base"
+            className="absolute right-16 top-1/2 z-20 -translate-y-1/2 text-base"
           />
         )}
+        <FieldInfo title={info} className="right-2" />
       </div>
     </div>
   )
@@ -2535,7 +2550,8 @@ function ToggleWithInfo({
   checked,
   onChange,
   disabled = false,
-  inherited = false
+  inherited = false,
+  compact = false
 }: {
   id: string
   label: string
@@ -2544,6 +2560,7 @@ function ToggleWithInfo({
   onChange: (checked: boolean) => void
   disabled?: boolean
   inherited?: boolean
+  compact?: boolean
 }) {
   const { t } = useTranslation(['entityBuilder'])
   const inheritedTitle = t(
@@ -2553,7 +2570,9 @@ function ToggleWithInfo({
   return (
     <label
       htmlFor={id}
-      className={`relative flex min-h-[76px] cursor-pointer items-start gap-3 rounded-xl border p-3 pr-10 transition disabled:cursor-not-allowed ${
+      className={`relative flex cursor-pointer items-start gap-3 rounded-xl border pr-10 transition disabled:cursor-not-allowed ${
+        compact ? 'h-[70px] min-h-[70px] p-2.5' : 'min-h-[76px] p-3'
+      } ${
         inherited
           ? 'border-blue-300 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/30'
           : 'border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-950'
@@ -2571,7 +2590,9 @@ function ToggleWithInfo({
         <span className="block text-sm font-semibold text-gray-800 dark:text-gray-100">
           {label}
         </span>
-        <span className="mt-1 block text-sm text-gray-500 dark:text-gray-300">
+        <span
+          className={`${compact ? 'mt-0.5 line-clamp-1 text-xs' : 'mt-1 text-sm'} block text-gray-500 dark:text-gray-300`}
+        >
           {description}
         </span>
       </span>
@@ -2615,20 +2636,23 @@ function GroupSearchInput({
 
   return (
     <div className="relative">
-      <FieldLabel htmlFor={id} label={label} info={info} />
-      <input
-        id={id}
-        className="h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 text-base outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400"
-        value={value}
-        placeholder={placeholder}
-        disabled={disabled}
-        onFocus={() => !disabled && setOpen(true)}
-        onBlur={() => window.setTimeout(() => setOpen(false), 120)}
-        onChange={(event) => {
-          onChange(event.target.value)
-          setOpen(!disabled)
-        }}
-      />
+      <FieldLabel htmlFor={id} label={label} />
+      <div className="relative">
+        <input
+          id={id}
+          className={`h-[44px] w-full rounded-lg border border-gray-300 bg-white px-3 ${info ? 'pr-10' : ''} text-base outline-none disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400`}
+          value={value}
+          placeholder={placeholder}
+          disabled={disabled}
+          onFocus={() => !disabled && setOpen(true)}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onChange={(event) => {
+            onChange(event.target.value)
+            setOpen(!disabled)
+          }}
+        />
+        {info && <FieldInfo title={info} />}
+      </div>
       {hint && (
         <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-300">
           {hint}
@@ -2822,28 +2846,30 @@ function MultiCheck({
 }) {
   const { t } = useTranslation(['entityBuilder'])
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
-      <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-100">
+    <div>
+      <h5 className="mb-1.5 text-sm font-semibold text-gray-700 dark:text-gray-100">
         {title}
       </h5>
-      <div className="mt-2 space-y-1">
-        {values.map((value) => (
-          <label
-            key={value}
-            className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(value)}
-              disabled={disabled}
-              onChange={(event) => onChange(value, event.target.checked)}
-            />
-            <span className="min-w-0 flex-1 truncate">
-              {t(`${labelPrefix}.${value}`, readableOptionLabel(value))}
-            </span>
-            <InfoIcon title={t(`${helpPrefix}.${value}`, '')} />
-          </label>
-        ))}
+      <div className="rounded-lg border border-gray-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950">
+        <div className="space-y-1">
+          {values.map((value) => (
+            <label
+              key={value}
+              className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(value)}
+                disabled={disabled}
+                onChange={(event) => onChange(value, event.target.checked)}
+              />
+              <span className="min-w-0 flex-1 truncate">
+                {t(`${labelPrefix}.${value}`, readableOptionLabel(value))}
+              </span>
+              <InfoIcon title={t(`${helpPrefix}.${value}`, '')} />
+            </label>
+          ))}
+        </div>
       </div>
     </div>
   )

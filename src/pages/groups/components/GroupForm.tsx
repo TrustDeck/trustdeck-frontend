@@ -151,11 +151,28 @@ export default function GroupForm() {
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
   const normalizedAlgorithm = String(temporal.algorithm ?? '').toUpperCase()
-  const fixedRandomAlphabet = FIXED_RANDOM_ALGORITHMS.has(normalizedAlgorithm)
-    ? defaultAlphabetForAlgorithm(normalizedAlgorithm)
-    : null
+  const fixedRandomAlphabet =
+    FIXED_RANDOM_ALGORITHMS.has(normalizedAlgorithm) ||
+    isConsecutiveAlgorithm(normalizedAlgorithm)
+      ? defaultAlphabetForAlgorithm(normalizedAlgorithm)
+      : null
   const alphabetIsCompatible =
     !fixedRandomAlphabet || temporal.alphabet === fixedRandomAlphabet
+
+  useEffect(() => {
+    if (
+      isConsecutiveAlgorithm(temporal.algorithm) &&
+      temporal.alphabet !== 'NUMBERS_ONLY_ALPHABET'
+    ) {
+      updateNodeAttribute(selectedNodeKey, 'alphabet', 'NUMBERS_ONLY_ALPHABET')
+      setAlphabetSelectionError(false)
+    }
+  }, [
+    selectedNodeKey,
+    temporal.algorithm,
+    temporal.alphabet,
+    updateNodeAttribute
+  ])
 
   const markFieldOverridden = (flag: keyof GroupStoredAttributes) => {
     updateNodeAttribute(selectedNodeKey, flag, false)
@@ -588,9 +605,11 @@ export default function GroupForm() {
               id="alphabet"
               placeholder={t('groups:inputs.alphabet.label')}
               value={
-                isHashAlgorithm(temporal.algorithm)
-                  ? 'HEXADECIMAL_ALPHABET'
-                  : (temporal.alphabet ?? '')
+                isConsecutiveAlgorithm(temporal.algorithm)
+                  ? 'NUMBERS_ONLY_ALPHABET'
+                  : isHashAlgorithm(temporal.algorithm)
+                    ? 'HEXADECIMAL_ALPHABET'
+                    : (temporal.alphabet ?? '')
               }
               onChange={(event) => {
                 if (
@@ -608,7 +627,10 @@ export default function GroupForm() {
               helpText={t('groups:inputs.alphabet.help')}
               invalid={alphabetSelectionError || !alphabetIsCompatible}
               errorMessage={t('groups:inputs.alphabet.fixedAlgorithmError')}
-              disabled={isHashAlgorithm(temporal.algorithm)}
+              disabled={
+                isHashAlgorithm(temporal.algorithm) ||
+                isConsecutiveAlgorithm(temporal.algorithm)
+              }
             />
           </InheritedField>
 

@@ -22,7 +22,7 @@
   "entity": {
     "title": "Entität",
     "entityType": {
-      "title": "Entitäten-Typ:",
+      "title": "Entitätstyp",
       "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."
     },
     "person": {
@@ -203,5 +203,6 @@
   "trustDeckId": "TrustDeck-ID",
   "entityNotFoundById": "Für den Bezeichner {{id}} wurde kein Ergebnis gefunden.",
   "masterObjectIndex": "Master Object Index",
-  "genericId": "ID"
+  "genericId": "ID",
+  "searchQuery": "Suchanfrage"
 }

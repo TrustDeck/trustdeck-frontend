@@ -6,9 +6,7 @@ import { useTranslation } from 'react-i18next'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
-import validation from '../../../core/utils/validation'
 import { Dialog } from 'primereact/dialog'
 import GroupService from '../../groups/service/GroupService'
 import useProjectStore from '../../../core/stores/ProjectStore'
@@ -88,30 +86,38 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="my-4 gap-4 flex flex-col sm:flex-row sm:items-end">
+        {psn && (
+          <p className="mt-4 text-base text-gray-600 dark:text-gray-300">
+            {t('search:pseudonym.searchHint')}
+          </p>
+        )}
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-end">
           {groupOptions.length > 0 && (
-            <div className="w-full sm:w-48 shrink-0">
+            <label className="block w-full shrink-0 sm:w-64">
+              <span className="td-field-label block mb-1">
+                {t('search:group.title')}
+              </span>
               <CustomDropdown
                 id="pseudonym-search-domain"
                 value={selectedDomain}
-                onChange={(e) => setSelectedDomain(e.value ?? '')}
+                onChange={(e) => setSelectedDomain(String(e.value ?? ''))}
                 options={groupOptions}
-                placeholder={t('search:group.placeholder')}
                 className="w-full"
               />
-            </div>
+            </label>
           )}
-          <div className="flex-1 min-w-0">
-            {psn && <p className="mb-2">{t('search:pseudonym.searchHint')}</p>}
-            <CustomFloatLabel
+          <label className="block min-w-0 flex-1">
+            <span className="td-field-label block mb-1">
+              {t('search:searchQuery')}
+            </span>
+            <input
               id="pseudonym"
+              type="text"
               value={pseudonym}
-              onChange={(e) => setPseudonym(e.target.value)}
-              placeholder={t('search:pseudonym.placeholder')}
-              errorMessage={t('search:pseudonym.error')}
-              validate={validation.isValidPseudonym}
+              onChange={(event) => setPseudonym(event.target.value)}
+              className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
             />
-          </div>
+          </label>
           <PrimaryButton
             label={
               <span className="hidden sm:inline">{t('search:submit')}</span>

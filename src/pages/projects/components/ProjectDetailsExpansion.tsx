@@ -446,30 +446,36 @@ export default function ProjectDetailsExpansion({
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <CustomCalendar
-                  id={`project-start-${fieldIdSuffix}`}
-                  placeholder={t('settings:startDateTime')}
-                  value={projectForm.startDate}
-                  onChange={(event) =>
-                    setProjectForm((previous) => ({
-                      ...previous,
-                      startDate: event.value
-                    }))
-                  }
-                  showTime
-                />
-                <CustomCalendar
-                  id={`project-end-${fieldIdSuffix}`}
-                  placeholder={t('settings:endDateTime')}
-                  value={projectForm.endDate}
-                  onChange={(event) =>
-                    setProjectForm((previous) => ({
-                      ...previous,
-                      endDate: event.value
-                    }))
-                  }
-                  showTime
-                />
+                <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
+                  {t('settings:startDateTime')}
+                  <CustomCalendar
+                    id={`project-start-${fieldIdSuffix}`}
+                    value={projectForm.startDate}
+                    onChange={(event) =>
+                      setProjectForm((previous) => ({
+                        ...previous,
+                        startDate: event.value
+                      }))
+                    }
+                    className="mt-1"
+                    showTime
+                  />
+                </label>
+                <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
+                  {t('settings:endDateTime')}
+                  <CustomCalendar
+                    id={`project-end-${fieldIdSuffix}`}
+                    value={projectForm.endDate}
+                    onChange={(event) =>
+                      setProjectForm((previous) => ({
+                        ...previous,
+                        endDate: event.value
+                      }))
+                    }
+                    className="mt-1"
+                    showTime
+                  />
+                </label>
               </div>
 
               <label className="block text-base font-medium text-gray-700 dark:text-gray-200">

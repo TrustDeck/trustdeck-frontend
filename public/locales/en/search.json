@@ -21,7 +21,7 @@
   "entity": {
     "title": "Entity",
     "entityType": {
-      "title": "Type of entity:",
+      "title": "Type of entity",
       "help": "Choose what you want to search."
     },
     "person": {
@@ -203,5 +203,6 @@
   "trustDeckId": "TrustDeck ID",
   "entityNotFoundById": "No result was found for identifier {{id}}.",
   "masterObjectIndex": "Master Object Index",
-  "genericId": "ID"
+  "genericId": "ID",
+  "searchQuery": "Search query"
 }

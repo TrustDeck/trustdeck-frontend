@@ -6,7 +6,7 @@ type CustomCalendarProps = {
   id: string
   value: Date | null
   onChange?: (e: { value: Date | null }) => void
-  placeholder: string
+  placeholder?: string
   helpText?: string
   errorMessage?: string
   validate?: (value: Date | null) => boolean
@@ -47,6 +47,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     onChange?.({ value: event?.value ?? null })
   }
 
+  const floatingLabel = (placeholder ?? '').trim()
   const showFloating = focused || Boolean(value) || !isValid
 
   return (
@@ -71,16 +72,18 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
         showIcon
       />
 
-      <label
-        htmlFor={id}
-        className={`td-floating-label pointer-events-none absolute left-3 font-font-text transition-all
-          ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'td-floating-label--error font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
-        `}
-      >
-        {!isValid && errorMessage ? errorMessage : placeholder}
-        {required && <span className="ml-1">*</span>}
-      </label>
+      {floatingLabel && (
+        <label
+          htmlFor={id}
+          className={`td-floating-label pointer-events-none absolute left-3 font-font-text transition-all
+            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
+            ${!isValid ? 'td-floating-label--error font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
+          `}
+        >
+          {!isValid && errorMessage ? errorMessage : floatingLabel}
+          {required && <span className="ml-1">*</span>}
+        </label>
+      )}
 
       {helpText && (
         <HelpTooltip

@@ -3,12 +3,10 @@ import useSearchStore from '../stores/SearchStore'
 import useSearchResultsStore from '../stores/SearchResultsStore'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import Divider from '../../../core/components/common/Divider'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { Dialog } from 'primereact/dialog'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
 import PersonService from '../services/PersonService'
 import useProjectStore from '../../../core/stores/ProjectStore'
@@ -191,26 +189,40 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="mt-4">
-          <CustomDropdown
-            id="selectedType"
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            options={entityDropdownOptions}
-            placeholder={t('search:entity.entityType.title')}
-          />
-        </div>
+        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+          <label className="block w-full shrink-0 sm:w-64">
+            <span className="td-field-label block mb-1">
+              {t('search:entity.entityType.title')}
+            </span>
+            <CustomDropdown
+              id="selectedType"
+              value={selectedType}
+              onChange={(e) => setSelectedType(String(e.value ?? ''))}
+              options={entityDropdownOptions}
+              className="w-full"
+            />
+          </label>
 
-        <Divider />
-        <div className="relative my-4">
-          <CustomFloatLabel
-            id="quick"
-            value={quick}
-            onChange={(e) => setQuick(e.target.value)}
-            placeholder={t('search:entity.person.quick.placeholder')}
+          <label className="block min-w-0 flex-1">
+            <span className="td-field-label block mb-1">
+              {t('search:searchQuery')}
+            </span>
+            <input
+              id="quick"
+              type="text"
+              value={quick}
+              onChange={(event) => setQuick(event.target.value)}
+              className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
+            />
+          </label>
+
+          <PrimaryButton
+            label={<span className="hidden sm:inline">{t('search:submit')}</span>}
+            type="submit"
+            loading={loading}
+            icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
           />
         </div>
-        <Divider />
         {/* {selectedType === 'bioprobe' && (
           <div className="bioprobe-fields">
             <div className="form-grid">w
@@ -244,14 +256,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({ psn = false }) => {
         )}
 
         <Divider /> */}
-        <div className="flex flex-wrap justify-end gap-2 mt-4">
-          <PrimaryButton
-            label={t('search:submit')}
-            type="submit"
-            loading={loading}
-            icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
-          />
-        </div>
         <Dialog
           visible={showModal}
           onHide={() => setShowModal(false)}

@@ -65,5 +65,11 @@
   "projectIconAlt": "Project icon for {{name}}",
   "subgroups_one": "subgroup",
   "subgroups_other": "subgroups",
-  "subgroups": "subgroups"
+  "subgroups": "subgroups",
+  "createSubtitle": "Provide the required project information and optionally define its validity period.",
+  "startDateLabel": "Start date",
+  "endDateLabel": "End date",
+  "description": "Description",
+  "requiredProjectName": "Project name is required.",
+  "requiredProjectAbbreviation": "Project abbreviation is required."
 }

@@ -204,5 +204,11 @@
   "entityNotFoundById": "No result was found for identifier {{id}}.",
   "masterObjectIndex": "Master Object Index",
   "genericId": "ID",
-  "searchQuery": "Search query"
+  "searchQuery": "Search query",
+  "view": "View",
+  "actions": "Actions",
+  "entitySummary": "Entity data",
+  "queryRequired": "Enter a search query.",
+  "entityResultsDescription": "{{count}} matching entity result(s).",
+  "pseudonymResultsDescription": "{{count}} matching pseudonym result(s)."
 }

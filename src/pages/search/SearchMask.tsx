@@ -9,7 +9,7 @@ import PageHeader from '../../core/components/common/PageHeader'
 type SearchMode = 'entity' | 'pseudonym'
 
 export default function SearchMask({ psn = false }) {
-  const { t } = useTranslation()
+  const { t } = useTranslation('search')
   const [mode, setMode] = useState<SearchMode>('entity')
   const clearSearchInputs = useSearchStore((s) => s.clearSearchInputs)
 
@@ -27,7 +27,7 @@ export default function SearchMask({ psn = false }) {
   ) : (
     <div className="flex flex-col w-full">
       <div className="flex items-center gap-2 text-gray-700 text-lg font-medium">
-        {t('search:searchFor')}
+        {t('searchFor')}
         <span
           onClick={() => handleModeClick('entity')}
           className={`cursor-pointer px-3 py-1 rounded-md transition-colors ${
@@ -36,7 +36,7 @@ export default function SearchMask({ psn = false }) {
               : 'search-toggle-unselected text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
-          {t('search:anEntity')}
+          {t('anEntity')}
         </span>
         /
         <span
@@ -47,7 +47,7 @@ export default function SearchMask({ psn = false }) {
               : 'search-toggle-unselected text-gray-600 bg-gray-200 hover:bg-gray-300'
           }`}
         >
-          {t('search:aPseudonym')}
+          {t('aPseudonym')}
         </span>
       </div>
     </div>
@@ -57,13 +57,13 @@ export default function SearchMask({ psn = false }) {
     <div className={psn ? 'w-full' : 'td-page-shell'}>
       {!psn && (
         <PageHeader
-          title={t('search:title')}
-          description={t('search:subtitle')}
+          title={t('title')}
+          description={t('subtitle')}
         />
       )}
       <Panel title={titleContent} className="!w-full">
-        {mode === 'entity' && <EntityMask psn={psn} />}
-        {mode === 'pseudonym' && <PseudonymMask psn={psn} />}
+        {mode === 'entity' && <EntityMask psn={psn} inlineResults={!psn} />}
+        {mode === 'pseudonym' && <PseudonymMask psn={psn} inlineResults={!psn} />}
       </Panel>
     </div>
   )

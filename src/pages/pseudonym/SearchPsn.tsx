@@ -295,7 +295,7 @@ export default function SearchPsn() {
               </p>
             </div>
           </div>
-          <PseudonymMask />
+          <PseudonymMask inlineResults />
         </Panel>
 
         <Panel className="h-full !p-6">

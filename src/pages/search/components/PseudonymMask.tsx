@@ -1,152 +1,158 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useTranslation } from 'react-i18next'
+
+import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
+import CustomDropdown from '@component/form/CustomDropdown'
+import GroupService from '../../groups/service/GroupService'
+import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
 import usePseudonymStore from '../stores/PseudonymSearchResults'
 import PseudonymService from '../services/PseudonymService'
-import { useTranslation } from 'react-i18next'
-import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { useNavigate } from 'react-router-dom'
-import CustomDropdown from '@component/form/CustomDropdown'
-import { Dialog } from 'primereact/dialog'
-import GroupService from '../../groups/service/GroupService'
-import useProjectStore from '../../../core/stores/ProjectStore'
-
-/**
- * The `PseudonymMask` component allows users to search for a pseudonym.
- *
- * It maintains the loading state while the search request is in progress.
- * Upon submission, it calls the `PseudonymService.searchPseudonym` method to fetch the results
- * and navigates to the pseudonym details page if the search is successful.
- *
- * @returns {JSX.Element} The rendered `PseudonymMask` component.
- */
+import { InlinePseudonymResults } from './InlineSearchResults'
 
 interface PseudonymMaskProps {
   psn?: boolean
+  inlineResults?: boolean
 }
 
 function flattenGroupOptions(nodes: any[]): { label: string; value: string }[] {
-  return nodes.flatMap((n) => [
-    { label: n.label, value: n.label },
-    ...(n.children ? flattenGroupOptions(n.children) : [])
+  return nodes.flatMap((node) => [
+    { label: node.label, value: node.label },
+    ...(node.children ? flattenGroupOptions(node.children) : [])
   ])
 }
 
-const PseudonymMask: React.FC<PseudonymMaskProps> = ({ psn = false }) => {
-  const { t } = useTranslation()
+const PseudonymMask: React.FC<PseudonymMaskProps> = ({
+  psn = false,
+  inlineResults = false
+}) => {
+  const { t } = useTranslation('search')
   const [loading, setLoading] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const [queryError, setQueryError] = useState('')
   const [groups, setGroups] = useState<any[]>([])
   const [selectedDomain, setSelectedDomain] = useState<string>('')
   const initialDomainSet = useRef(false)
-  const navigate = useNavigate()
 
   const { selectedProject } = useProjectStore()
   const { pseudonym, setPseudonym } = useSearchStore()
-  const { setPseudonymValue } = usePseudonymStore()
+  const { setResults } = usePseudonymStore()
 
   useEffect(() => {
     initialDomainSet.current = false
-    GroupService.getGroups().then((data) => {
-      setGroups(data ?? [])
-      if (!initialDomainSet.current && selectedProject?.abbreviation) {
-        setSelectedDomain(selectedProject.abbreviation)
-        initialDomainSet.current = true
-      }
-    })
+    GroupService.getGroups()
+      .then((data) => {
+        setGroups(data ?? [])
+        if (!initialDomainSet.current && selectedProject?.abbreviation) {
+          setSelectedDomain(selectedProject.abbreviation)
+          initialDomainSet.current = true
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load searchable groups', error)
+        setGroups([])
+      })
   }, [selectedProject?.abbreviation])
 
   const groupOptions = flattenGroupOptions(groups)
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setShowModal(false)
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    const normalizedQuery = pseudonym.trim()
+    const domain = selectedDomain || selectedProject?.abbreviation || ''
 
-    const domain = selectedDomain || selectedProject?.abbreviation
+    if (!normalizedQuery) {
+      setQueryError(t('queryRequired'))
+      return
+    }
+    if (!domain) return
+
+    setQueryError('')
+    setLoading(true)
     try {
-      const result = await PseudonymService.searchPseudonym(pseudonym, domain)
-      if (result) {
-        setPseudonymValue(result)
-        navigate(
-          `/search/pseudonym/${encodeURIComponent(domain ?? '')}/${encodeURIComponent(pseudonym)}`,
-          { state: { returnTo: '/pseudonym-management' } }
-        )
-      } else {
-        setShowModal(true)
-      }
+      const result = await PseudonymService.searchPseudonyms(
+        domain,
+        normalizedQuery
+      )
+      setResults(
+        result.map((entry) => ({
+          ...entry,
+          domainName: entry.domainName || domain
+        }))
+      )
     } catch (error) {
-      console.error('Error during form submission:', error)
-      setShowModal(true)
+      console.error('Error during pseudonym search:', error)
+      setResults([])
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div>
+    <div className="w-full">
       <form onSubmit={handleSubmit} className="flex flex-col">
         {psn && (
           <p className="mt-4 text-base text-gray-600 dark:text-gray-300">
-            {t('search:pseudonym.searchHint')}
+            {t('pseudonym.searchHint')}
           </p>
         )}
         <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-end">
-          {groupOptions.length > 0 && (
-            <label className="block w-full shrink-0 sm:w-64">
-              <span className="td-field-label block mb-1">
-                {t('search:group.title')}
-              </span>
-              <CustomDropdown
-                id="pseudonym-search-domain"
-                value={selectedDomain}
-                onChange={(e) => setSelectedDomain(String(e.value ?? ''))}
-                options={groupOptions}
-                className="w-full"
-              />
-            </label>
-          )}
+          <label className="block w-full shrink-0 sm:w-64">
+            <span className="td-field-label mb-1 block">
+              {t('group.title')}
+            </span>
+            <CustomDropdown
+              id="pseudonym-search-domain"
+              value={selectedDomain}
+              onChange={(event) =>
+                setSelectedDomain(String(event.value ?? ''))
+              }
+              options={groupOptions}
+              className="w-full"
+              filter
+            />
+          </label>
+
           <label className="block min-w-0 flex-1">
-            <span className="td-field-label block mb-1">
-              {t('search:searchQuery')}
+            <span className="td-field-label mb-1 block">
+              {t('searchQuery')}
             </span>
             <input
               id="pseudonym"
               type="text"
               value={pseudonym}
-              onChange={(event) => setPseudonym(event.target.value)}
-              className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
+              onChange={(event) => {
+                setPseudonym(event.target.value)
+                if (queryError) setQueryError('')
+              }}
+              aria-invalid={Boolean(queryError)}
+              className={`h-[44px] w-full rounded-lg border bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:ring-1 dark:bg-slate-900 dark:text-gray-100 ${
+                queryError
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                  : 'border-color-light-gray focus:border-color-blue focus:ring-color-blue'
+              }`}
             />
+            {queryError && (
+              <span className="mt-1 block text-sm font-medium text-red-600">
+                {queryError}
+              </span>
+            )}
           </label>
+
           <PrimaryButton
-            label={
-              <span className="hidden sm:inline">{t('search:submit')}</span>
-            }
+            label={<span className="hidden sm:inline">{t('submit')}</span>}
             type="submit"
             loading={loading}
-            icon={<MagnifyingGlassIcon className="h-5 w-5 mr-1" />}
+            icon={<MagnifyingGlassIcon className="mr-1 h-5 w-5" />}
           />
         </div>
-        <Dialog
-          visible={showModal}
-          onHide={() => setShowModal(false)}
-          header={t('search:results')}
-          closable
-          dismissableMask
-          style={{ width: '600px', maxWidth: '90vw' }}
-          className="mx-auto"
-        >
-          <div className="flex flex-col gap-4">
-            <p className="text-base">{t('search:noResults')}</p>
-            <div className="flex justify-end">
-              <PrimaryButton
-                label={t('search:ok', 'Ok')}
-                onClick={() => setShowModal(false)}
-              />
-            </div>
-          </div>
-        </Dialog>
       </form>
+
+      {inlineResults && (
+        <InlinePseudonymResults
+          fallbackDomain={selectedDomain || selectedProject?.abbreviation || ''}
+        />
+      )}
     </div>
   )
 }

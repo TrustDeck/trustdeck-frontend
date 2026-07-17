@@ -65,5 +65,11 @@
   "projectIconAlt": "Projektsymbol für {{name}}",
   "subgroups_one": "Untergruppe",
   "subgroups_other": "Untergruppen",
-  "subgroups": "Untergruppen"
+  "subgroups": "Untergruppen",
+  "createSubtitle": "Geben Sie die erforderlichen Projektinformationen an und legen Sie optional den Gültigkeitszeitraum fest.",
+  "startDateLabel": "Startdatum",
+  "endDateLabel": "Enddatum",
+  "description": "Beschreibung",
+  "requiredProjectName": "Der Projektname ist erforderlich.",
+  "requiredProjectAbbreviation": "Das Projektkürzel ist erforderlich."
 }

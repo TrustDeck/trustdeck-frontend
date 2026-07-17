@@ -20,6 +20,8 @@ type CustomDropdownProps = {
   disabled?: boolean
   invalid?: boolean
   errorMessage?: string
+  filter?: boolean
+  filterPlaceholder?: string
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -36,6 +38,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   disabled,
   invalid = false,
   errorMessage,
+  filter = false,
+  filterPlaceholder,
   ...props
 }) => {
   const floatingLabel = (placeholder || label || '').trim()
@@ -53,6 +57,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           onChange={onChange}
           placeholder=""
           disabled={disabled}
+          filter={filter}
+          filterPlaceholder={filterPlaceholder}
           className={`flex h-[44px] w-full items-center rounded-lg border font-font-text text-xl font-normal ${
             invalid ? 'border-red-500' : 'border-color-light-gray'
           }`}

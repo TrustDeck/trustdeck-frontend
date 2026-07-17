@@ -33,5 +33,7 @@
     "title": "This page could not be displayed",
     "description": "Please reload the page. If the problem persists, check the browser console and backend permissions.",
     "fallbackMessage": "The page could not be rendered."
-  }
+  },
+  "view": "View",
+  "actions": "Actions"
 }

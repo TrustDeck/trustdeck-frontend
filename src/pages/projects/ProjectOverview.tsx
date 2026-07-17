@@ -17,6 +17,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 import {
   CachedUserAccess,
   canManageProject,
+  clearPermissionCache,
   getCurrentUserAccess
 } from '../../core/services/PermissionCache'
 import PageHeader from '../../core/components/common/PageHeader'
@@ -102,8 +103,13 @@ export default function ProjectOverview() {
     }
 
     TrustDeck.instance().setToken(accessToken)
+    // Synchronize token roles before evaluating project actions. This avoids a
+    // race after frontend redeploys where the permission cache was populated
+    // before the refreshed Keycloak roles reached the user store.
+    useUserStore.getState().setFromAccessToken(accessToken)
+    clearPermissionCache()
     setPermissionsReady(false)
-    getCurrentUserAccess(false)
+    getCurrentUserAccess(true)
       .then((access) => {
         if (!active) return
         setPermissionAccess(access)

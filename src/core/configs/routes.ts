@@ -2,7 +2,6 @@ import { FC, SVGProps } from 'react'
 import LoggedOut from '../../pages/general/LoggedOut'
 import Login from '../../pages/general/Login'
 import AuthCallback from '../../pages/general/AuthCallback'
-import ResultsMask from '../../pages/search/ResultsMask'
 import SearchMask from '../../pages/search/SearchMask'
 import SearchPsn from '../../pages/pseudonym/SearchPsn'
 import PreReg from '../../pages/identity/PreReg'
@@ -195,14 +194,6 @@ export const routes: RouteConfig[] = [
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 3
-  },
-  {
-    path: '/search/results',
-    titleKey: 'layout:menu.searchResults',
-    component: ResultsMask,
-    Icon: MagnifyingGlassIcon,
-    isProtected: true,
-    isSidebar: false
   },
   {
     path: '/search/pseudonym/:domainName/:pseudonymId',

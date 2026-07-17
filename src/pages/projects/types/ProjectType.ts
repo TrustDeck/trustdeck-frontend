@@ -21,8 +21,8 @@ export interface ProjectType {
   name: string;
   description?: string;
   abbreviation: string;
-  startDate: string; // ISO 8601 datetime string
-  endDate: string;   // ISO 8601 datetime string
+  startDate?: string; // ISO 8601 datetime string
+  endDate?: string;   // ISO 8601 datetime string
   entityTypes?: string[];
   statistics?: {
     firstPseudonymCreatedAt: string;

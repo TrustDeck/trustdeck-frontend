@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useLocation, useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import useSearchResultsStore from './stores/SearchResultsStore'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
@@ -27,10 +27,15 @@ const EntityDetails: React.FC = () => {
   const { entityId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const showToast = useToastStore((state) => state.show)
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const returnTo =
+    typeof (location.state as { returnTo?: unknown } | null)?.returnTo === 'string'
+      ? String((location.state as { returnTo?: string }).returnTo)
+      : '/search'
 
   const entity = useMemo(
     () => results.find((e) => e.trustdeckID === entityId),
@@ -188,7 +193,7 @@ const EntityDetails: React.FC = () => {
         detail: t('search:deleteSuccess'),
         life: 3000
       })
-      navigate('/search/results')
+      navigate(returnTo)
     } catch (error) {
       console.error(error)
       showToast({
@@ -211,7 +216,7 @@ const EntityDetails: React.FC = () => {
         <div className="flex-shrink-0">
           <PrimaryOutlinedButton
             label={<span className="hidden sm:inline">{t('search:back')}</span>}
-            onClick={() => navigate('/search/results')}
+            onClick={() => navigate(returnTo)}
             icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           />
         </div>

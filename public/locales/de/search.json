@@ -204,5 +204,11 @@
   "entityNotFoundById": "Für den Bezeichner {{id}} wurde kein Ergebnis gefunden.",
   "masterObjectIndex": "Master Object Index",
   "genericId": "ID",
-  "searchQuery": "Suchanfrage"
+  "searchQuery": "Suchanfrage",
+  "view": "Anzeigen",
+  "actions": "Aktionen",
+  "entitySummary": "Entitätsdaten",
+  "queryRequired": "Geben Sie eine Suchanfrage ein.",
+  "entityResultsDescription": "{{count}} passende Entitätsergebnisse.",
+  "pseudonymResultsDescription": "{{count}} passende Pseudonymergebnisse."
 }

@@ -48,6 +48,7 @@ type PseudonymInheritanceField = Extract<
 
 type PseudonymLocationState = {
   returnTo?: string
+  edit?: boolean
 } | null
 
 function asFormValue(
@@ -127,6 +128,7 @@ const PseudonymDetails: React.FC = () => {
   const locationState = location.state as PseudonymLocationState
   const returnTo =
     typeof locationState?.returnTo === 'string' ? locationState.returnTo : ''
+  const openInEditMode = Boolean(locationState?.edit)
   const currentPseudonym = pseudonymValue ?? null
   const requestDomain =
     currentPseudonym?.domainName || domainName || formData.domainName
@@ -134,6 +136,11 @@ const PseudonymDetails: React.FC = () => {
     'search:pseudonym.inheritedTooltip',
     'Inherited from the group configuration.'
   )
+
+
+  useEffect(() => {
+    if (openInEditMode) setEditMode(true)
+  }, [openInEditMode])
 
   useEffect(() => {
     const needsFetch =

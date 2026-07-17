@@ -27,7 +27,12 @@ let pending: Promise<CachedUserAccess> | null = null
 
 function currentUserKey() {
   const user = useUserStore.getState()
-  return user.username || user.email || user.fullname || 'anonymous'
+  const identity = user.username || user.email || user.fullname || 'anonymous'
+  const roleSignature = [...(user.roles ?? [])]
+    .map((role) => normalize(role))
+    .sort()
+    .join('|')
+  return `${identity}::${roleSignature}`
 }
 
 function normalize(value: unknown) {

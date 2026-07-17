@@ -22,6 +22,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 import useToastStore from '../../core/stores/ToastStore'
 import TrustDeck, {
   EntityTypePayload,
+  RecordLinkageCandidate,
   TrustDeckHttpError
 } from '../../core/services/TrustDeck'
 import DynamicEntity from '../search/components/DynamicEntity'
@@ -109,6 +110,19 @@ function entityId(entity: EntityInstance | null | undefined) {
       entity.data?.id ??
       ''
   )
+}
+
+function parseRecordLinkageCandidates(body: string): RecordLinkageCandidate[] {
+  try {
+    const parsed = JSON.parse(body)
+    return Array.isArray(parsed)
+      ? parsed.filter((candidate): candidate is RecordLinkageCandidate =>
+          Boolean(candidate?.entityInstance)
+        )
+      : []
+  } catch {
+    return []
+  }
 }
 
 function permissionActionValue(permission: Record<string, any>) {
@@ -612,6 +626,11 @@ export default function PreReg() {
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedInstance, setSelectedInstance] =
     useState<EntityInstance | null>(null)
+  const [linkageCandidates, setLinkageCandidates] = useState<
+    RecordLinkageCandidate[]
+  >([])
+  const [selectedLinkageCandidate, setSelectedLinkageCandidate] =
+    useState<RecordLinkageCandidate | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -931,6 +950,8 @@ export default function PreReg() {
     setInstances([])
     setHasSearchedInstances(false)
     setSelectedInstance(null)
+    setLinkageCandidates([])
+    setSelectedLinkageCandidate(null)
     setQuery('')
   }, [selectedTypeName])
 
@@ -947,6 +968,8 @@ export default function PreReg() {
     }
     setModalMode('create')
     setSelectedInstance(null)
+    setLinkageCandidates([])
+    setSelectedLinkageCandidate(null)
     setFormData(buildInitialEntityData(selectedSchemaAttributes))
     setModalOpen(true)
   }
@@ -993,10 +1016,16 @@ export default function PreReg() {
   const closeModal = () => {
     if (saving) return
     setModalOpen(false)
+    setLinkageCandidates([])
+    setSelectedLinkageCandidate(null)
   }
 
   const handleFieldChange = (path: Array<string | number>, value: any) => {
     setFormData((prev) => setValueAtPath(prev, path, value))
+    if (modalMode === 'create' && linkageCandidates.length > 0) {
+      setLinkageCandidates([])
+      setSelectedLinkageCandidate(null)
+    }
   }
 
   const handleSave = async () => {
@@ -1052,25 +1081,29 @@ export default function PreReg() {
         : dataForValidation
 
       if (modalMode === 'create') {
-        const created = await TrustDeck.instance().postEntity(
+        const creationResult = await TrustDeck.instance().postEntityWithResult(
           selectedTypeName,
           {
             data: dataToSave
           }
         )
         const normalized = await attachPseudonymLinks(
-          normalizeInstance(created)
+          normalizeInstance(creationResult.entity)
         )
         setInstances((current) => [normalized, ...current])
         setHasSearchedInstances(true)
         setSelectedInstance(normalized)
+        setLinkageCandidates([])
+        setSelectedLinkageCandidate(null)
         setModalMode('view')
         setFormData(normalized.data ?? dataToSave)
         showToast({
           severity: 'success',
           summary: t('identity:crud.create'),
-          detail: t('identity:crud.createSuccess'),
-          life: 3000
+          detail: creationResult.created
+            ? t('identity:crud.createSuccess')
+            : t('identity:crud.existingEntityReturned'),
+          life: 4000
         })
       } else if (modalMode === 'edit' && selectedInstance) {
         const identifier = entityId(selectedInstance)
@@ -1098,6 +1131,26 @@ export default function PreReg() {
         })
       }
     } catch (error) {
+      if (
+        modalMode === 'create' &&
+        error instanceof TrustDeckHttpError &&
+        error.status === 409
+      ) {
+        const candidates = parseRecordLinkageCandidates(error.body)
+        if (candidates.length > 0) {
+          setLinkageCandidates(candidates)
+          showToast({
+            severity: 'warn',
+            summary: t('identity:crud.linkageConflictTitle'),
+            detail: t('identity:crud.linkageConflictText', {
+              count: candidates.length
+            }),
+            life: 6000
+          })
+          return
+        }
+      }
+
       if (error instanceof TrustDeckHttpError && error.status === 403) {
         markBackendDenied(
           modalMode === 'create' ? 'instance:create' : 'instance:update'
@@ -1247,9 +1300,6 @@ export default function PreReg() {
                       {t('identity:crud.typeName')}
                     </th>
                     <th className="px-4 py-3 font-semibold">
-                      {t('identity:crud.version')}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
                       {t('identity:crud.associatedGroup')}
                     </th>
                   </tr>
@@ -1269,18 +1319,7 @@ export default function PreReg() {
                         onClick={() => setSelectedTypeName(type.name)}
                       >
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span>{type.name}</span>
-                            {selected && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-950 dark:text-blue-200">
-                                <CheckIcon className="h-3.5 w-3.5" />
-                                {t('identity:crud.selectedBadge')}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                          {type.version || '-'}
+                          {type.name}
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                           {type.associatedDomainName || '-'}
@@ -1533,6 +1572,75 @@ export default function PreReg() {
             </p>
           )}
 
+          {modalMode === 'create' && linkageCandidates.length > 0 && (
+            <div className="mx-auto w-full max-w-[824px] rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
+              <h3 className="text-base font-semibold text-amber-950 dark:text-amber-100">
+                {t('identity:crud.linkageConflictTitle')}
+              </h3>
+              <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
+                {t('identity:crud.linkageConflictText', {
+                  count: linkageCandidates.length
+                })}
+              </p>
+              <div className="mt-4 overflow-x-auto rounded-lg border border-amber-200 bg-white dark:border-amber-900 dark:bg-slate-950">
+                <table className="w-full min-w-[680px] text-left text-sm">
+                  <thead className="bg-amber-100/70 text-amber-950 dark:bg-amber-950/60 dark:text-amber-100">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">
+                        {t('identity:crud.identifier')}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t('identity:crud.linkageScore')}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t('identity:crud.linkageStatus')}
+                      </th>
+                      <th className="px-3 py-2 font-semibold">
+                        {t('identity:crud.linkageMatchedOn')}
+                      </th>
+                      <th className="w-16 px-3 py-2" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-100 dark:divide-amber-950">
+                    {linkageCandidates.map((candidate, index) => (
+                      <tr
+                        key={`${entityId(candidate.entityInstance)}-${index}`}
+                      >
+                        <td className="px-3 py-2 font-mono">
+                          {entityId(candidate.entityInstance) || '—'}
+                        </td>
+                        <td className="px-3 py-2">
+                          {(
+                            Number(candidate.normalizedScore ?? 0) * 100
+                          ).toLocaleString(i18n.language, {
+                            maximumFractionDigits: 2
+                          })}
+                          %
+                        </td>
+                        <td className="px-3 py-2">
+                          {candidate.candidateStatus ?? '—'}
+                        </td>
+                        <td className="px-3 py-2">
+                          {(candidate.matchedOn ?? []).join(', ') || '—'}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <IconActionButton
+                            title={t('identity:crud.viewCandidate')}
+                            onClick={() =>
+                              setSelectedLinkageCandidate(candidate)
+                            }
+                          >
+                            <EyeIcon className="h-5 w-5" />
+                          </IconActionButton>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           <div className="mx-auto flex w-full max-w-[824px] justify-end gap-2">
             {modalMode === 'view' && selectedInstance && (
               <PrimaryButton
@@ -1577,6 +1685,41 @@ export default function PreReg() {
             />
           </div>
         </div>
+      </Dialog>
+
+      <Dialog
+        visible={Boolean(selectedLinkageCandidate)}
+        onHide={() => setSelectedLinkageCandidate(null)}
+        header={t('identity:crud.candidateDetails')}
+        closable
+        style={{ width: '980px', maxWidth: '95vw' }}
+        className="mx-auto td-identity-entity-dialog"
+      >
+        {selectedLinkageCandidate && (
+          <div className="flex flex-col gap-4">
+            <DynamicEntity
+              entity={{
+                ...selectedLinkageCandidate.entityInstance,
+                data: selectedLinkageCandidate.entityInstance.data ?? {},
+                entityTypeName: selectedTypeName,
+                type: selectedTypeName,
+                trustdeckID: entityId(selectedLinkageCandidate.entityInstance)
+              }}
+              schemaAttributes={selectedSchemaAttributes}
+              editMode={false}
+              formData={selectedLinkageCandidate.entityInstance.data ?? {}}
+              onFieldChange={() => undefined}
+              showIdentifierPanel
+            />
+            <div className="flex justify-end">
+              <PrimaryOutlinedButton
+                label={t('identity:crud.close')}
+                onClick={() => setSelectedLinkageCandidate(null)}
+                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+              />
+            </div>
+          </div>
+        )}
       </Dialog>
 
       <Dialog

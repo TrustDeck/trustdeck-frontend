@@ -21,6 +21,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 type LayoutValue = 'row' | 'col' | 'group'
 type PrivacyMode = 'plain' | 'pprl'
 type PprlMethod = 'ngramBloomFilter' | 'hmacExact'
+type MatchAction = 'reject' | 'returnExisting'
 type DropIndicator = {
   targetKey: string
   position: 'before' | 'after' | 'inside'
@@ -43,19 +44,32 @@ function filterGroupOptions(
   )
 }
 
-type LinkageConfig = {
+type PprlConfig = {
+  method?: PprlMethod
+  n?: number
+  length?: number
+  hashPositions?: number
+  bandSize?: number
+  exact?: boolean
+}
+
+type EntityLinkageConfig = {
+  enabled?: boolean
   privacyMode?: PrivacyMode
+  pprl?: PprlConfig
+  minScore?: number
+  minNormalizedScore?: number
+  bloomMinSimilarity?: number
+  candidateLimit?: number
+  autoLinkOnCreate?: boolean
+  onMatch?: MatchAction
+}
+
+type LinkageConfig = {
   normalizers?: string[]
   encoders?: string[]
   blocking?: string[]
   weight?: number
-  pprl?: {
-    method?: PprlMethod
-    n?: number
-    length?: number
-    hashPositions?: number
-    bandSize?: number
-  }
 }
 
 type BuilderAttribute = {
@@ -96,6 +110,7 @@ export type EntityTypePayload = {
     label_en?: string
     label_de?: string
     attributes?: any[]
+    recordLinkage?: EntityLinkageConfig
   }
 }
 
@@ -138,7 +153,8 @@ const blockingOptions = [
   'phonetic',
   'year',
   'yearMonth',
-  'domainExact'
+  'domainExact',
+  'bloomBands'
 ]
 
 function compactArray(values?: string[]) {
@@ -218,36 +234,168 @@ function serializeLabels(
   return out
 }
 
-function defaultLinkageConfig(type?: string): LinkageConfig {
-  const exact =
-    type === 'date' ||
-    type === 'datetime' ||
-    type === 'boolean' ||
-    type === 'integer' ||
-    type === 'number'
+function defaultEntityLinkageConfig(): Required<EntityLinkageConfig> {
   return {
-    privacyMode: 'pprl',
-    normalizers: exact
-      ? ['trim']
-      : [
-          'trim',
-          'lower',
-          'collapseWhitespace',
-          'umlautFold',
-          'asciiFold',
-          'removePunctuation'
-        ],
-    weight: 1,
-    pprl: exact
-      ? { method: 'hmacExact' }
-      : {
-          method: 'ngramBloomFilter',
-          n: 2,
-          length: 1024,
-          hashPositions: 10,
-          bandSize: 32
-        }
+    enabled: true,
+    privacyMode: 'plain',
+    pprl: {
+      method: 'ngramBloomFilter',
+      n: 2,
+      length: 1024,
+      hashPositions: 10,
+      bandSize: 32,
+      exact: false
+    },
+    minScore: 4,
+    minNormalizedScore: 0.5,
+    bloomMinSimilarity: 0.75,
+    candidateLimit: 250,
+    autoLinkOnCreate: false,
+    onMatch: 'reject'
   }
+}
+
+function defaultLinkageConfig(type?: string): LinkageConfig {
+  if (type === 'date') {
+    return {
+      normalizers: ['trim'],
+      encoders: [],
+      blocking: ['exact', 'year', 'yearMonth', 'bloomBands'],
+      weight: 3
+    }
+  }
+
+  return {
+    normalizers: ['trim', 'lower', 'collapseWhitespace'],
+    encoders: [],
+    blocking: ['exact', 'prefix4', 'bloomBands'],
+    weight: 1
+  }
+}
+
+function effectiveAttributeLinkageConfig(
+  attribute: Pick<BuilderAttribute, 'type' | 'linkageConfig'>
+): LinkageConfig {
+  return {
+    ...defaultLinkageConfig(attribute.type),
+    ...(attribute.linkageConfig ?? {})
+  }
+}
+
+function hasOwn(value: object | null | undefined, key: string) {
+  return Boolean(value && Object.prototype.hasOwnProperty.call(value, key))
+}
+
+function normalizePprlConfig(value: any, partial = false): PprlConfig {
+  const defaults = defaultEntityLinkageConfig().pprl
+  const out: PprlConfig = {}
+  const source = value && typeof value === 'object' ? value : {}
+  const assign = <K extends keyof PprlConfig>(
+    key: K,
+    fallback: PprlConfig[K]
+  ) => {
+    if (!partial || hasOwn(source, key)) out[key] = source[key] ?? fallback
+  }
+  assign('method', defaults.method)
+  assign('n', defaults.n)
+  assign('length', defaults.length)
+  assign('hashPositions', defaults.hashPositions)
+  assign('bandSize', defaults.bandSize)
+  assign('exact', defaults.exact)
+  return out
+}
+
+function normalizeEntityLinkageConfig(
+  value: any,
+  partial = false
+): EntityLinkageConfig {
+  const defaults = defaultEntityLinkageConfig()
+  const source = value && typeof value === 'object' ? value : {}
+  const out: EntityLinkageConfig = {}
+  const assign = <K extends Exclude<keyof EntityLinkageConfig, 'pprl'>>(
+    key: K,
+    fallback: EntityLinkageConfig[K]
+  ) => {
+    if (!partial || hasOwn(source, key)) out[key] = source[key] ?? fallback
+  }
+
+  assign('enabled', defaults.enabled)
+  assign('privacyMode', defaults.privacyMode)
+  assign('minScore', defaults.minScore)
+  assign('minNormalizedScore', defaults.minNormalizedScore)
+  assign('bloomMinSimilarity', defaults.bloomMinSimilarity)
+  assign('candidateLimit', defaults.candidateLimit)
+  assign('autoLinkOnCreate', defaults.autoLinkOnCreate)
+  assign('onMatch', defaults.onMatch)
+  if (!partial || hasOwn(source, 'pprl')) {
+    out.pprl = normalizePprlConfig(source.pprl, partial)
+  }
+  return out
+}
+
+function mergeEntityLinkageConfig(
+  ...configs: Array<EntityLinkageConfig | null | undefined>
+): Required<EntityLinkageConfig> {
+  const defaults = defaultEntityLinkageConfig()
+  const merged: EntityLinkageConfig = {
+    ...defaults,
+    pprl: { ...defaults.pprl }
+  }
+  configs.forEach((config) => {
+    if (!config) return
+    Object.entries(config).forEach(([key, value]) => {
+      if (key === 'pprl' || value === undefined) return
+      ;(merged as any)[key] = value
+    })
+    if (config.pprl) {
+      merged.pprl = { ...(merged.pprl ?? {}), ...config.pprl }
+    }
+  })
+  return merged as Required<EntityLinkageConfig>
+}
+
+function findLegacyEntityLinkageConfig(
+  attributes: any[] = []
+): EntityLinkageConfig | null {
+  for (const attribute of attributes) {
+    if (Array.isArray(attribute?.attributes)) {
+      const nested = findLegacyEntityLinkageConfig(attribute.attributes)
+      if (nested) return nested
+    }
+    const legacy = attribute?.linkageConfig
+    if (legacy && (legacy.privacyMode || legacy.pprl)) {
+      return normalizeEntityLinkageConfig(
+        {
+          privacyMode: legacy.privacyMode,
+          pprl: legacy.pprl
+        },
+        true
+      )
+    }
+  }
+  return null
+}
+
+function recordLinkageOverridesFromPayload(
+  payload?: EntityTypePayload | null
+): EntityLinkageConfig {
+  const definition = payload?.typeDefinition as any
+  if (
+    definition?.recordLinkage &&
+    typeof definition.recordLinkage === 'object'
+  ) {
+    return normalizeEntityLinkageConfig(definition.recordLinkage, true)
+  }
+  return findLegacyEntityLinkageConfig(definition?.attributes) ?? {}
+}
+
+function effectiveRecordLinkageFromPayload(
+  payload?: EntityTypePayload | null
+): Required<EntityLinkageConfig> {
+  return mergeEntityLinkageConfig(
+    defaultEntityLinkageConfig(),
+    recordLinkageOverridesFromPayload(payload)
+  )
 }
 
 function mapBackendAttribute(attribute: any): BuilderAttribute {
@@ -270,11 +418,24 @@ function mapBackendAttribute(attribute: any): BuilderAttribute {
     }
   }
 
-  const importedLinkageConfig = attribute?.linkageConfig
-    ? { ...attribute.linkageConfig }
+  const rawLinkageConfig = attribute?.linkageConfig
+  const importedLinkageConfig: LinkageConfig | undefined = rawLinkageConfig
+    ? {
+        normalizers: Array.isArray(rawLinkageConfig.normalizers)
+          ? rawLinkageConfig.normalizers
+          : undefined,
+        encoders: Array.isArray(rawLinkageConfig.encoders)
+          ? rawLinkageConfig.encoders
+          : undefined,
+        blocking: Array.isArray(rawLinkageConfig.blocking)
+          ? rawLinkageConfig.blocking
+          : undefined,
+        weight:
+          rawLinkageConfig.weight === undefined
+            ? undefined
+            : Number(rawLinkageConfig.weight)
+      }
     : undefined
-  if (importedLinkageConfig) delete importedLinkageConfig.comparator
-  if (importedLinkageConfig?.pprl) delete importedLinkageConfig.pprl.exact
 
   const labels = labelsFromBackendAttribute(attribute)
 
@@ -289,7 +450,8 @@ function mapBackendAttribute(attribute: any): BuilderAttribute {
       '',
     label_de: labels.de ?? attribute?.label_de ?? attribute?.labelDe ?? '',
     labels,
-    type: attribute?.type === 'integer' ? 'number' : (attribute?.type ?? 'string'),
+    type:
+      attribute?.type === 'integer' ? 'number' : (attribute?.type ?? 'string'),
     required: Boolean(attribute?.required),
     linkage: Boolean(attribute?.linkage),
     repeatable: Boolean(attribute?.repeatable),
@@ -418,26 +580,57 @@ async function loadAllGroupOptions(
 
 function cleanLinkageConfig(config: LinkageConfig): LinkageConfig {
   const cleaned: LinkageConfig = {}
-  if (config.privacyMode) cleaned.privacyMode = config.privacyMode
   if (compactArray(config.normalizers).length)
     cleaned.normalizers = compactArray(config.normalizers)
   if (compactArray(config.encoders).length)
     cleaned.encoders = compactArray(config.encoders)
-  if (config.privacyMode !== 'pprl' && compactArray(config.blocking).length)
+  if (compactArray(config.blocking).length)
     cleaned.blocking = compactArray(config.blocking)
   if (config.weight !== undefined && config.weight !== null)
     cleaned.weight = Number(config.weight)
-  if (config.privacyMode === 'pprl' && config.pprl) {
-    cleaned.pprl = {
-      method: config.pprl.method ?? 'ngramBloomFilter'
-    }
-    if ((cleaned.pprl.method ?? config.pprl.method) === 'ngramBloomFilter') {
-      cleaned.pprl.n = Number(config.pprl.n ?? 2)
-      cleaned.pprl.length = Number(config.pprl.length ?? 1024)
-      cleaned.pprl.hashPositions = Number(config.pprl.hashPositions ?? 10)
-      cleaned.pprl.bandSize = Number(config.pprl.bandSize ?? 32)
-    }
+  return cleaned
+}
+
+function cleanEntityLinkageConfig(
+  config: EntityLinkageConfig,
+  partial = false
+): EntityLinkageConfig {
+  const normalized = normalizeEntityLinkageConfig(config, partial)
+  const cleaned: EntityLinkageConfig = {}
+  const copyNumber = (key: keyof EntityLinkageConfig) => {
+    if (hasOwn(normalized, key))
+      (cleaned as any)[key] = Number((normalized as any)[key])
   }
+  const copyValue = (key: keyof EntityLinkageConfig) => {
+    if (hasOwn(normalized, key))
+      (cleaned as any)[key] = (normalized as any)[key]
+  }
+
+  copyValue('enabled')
+  copyValue('privacyMode')
+  copyNumber('minScore')
+  copyNumber('minNormalizedScore')
+  copyNumber('bloomMinSimilarity')
+  copyNumber('candidateLimit')
+  copyValue('autoLinkOnCreate')
+  copyValue('onMatch')
+
+  if (normalized.pprl && (!partial || hasOwn(config, 'pprl'))) {
+    const pprl: PprlConfig = {}
+    const source = normalized.pprl
+    const original = config.pprl
+    const shouldCopy = (key: keyof PprlConfig) =>
+      !partial || hasOwn(original, key)
+    if (shouldCopy('method')) pprl.method = source.method
+    if (shouldCopy('n')) pprl.n = Number(source.n)
+    if (shouldCopy('length')) pprl.length = Number(source.length)
+    if (shouldCopy('hashPositions'))
+      pprl.hashPositions = Number(source.hashPositions)
+    if (shouldCopy('bandSize')) pprl.bandSize = Number(source.bandSize)
+    if (shouldCopy('exact')) pprl.exact = Boolean(source.exact)
+    if (Object.keys(pprl).length) cleaned.pprl = pprl
+  }
+
   return cleaned
 }
 
@@ -549,6 +742,32 @@ function hasInvalidAttribute(attributes: BuilderAttribute[]): boolean {
       !(attribute.type ?? '').trim()
     )
   })
+}
+
+function hasInvalidEntityLinkageConfig(
+  config: Required<EntityLinkageConfig>
+): boolean {
+  const pprl = config.pprl
+  return (
+    !Number.isFinite(config.minScore) ||
+    config.minScore < 0 ||
+    !Number.isFinite(config.minNormalizedScore) ||
+    config.minNormalizedScore < 0 ||
+    config.minNormalizedScore > 1 ||
+    !Number.isFinite(config.bloomMinSimilarity) ||
+    config.bloomMinSimilarity < 0 ||
+    config.bloomMinSimilarity > 1 ||
+    !Number.isInteger(config.candidateLimit) ||
+    config.candidateLimit < 1 ||
+    !Number.isInteger(pprl.n) ||
+    (pprl.n ?? 0) < 1 ||
+    !Number.isInteger(pprl.length) ||
+    (pprl.length ?? 0) < 128 ||
+    !Number.isInteger(pprl.hashPositions) ||
+    (pprl.hashPositions ?? 0) < 1 ||
+    !Number.isInteger(pprl.bandSize) ||
+    (pprl.bandSize ?? 0) < 8
+  )
 }
 
 function extractAttribute(
@@ -707,6 +926,24 @@ export default function Builder({
   >([])
   const [groupSearchLoading, setGroupSearchLoading] = useState(false)
   const [attributes, setAttributes] = useState<BuilderAttribute[]>([])
+  const [entityLinkageOverrides, setEntityLinkageOverrides] =
+    useState<EntityLinkageConfig>({})
+  const [baseEntityLinkageConfig, setBaseEntityLinkageConfig] =
+    useState<EntityLinkageConfig | null>(null)
+  const effectiveEntityLinkageConfig = useMemo(
+    () =>
+      saveTarget === 'project'
+        ? mergeEntityLinkageConfig(
+            defaultEntityLinkageConfig(),
+            baseEntityLinkageConfig,
+            entityLinkageOverrides
+          )
+        : mergeEntityLinkageConfig(
+            defaultEntityLinkageConfig(),
+            entityLinkageOverrides
+          ),
+    [baseEntityLinkageConfig, entityLinkageOverrides, saveTarget]
+  )
   const attributeElementRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [pendingScrollAttributeKey, setPendingScrollAttributeKey] = useState<
     string | null
@@ -736,6 +973,14 @@ export default function Builder({
         ? attributesFromPayload(initialType).map(unlockImportedAttribute)
         : []
     )
+    setEntityLinkageOverrides(
+      initialType
+        ? recordLinkageOverridesFromPayload(initialType)
+        : scope === 'base'
+          ? defaultEntityLinkageConfig()
+          : {}
+    )
+    setBaseEntityLinkageConfig(null)
     setDraggedAttributeKey(null)
     setDropIndicator(null)
     setCollapsedLinkageKeys({})
@@ -857,16 +1102,22 @@ export default function Builder({
   useEffect(() => {
     let active = true
     async function loadSelectedBaseType() {
-      if (saveTarget !== 'project' || !selectedBaseType) return
+      if (saveTarget !== 'project' || !selectedBaseType) {
+        setBaseEntityLinkageConfig(null)
+        return
+      }
       setBaseTypeLoading(true)
       try {
         const base = (await TrustDeck.instance().getBaseType(
           selectedBaseType
         )) as any
         if (!active) return
-        const baseAttributes = attributesFromPayload(
-          base as EntityTypePayload
-        ).map(lockBaseAttribute)
+        const basePayload = base as EntityTypePayload
+        const baseAttributes =
+          attributesFromPayload(basePayload).map(lockBaseAttribute)
+        setBaseEntityLinkageConfig(
+          effectiveRecordLinkageFromPayload(basePayload)
+        )
         setRootLayout((base.typeDefinition?.layout as LayoutValue) ?? 'group')
         setAttributes((current) => [
           ...baseAttributes,
@@ -877,6 +1128,7 @@ export default function Builder({
         ])
       } catch {
         if (active) {
+          setBaseEntityLinkageConfig(null)
           showToast({
             severity: 'error',
             summary: t('toast.baseLoadFailedSummary'),
@@ -896,6 +1148,10 @@ export default function Builder({
 
   const payload = useMemo<EntityTypePayload>(() => {
     const name = entityName.trim()
+    const recordLinkage =
+      saveTarget === 'base'
+        ? cleanEntityLinkageConfig(effectiveEntityLinkageConfig)
+        : cleanEntityLinkageConfig(entityLinkageOverrides, true)
     const built: EntityTypePayload = {
       name,
       version: 'v1.0',
@@ -908,7 +1164,8 @@ export default function Builder({
         label_de: name,
         attributes: attributes.map((attribute) =>
           serializeAttribute(attribute, name)
-        )
+        ),
+        ...(Object.keys(recordLinkage).length ? { recordLinkage } : {})
       }
     }
     if (saveTarget === 'project') {
@@ -919,6 +1176,8 @@ export default function Builder({
   }, [
     associatedGroupName,
     attributes,
+    effectiveEntityLinkageConfig,
+    entityLinkageOverrides,
     entityName,
     rootLayout,
     saveTarget,
@@ -1090,6 +1349,15 @@ export default function Builder({
       })
       return
     }
+    if (hasInvalidEntityLinkageConfig(effectiveEntityLinkageConfig)) {
+      showToast({
+        severity: 'error',
+        summary: t('toast.invalidEntityLinkageSummary'),
+        detail: t('toast.invalidEntityLinkageDetail'),
+        life: 4500
+      })
+      return
+    }
     if (saveTarget === 'project' && !finalPayload.baseTypeName) {
       showToast({
         severity: 'error',
@@ -1146,7 +1414,7 @@ export default function Builder({
         severity: 'success',
         summary:
           mode === 'edit'
-            ? t('toast.updatedSummary', 'Entity type updated')
+            ? t('toast.updatedSummary', 'Entity updated')
             : t('toast.createdSummary'),
         detail:
           saveTarget === 'base'
@@ -1185,13 +1453,13 @@ export default function Builder({
     value: string,
     checked: boolean
   ) => {
-    const current = attribute.linkageConfig?.[key] ?? []
+    const current = effectiveAttributeLinkageConfig(attribute)[key] ?? []
     const next = checked
       ? Array.from(new Set([...current, value]))
       : current.filter((item) => item !== value)
     updateAttribute(attribute.key, {
       linkageConfig: {
-        ...(attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)),
+        ...effectiveAttributeLinkageConfig(attribute),
         [key]: next
       }
     })
@@ -1203,29 +1471,263 @@ export default function Builder({
   ) => {
     updateAttribute(attribute.key, {
       linkageConfig: {
-        ...(attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)),
+        ...effectiveAttributeLinkageConfig(attribute),
         ...patch
       }
     })
   }
 
-  const updatePprlConfig = (
-    attribute: BuilderAttribute,
-    patch: NonNullable<LinkageConfig['pprl']>
-  ) => {
-    const config =
-      attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)
-    updateAttribute(attribute.key, {
-      linkageConfig: { ...config, pprl: { ...(config.pprl ?? {}), ...patch } }
-    })
+  const updateEntityLinkageConfig = (patch: Partial<EntityLinkageConfig>) => {
+    setEntityLinkageOverrides((current) => ({ ...current, ...patch }))
+  }
+
+  const updateEntityPprlConfig = (patch: Partial<PprlConfig>) => {
+    setEntityLinkageOverrides((current) => ({
+      ...current,
+      pprl: { ...(current.pprl ?? {}), ...patch }
+    }))
+  }
+
+  const isEntityLinkageSettingInherited = (
+    key: Exclude<keyof EntityLinkageConfig, 'pprl'>
+  ) =>
+    saveTarget === 'project' &&
+    Boolean(baseEntityLinkageConfig) &&
+    !hasOwn(entityLinkageOverrides, key)
+
+  const isEntityPprlSettingInherited = (key: keyof PprlConfig) =>
+    saveTarget === 'project' &&
+    Boolean(baseEntityLinkageConfig?.pprl) &&
+    !hasOwn(entityLinkageOverrides.pprl, key)
+
+  const renderEntityLinkageConfig = () => {
+    const config = effectiveEntityLinkageConfig
+    const pprl = config.pprl
+    const locked = readOnly
+    const settingsDisabled = locked || !config.enabled
+    return (
+      <div className="space-y-5 text-left">
+        <ToggleWithInfo
+          id="entity-linkage-enabled"
+          label={t('entityLinkage.enabled')}
+          description={t('entityLinkageHelp.enabled')}
+          checked={config.enabled}
+          disabled={locked}
+          inherited={isEntityLinkageSettingInherited('enabled')}
+          onChange={(checked) =>
+            updateEntityLinkageConfig({ enabled: checked })
+          }
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <DropdownWithInfo
+            id="entity-linkage-privacy-mode"
+            label={t('linkageConfig.privacyMode')}
+            value={config.privacyMode}
+            info={t('linkageConfigHelp.privacyMode')}
+            disabled={settingsDisabled}
+            inherited={isEntityLinkageSettingInherited('privacyMode')}
+            options={[
+              { label: t('linkageConfig.plain'), value: 'plain' },
+              { label: 'PPRL', value: 'pprl' }
+            ]}
+            onChange={(value) =>
+              updateEntityLinkageConfig({ privacyMode: value as PrivacyMode })
+            }
+          />
+          <NumberInput
+            id="entity-linkage-min-score"
+            value={config.minScore}
+            label={t('entityLinkage.minScore')}
+            info={t('entityLinkageHelp.minScore')}
+            disabled={settingsDisabled}
+            inherited={isEntityLinkageSettingInherited('minScore')}
+            min={0}
+            step="0.1"
+            onChange={(value) => updateEntityLinkageConfig({ minScore: value })}
+          />
+          <NumberInput
+            id="entity-linkage-min-normalized-score"
+            value={config.minNormalizedScore}
+            label={t('entityLinkage.minNormalizedScore')}
+            info={t('entityLinkageHelp.minNormalizedScore')}
+            disabled={settingsDisabled}
+            inherited={isEntityLinkageSettingInherited('minNormalizedScore')}
+            min={0}
+            max={1}
+            step="0.01"
+            onChange={(value) =>
+              updateEntityLinkageConfig({ minNormalizedScore: value })
+            }
+          />
+          <NumberInput
+            id="entity-linkage-candidate-limit"
+            value={config.candidateLimit}
+            label={t('entityLinkage.candidateLimit')}
+            info={t('entityLinkageHelp.candidateLimit')}
+            disabled={settingsDisabled}
+            inherited={isEntityLinkageSettingInherited('candidateLimit')}
+            min={1}
+            step="1"
+            onChange={(value) =>
+              updateEntityLinkageConfig({
+                candidateLimit: Math.max(1, Math.round(value))
+              })
+            }
+          />
+        </div>
+
+        {config.privacyMode === 'pprl' && (
+          <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4 dark:border-blue-900/60 dark:bg-blue-950/20">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+              {t('linkageConfig.pprlSettings')}
+            </h4>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <DropdownWithInfo
+                id="entity-linkage-pprl-method"
+                label={t('linkageConfig.pprlMethod')}
+                value={pprl.method ?? 'ngramBloomFilter'}
+                info={t('linkageConfigHelp.pprlMethod')}
+                disabled={settingsDisabled}
+                inherited={isEntityPprlSettingInherited('method')}
+                options={pprlMethodOptions}
+                onChange={(value) =>
+                  updateEntityPprlConfig({ method: value as PprlMethod })
+                }
+              />
+              {(pprl.method ?? 'ngramBloomFilter') === 'ngramBloomFilter' && (
+                <>
+                  <NumberInput
+                    id="entity-linkage-ngram-size"
+                    value={pprl.n ?? 2}
+                    label={t('linkageConfig.ngramSize')}
+                    info={t('linkageConfigHelp.ngramSize')}
+                    disabled={settingsDisabled}
+                    inherited={isEntityPprlSettingInherited('n')}
+                    min={1}
+                    step="1"
+                    onChange={(value) =>
+                      updateEntityPprlConfig({
+                        n: Math.max(1, Math.round(value))
+                      })
+                    }
+                  />
+                  <NumberInput
+                    id="entity-linkage-bloom-length"
+                    value={pprl.length ?? 1024}
+                    label={t('linkageConfig.bloomLength')}
+                    info={t('linkageConfigHelp.bloomLength')}
+                    disabled={settingsDisabled}
+                    inherited={isEntityPprlSettingInherited('length')}
+                    min={128}
+                    step="1"
+                    onChange={(value) =>
+                      updateEntityPprlConfig({
+                        length: Math.max(128, Math.round(value))
+                      })
+                    }
+                  />
+                  <NumberInput
+                    id="entity-linkage-hash-positions"
+                    value={pprl.hashPositions ?? 10}
+                    label={t('linkageConfig.hashPositions')}
+                    info={t('linkageConfigHelp.hashPositions')}
+                    disabled={settingsDisabled}
+                    inherited={isEntityPprlSettingInherited('hashPositions')}
+                    min={1}
+                    step="1"
+                    onChange={(value) =>
+                      updateEntityPprlConfig({
+                        hashPositions: Math.max(1, Math.round(value))
+                      })
+                    }
+                  />
+                  <NumberInput
+                    id="entity-linkage-band-size"
+                    value={pprl.bandSize ?? 32}
+                    label={t('linkageConfig.bandSize')}
+                    info={t('linkageConfigHelp.bandSize')}
+                    disabled={settingsDisabled}
+                    inherited={isEntityPprlSettingInherited('bandSize')}
+                    min={8}
+                    step="1"
+                    onChange={(value) =>
+                      updateEntityPprlConfig({
+                        bandSize: Math.max(8, Math.round(value))
+                      })
+                    }
+                  />
+                  <NumberInput
+                    id="entity-linkage-bloom-similarity"
+                    value={config.bloomMinSimilarity}
+                    label={t('entityLinkage.bloomMinSimilarity')}
+                    info={t('entityLinkageHelp.bloomMinSimilarity')}
+                    disabled={settingsDisabled}
+                    inherited={isEntityLinkageSettingInherited(
+                      'bloomMinSimilarity'
+                    )}
+                    min={0}
+                    max={1}
+                    step="0.01"
+                    onChange={(value) =>
+                      updateEntityLinkageConfig({ bloomMinSimilarity: value })
+                    }
+                  />
+                  <ToggleWithInfo
+                    id="entity-linkage-exact-token"
+                    label={t('entityLinkage.exactToken')}
+                    description={t('entityLinkageHelp.exactToken')}
+                    checked={Boolean(pprl.exact)}
+                    disabled={settingsDisabled}
+                    inherited={isEntityPprlSettingInherited('exact')}
+                    onChange={(checked) =>
+                      updateEntityPprlConfig({ exact: checked })
+                    }
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <ToggleWithInfo
+            id="entity-linkage-auto-create"
+            label={t('entityLinkage.autoLinkOnCreate')}
+            description={t('entityLinkageHelp.autoLinkOnCreate')}
+            checked={config.autoLinkOnCreate}
+            disabled={settingsDisabled}
+            inherited={isEntityLinkageSettingInherited('autoLinkOnCreate')}
+            onChange={(checked) =>
+              updateEntityLinkageConfig({ autoLinkOnCreate: checked })
+            }
+          />
+          <DropdownWithInfo
+            id="entity-linkage-on-match"
+            label={t('entityLinkage.onMatch')}
+            value={config.onMatch}
+            info={t('entityLinkageHelp.onMatch')}
+            disabled={settingsDisabled || !config.autoLinkOnCreate}
+            inherited={isEntityLinkageSettingInherited('onMatch')}
+            options={[
+              { label: t('entityLinkage.onMatchReject'), value: 'reject' },
+              {
+                label: t('entityLinkage.onMatchReturnExisting'),
+                value: 'returnExisting'
+              }
+            ]}
+            onChange={(value) =>
+              updateEntityLinkageConfig({ onMatch: value as MatchAction })
+            }
+          />
+        </div>
+      </div>
+    )
   }
 
   const renderLinkageConfig = (attribute: BuilderAttribute) => {
     if (!attribute.linkage) return null
-    const config =
-      attribute.linkageConfig ?? defaultLinkageConfig(attribute.type)
-    const pprl = config.pprl ?? defaultLinkageConfig(attribute.type).pprl ?? {}
-    const privacyMode = config.privacyMode ?? 'pprl'
+    const config = effectiveAttributeLinkageConfig(attribute)
     const isCollapsed = collapsedLinkageKeys[attribute.key] ?? true
     const locked = readOnly || Boolean(attribute.locked)
     return (
@@ -1242,10 +1744,10 @@ export default function Builder({
         >
           <span>
             <span className="block font-semibold text-color-blue dark:text-blue-100">
-              {t('linkageConfig.title')}
+              {t('linkageConfig.attributeTitle')}
             </span>
             <span className="mt-1 block text-sm font-normal text-gray-600 dark:text-gray-300">
-              {t('linkageConfig.description')}
+              {t('linkageConfig.attributeDescription')}
             </span>
           </span>
           {isCollapsed ? (
@@ -1254,144 +1756,53 @@ export default function Builder({
             <ChevronDownIcon className="h-5 w-5 flex-none text-color-blue dark:text-blue-100" />
           )}
         </button>
-        {isCollapsed ? null : (
-          <div className="px-4 pb-4">
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <DropdownWithInfo
-                id={`privacy-${attribute.key}`}
-                label={t('linkageConfig.privacyMode')}
-                value={privacyMode}
-                info={t('linkageConfigHelp.privacyMode')}
-                disabled={locked}
-                options={[
-                  { label: 'PPRL', value: 'pprl' },
-                  { label: t('linkageConfig.plain'), value: 'plain' }
-                ]}
-                onChange={(value) =>
-                  updateLinkageConfig(attribute, {
-                    privacyMode: value as PrivacyMode
-                  })
-                }
-              />
-              <InputWithInfo
-                id={`weight-${attribute.key}`}
-                label={t('linkageConfig.weight')}
-                type="number"
-                step="0.1"
-                value={String(config.weight ?? 1)}
-                info={t('linkageConfigHelp.weight')}
-                disabled={locked}
-                onChange={(value) =>
-                  updateLinkageConfig(attribute, { weight: Number(value) })
-                }
-              />
-            </div>
-            <div
-              className={`mt-4 grid gap-4 ${privacyMode === 'pprl' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'}`}
-            >
-              <MultiCheck
-                title={t('linkageConfig.normalizers')}
-                values={normalizerOptions}
-                selected={config.normalizers ?? []}
-                labelPrefix="normalizerOptions"
-                helpPrefix="normalizerHelp"
-                disabled={locked}
-                onChange={(value, checked) =>
-                  setListValue(attribute, 'normalizers', value, checked)
-                }
-              />
-              <MultiCheck
-                title={t('linkageConfig.encoders')}
-                values={encoderOptions}
-                selected={config.encoders ?? []}
-                labelPrefix="encoderOptions"
-                helpPrefix="encoderHelp"
-                disabled={locked}
-                onChange={(value, checked) =>
-                  setListValue(attribute, 'encoders', value, checked)
-                }
-              />
-              {privacyMode !== 'pprl' && (
-                <MultiCheck
-                  title={t('linkageConfig.blocking')}
-                  values={blockingOptions}
-                  selected={config.blocking ?? []}
-                  labelPrefix="blockingOptions"
-                  helpPrefix="blockingHelp"
-                  disabled={locked}
-                  onChange={(value, checked) =>
-                    setListValue(attribute, 'blocking', value, checked)
-                  }
-                />
-              )}
-            </div>
-            {privacyMode === 'pprl' && (
-              <div className="mt-4 rounded-lg border border-blue-200 bg-white p-3 dark:border-blue-900 dark:bg-slate-950">
-                <h5 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-300">
-                  {t('linkageConfig.pprlSettings')}
-                </h5>
-                <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <DropdownWithInfo
-                    id={`pprl-method-${attribute.key}`}
-                    label={t('linkageConfig.pprlMethod')}
-                    value={pprl.method ?? 'ngramBloomFilter'}
-                    info={t('linkageConfigHelp.pprlMethod')}
-                    disabled={locked}
-                    options={pprlMethodOptions}
-                    onChange={(value) =>
-                      updatePprlConfig(attribute, {
-                        method: value as PprlMethod
-                      })
-                    }
-                  />
-                  {(pprl.method ?? 'ngramBloomFilter') ===
-                    'ngramBloomFilter' && (
-                    <>
-                      <NumberInput
-                        id={`n-${attribute.key}`}
-                        value={pprl.n ?? 2}
-                        label={t('linkageConfig.ngramSize')}
-                        info={t('linkageConfigHelp.ngramSize')}
-                        disabled={locked}
-                        onChange={(value) =>
-                          updatePprlConfig(attribute, { n: value })
-                        }
-                      />
-                      <NumberInput
-                        id={`length-${attribute.key}`}
-                        value={pprl.length ?? 1024}
-                        label={t('linkageConfig.bloomLength')}
-                        info={t('linkageConfigHelp.bloomLength')}
-                        disabled={locked}
-                        onChange={(value) =>
-                          updatePprlConfig(attribute, { length: value })
-                        }
-                      />
-                      <NumberInput
-                        id={`hash-${attribute.key}`}
-                        value={pprl.hashPositions ?? 10}
-                        label={t('linkageConfig.hashPositions')}
-                        info={t('linkageConfigHelp.hashPositions')}
-                        disabled={locked}
-                        onChange={(value) =>
-                          updatePprlConfig(attribute, { hashPositions: value })
-                        }
-                      />
-                      <NumberInput
-                        id={`band-${attribute.key}`}
-                        value={pprl.bandSize ?? 32}
-                        label={t('linkageConfig.bandSize')}
-                        info={t('linkageConfigHelp.bandSize')}
-                        disabled={locked}
-                        onChange={(value) =>
-                          updatePprlConfig(attribute, { bandSize: value })
-                        }
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
+        {!isCollapsed && (
+          <div className="grid gap-4 px-4 pb-4 pt-2 lg:grid-cols-4">
+            <InputWithInfo
+              id={`weight-${attribute.key}`}
+              label={t('linkageConfig.weight')}
+              type="number"
+              step="0.1"
+              value={String(config.weight ?? 1)}
+              info={t('linkageConfigHelp.weight')}
+              disabled={locked}
+              onChange={(value) =>
+                updateLinkageConfig(attribute, { weight: Number(value) })
+              }
+            />
+            <MultiCheck
+              title={t('linkageConfig.normalizers')}
+              values={normalizerOptions}
+              selected={config.normalizers ?? []}
+              labelPrefix="normalizerOptions"
+              helpPrefix="normalizerHelp"
+              disabled={locked}
+              onChange={(value, checked) =>
+                setListValue(attribute, 'normalizers', value, checked)
+              }
+            />
+            <MultiCheck
+              title={t('linkageConfig.encoders')}
+              values={encoderOptions}
+              selected={config.encoders ?? []}
+              labelPrefix="encoderOptions"
+              helpPrefix="encoderHelp"
+              disabled={locked}
+              onChange={(value, checked) =>
+                setListValue(attribute, 'encoders', value, checked)
+              }
+            />
+            <MultiCheck
+              title={t('linkageConfig.blocking')}
+              values={blockingOptions}
+              selected={config.blocking ?? []}
+              labelPrefix="blockingOptions"
+              helpPrefix="blockingHelp"
+              disabled={locked}
+              onChange={(value, checked) =>
+                setListValue(attribute, 'blocking', value, checked)
+              }
+            />
           </div>
         )}
       </div>
@@ -1405,8 +1816,7 @@ export default function Builder({
     const isGroup = Array.isArray(attribute.attributes)
     const inheritedFromBase = Boolean(attribute.locked)
     const locked = readOnly || inheritedFromBase
-    const collapsed =
-      collapsedAttributeKeys[attribute.key] ?? inheritedFromBase
+    const collapsed = collapsedAttributeKeys[attribute.key] ?? inheritedFromBase
     const showBeforeDropLine =
       dropIndicator?.targetKey === attribute.key &&
       dropIndicator.position === 'before'
@@ -1429,7 +1839,7 @@ export default function Builder({
           <div className="h-1 rounded-full bg-color-blue shadow-[0_0_0_3px_rgba(37,99,235,0.18)]" />
         )}
         <div
-          draggable={!locked}
+          draggable={false}
           onDragStart={(event) => {
             if (locked) {
               event.preventDefault()
@@ -1615,12 +2025,7 @@ export default function Builder({
                                 defaultLinkageConfig(attribute.type),
                               tags: attribute.tags?.length
                                 ? attribute.tags
-                                : [
-                                    buildDefaultTag(
-                                      entityName,
-                                      attribute.name
-                                    )
-                                  ]
+                                : [buildDefaultTag(entityName, attribute.name)]
                             }
                           : {})
                       })
@@ -1769,7 +2174,9 @@ export default function Builder({
                   label={t('associatedGroupName')}
                   placeholder={t('associatedGroupNamePlaceholder')}
                   info={t('associatedGroupNameHelp')}
-                  hint={!readOnly ? t('associatedGroupCreationHint') : undefined}
+                  hint={
+                    !readOnly ? t('associatedGroupCreationHint') : undefined
+                  }
                   options={groupOptions}
                   loading={groupSearchLoading}
                   disabled={readOnly}
@@ -1790,6 +2197,13 @@ export default function Builder({
           </div>
         </Panel>
       )}
+
+      <Panel title={t('entityLinkage.title')} className="!w-full" noMaxWidth>
+        <p className="mb-5 text-sm text-gray-500 dark:text-gray-300">
+          {t('entityLinkage.description')}
+        </p>
+        {renderEntityLinkageConfig()}
+      </Panel>
 
       <Panel title={t('visualPreview')} className="!w-full" noMaxWidth>
         {attributes.length === 0 ? (
@@ -1905,12 +2319,7 @@ function FloatingTextInput({
 }) {
   return (
     <div>
-      <FieldLabel
-        htmlFor={id}
-        label={label}
-        required={required}
-        info={info}
-      />
+      <FieldLabel htmlFor={id} label={label} required={required} info={info} />
       <input
         id={id}
         className={`h-[44px] w-full rounded-lg border px-3 text-base disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 dark:bg-slate-950 dark:text-gray-100 dark:disabled:bg-slate-800 dark:disabled:text-gray-400 ${error ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-slate-700'}`}
@@ -1978,12 +2387,7 @@ function LabeledDropdown({
 }) {
   return (
     <div>
-      <FieldLabel
-        htmlFor={id}
-        label={label}
-        required={required}
-        info={info}
-      />
+      <FieldLabel htmlFor={id} label={label} required={required} info={info} />
       <CustomDropdown
         id={id}
         value={value}
@@ -2010,7 +2414,9 @@ function InputWithInfo({
   disabled = false,
   maxLength,
   inputMode,
-  inherited = false
+  inherited = false,
+  min,
+  max
 }: {
   id: string
   label: string
@@ -2024,11 +2430,13 @@ function InputWithInfo({
   maxLength?: number
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
   inherited?: boolean
+  min?: number
+  max?: number
 }) {
   const { t } = useTranslation(['entityBuilder'])
   const inheritedTitle = t(
-    'groupCreate.inheritedEditable',
-    'Inherited from parent group; edit to override.'
+    'entityLinkage.inherited',
+    'Inherited from the base entity; edit to override.'
   )
 
   return (
@@ -2046,6 +2454,8 @@ function InputWithInfo({
           type={type}
           step={step}
           maxLength={maxLength}
+          min={min}
+          max={max}
           inputMode={inputMode}
           value={value}
           placeholder={placeholder ?? ''}
@@ -2084,8 +2494,8 @@ function DropdownWithInfo({
 }) {
   const { t } = useTranslation(['entityBuilder'])
   const inheritedTitle = t(
-    'groupCreate.inheritedEditable',
-    'Inherited from parent group; edit to override.'
+    'entityLinkage.inherited',
+    'Inherited from the base entity; edit to override.'
   )
 
   return (
@@ -2115,6 +2525,63 @@ function DropdownWithInfo({
         )}
       </div>
     </div>
+  )
+}
+
+function ToggleWithInfo({
+  id,
+  label,
+  description,
+  checked,
+  onChange,
+  disabled = false,
+  inherited = false
+}: {
+  id: string
+  label: string
+  description: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+  disabled?: boolean
+  inherited?: boolean
+}) {
+  const { t } = useTranslation(['entityBuilder'])
+  const inheritedTitle = t(
+    'entityLinkage.inherited',
+    'Inherited from the base entity; edit to override.'
+  )
+  return (
+    <label
+      htmlFor={id}
+      className={`relative flex min-h-[76px] cursor-pointer items-start gap-3 rounded-xl border p-3 pr-10 transition disabled:cursor-not-allowed ${
+        inherited
+          ? 'border-blue-300 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/30'
+          : 'border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-950'
+      } ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-4 w-4"
+      />
+      <span>
+        <span className="block text-sm font-semibold text-gray-800 dark:text-gray-100">
+          {label}
+        </span>
+        <span className="mt-1 block text-sm text-gray-500 dark:text-gray-300">
+          {description}
+        </span>
+      </span>
+      {inherited && (
+        <InheritanceIndicator
+          title={inheritedTitle}
+          className="absolute right-3 top-3 text-base"
+        />
+      )}
+    </label>
   )
 }
 
@@ -2278,7 +2745,11 @@ function NumberInput({
   label,
   info,
   onChange,
-  disabled = false
+  disabled = false,
+  inherited = false,
+  min,
+  max,
+  step
 }: {
   id: string
   value: number
@@ -2286,6 +2757,10 @@ function NumberInput({
   info: string
   onChange: (value: number) => void
   disabled?: boolean
+  inherited?: boolean
+  min?: number
+  max?: number
+  step?: string
 }) {
   return (
     <InputWithInfo
@@ -2295,6 +2770,10 @@ function NumberInput({
       type="number"
       value={String(value)}
       disabled={disabled}
+      inherited={inherited}
+      min={min}
+      max={max}
+      step={step}
       onChange={(value) => onChange(Number(value))}
     />
   )
@@ -2318,7 +2797,8 @@ function readableOptionLabel(value: string) {
     phonetic: 'Phonetic key',
     year: 'Year',
     yearMonth: 'Year and month',
-    domainExact: 'Exact group value'
+    domainExact: 'Exact group value',
+    bloomBands: 'Bloom filter bands'
   }
   return labels[value] ?? value
 }

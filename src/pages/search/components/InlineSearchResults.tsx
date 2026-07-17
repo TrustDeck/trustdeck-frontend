@@ -1,24 +1,32 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Dialog } from 'primereact/dialog'
 import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
   EyeIcon,
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/react/24/outline'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import Panel from '../../../core/components/common/Panel'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
-import useLayoutStore from '../../../core/stores/LayoutStore'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
-import { formatDateTime } from '../../../core/utils/date'
 import type { Pseudonym } from '../../../core/types/Pseudonym'
 import useSearchResultsStore from '../stores/SearchResultsStore'
 import usePseudonymStore from '../stores/PseudonymSearchResults'
+import {
+  formatDisplayValue,
+  readDisplayValue,
+  selectSummaryAttributes
+} from '../utils/entityDisplay'
+import InlineEntityDetail from './InlineEntityDetail'
+import InlinePseudonymDetail from './InlinePseudonymDetail'
+
+const PAGE_SIZE = 10
 
 type ActionButtonProps = {
   title: string
@@ -63,38 +71,46 @@ function resolveTrustDeckId(result: any): string {
   )
 }
 
-function displayValue(value: unknown): string {
-  if (value === null || value === undefined || value === '') return '—'
-  if (typeof value === 'boolean') return value ? 'true' : 'false'
-  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-    return formatDateTime(value) || value
-  }
-  return String(value)
-}
+function Pagination({
+  total,
+  page,
+  onPageChange
+}: {
+  total: number
+  page: number
+  onPageChange: (page: number) => void
+}) {
+  const { t } = useTranslation('search')
+  const pageCount = Math.ceil(total / PAGE_SIZE)
+  if (pageCount <= 1) return null
 
-function entitySummary(result: any): Array<{ label: string; value: string }> {
-  const data = result?.data && typeof result.data === 'object' ? result.data : {}
-  const ignored = new Set([
-    'trustdeckID',
-    'trustdeckId',
-    'trustDeckId',
-    'id',
-    'entityTypeName'
-  ])
-
-  return Object.entries(data)
-    .filter(
-      ([key, value]) =>
-        !ignored.has(key) &&
-        value !== null &&
-        value !== undefined &&
-        value !== '' &&
-        (typeof value === 'string' ||
-          typeof value === 'number' ||
-          typeof value === 'boolean')
-    )
-    .slice(0, 3)
-    .map(([label, value]) => ({ label, value: displayValue(value) }))
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3 border-t border-gray-200 px-5 py-4 dark:border-slate-700">
+      <button
+        type="button"
+        title={t('pagination.previous')}
+        aria-label={t('pagination.previous')}
+        disabled={page === 0}
+        onClick={() => onPageChange(Math.max(0, page - 1))}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+      >
+        <ChevronLeftIcon className="h-5 w-5" />
+      </button>
+      <span className="text-base font-medium text-gray-700 dark:text-gray-200">
+        {t('pagination.pageOf', { page: page + 1, pages: pageCount })}
+      </span>
+      <button
+        type="button"
+        title={t('pagination.next')}
+        aria-label={t('pagination.next')}
+        disabled={page >= pageCount - 1}
+        onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+      >
+        <ChevronRightIcon className="h-5 w-5" />
+      </button>
+    </div>
+  )
 }
 
 export function InlineEntityResults({
@@ -102,24 +118,83 @@ export function InlineEntityResults({
 }: {
   entityTypeName: string
 }) {
-  const { t } = useTranslation('search')
-  const navigate = useNavigate()
+  const { t, i18n } = useTranslation('search')
   const showToast = useToastStore((state) => state.show)
   const selectedProject = useProjectStore((state) => state.selectedProject)
-  const setEditMode = useLayoutStore((state) => state.setEditMode)
-  const { results, hasSearched, removeResult } = useSearchResultsStore()
+  const entityAttributes = useProjectStore((state) => state.entityAttributes)
+  const { results, hasSearched, setResults, removeResult } =
+    useSearchResultsStore()
   const [pendingDelete, setPendingDelete] = useState<any | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [page, setPage] = useState(0)
+  const [selectedIdentifier, setSelectedIdentifier] = useState('')
+  const [selectedEditMode, setSelectedEditMode] = useState(false)
+
+  const schemaAttributes = useMemo(
+    () =>
+      entityAttributes.find(
+        (definition) =>
+          definition.name?.toLowerCase() === entityTypeName.toLowerCase()
+      )?.typeDefinition?.attributes ?? [],
+    [entityAttributes, entityTypeName]
+  )
+
+  const summaryAttributes = useMemo(
+    () => selectSummaryAttributes(schemaAttributes, i18n.language, 3),
+    [i18n.language, schemaAttributes]
+  )
+
+  const selectedEntity = useMemo(
+    () =>
+      results.find(
+        (result) => resolveTrustDeckId(result) === selectedIdentifier
+      ),
+    [results, selectedIdentifier]
+  )
+
+  useEffect(() => {
+    setPage(0)
+    setSelectedIdentifier('')
+  }, [entityTypeName])
+
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(results.length / PAGE_SIZE) - 1)
+    if (page > maxPage) setPage(maxPage)
+  }, [page, results.length])
 
   if (!hasSearched) return null
+
+  if (selectedEntity) {
+    return (
+      <InlineEntityDetail
+        entity={selectedEntity}
+        entityTypeName={entityTypeName}
+        initialEditMode={selectedEditMode}
+        onClose={() => setSelectedIdentifier('')}
+        onUpdated={(updatedEntity) => {
+          setSelectedEditMode(false)
+          setResults(
+            results.map((result) =>
+              resolveTrustDeckId(result) === selectedIdentifier
+                ? updatedEntity
+                : result
+            ),
+            entityTypeName
+          )
+        }}
+        onDeleted={(identifier) => {
+          removeResult(identifier)
+          setSelectedIdentifier('')
+        }}
+      />
+    )
+  }
 
   const openResult = (result: any, edit: boolean) => {
     const identifier = resolveTrustDeckId(result)
     if (!identifier) return
-    setEditMode(edit)
-    navigate(`/search/${encodeURIComponent(identifier)}`, {
-      state: { returnTo: '/search' }
-    })
+    setSelectedEditMode(edit)
+    setSelectedIdentifier(identifier)
   }
 
   const deleteResult = async () => {
@@ -154,6 +229,8 @@ export function InlineEntityResults({
     }
   }
 
+  const pageResults = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
   return (
     <Panel className="mt-6 !w-full !p-0 overflow-hidden">
       <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
@@ -169,48 +246,55 @@ export function InlineEntityResults({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed border-collapse text-left">
+          <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
-                <th className="w-[28%] px-5 py-3 text-base font-semibold">
+                <th className="w-[25%] px-5 py-3 text-base font-semibold">
                   {t('trustDeckId')}
                 </th>
-                <th className="px-5 py-3 text-base font-semibold">
-                  {t('entitySummary')}
-                </th>
+                {summaryAttributes.map((attribute) => (
+                  <th
+                    key={attribute.key}
+                    className="px-4 py-3 text-base font-semibold"
+                  >
+                    {attribute.label}
+                  </th>
+                ))}
+                {summaryAttributes.length === 0 && (
+                  <th className="px-4 py-3 text-base font-semibold">
+                    {t('entitySummary')}
+                  </th>
+                )}
                 <th className="w-40 px-5 py-3 text-right text-base font-semibold">
                   {t('actions')}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {results.map((result) => {
+              {pageResults.map((result) => {
                 const identifier = resolveTrustDeckId(result)
-                const summary = entitySummary(result)
+                const data = result?.data ?? {}
                 return (
                   <tr
                     key={identifier}
                     className="border-t border-gray-200 align-middle hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
                   >
-                    <td className="px-5 py-4 text-lg font-semibold break-all">
+                    <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
                       {identifier || '—'}
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-x-6 gap-y-2">
-                        {summary.length ? (
-                          summary.map((entry) => (
-                            <span key={entry.label} className="text-base">
-                              <span className="font-semibold text-gray-600 dark:text-gray-300">
-                                {entry.label}:
-                              </span>{' '}
-                              <span>{entry.value}</span>
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-500">—</span>
+                    {summaryAttributes.map((attribute) => (
+                      <td
+                        key={`${identifier}-${attribute.key}`}
+                        className="break-words px-4 py-4 text-base"
+                      >
+                        {formatDisplayValue(
+                          readDisplayValue(data, attribute.path)
                         )}
-                      </div>
-                    </td>
+                      </td>
+                    ))}
+                    {summaryAttributes.length === 0 && (
+                      <td className="px-4 py-4 text-base text-gray-500">—</td>
+                    )}
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
                         <ActionButton
@@ -241,6 +325,8 @@ export function InlineEntityResults({
           </table>
         </div>
       )}
+
+      <Pagination total={results.length} page={page} onPageChange={setPage} />
 
       <Dialog
         visible={Boolean(pendingDelete)}
@@ -276,26 +362,75 @@ export function InlinePseudonymResults({
   fallbackDomain: string
 }) {
   const { t } = useTranslation('search')
-  const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const {
     results,
     hasSearched,
+    setResults,
     setPseudonymValue,
     removeResult
   } = usePseudonymStore()
   const [pendingDelete, setPendingDelete] = useState<Pseudonym | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [page, setPage] = useState(0)
+  const [selectedKey, setSelectedKey] = useState('')
+  const [selectedEditMode, setSelectedEditMode] = useState(false)
+
+  const makeKey = (result: Pseudonym) =>
+    `${result.domainName || fallbackDomain}:${result.psn}`
+
+  const selectedPseudonym = useMemo(
+    () =>
+      results.find(
+        (result) =>
+          `${result.domainName || fallbackDomain}:${result.psn}` === selectedKey
+      ),
+    [fallbackDomain, results, selectedKey]
+  )
+
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(results.length / PAGE_SIZE) - 1)
+    if (page > maxPage) setPage(maxPage)
+  }, [page, results.length])
 
   if (!hasSearched) return null
 
-  const openResult = (result: Pseudonym, edit: boolean) => {
-    const domain = result.domainName || fallbackDomain
-    setPseudonymValue(result)
-    navigate(
-      `/search/pseudonym/${encodeURIComponent(domain)}/${encodeURIComponent(result.psn)}`,
-      { state: { returnTo: '/search', edit } }
+  if (selectedPseudonym) {
+    return (
+      <InlinePseudonymDetail
+        pseudonym={selectedPseudonym}
+        fallbackDomain={fallbackDomain}
+        initialEditMode={selectedEditMode}
+        onClose={() => setSelectedKey('')}
+        onUpdated={(previousDomain, previousPseudonym, updated) => {
+          setSelectedEditMode(false)
+          const normalized = {
+            ...updated,
+            domainName: updated.domainName || previousDomain
+          }
+          setResults(
+            results.map((result) => {
+              const domain = result.domainName || fallbackDomain
+              return domain === previousDomain && result.psn === previousPseudonym
+                ? normalized
+                : result
+            })
+          )
+          setPseudonymValue(normalized)
+          setSelectedKey(makeKey(normalized))
+        }}
+        onDeleted={(domain, pseudonym) => {
+          removeResult(domain, pseudonym)
+          setSelectedKey('')
+        }}
+      />
     )
+  }
+
+  const openResult = (result: Pseudonym, edit: boolean) => {
+    setPseudonymValue(result)
+    setSelectedEditMode(edit)
+    setSelectedKey(makeKey(result))
   }
 
   const deleteResult = async () => {
@@ -328,6 +463,8 @@ export function InlinePseudonymResults({
     }
   }
 
+  const pageResults = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
   return (
     <Panel className="mt-6 !w-full !p-0 overflow-hidden">
       <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
@@ -343,7 +480,7 @@ export function InlinePseudonymResults({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+          <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
                 <th className="px-5 py-3 text-base font-semibold">
@@ -364,17 +501,17 @@ export function InlinePseudonymResults({
               </tr>
             </thead>
             <tbody>
-              {results.map((result) => {
+              {pageResults.map((result) => {
                 const domain = result.domainName || fallbackDomain
                 return (
                   <tr
                     key={`${domain}:${result.psn}`}
                     className="border-t border-gray-200 align-middle hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
                   >
-                    <td className="px-5 py-4 text-lg font-semibold break-all">
+                    <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
                       {result.psn || '—'}
                     </td>
-                    <td className="px-5 py-4 text-base break-all">
+                    <td className="break-all px-5 py-4 text-base">
                       {result.identifierItem?.identifier || '—'}
                     </td>
                     <td className="px-5 py-4 text-base">
@@ -411,6 +548,8 @@ export function InlinePseudonymResults({
           </table>
         </div>
       )}
+
+      <Pagination total={results.length} page={page} onPageChange={setPage} />
 
       <Dialog
         visible={Boolean(pendingDelete)}

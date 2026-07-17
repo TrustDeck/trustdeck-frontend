@@ -22,7 +22,7 @@
   "entity": {
     "title": "Entität",
     "entityType": {
-      "title": "Entitätstyp",
+      "title": "Entität",
       "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."
     },
     "person": {
@@ -196,7 +196,7 @@
   "deleteFailed": "Entität konnte nicht gelöscht werden.",
   "confirmDeleteTitle": "Löschen bestätigen",
   "confirmDeleteEntity": "Möchten Sie diese Entität wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
-  "noEntitySchema": "Für den ausgewählten Entitätstyp ist keine Typdefinition verfügbar.",
+  "noEntitySchema": "Für die ausgewählte Entität ist keine Definition verfügbar.",
   "listAll": "Alle auflisten",
   "ok": "Ok",
   "subtitle": "Suchen Sie im ausgewählten Projekt nach Entitäten oder Pseudonymen.",
@@ -210,5 +210,11 @@
   "entitySummary": "Entitätsdaten",
   "queryRequired": "Geben Sie eine Suchanfrage ein.",
   "entityResultsDescription": "{{count}} passende Entitätsergebnisse.",
-  "pseudonymResultsDescription": "{{count}} passende Pseudonymergebnisse."
+  "pseudonymResultsDescription": "{{count}} passende Pseudonymergebnisse.",
+  "backToResults": "Zurück zu den Suchergebnissen",
+  "pagination": {
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "pageOf": "Seite {{page}} von {{pages}}"
+  }
 }

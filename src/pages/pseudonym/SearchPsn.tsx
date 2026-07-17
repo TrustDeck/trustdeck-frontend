@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Checkbox } from 'primereact/checkbox'
 import { Dialog } from 'primereact/dialog'
 import { Stepper } from 'primereact/stepper'
@@ -19,9 +19,8 @@ import SearchResult from '../../core/components/common/SearchResult'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomTreeSelect from '@component/form/CustomTreeSelect'
+import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
-import SecondaryButton from '@component/form/buttons/SecondaryButton'
-import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import EntityMask from '../search/components/EntityMask'
 import PseudonymMask from '../search/components/PseudonymMask'
 import SearchPseudonymService from '../search/services/PseudonymService'
@@ -44,6 +43,8 @@ type StandalonePseudonymForm = {
   validityTime: string
   omitPrefix: boolean
 }
+
+type GenerationMode = 'entity' | 'standalone' | null
 
 const createStandaloneForm = (): StandalonePseudonymForm => ({
   group: '',
@@ -90,19 +91,46 @@ const firstCreatedPseudonymValue = (
   return fallbackPseudonym
 }
 
+function flattenEntityData(
+  value: unknown,
+  path = ''
+): Array<{ label: string; value: string }> {
+  if (value === null || value === undefined) {
+    return path ? [{ label: path, value: '—' }] : []
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return path ? [{ label: path, value: '—' }] : []
+    return value.flatMap((entry, index) =>
+      flattenEntityData(entry, `${path}${path ? ' ' : ''}[${index + 1}]`)
+    )
+  }
+
+  if (typeof value === 'object') {
+    return Object.entries(value as Record<string, unknown>).flatMap(
+      ([key, entry]) => flattenEntityData(entry, path ? `${path}.${key}` : key)
+    )
+  }
+
+  return [{ label: path || 'value', value: String(value) }]
+}
+
 export default function SearchPsn() {
-  const { results, clearResults } = useSearchResultsStore()
+  const { results, clearResults: clearEntityResults } = useSearchResultsStore()
   const { setStepperRef, previousStep } = useStepperControlStore()
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
   const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { setPseudonymValue } = usePseudonymStore()
+  const {
+    setPseudonymValue,
+    clearResults: clearPseudonymResults
+  } = usePseudonymStore()
 
-  const [entityWorkflowVisible, setEntityWorkflowVisible] = useState(false)
+  const [generationMode, setGenerationMode] = useState<GenerationMode>(null)
+  const [viewedEntity, setViewedEntity] = useState<any | null>(null)
   const [entityCreating, setEntityCreating] = useState(false)
   const [entityError, setEntityError] = useState('')
-  const [standaloneVisible, setStandaloneVisible] = useState(false)
   const [standaloneAdvancedOpen, setStandaloneAdvancedOpen] = useState(false)
   const [standaloneForm, setStandaloneForm] = useState<StandalonePseudonymForm>(
     () => createStandaloneForm()
@@ -111,35 +139,50 @@ export default function SearchPsn() {
   const [standaloneCreating, setStandaloneCreating] = useState(false)
 
   const localStepperRef = useRef<any | null>(null)
+  const viewedEntityFields = useMemo(
+    () => flattenEntityData(viewedEntity?.data ?? viewedEntity ?? {}),
+    [viewedEntity]
+  )
 
   useEffect(() => {
     setStepperRef(localStepperRef)
-    clearResults()
+    clearEntityResults()
+    clearPseudonymResults()
 
     const loadGroups = async () => {
       const data = await GroupService.getGroups()
       setGroups(data)
     }
 
-    loadGroups()
-  }, [setStepperRef, clearResults, setGroups])
+    void loadGroups()
+  }, [setStepperRef, clearEntityResults, clearPseudonymResults, setGroups])
 
   const resetEntityWorkflow = () => {
-    clearResults()
+    clearEntityResults()
     setSelectedGroup('')
     setSelectedEntityId({ identifier: '', identifierType: '' })
     setEntityError('')
     localStepperRef.current?.setActiveStep?.(0)
   }
 
-  const openEntityWorkflow = () => {
+  const startEntityWorkflow = () => {
     resetEntityWorkflow()
-    setEntityWorkflowVisible(true)
+    setGenerationMode('entity')
   }
 
-  const closeEntityWorkflow = () => {
-    setEntityWorkflowVisible(false)
+  const startStandaloneWorkflow = () => {
+    setStandaloneForm(createStandaloneForm())
+    setStandaloneAdvancedOpen(false)
+    setStandaloneError('')
+    setGenerationMode('standalone')
+  }
+
+  const cancelGeneration = () => {
     resetEntityWorkflow()
+    setStandaloneForm(createStandaloneForm())
+    setStandaloneAdvancedOpen(false)
+    setStandaloneError('')
+    setGenerationMode(null)
   }
 
   async function handleEntityPseudonymCreate() {
@@ -185,7 +228,7 @@ export default function SearchPsn() {
           firstGroup
         )
         if (pseudonymData) setPseudonymValue(pseudonymData)
-        setEntityWorkflowVisible(false)
+        setGenerationMode(null)
         navigate(
           `/search/pseudonym/${encodeURIComponent(firstGroup)}/${encodeURIComponent(firstPsn)}`,
           { state: { returnTo: '/pseudonym-management' } }
@@ -197,13 +240,6 @@ export default function SearchPsn() {
     } finally {
       setEntityCreating(false)
     }
-  }
-
-  function handleStandalonePseudonym() {
-    setStandaloneForm(createStandaloneForm())
-    setStandaloneAdvancedOpen(false)
-    setStandaloneError('')
-    setStandaloneVisible(true)
   }
 
   async function handleStandaloneCreate() {
@@ -255,7 +291,7 @@ export default function SearchPsn() {
           selectedGroupName
         )
         if (pseudonymData) setPseudonymValue(pseudonymData)
-        setStandaloneVisible(false)
+        setGenerationMode(null)
         navigate(
           `/search/pseudonym/${encodeURIComponent(selectedGroupName)}/${encodeURIComponent(createdPsn)}`,
           { state: { returnTo: '/pseudonym-management' } }
@@ -280,8 +316,8 @@ export default function SearchPsn() {
         description={t('pseudonyms:headers.subtitle')}
       />
 
-      <div className="grid w-full gap-6 xl:grid-cols-2">
-        <Panel className="h-full !p-6">
+      <div className="flex w-full flex-col gap-6">
+        <Panel noMaxWidth className="w-full !p-6">
           <div className="mb-5 flex items-start gap-4">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-color-blue dark:bg-blue-950/50 dark:text-blue-300">
               <MagnifyingGlassIcon className="h-7 w-7" />
@@ -298,7 +334,7 @@ export default function SearchPsn() {
           <PseudonymMask inlineResults />
         </Panel>
 
-        <Panel className="h-full !p-6">
+        <Panel noMaxWidth className="w-full !p-6">
           <div className="mb-5 flex items-start gap-4">
             <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
               <SparklesIcon className="h-7 w-7" />
@@ -313,117 +349,183 @@ export default function SearchPsn() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={openEntityWorkflow}
-              className="group flex min-h-52 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
-            >
-              <UserIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
-              <h3 className="td-section-title mt-4">
-                {t('pseudonyms:management.entityTitle')}
-              </h3>
-              <p className="td-section-subtitle mt-2 flex-1">
-                {t('pseudonyms:management.entityDescription')}
-              </p>
-              <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
-                {t('pseudonyms:management.entityAction')}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleStandalonePseudonym}
-              className="group flex min-h-52 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-amber-500 hover:bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-amber-500 dark:hover:bg-amber-950/20"
-            >
-              <IdentificationIcon className="h-9 w-9 text-amber-700 dark:text-amber-300" />
-              <h3 className="td-section-title mt-4">
-                {t('pseudonyms:management.standaloneTitle')}
-              </h3>
-              <p className="td-section-subtitle mt-2 flex-1">
-                {t('pseudonyms:management.standaloneDescription')}
-              </p>
-              <span className="mt-5 font-semibold text-amber-700 group-hover:underline dark:text-amber-300">
-                {t('pseudonyms:management.standaloneAction')}
-              </span>
-            </button>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-base text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200">
-        {t('pseudonyms:infotext')}
-      </div>
-
-      <Dialog
-        header={t('pseudonyms:entityFlow.modalTitle')}
-        visible={entityWorkflowVisible}
-        onHide={closeEntityWorkflow}
-        dismissableMask
-        className="w-[min(96vw,1100px)]"
-      >
-        <p className="mb-6 text-base text-gray-600 dark:text-gray-300">
-          {t('pseudonyms:entityFlow.modalDescription')}
-        </p>
-
-        <Stepper ref={localStepperRef} linear className="td-pseudonym-stepper">
-          <StepperPanel header={t('pseudonyms:entityFlow.searchStep')}>
-            <div className="pt-4">
-              <EntityMask psn />
-            </div>
-          </StepperPanel>
-
-          <StepperPanel header={t('pseudonyms:entityFlow.selectStep')}>
-            <div className="space-y-5 pt-4">
-              <div className="grid gap-4 lg:grid-cols-2">
-                {results.map((result, index) => (
-                  <SearchResult
-                    key={result.trustdeckID ?? result.trustdeckId ?? index}
-                    pseudonymization
-                    result={result}
-                  />
-                ))}
-              </div>
-              <PrimaryOutlinedButton
-                label={t('identity:buttons.back')}
-                icon={<ArrowLeftIcon className="h-5 w-5" />}
-                onClick={() => previousStep()}
-              />
-            </div>
-          </StepperPanel>
-
-          <StepperPanel header={t('pseudonyms:entityFlow.groupStep')}>
-            <div className="space-y-5 pt-4">
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-base text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
-                <h3 className="font-semibold">
-                  {t('pseudonyms:selectedEntity.title')}
+          {!generationMode && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <button
+                type="button"
+                onClick={startEntityWorkflow}
+                className="group flex min-h-44 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+              >
+                <UserIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
+                <h3 className="td-section-title mt-4">
+                  {t('pseudonyms:management.entityTitle')}
                 </h3>
-                <p className="mt-1 break-all text-lg font-medium">
-                  {selectedEntityId.displayName ||
-                    selectedEntityId.identifier ||
-                    '—'}
+                <p className="td-section-subtitle mt-2 flex-1">
+                  {t('pseudonyms:management.entityDescription')}
                 </p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <span>
-                    {t('pseudonyms:selectedEntity.identifierType')}:{' '}
-                    <strong>
-                      {selectedEntityId.identifierType || 'TrustDeckID'}
-                    </strong>
-                  </span>
-                  <span className="break-all">
-                    {t('pseudonyms:selectedEntity.identifier')}:{' '}
-                    <strong>{selectedEntityId.identifier || '—'}</strong>
-                  </span>
-                </div>
-              </div>
+                <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
+                  {t('pseudonyms:management.entityAction')}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={startStandaloneWorkflow}
+                className="group flex min-h-44 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+              >
+                <IdentificationIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
+                <h3 className="td-section-title mt-4">
+                  {t('pseudonyms:management.standaloneTitle')}
+                </h3>
+                <p className="td-section-subtitle mt-2 flex-1">
+                  {t('pseudonyms:management.standaloneDescription')}
+                </p>
+                <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
+                  {t('pseudonyms:management.standaloneAction')}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {generationMode === 'entity' && (
+            <div className="rounded-2xl border border-gray-200 p-5 dark:border-slate-700">
+              <p className="mb-4 text-base text-gray-600 dark:text-gray-300">
+                {t('pseudonyms:entityFlow.modalDescription')}
+              </p>
+
+              <Stepper
+                ref={localStepperRef}
+                linear
+                className="td-pseudonym-stepper"
+              >
+                <StepperPanel header={t('pseudonyms:entityFlow.searchStep')}>
+                  <div className="space-y-5 pt-4">
+                    <EntityMask psn />
+                    <PrimaryOutlinedButton
+                      label={t('common:cancel')}
+                      onClick={cancelGeneration}
+                    />
+                  </div>
+                </StepperPanel>
+
+                <StepperPanel header={t('pseudonyms:entityFlow.selectStep')}>
+                  <div className="space-y-5 pt-4">
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {results.map((result, index) => (
+                        <SearchResult
+                          key={
+                            result.trustdeckID ?? result.trustdeckId ?? index
+                          }
+                          pseudonymization
+                          result={result}
+                          onView={setViewedEntity}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <PrimaryOutlinedButton
+                        label={t('identity:buttons.back')}
+                        icon={<ArrowLeftIcon className="h-5 w-5" />}
+                        onClick={() => previousStep()}
+                      />
+                      <PrimaryOutlinedButton
+                        label={t('common:cancel')}
+                        onClick={cancelGeneration}
+                      />
+                    </div>
+                  </div>
+                </StepperPanel>
+
+                <StepperPanel header={t('pseudonyms:entityFlow.groupStep')}>
+                  <div className="space-y-5 pt-4">
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-base text-blue-950 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+                      <h3 className="font-semibold">
+                        {t('pseudonyms:selectedEntity.title')}
+                      </h3>
+                      <p className="mt-1 break-all font-mono text-lg font-medium">
+                        {selectedEntityId.displayName ||
+                          selectedEntityId.identifier ||
+                          '—'}
+                      </p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        <span>
+                          {t('pseudonyms:selectedEntity.identifierType')}:{' '}
+                          <strong>
+                            {selectedEntityId.identifierType || 'TrustDeckID'}
+                          </strong>
+                        </span>
+                        <span className="break-all">
+                          {t('pseudonyms:selectedEntity.identifier')}:{' '}
+                          <strong className="font-mono">
+                            {selectedEntityId.identifier || '—'}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    <CustomTreeSelect
+                      id="entity-pseudonym-group"
+                      placeholder={t('pseudonyms:standalone.fields.group')}
+                      value={selectedGroup || null}
+                      options={groups || []}
+                      onChange={(event) =>
+                        setSelectedGroup(String(event.value ?? ''))
+                      }
+                      selectionMode="single"
+                      required
+                      filter
+                      filterPlaceholder={t(
+                        'pseudonyms:standalone.fields.groupSearch'
+                      )}
+                    />
+
+                    {entityError && (
+                      <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                        {entityError}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <PrimaryButton
+                        label={t('pseudonyms:buttons.generate')}
+                        onClick={handleEntityPseudonymCreate}
+                        loading={entityCreating}
+                        disabled={entityCreating}
+                      />
+                      <PrimaryOutlinedButton
+                        label={t('identity:buttons.back')}
+                        icon={<ArrowLeftIcon className="h-5 w-5" />}
+                        onClick={() => previousStep()}
+                        disabled={entityCreating}
+                      />
+                      <PrimaryOutlinedButton
+                        label={t('common:cancel')}
+                        onClick={cancelGeneration}
+                        disabled={entityCreating}
+                      />
+                    </div>
+                  </div>
+                </StepperPanel>
+              </Stepper>
+            </div>
+          )}
+
+          {generationMode === 'standalone' && (
+            <div className="space-y-6 rounded-2xl border border-gray-200 p-5 dark:border-slate-700">
+              <p className="text-base text-gray-600 dark:text-gray-300">
+                {t('pseudonyms:standalone.modalDescription')}
+              </p>
 
               <CustomTreeSelect
-                id="entity-pseudonym-group"
+                id="standalone-group"
                 placeholder={t('pseudonyms:standalone.fields.group')}
-                value={selectedGroup || null}
+                value={standaloneForm.group || null}
                 options={groups || []}
                 onChange={(event) =>
-                  setSelectedGroup(String(event.value ?? ''))
+                  setStandaloneForm((current) => ({
+                    ...current,
+                    group: String(event.value ?? '')
+                  }))
                 }
                 selectionMode="single"
                 required
@@ -433,190 +535,170 @@ export default function SearchPsn() {
                 )}
               />
 
-              {entityError && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <CustomFloatLabel
+                  id="standalone-identifier"
+                  placeholder={t('pseudonyms:standalone.fields.identifier')}
+                  value={standaloneForm.identifier}
+                  onChange={(event) =>
+                    setStandaloneForm((current) => ({
+                      ...current,
+                      identifier: event.target.value
+                    }))
+                  }
+                  required
+                />
+                <CustomFloatLabel
+                  id="standalone-id-type"
+                  placeholder={t('pseudonyms:standalone.fields.idType')}
+                  value={standaloneForm.idType}
+                  onChange={(event) =>
+                    setStandaloneForm((current) => ({
+                      ...current,
+                      idType: event.target.value
+                    }))
+                  }
+                  required
+                />
+              </div>
+
+              <button
+                type="button"
+                className="text-sm font-semibold text-color-blue hover:underline dark:text-blue-300"
+                onClick={() => setStandaloneAdvancedOpen((open) => !open)}
+              >
+                {standaloneAdvancedOpen
+                  ? t('pseudonyms:standalone.advanced.hide')
+                  : t('pseudonyms:standalone.advanced.show')}
+              </button>
+
+              {standaloneAdvancedOpen && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <CustomFloatLabel
+                      id="standalone-pseudonym"
+                      placeholder={t('pseudonyms:standalone.fields.pseudonym')}
+                      value={standaloneForm.psn}
+                      onChange={(event) =>
+                        setStandaloneForm((current) => ({
+                          ...current,
+                          psn: event.target.value
+                        }))
+                      }
+                    />
+                    <CustomFloatLabel
+                      id="standalone-validity-time"
+                      placeholder={t(
+                        'pseudonyms:standalone.fields.validityTime'
+                      )}
+                      value={standaloneForm.validityTime}
+                      onChange={(event) =>
+                        setStandaloneForm((current) => ({
+                          ...current,
+                          validityTime: event.target.value
+                        }))
+                      }
+                      helpText={t(
+                        'pseudonyms:standalone.fields.validityTimeHelp'
+                      )}
+                      helpIconInside
+                    />
+                    <CustomCalendar
+                      id="standalone-valid-from"
+                      placeholder={t('pseudonyms:standalone.fields.validFrom')}
+                      value={standaloneForm.validFrom}
+                      onChange={(event) =>
+                        setStandaloneForm((current) => ({
+                          ...current,
+                          validFrom: event.value
+                        }))
+                      }
+                      showTime
+                      showSeconds
+                      hourFormat="24"
+                      dateFormat="dd.mm.yy"
+                    />
+                    <CustomCalendar
+                      id="standalone-valid-to"
+                      placeholder={t('pseudonyms:standalone.fields.validTo')}
+                      value={standaloneForm.validTo}
+                      onChange={(event) =>
+                        setStandaloneForm((current) => ({
+                          ...current,
+                          validTo: event.value
+                        }))
+                      }
+                      showTime
+                      showSeconds
+                      hourFormat="24"
+                      dateFormat="dd.mm.yy"
+                    />
+                  </div>
+
+                  <label className="mt-4 flex cursor-pointer items-center gap-3 text-base text-gray-700 dark:text-gray-200">
+                    <Checkbox
+                      checked={standaloneForm.omitPrefix}
+                      onChange={(event) =>
+                        setStandaloneForm((current) => ({
+                          ...current,
+                          omitPrefix: Boolean(event.checked)
+                        }))
+                      }
+                    />
+                    <span>{t('pseudonyms:standalone.fields.omitPrefix')}</span>
+                  </label>
+                </div>
+              )}
+
+              {standaloneError && (
                 <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-                  {entityError}
+                  {standaloneError}
                 </p>
               )}
 
-              <div className="flex flex-wrap justify-between gap-3 pt-2">
-                <PrimaryOutlinedButton
-                  label={t('identity:buttons.back')}
-                  icon={<ArrowLeftIcon className="h-5 w-5" />}
-                  onClick={() => previousStep()}
-                  disabled={entityCreating}
-                />
-                <SecondaryButton
+              <div className="flex flex-wrap gap-3 pt-2">
+                <PrimaryButton
                   label={t('pseudonyms:buttons.generate')}
-                  onClick={handleEntityPseudonymCreate}
-                  loading={entityCreating}
-                  disabled={entityCreating}
+                  onClick={handleStandaloneCreate}
+                  loading={standaloneCreating}
+                  disabled={standaloneCreating}
+                />
+                <PrimaryOutlinedButton
+                  label={t('common:cancel')}
+                  onClick={cancelGeneration}
+                  disabled={standaloneCreating}
                 />
               </div>
             </div>
-          </StepperPanel>
-        </Stepper>
-      </Dialog>
+          )}
+        </Panel>
+      </div>
 
       <Dialog
-        header={t('pseudonyms:standalone.modalTitle')}
-        visible={standaloneVisible}
-        onHide={() => setStandaloneVisible(false)}
+        header={t('pseudonyms:entityFlow.entityDetailsTitle')}
+        visible={Boolean(viewedEntity)}
+        onHide={() => setViewedEntity(null)}
         dismissableMask
-        className="w-[min(92vw,760px)]"
+        className="w-[min(92vw,900px)]"
       >
-        <div className="space-y-6 pt-2">
-          <p className="text-base text-gray-600 dark:text-gray-300">
-            {t('pseudonyms:standalone.modalDescription')}
-          </p>
-
-          <CustomTreeSelect
-            id="standalone-group"
-            placeholder={t('pseudonyms:standalone.fields.group')}
-            value={standaloneForm.group || null}
-            options={groups || []}
-            onChange={(event) =>
-              setStandaloneForm((current) => ({
-                ...current,
-                group: String(event.value ?? '')
-              }))
-            }
-            selectionMode="single"
-            required
-            filter
-            filterPlaceholder={t('pseudonyms:standalone.fields.groupSearch')}
-          />
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CustomFloatLabel
-              id="standalone-identifier"
-              placeholder={t('pseudonyms:standalone.fields.identifier')}
-              value={standaloneForm.identifier}
-              onChange={(event) =>
-                setStandaloneForm((current) => ({
-                  ...current,
-                  identifier: event.target.value
-                }))
-              }
-              required
-            />
-            <CustomFloatLabel
-              id="standalone-id-type"
-              placeholder={t('pseudonyms:standalone.fields.idType')}
-              value={standaloneForm.idType}
-              onChange={(event) =>
-                setStandaloneForm((current) => ({
-                  ...current,
-                  idType: event.target.value
-                }))
-              }
-              required
-            />
-          </div>
-
-          <button
-            type="button"
-            className="text-sm font-semibold text-color-blue hover:underline dark:text-blue-300"
-            onClick={() => setStandaloneAdvancedOpen((open) => !open)}
-          >
-            {standaloneAdvancedOpen
-              ? t('pseudonyms:standalone.advanced.hide')
-              : t('pseudonyms:standalone.advanced.show')}
-          </button>
-
-          {standaloneAdvancedOpen && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <CustomFloatLabel
-                  id="standalone-pseudonym"
-                  placeholder={t('pseudonyms:standalone.fields.pseudonym')}
-                  value={standaloneForm.psn}
-                  onChange={(event) =>
-                    setStandaloneForm((current) => ({
-                      ...current,
-                      psn: event.target.value
-                    }))
-                  }
-                />
-                <CustomFloatLabel
-                  id="standalone-validity-time"
-                  placeholder={t('pseudonyms:standalone.fields.validityTime')}
-                  value={standaloneForm.validityTime}
-                  onChange={(event) =>
-                    setStandaloneForm((current) => ({
-                      ...current,
-                      validityTime: event.target.value
-                    }))
-                  }
-                  helpText={t('pseudonyms:standalone.fields.validityTimeHelp')}
-                  helpIconInside
-                />
-                <CustomCalendar
-                  id="standalone-valid-from"
-                  placeholder={t('pseudonyms:standalone.fields.validFrom')}
-                  value={standaloneForm.validFrom}
-                  onChange={(event) =>
-                    setStandaloneForm((current) => ({
-                      ...current,
-                      validFrom: event.value
-                    }))
-                  }
-                  showTime
-                  showSeconds
-                  hourFormat="24"
-                  dateFormat="dd.mm.yy"
-                />
-                <CustomCalendar
-                  id="standalone-valid-to"
-                  placeholder={t('pseudonyms:standalone.fields.validTo')}
-                  value={standaloneForm.validTo}
-                  onChange={(event) =>
-                    setStandaloneForm((current) => ({
-                      ...current,
-                      validTo: event.value
-                    }))
-                  }
-                  showTime
-                  showSeconds
-                  hourFormat="24"
-                  dateFormat="dd.mm.yy"
-                />
-              </div>
-
-              <label className="mt-4 flex cursor-pointer items-center gap-3 text-base text-gray-700 dark:text-gray-200">
-                <Checkbox
-                  checked={standaloneForm.omitPrefix}
-                  onChange={(event) =>
-                    setStandaloneForm((current) => ({
-                      ...current,
-                      omitPrefix: Boolean(event.checked)
-                    }))
-                  }
-                />
-                <span>{t('pseudonyms:standalone.fields.omitPrefix')}</span>
-              </label>
-            </div>
-          )}
-
-          {standaloneError && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-              {standaloneError}
-            </p>
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <SecondaryOutlinedButton
-              label={t('common:cancel')}
-              onClick={() => setStandaloneVisible(false)}
-              disabled={standaloneCreating}
-            />
-            <SecondaryButton
-              label={t('pseudonyms:buttons.generate')}
-              onClick={handleStandaloneCreate}
-              loading={standaloneCreating}
-              disabled={standaloneCreating}
-            />
-          </div>
+        <p className="mb-5 text-base text-gray-600 dark:text-gray-300">
+          {t('pseudonyms:entityFlow.entityDetailsDescription')}
+        </p>
+        <div className="max-h-[65vh] overflow-auto rounded-xl border border-gray-200 dark:border-slate-700">
+          <table className="min-w-full divide-y divide-gray-200 text-left dark:divide-slate-700">
+            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+              {viewedEntityFields.map((field, index) => (
+                <tr key={`${field.label}-${index}`}>
+                  <th className="w-1/3 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 dark:bg-slate-900 dark:text-gray-200">
+                    {field.label}
+                  </th>
+                  <td className="break-all px-4 py-3 text-base text-gray-900 dark:text-gray-100">
+                    {field.value}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Dialog>
     </div>

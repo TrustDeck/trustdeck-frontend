@@ -110,7 +110,7 @@ export default function BaseTypeManager() {
       await TrustDeck.instance().deleteBaseType(selectedType.name)
       showToast({
         severity: 'success',
-        summary: t('toast.deletedSummary', 'Entity type deleted'),
+        summary: t('toast.deletedSummary', 'Entity deleted'),
         detail: t('toast.baseDeletedDetail', 'The base type was deleted.'),
         life: 3500
       })
@@ -150,7 +150,7 @@ export default function BaseTypeManager() {
               <p className="text-base text-gray-600 dark:text-gray-300">
                 {t(
                   'baseTypesSectionDescription',
-                  'Manage reusable type blueprints that can be extended by project-specific entity types.'
+                  'Manage reusable base entities that can be extended by project-specific entities.'
                 )}
               </p>
 

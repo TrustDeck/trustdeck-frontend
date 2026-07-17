@@ -101,7 +101,9 @@
     "deletedSummary": "Entität gelöscht",
     "projectDeletedDetail": "Die Projektentität wurde gelöscht.",
     "baseDeletedDetail": "Die Basisentität wurde gelöscht.",
-    "deleteFailed": "Löschen fehlgeschlagen"
+    "deleteFailed": "Löschen fehlgeschlagen",
+    "invalidEntityLinkageSummary": "Ungültige Record-Linkage-Konfiguration",
+    "invalidEntityLinkageDetail": "Prüfen Sie Schwellenwerte, Ähnlichkeitswerte, Kandidatenlimit und numerische PPRL-Einstellungen."
   },
   "loadingEntityTypes": "Entitäten werden geladen...",
   "noEntityTypesTitle": "Noch keine Entitäten konfiguriert",
@@ -154,7 +156,7 @@
   },
   "linkageConfig": {
     "title": "Record-Linkage-Konfiguration",
-    "description": "Konfigurieren Sie, wie dieses Attribut normalisiert, verglichen, gewichtet und optional für datenschutzwahrende Record-Linkage transformiert wird.",
+    "description": "Konfigurieren Sie, wie dieses Attribut im Record-Linkage-Prozess der Entität vorbereitet, geblockt und gewichtet wird.",
     "tagsPlaceholder": "Tags, kommagetrennt, z. B. person.givenName",
     "privacyMode": "Datenschutzmodus",
     "plain": "Klartext",
@@ -174,7 +176,9 @@
     "pprlMethodOptions": {
       "ngramBloomFilter": "n-Gramm-Bloom-Filter",
       "hmacExact": "HMAC-basierter exakter Abgleich"
-    }
+    },
+    "attributeTitle": "Linkage-Einstellungen des Attributs",
+    "attributeDescription": "Legen Sie fest, wie dieses Attribut am Linkage-Prozess der Entität teilnimmt: Normalisierung, Kodierung, Blocking und Gewichtung."
   },
   "linkageConfigHelp": {
     "tags": "Semantische Tags beschreiben die Bedeutung eines Attributs. Standardmäßig verwendet TrustDeck den Entitätsnamen gefolgt vom Attributnamen, zum Beispiel person.firstName.",
@@ -207,7 +211,8 @@
     "phonetic": "Verwendet eine phonetische Kodierung als Blocking-Schlüssel.",
     "year": "Verwendet den Jahresanteil als Blocking-Schlüssel.",
     "yearMonth": "Verwendet Jahr und Monat als Blocking-Schlüssel.",
-    "domainExact": "Verwendet einen gruppenspezifischen exakten Blocking-Schlüssel."
+    "domainExact": "Verwendet einen gruppenspezifischen exakten Blocking-Schlüssel.",
+    "bloomBands": "Verwendet Bänder des entitätsweiten Bloom-Filters als geschützte Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
   "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu.",
@@ -291,7 +296,8 @@
     "phonetic": "Phonetischer Wert",
     "year": "Jahr",
     "yearMonth": "Jahr und Monat",
-    "domainExact": "Gruppenspezifischer exakter Wert"
+    "domainExact": "Gruppenspezifischer exakter Wert",
+    "bloomBands": "Bloom-Filter-Bänder"
   },
   "systemAttributeIdentifierPlaceholder": "z. B. familyName",
   "labelTextRequired": "Bezeichnung *",
@@ -373,5 +379,30 @@
   "associatedGroupCreationHint": "Erstellen Sie die Pseudonymgruppe zuerst in der Pseudonymgruppenverwaltung. Sie kann auch später zugewiesen oder geändert werden, solange für diese Entität noch keine Entitätsinstanzen vorhanden sind.",
   "projectTypeCreateHelp": "Definieren Sie eine neue projektspezifische Entität und ihre Attribute.",
   "editEntityHelp": "Bearbeiten Sie die Entitätseinstellungen und Attributdefinition direkt unten.",
-  "viewEntityHelp": "Prüfen Sie die zugeordnete Pseudonymgruppe, die Basisentität und die Entitätsattribute."
+  "viewEntityHelp": "Prüfen Sie die zugeordnete Pseudonymgruppe, die Basisentität und die Entitätsattribute.",
+  "entityLinkage": {
+    "title": "Record Linkage auf Entitätsebene",
+    "description": "Legen Sie fest, ob Record Linkage für diese Entität verwendet wird und wie Kandidaten bewertet, geschützt und bei der Erstellung behandelt werden.",
+    "enabled": "Record Linkage für diese Entität aktivieren",
+    "minScore": "Minimaler Rohwert",
+    "minNormalizedScore": "Minimaler normalisierter Wert",
+    "bloomMinSimilarity": "Minimale Bloom-Ähnlichkeit",
+    "candidateLimit": "Kandidatenlimit",
+    "exactToken": "Zusätzliches exaktes HMAC-Token erzeugen",
+    "autoLinkOnCreate": "Vor der Erstellung automatisch nach passenden Entitäten suchen",
+    "onMatch": "Verhalten bei einem Treffer",
+    "onMatchReject": "Erstellung ablehnen und Kandidaten zurückgeben",
+    "onMatchReturnExisting": "Bestehende Entität zurückgeben, statt ein Duplikat anzulegen",
+    "inherited": "Von der Basisentität geerbt; bearbeiten zum Überschreiben."
+  },
+  "entityLinkageHelp": {
+    "enabled": "Steuert Record Linkage für die gesamte Entität. Die Attributeinstellungen legen nur fest, welche Werte teilnehmen und wie sie vorbereitet werden.",
+    "minScore": "Minimale Summe der Gewichtungen übereinstimmender Attribute, damit ein Kandidat zurückgegeben wird.",
+    "minNormalizedScore": "Minimaler Anteil des möglichen Abfragewerts für einen Kandidaten. Geben Sie einen Wert zwischen 0 und 1 ein.",
+    "bloomMinSimilarity": "Minimale Dice-Ähnlichkeit, ab der ein Bloom-Filter-Attribut zum Entitätswert beiträgt. Geben Sie einen Wert zwischen 0 und 1 ein.",
+    "candidateLimit": "Maximale Anzahl geblockter Kandidaten, die vor der detaillierten Bewertung geladen wird.",
+    "exactToken": "Erzeugt beim n-Gramm-Bloom-Filter zusätzlich ein geschütztes exaktes Token, damit exakte Übereinstimmungen stärker beitragen können.",
+    "autoLinkOnCreate": "Führt vor dem Speichern einer neuen Entität Record Linkage auf Entitätsebene aus.",
+    "onMatch": "Ablehnen liefert die Kandidatenliste mit HTTP 409. Bestehende Entität zurückgeben liefert den besten aktiven Treffer, ohne ein Duplikat anzulegen."
+  }
 }

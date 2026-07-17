@@ -20,6 +20,12 @@ type CustomFloatLabelProps = {
   required?: boolean
 }
 
+/**
+ * Shared text field with a permanent small label above the control.
+ *
+ * The historic component name is retained to avoid touching every caller, but
+ * no floating-label behavior is rendered anymore.
+ */
 const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   id,
   value,
@@ -38,10 +44,8 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   required
 }) => {
   const [isValid, setIsValid] = useState(true)
-  const [focused, setFocused] = useState(false)
 
   const handleBlur = () => {
-    setFocused(false)
     if (validate) {
       setIsValid(validate(String(value)))
     } else if (required) {
@@ -50,45 +54,47 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
     onBlur?.()
   }
 
-  const showFloating = focused || String(value).length > 0 || !isValid
+  const label = placeholder.trim()
 
   return (
-    <div className="relative w-full">
-      <InputText
-        id={id}
-        value={String(value)}
-        onChange={onChange}
-        onFocus={() => setFocused(true)}
-        placeholder={
-          focused && !readOnly && !disabled ? inputPlaceholder : undefined
-        }
-        onBlur={handleBlur}
-        onKeyDown={onKeyDown}
-        readOnly={readOnly}
-        disabled={disabled}
-        className={`h-[44px] w-full rounded-lg px-3 font-font-text text-xl font-normal ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
-          !isValid ? 'border border-red-500' : 'border border-color-light-gray'
-        } ${disabled ? 'cursor-not-allowed text-gray-400' : ''}`}
-      />
+    <div className="w-full">
+      {label && (
+        <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
+          <span>{label}</span>
+          {required && <span aria-hidden="true">*</span>}
+        </label>
+      )}
 
-      <label
-        htmlFor={id}
-        className={`td-floating-label pointer-events-none absolute left-3 font-font-text transition-all
-          ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'td-floating-label--error font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
-        `}
-      >
-        {!isValid && errorMessage ? errorMessage : placeholder}
-        {required && <span className="ml-1">*</span>}
-      </label>
-
-      {helpText && (
-        <HelpTooltip
-          text={helpText}
-          className={`absolute top-1/2 z-30 -translate-y-1/2 ${
-            helpIconInside ? 'right-3' : '-right-8'
-          }`}
+      <div className="relative w-full">
+        <InputText
+          id={id}
+          value={String(value)}
+          onChange={onChange}
+          placeholder={!readOnly && !disabled ? inputPlaceholder : undefined}
+          onBlur={handleBlur}
+          onKeyDown={onKeyDown}
+          readOnly={readOnly}
+          disabled={disabled}
+          aria-invalid={!isValid}
+          className={`h-[44px] w-full rounded-lg px-3 font-font-text text-xl font-normal ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
+            !isValid ? 'border border-red-500' : 'border border-color-light-gray'
+          } ${disabled ? 'cursor-not-allowed text-gray-400' : ''}`}
         />
+
+        {helpText && (
+          <HelpTooltip
+            text={helpText}
+            className={`absolute top-1/2 z-30 -translate-y-1/2 ${
+              helpIconInside ? 'right-3' : '-right-8'
+            }`}
+          />
+        )}
+      </div>
+
+      {!isValid && errorMessage && (
+        <p className="mt-1 text-sm font-semibold text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
       )}
     </div>
   )

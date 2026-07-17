@@ -101,7 +101,9 @@
     "deletedSummary": "Entity deleted",
     "projectDeletedDetail": "The project entity was deleted.",
     "baseDeletedDetail": "The base entity was deleted.",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "invalidEntityLinkageSummary": "Invalid record-linkage configuration",
+    "invalidEntityLinkageDetail": "Check score thresholds, similarity values, candidate limit, and PPRL numeric settings."
   },
   "loadingEntityTypes": "Loading entities...",
   "noEntityTypesTitle": "No entities configured yet",
@@ -154,7 +156,7 @@
   },
   "linkageConfig": {
     "title": "Record linkage configuration",
-    "description": "Configure how this attribute is normalized, compared, weighted and optionally transformed for privacy-preserving record linkage.",
+    "description": "Configure how this attribute is prepared, blocked, and weighted within the entity-level record-linkage process.",
     "tagsPlaceholder": "Tags, comma separated, e.g. person.givenName",
     "privacyMode": "Privacy mode",
     "plain": "Plain",
@@ -174,7 +176,9 @@
     "pprlMethodOptions": {
       "ngramBloomFilter": "n-gram Bloom Filter",
       "hmacExact": "HMAC-based exact matching"
-    }
+    },
+    "attributeTitle": "Attribute linkage settings",
+    "attributeDescription": "Choose how this attribute participates in the entity-level linkage process: normalization, encoding, blocking, and weight."
   },
   "linkageConfigHelp": {
     "tags": "Semantic tags describe what an attribute represents. By default, TrustDeck uses the entity name followed by the attribute name, for example person.firstName.",
@@ -207,7 +211,8 @@
     "phonetic": "Uses a phonetic encoding as the blocking key.",
     "year": "Uses the year part as a blocking key.",
     "yearMonth": "Uses year and month as a blocking key.",
-    "domainExact": "Uses a group-specific exact blocking key."
+    "domainExact": "Uses a group-specific exact blocking key.",
+    "bloomBands": "Uses bands of the entity-level Bloom filter as protected blocking keys."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
   "addMoreAttributesHint": "Add more attributes or sections to the definition.",
@@ -291,7 +296,8 @@
     "phonetic": "Phonetic value",
     "year": "Year",
     "yearMonth": "Year and month",
-    "domainExact": "Group-specific exact value"
+    "domainExact": "Group-specific exact value",
+    "bloomBands": "Bloom-filter bands"
   },
   "systemAttributeIdentifierPlaceholder": "e.g. familyName",
   "labelTextRequired": "Label text *",
@@ -373,5 +379,30 @@
   "associatedGroupCreationHint": "Create the pseudonym group first in Pseudonym Group Management. It can also be assigned or changed later while this entity has no entity instances.",
   "projectTypeCreateHelp": "Define a new project-specific entity and its attributes.",
   "editEntityHelp": "Edit the entity settings and attribute definition directly below.",
-  "viewEntityHelp": "Review the associated pseudonym group, base entity, and entity attributes."
+  "viewEntityHelp": "Review the associated pseudonym group, base entity, and entity attributes.",
+  "entityLinkage": {
+    "title": "Entity-level record linkage",
+    "description": "Configure whether record linkage is used for this entity and how candidates are scored, protected, and handled during creation.",
+    "enabled": "Enable record linkage for this entity",
+    "minScore": "Minimum raw score",
+    "minNormalizedScore": "Minimum normalized score",
+    "bloomMinSimilarity": "Minimum Bloom similarity",
+    "candidateLimit": "Candidate limit",
+    "exactToken": "Generate an additional exact HMAC token",
+    "autoLinkOnCreate": "Check for matching entities automatically before creation",
+    "onMatch": "Behavior when a match is found",
+    "onMatchReject": "Reject creation and return candidates",
+    "onMatchReturnExisting": "Return the existing entity instead of creating a duplicate",
+    "inherited": "Inherited from the base entity; edit to override."
+  },
+  "entityLinkageHelp": {
+    "enabled": "Controls record linkage for the complete entity. Attribute settings below only define which values participate and how they are prepared.",
+    "minScore": "Minimum sum of matched attribute weights required for a candidate to be returned.",
+    "minNormalizedScore": "Minimum fraction of the possible query score required for a candidate. Enter a value between 0 and 1.",
+    "bloomMinSimilarity": "Minimum Dice similarity at which a Bloom-filter attribute contributes to the entity score. Enter a value between 0 and 1.",
+    "candidateLimit": "Maximum number of blocked candidates loaded before detailed scoring.",
+    "exactToken": "For n-gram Bloom Filter linkage, additionally creates a protected exact token so exact agreement can contribute strongly.",
+    "autoLinkOnCreate": "Runs entity-level record linkage before a new entity is stored.",
+    "onMatch": "Reject returns the candidate list with HTTP 409. Return existing sends the best active matching entity instead of creating a duplicate."
+  }
 }

@@ -11,6 +11,16 @@ interface LinksTableProps {
   entity: Entity
 }
 
+function transformLinks(links: Link[], parentId: string): TreeNode[] {
+  if (!links || links.length === 0) return []
+
+  return links.map((link) => ({
+    key: `${parentId}-${link.group}-${link.pseudonym}`,
+    data: { group: link.group, pseudonym: link.pseudonym },
+    children: link.children ? transformLinks(link.children, parentId) : []
+  }))
+}
+
 export default function LinksTable({ entity }: LinksTableProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([])
   const { t } = useTranslation()
@@ -19,37 +29,30 @@ export default function LinksTable({ entity }: LinksTableProps) {
 
   useEffect(() => {
     if (entity && entity.links) {
-      const normalizedLinks = Array.isArray(entity.links) ? entity.links : [entity.links]
-      const transformedLinks = transformLinks(normalizedLinks, entity.id)
-      setNodes(transformedLinks)
+      const normalizedLinks = Array.isArray(entity.links)
+        ? entity.links
+        : [entity.links]
+      setNodes(transformLinks(normalizedLinks, entity.id))
     } else {
       setNodes([])
     }
   }, [entity])
-
-  const transformLinks = (links: Link[], parentId: string): TreeNode[] => {
-    if (!links || links.length === 0) return []
-
-    return links.map((link) => ({
-      key: `${parentId}-${link.group}-${link.pseudonym}`,
-      data: { group: link.group, pseudonym: link.pseudonym },
-      children: link.children ? transformLinks(link.children, parentId) : []
-    }))
-  }
 
   const groupTemplate = (node: TreeNode) => (
     <span
       className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left text-base"
       title={node.data.group}
     >
-      {node.data.group || '-'}
+      {node.data.group || '—'}
     </span>
   )
 
   const pseudonymTemplate = (node: TreeNode) => {
     if (!node.data.pseudonym) {
       return (
-        <span className="inline-flex min-h-[2.75rem] items-center text-base">-</span>
+        <span className="inline-flex min-h-[2.75rem] items-center text-base">
+          —
+        </span>
       )
     }
 
@@ -67,7 +70,7 @@ export default function LinksTable({ entity }: LinksTableProps) {
             }
           })
         }
-        className="inline-flex min-h-[2.75rem] items-center break-all text-left text-base text-blue-500 hover:underline"
+        className="inline-flex min-h-[2.75rem] items-center break-all text-left font-mono text-base text-blue-500 hover:underline"
       >
         {node.data.pseudonym}
       </button>
@@ -76,8 +79,17 @@ export default function LinksTable({ entity }: LinksTableProps) {
 
   return (
     <TreeTable className="w-full linked-pseudonym-table" value={nodes}>
-      <Column field="group" header={t('search:group.title')} expander body={groupTemplate} />
-      <Column field="pseudonym" header={t('search:pseudonym.title')} body={pseudonymTemplate} />
+      <Column
+        field="group"
+        header={t('search:group.title')}
+        expander
+        body={groupTemplate}
+      />
+      <Column
+        field="pseudonym"
+        header={t('search:pseudonym.title')}
+        body={pseudonymTemplate}
+      />
     </TreeTable>
   )
 }

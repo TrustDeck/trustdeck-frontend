@@ -3,14 +3,14 @@ import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Panel from '../../../core/components/common/Panel'
 import Divider from '../../../core/components/common/Divider'
 import LinksTable from './LinksTable'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomInputNumber from '@component/form/CustomInputNumber'
 import type { Attribute } from '../../../core/stores/ProjectStore'
 import type { Entity } from '../types/Entity'
+import { resolveAttributeLabel } from '../utils/entityDisplay'
 
-type Props = {
+export type DynamicEntityProps = {
   entity: any
   schemaAttributes: Attribute[]
   editMode: boolean
@@ -64,6 +64,21 @@ function resolveTrustDeckId(entity: any): string {
   )
 }
 
+function FieldLabel({
+  label,
+  required = false
+}: {
+  label: string
+  required?: boolean
+}) {
+  return (
+    <span className="td-field-label mb-1 block">
+      {label}
+      {required && <span className="ml-1 text-red-600">*</span>}
+    </span>
+  )
+}
+
 export default function DynamicEntity({
   entity,
   schemaAttributes,
@@ -71,23 +86,11 @@ export default function DynamicEntity({
   formData,
   onFieldChange,
   showIdentifierPanel = true
-}: Props) {
+}: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
 
-  const resolveLabel = (attr: any) => {
-    const isGerman = i18n.language.startsWith('de')
-    return isGerman
-      ? attr.label_de ||
-          attr.labelDe ||
-          attr.label_en ||
-          attr.labelEn ||
-          attr.name
-      : attr.label_en ||
-          attr.labelEn ||
-          attr.label_de ||
-          attr.labelDe ||
-          attr.name
-  }
+  const resolveLabel = (attr: any) =>
+    resolveAttributeLabel(attr, i18n.language)
 
   const isEmptyValue = (value: unknown) =>
     value === undefined || value === null || String(value).trim() === ''
@@ -102,121 +105,134 @@ export default function DynamicEntity({
     attr: any,
     rawValue: any,
     key: string,
-    setValue: (value: any) => void
+    setValue: (value: any) => void,
+    showLabel = true
   ) => {
     const displayLabel = resolveLabel(attr)
     const enumValues = attr.values ?? attr.enum ?? []
 
-    if (editMode && attr.name && attr.type === 'enum') {
+    if (!editMode || !attr.name) {
       return (
-        <CustomDropdown
-          key={key}
-          id={key}
-          value={rawValue ?? ''}
-          options={enumValues.map((option: string) => ({
-            label: option,
-            value: option
-          }))}
-          onChange={(e) => setValue(e.value)}
-          placeholder={displayLabel}
-          required={attr.required}
-        />
+        <div key={key} className="min-w-0">
+          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          <div className="min-h-[44px] break-words rounded-lg border border-color-light-gray bg-white px-3 py-2 text-xl text-gray-900 dark:bg-slate-950 dark:text-gray-100">
+            {formatValue(rawValue) || '—'}
+          </div>
+        </div>
       )
     }
 
-    if (
-      editMode &&
-      attr.name &&
-      (attr.type === 'date' || attr.type === 'datetime')
-    ) {
+    if (attr.type === 'enum') {
       return (
-        <CustomCalendar
-          key={key}
-          id={key}
-          value={parseDateValue(rawValue)}
-          onChange={(e) => {
-            if (!e.value) {
-              setValue('')
-              return
-            }
-            setValue(
-              attr.type === 'date'
-                ? formatDateOnly(e.value)
-                : e.value.toISOString()
-            )
-          }}
-          placeholder={displayLabel}
-          required={attr.required}
-          showTime={attr.type === 'datetime'}
-        />
-      )
-    }
-
-    if (
-      editMode &&
-      attr.name &&
-      (attr.type === 'integer' || attr.type === 'number')
-    ) {
-      return (
-        <CustomInputNumber
-          key={key}
-          id={key}
-          value={
-            typeof rawValue === 'number'
-              ? rawValue
-              : rawValue !== '' && rawValue !== undefined && rawValue !== null
-                ? Number(rawValue)
-                : null
-          }
-          onChange={(e) => setValue(e.value ?? '')}
-          placeholder={attr.required ? `${displayLabel} *` : displayLabel}
-          min={attr.minimum}
-          max={attr.maximum}
-          step={attr.type === 'integer' ? 1 : 0.01}
-          validate={(value) => {
-            if (attr.required && (value === null || value === undefined))
-              return false
-            if (value === null || value === undefined) return true
-            if (attr.type === 'integer' && !Number.isInteger(value))
-              return false
-            if (typeof attr.minimum === 'number' && value < attr.minimum)
-              return false
-            if (typeof attr.maximum === 'number' && value > attr.maximum)
-              return false
-            return true
-          }}
-          errorMessage={t('identity:crud.invalidField')}
-        />
-      )
-    }
-
-    if (editMode && attr.name && attr.type === 'boolean') {
-      return (
-        <label
-          key={key}
-          className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray px-3 text-xl font-font-text text-gray-700 dark:text-gray-200"
-        >
-          <input
-            type="checkbox"
-            checked={Boolean(rawValue)}
-            onChange={(e) => setValue(e.target.checked)}
-            className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+        <label key={key} className="block min-w-0">
+          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          <CustomDropdown
+            id={key}
+            value={rawValue ?? ''}
+            options={enumValues.map((option: string) => ({
+              label: option,
+              value: option
+            }))}
+            onChange={(event) => setValue(event.value)}
+            className="w-full"
+            required={attr.required}
           />
-          <span>{attr.required ? `${displayLabel} *` : displayLabel}</span>
         </label>
       )
     }
 
+    if (attr.type === 'date' || attr.type === 'datetime') {
+      return (
+        <label key={key} className="block min-w-0">
+          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          <CustomCalendar
+            id={key}
+            value={parseDateValue(rawValue)}
+            onChange={(event) => {
+              if (!event.value) {
+                setValue('')
+                return
+              }
+              setValue(
+                attr.type === 'date'
+                  ? formatDateOnly(event.value)
+                  : event.value.toISOString()
+              )
+            }}
+            required={attr.required}
+            showTime={attr.type === 'datetime'}
+            showSeconds={attr.type === 'datetime'}
+            dateFormat="dd.mm.yy"
+            hourFormat="24"
+          />
+        </label>
+      )
+    }
+
+    if (attr.type === 'integer' || attr.type === 'number') {
+      return (
+        <label key={key} className="block min-w-0">
+          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          <CustomInputNumber
+            id={key}
+            value={
+              typeof rawValue === 'number'
+                ? rawValue
+                : rawValue !== '' && rawValue !== undefined && rawValue !== null
+                  ? Number(rawValue)
+                  : null
+            }
+            onChange={(event) => setValue(event.value ?? '')}
+            placeholder=""
+            min={attr.minimum}
+            max={attr.maximum}
+            step={attr.type === 'integer' ? 1 : 0.01}
+            validate={(value) => {
+              if (attr.required && (value === null || value === undefined))
+                return false
+              if (value === null || value === undefined) return true
+              if (attr.type === 'integer' && !Number.isInteger(value))
+                return false
+              if (typeof attr.minimum === 'number' && value < attr.minimum)
+                return false
+              if (typeof attr.maximum === 'number' && value > attr.maximum)
+                return false
+              return true
+            }}
+            errorMessage={t('identity:crud.invalidField')}
+          />
+        </label>
+      )
+    }
+
+    if (attr.type === 'boolean') {
+      return (
+        <div key={key} className="min-w-0">
+          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          <label className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray bg-white px-3 text-xl font-font-text text-gray-700 dark:bg-slate-950 dark:text-gray-200">
+            <input
+              type="checkbox"
+              checked={Boolean(rawValue)}
+              onChange={(event) => setValue(event.target.checked)}
+              className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+            />
+            <span>{rawValue ? t('common:yes') : t('common:no')}</span>
+          </label>
+        </div>
+      )
+    }
+
     return (
-      <CustomFloatLabel
-        key={key}
-        id={key}
-        readOnly={!editMode || !attr.name}
-        value={formatValue(rawValue)}
-        placeholder={displayLabel}
-        required={attr.required}
-        onChange={attr.name ? (e) => setValue(e.target.value) : undefined}
-      />
+      <label key={key} className="block min-w-0">
+        {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+        <input
+          id={key}
+          type="text"
+          value={formatValue(rawValue)}
+          onChange={(event) => setValue(event.target.value)}
+          className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+        />
+      </label>
     )
   }
 
@@ -248,9 +264,7 @@ export default function DynamicEntity({
           key={key}
           className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-slate-700"
         >
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {resolveLabel(attr)}
-          </div>
+          <FieldLabel label={resolveLabel(attr)} required={attr.required} />
           {values.map((value, index) => (
             <div
               key={`${key}-value-${index}`}
@@ -265,7 +279,8 @@ export default function DynamicEntity({
                   },
                   value,
                   `${key}-input-${index}`,
-                  (nextValue) => setRepeatableValue(index, nextValue)
+                  (nextValue) => setRepeatableValue(index, nextValue),
+                  false
                 )}
               </div>
               <button
@@ -302,7 +317,7 @@ export default function DynamicEntity({
     context: Record<string, any>,
     keyPrefix: string,
     pathPrefix: Array<string | number>
-  ) =>
+  ): React.ReactNode[] =>
     attributes.map((attr, index) => {
       const key = `${keyPrefix}-${attr.name || attr.key || index}`
 
@@ -331,11 +346,11 @@ export default function DynamicEntity({
 
         return (
           <div key={key} className="space-y-3">
-            <h3 className="text-md font-medium">{resolveLabel(attr)}</h3>
+            <h3 className="td-section-title">{resolveLabel(attr)}</h3>
             {entries.map((entry, entryIndex) => (
               <div key={`${key}-entry-${entryIndex}`} className="space-y-3">
                 {entries.length > 1 && (
-                  <div className="text-sm text-gray-600">{`${resolveLabel(attr)} ${entryIndex + 1}`}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">{`${resolveLabel(attr)} ${entryIndex + 1}`}</div>
                 )}
                 {renderAttributes(
                   attr.attributes,
@@ -365,8 +380,8 @@ export default function DynamicEntity({
     <div
       className={
         showIdentifierPanel
-          ? 'mx-auto grid w-full max-w-[824px] grid-cols-1 items-start justify-center gap-8 xl:grid-cols-[minmax(0,370px)_minmax(0,370px)]'
-          : 'mx-auto flex w-full max-w-3xl justify-center'
+          ? 'mx-auto grid w-full max-w-[1100px] grid-cols-1 items-start justify-center gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.8fr)]'
+          : 'mx-auto flex w-full max-w-4xl justify-center'
       }
     >
       <Panel noBasePanel noMaxWidth className={modalPanelClass}>
@@ -387,11 +402,11 @@ export default function DynamicEntity({
             <Divider text={t('search:identifier')} />
             <div className="flex flex-col gap-4">
               <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
-                <div className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+                <div className="td-field-label mb-1">
                   {t('search:trustDeckId')}
                 </div>
-                <div className="break-all font-mono text-base text-gray-900 dark:text-gray-100">
-                  {resolveTrustDeckId(entity) || '-'}
+                <div className="break-all font-mono text-lg text-gray-900 dark:text-gray-100">
+                  {resolveTrustDeckId(entity) || '—'}
                 </div>
               </div>
             </div>

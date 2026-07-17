@@ -17,7 +17,6 @@ import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOut
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import Divider from '../../core/components/common/Divider'
 import PseudonymTable from './components/PseudonymTable'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import TrustDeck, {
   PseudonymUpdatePayload
 } from '../../core/services/TrustDeck'
@@ -378,28 +377,34 @@ const PseudonymDetails: React.FC = () => {
     }
 
     return (
-      <div
-        className={`relative rounded-lg border px-4 py-3 ${
+      <label
+        className={`block rounded-lg border px-4 py-3 ${
           inherited
             ? 'border-blue-200 bg-blue-50/70 ring-1 ring-blue-100 dark:border-blue-800 dark:bg-blue-950/30'
             : 'border-color-light-gray bg-white dark:bg-slate-950'
         }`}
       >
-        {inherited && (
-          <InheritanceIndicator
-            title={inheritanceTooltip}
-            className="absolute right-3 top-3 text-lg"
-          />
-        )}
-        <CustomFloatLabel
+        <span className="td-field-label mb-1 flex items-center gap-1">
+          {label}
+          {inherited && (
+            <InheritanceIndicator
+              title={inheritanceTooltip}
+              className="text-lg text-blue-700 dark:text-blue-300"
+            />
+          )}
+        </span>
+        <input
           id={`pseudonym-${id}`}
+          type="text"
           value={String(value ?? '')}
-          placeholder={label}
           onChange={(event) =>
             updateEditableField(id, event.target.value, inheritedField)
           }
+          className={`h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 text-xl text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100 ${
+            id === 'psn' ? 'font-mono' : ''
+          }`}
         />
-      </div>
+      </label>
     )
   }
 

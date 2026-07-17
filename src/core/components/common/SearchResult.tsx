@@ -3,8 +3,7 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CakeIcon } from '@heroicons/react/24/outline'
-import { IdentificationIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, IdentificationIcon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/24/solid'
 import { CheckIcon } from '@heroicons/react/24/outline'
 import { BeakerIcon } from '@heroicons/react/24/outline'
@@ -77,6 +76,7 @@ interface SearchResultProps {
   newPerson?: boolean
   recent?: boolean
   type?: 'person' | 'bioprobe'
+  onView?: (result: SearchResult) => void
 }
 
 const SearchResult: React.FC<SearchResultProps> = ({
@@ -85,7 +85,8 @@ const SearchResult: React.FC<SearchResultProps> = ({
   pseudonymization,
   newPerson,
   recent,
-  type
+  type,
+  onView
 }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -111,11 +112,9 @@ const SearchResult: React.FC<SearchResultProps> = ({
                 {result.data.firstName} {result.data.lastName}
               </h3>
               <div className="flex space-x-8">
-                <p className="flex">
-                  <CakeIcon className="h-5 w-5 mr-1" />{' '}
-                  {result.data.dateOfBirth &&
-                    result.data.dateOfBirth.split('T')[0]}
-                </p>
+                {result.data.dateOfBirth && (
+                  <p>{result.data.dateOfBirth.split('T')[0]}</p>
+                )}
                 {!newPerson && (
                   <p className="flex">
                     <IdentificationIcon className="h-5 w-5 mr-1" />
@@ -133,6 +132,13 @@ const SearchResult: React.FC<SearchResultProps> = ({
                     navigate(`/search/${result.trustdeckID}`)
                     setEditMode(true)
                   }}
+                />
+              )}
+              {pseudonymization && onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
                 />
               )}
               {!newPerson && (
@@ -163,6 +169,41 @@ const SearchResult: React.FC<SearchResultProps> = ({
             </div>
           </>
         )}
+        {!isPersonResult && type !== 'bioprobe' && (
+          <>
+            <div className="min-w-0">
+              <h3 className="break-all font-mono text-lg font-semibold">
+                {resolveTrustDeckId(result) || resolveDisplayName(result) || '—'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                {resolveEntityTypeName(result) || t('search:entity.entityType.title')}
+              </p>
+            </div>
+            <div className="mt-3 flex justify-around gap-3 sm:mt-0 sm:justify-normal">
+              {onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
+                />
+              )}
+              <PrimaryButton
+                label={t('search:select')}
+                icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                onClick={() => {
+                  const trustDeckId = resolveTrustDeckId(result)
+                  setSelectedEntityId({
+                    identifier: trustDeckId,
+                    identifierType: 'TrustDeckID',
+                    entityTypeName: resolveEntityTypeName(result),
+                    displayName: resolveDisplayName(result)
+                  })
+                  handleNext()
+                }}
+              />
+            </div>
+          </>
+        )}
         {/* Bioprobe result */}
         {type === 'bioprobe' && (
           <>
@@ -187,6 +228,13 @@ const SearchResult: React.FC<SearchResultProps> = ({
                     navigate(`/search/${result.id}`)
                     setEditMode(true)
                   }}
+                />
+              )}
+              {pseudonymization && onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
                 />
               )}
               <PrimaryButton

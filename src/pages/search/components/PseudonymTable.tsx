@@ -9,23 +9,8 @@ interface PseudonymTableProps {
   pseudonym: Pseudonym
 }
 
-export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
-  const [nodes, setNodes] = useState<TreeNode[]>([])
-  const [expandedKeys, setExpandedKeys] = useState<{ [key: string]: boolean }>({})
-  const { t } = useTranslation()
-
-  useEffect(() => {
-    if (pseudonym?.children?.length) {
-      const treeNodes = pseudonym.children.flatMap((child) => transformPseudonymToTree(child))
-      setNodes(treeNodes)
-      setExpandedKeys(getAllKeys(treeNodes))
-    } else {
-      setNodes([])
-      setExpandedKeys({})
-    }
-  }, [pseudonym])
-
-  const transformPseudonymToTree = (current: Pseudonym): TreeNode[] => [
+function transformPseudonymToTree(current: Pseudonym): TreeNode[] {
+  return [
     {
       key: `${current.domainName}-${current.psn}`,
       data: { group: current.domainName, pseudonym: current.psn },
@@ -34,29 +19,51 @@ export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
         : []
     }
   ]
+}
 
-  const getAllKeys = (
-    treeNodes: TreeNode[],
-    keys: { [key: string]: boolean } = {}
-  ): { [key: string]: boolean } => {
-    treeNodes.forEach((node) => {
-      keys[node.key] = true
-      if (node.children && node.children.length > 0) {
-        getAllKeys(node.children, keys)
-      }
-    })
-    return keys
-  }
+function getAllKeys(
+  treeNodes: TreeNode[],
+  keys: { [key: string]: boolean } = {}
+): { [key: string]: boolean } {
+  treeNodes.forEach((node) => {
+    keys[node.key] = true
+    if (node.children && node.children.length > 0) {
+      getAllKeys(node.children, keys)
+    }
+  })
+  return keys
+}
+
+export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
+  const [nodes, setNodes] = useState<TreeNode[]>([])
+  const [expandedKeys, setExpandedKeys] = useState<{ [key: string]: boolean }>({})
+  const { t } = useTranslation()
+
+  useEffect(() => {
+    if (pseudonym?.children?.length) {
+      const treeNodes = pseudonym.children.flatMap((child) =>
+        transformPseudonymToTree(child)
+      )
+      setNodes(treeNodes)
+      setExpandedKeys(getAllKeys(treeNodes))
+    } else {
+      setNodes([])
+      setExpandedKeys({})
+    }
+  }, [pseudonym])
 
   const groupTemplate = (node: TreeNode) => (
-    <span className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left text-xl text-gray-900 dark:text-gray-100" title={node.data.group}>
-      {node.data.group || '-'}
+    <span
+      className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left text-xl text-gray-900 dark:text-gray-100"
+      title={node.data.group}
+    >
+      {node.data.group || '—'}
     </span>
   )
 
   const pseudonymTemplate = (node: TreeNode) => (
-    <span className="inline-flex min-h-[2.75rem] items-center break-all text-xl text-gray-900 dark:text-gray-100">
-      {node.data.pseudonym || '-'}
+    <span className="inline-flex min-h-[2.75rem] items-center break-all font-mono text-xl text-gray-900 dark:text-gray-100">
+      {node.data.pseudonym || '—'}
     </span>
   )
 
@@ -73,10 +80,19 @@ export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
       className="w-full linked-pseudonym-table"
       value={nodes}
       expandedKeys={expandedKeys}
-      onToggle={(e) => setExpandedKeys(e.value)}
+      onToggle={(event) => setExpandedKeys(event.value)}
     >
-      <Column field="group" header={t('search:group.title')} expander body={groupTemplate} />
-      <Column field="pseudonym" header={t('search:pseudonym.title')} body={pseudonymTemplate} />
+      <Column
+        field="group"
+        header={t('search:group.title')}
+        expander
+        body={groupTemplate}
+      />
+      <Column
+        field="pseudonym"
+        header={t('search:pseudonym.title')}
+        body={pseudonymTemplate}
+      />
     </TreeTable>
   )
 }

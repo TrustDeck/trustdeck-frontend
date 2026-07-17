@@ -7,6 +7,7 @@ type CustomCalendarProps = {
   value: Date | null
   onChange?: (e: { value: Date | null }) => void
   placeholder?: string
+  label?: string
   helpText?: string
   errorMessage?: string
   validate?: (value: Date | null) => boolean
@@ -24,6 +25,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   value,
   onChange,
   placeholder,
+  label,
   helpText,
   errorMessage = '',
   validate,
@@ -35,11 +37,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   showSeconds = false,
   hourFormat = '24'
 }) => {
-  const [focused, setFocused] = useState(false)
   const [isValid, setIsValid] = useState(true)
 
   const handleBlur = () => {
-    setFocused(false)
     if (validate) setIsValid(validate(value))
   }
 
@@ -47,49 +47,49 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     onChange?.({ value: event?.value ?? null })
   }
 
-  const floatingLabel = (placeholder ?? '').trim()
-  const showFloating = focused || Boolean(value) || !isValid
+  const fieldLabel = (label || placeholder || '').trim()
 
   return (
-    <div className="relative w-full">
-      <Calendar
-        id={id}
-        value={value}
-        onChange={handleChange}
-        onFocus={() => setFocused(true)}
-        onBlur={handleBlur}
-        readOnlyInput={readOnly}
-        disabled={readOnly}
-        className={`h-[44px] w-full rounded-lg px-3 pb-2 pt-3 text-xl font-normal ${className} ${
-          !isValid ? 'border border-red-500' : 'border border-color-light-gray'
-        }`}
-        panelClassName="z-[9999]"
-        inputClassName={`m-0 h-full w-full border-none bg-transparent p-0 pb-1 font-font-text text-xl focus:ring-0 ${helpText ? 'pr-16' : 'pr-10'}`}
-        dateFormat={dateFormat}
-        showTime={showTime}
-        showSeconds={showSeconds}
-        hourFormat={hourFormat}
-        showIcon
-      />
-
-      {floatingLabel && (
-        <label
-          htmlFor={id}
-          className={`td-floating-label pointer-events-none absolute left-3 font-font-text transition-all
-            ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-            ${!isValid ? 'td-floating-label--error font-semibold text-red-600' : 'text-gray-500 dark:text-gray-300'}
-          `}
-        >
-          {!isValid && errorMessage ? errorMessage : floatingLabel}
-          {required && <span className="ml-1">*</span>}
+    <div className="w-full">
+      {fieldLabel && (
+        <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
+          <span>{fieldLabel}</span>
+          {required && <span aria-hidden="true">*</span>}
         </label>
       )}
 
-      {helpText && (
-        <HelpTooltip
-          text={helpText}
-          className="absolute right-11 top-1/2 z-30 -translate-y-1/2"
+      <div className="relative w-full">
+        <Calendar
+          id={id}
+          value={value}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          readOnlyInput={readOnly}
+          disabled={readOnly}
+          className={`h-[44px] w-full rounded-lg text-xl font-normal ${className} ${
+            !isValid ? 'border border-red-500' : 'border border-color-light-gray'
+          }`}
+          panelClassName="z-[9999]"
+          inputClassName={`m-0 h-full w-full border-none bg-transparent px-3 font-font-text text-xl focus:ring-0 ${helpText ? 'pr-16' : 'pr-10'}`}
+          dateFormat={dateFormat}
+          showTime={showTime}
+          showSeconds={showSeconds}
+          hourFormat={hourFormat}
+          showIcon
         />
+
+        {helpText && (
+          <HelpTooltip
+            text={helpText}
+            className="absolute right-11 top-1/2 z-30 -translate-y-1/2"
+          />
+        )}
+      </div>
+
+      {!isValid && errorMessage && (
+        <p className="mt-1 text-sm font-semibold text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
       )}
     </div>
   )

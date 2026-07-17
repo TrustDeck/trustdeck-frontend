@@ -19,10 +19,13 @@ import CustomCalendar from '@component/form/CustomCalendar'
 import validation from '../../../core/utils/validation'
 import { countryOptions } from '../util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
-import PersonRecordLinkage from '../services/PersonRecordLinkage'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchResultsStore from '../../search/stores/SearchResultsStore'
 import { Tooltip } from 'primereact/tooltip'
+import {
+  TrustDeckHttpError,
+  type RecordLinkageCandidate
+} from '../../../core/services/TrustDeck'
 
 /**
  * The `PersonForm` component renders a multi-step form for creating or registering a person entity.
@@ -83,24 +86,56 @@ export default function PersonForm() {
         ...(contactLastName && { contactLastName }),
         ...(contactPhone && { contactPhone }),
         ...(contactEmail && { contactEmail }),
-        ...(contactRelationship && { contactRelationship }),
+        ...(contactRelationship && { contactRelationship })
       }
     }
 
     try {
-      const recordLinkage = await PersonRecordLinkage.recordLinkage(payload)
-
-      if (recordLinkage.length > 0) {
-        setNewEntry({ ...recordLinkage, matchingEntities: undefined })
-        setDuplicates(recordLinkage.matchingEntities)
-        navigate('/identity/duplicates')
-      } else {
-        const createdPerson = await PersonService.create(payload)
-        const personData = await SearchPersonService.getPerson(createdPerson.trustdeckID)
-        setResults([personData])
-        navigate(`/search/${createdPerson.trustdeckID}`)
-      }
+      // Entity-level automatic linkage is applied by the backend during creation
+      // when it is enabled for the selected entity definition.
+      const creationResult = await PersonService.createWithResult(payload)
+      const createdPerson = creationResult.entity
+      const personData = await SearchPersonService.getPerson(
+        createdPerson.trustdeckID
+      )
+      setResults([personData])
+      navigate(`/search/${createdPerson.trustdeckID}`)
     } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 409) {
+        try {
+          const candidates = JSON.parse(error.body) as RecordLinkageCandidate[]
+          if (Array.isArray(candidates) && candidates.length > 0) {
+            setNewEntry(payload.data as any)
+            setDuplicates(
+              candidates.map((candidate) => {
+                const instance = candidate.entityInstance ?? {}
+                const trustdeckID =
+                  instance.trustdeckID ??
+                  instance.trustdeckId ??
+                  instance.trustDeckId ??
+                  instance.id ??
+                  ''
+                const data = instance.data ?? {}
+                return {
+                  ...data,
+                  trustdeckID,
+                  identifiers:
+                    data.identifiers ??
+                    (trustdeckID ? [{ identifier: trustdeckID }] : []),
+                  linkageScore: candidate.score,
+                  normalizedScore: candidate.normalizedScore,
+                  matchedOn: candidate.matchedOn,
+                  candidateStatus: candidate.candidateStatus
+                }
+              })
+            )
+            navigate('/identity/duplicates')
+            return
+          }
+        } catch {
+          // Fall through to the generic error logging below.
+        }
+      }
       console.error('Failed to register person:', error)
     }
   }
@@ -201,7 +236,6 @@ export default function PersonForm() {
     }
   }
 
-
   return (
     <Panel>
       <Stepper ref={stepperRef} orientation="vertical" linear>
@@ -245,10 +279,10 @@ export default function PersonForm() {
           )}
         </StepperPanel> */}
         <StepperPanel header={t('identity:headers.personalData')}>
-          <p className='mb-2'>
+          <p className="mb-2">
             All fields marked with an * are required and must be filled out.
           </p>
-          <div className='sm:space-y-0 space-y-3 mb-5'>
+          <div className="sm:space-y-0 space-y-3 mb-5">
             <CustomFloatLabel
               id="id"
               value={id === 0 ? '' : id}
@@ -365,7 +399,7 @@ export default function PersonForm() {
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.address')}>
-          <p className='mb-2'>
+          <p className="mb-2">
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -444,7 +478,7 @@ export default function PersonForm() {
           </div>
         </StepperPanel>
         <StepperPanel header={t('identity:headers.emergencyContact')}>
-          <p className='mb-2'>
+          <p className="mb-2">
             All fields marked with an * are required and must be filled out.
           </p>
           <div className="sm:form-grid sm:space-y-0 space-y-3">
@@ -489,7 +523,7 @@ export default function PersonForm() {
             />
           </div>
           <div className="flex py-4">
-          <PrimaryOutlinedButton
+            <PrimaryOutlinedButton
               label={
                 <span className="flex items-center gap-2">
                   {t('identity:buttons.back')}

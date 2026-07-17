@@ -21,7 +21,7 @@
   "entity": {
     "title": "Entity",
     "entityType": {
-      "title": "Type of entity",
+      "title": "Entity",
       "help": "Choose what you want to search."
     },
     "person": {
@@ -194,7 +194,7 @@
   "deleteFailed": "Failed to delete entity.",
   "confirmDeleteTitle": "Confirm deletion",
   "confirmDeleteEntity": "Do you really want to delete this entity? This action cannot be undone.",
-  "noEntitySchema": "No type definition is available for the selected entity type.",
+  "noEntitySchema": "No definition is available for the selected entity.",
   "listAll": "List all",
   "ok": "Ok",
   "subtitle": "Search for entities or pseudonyms in the selected project.",
@@ -210,5 +210,11 @@
   "entitySummary": "Entity data",
   "queryRequired": "Enter a search query.",
   "entityResultsDescription": "{{count}} matching entity result(s).",
-  "pseudonymResultsDescription": "{{count}} matching pseudonym result(s)."
+  "pseudonymResultsDescription": "{{count}} matching pseudonym result(s).",
+  "backToResults": "Back to search results",
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {{page}} of {{pages}}"
+  }
 }

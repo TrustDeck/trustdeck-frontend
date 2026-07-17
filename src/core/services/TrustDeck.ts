@@ -66,6 +66,19 @@ export type EntityInstancePayload = {
   data: unknown
 }
 
+export type EntityCreationResult<T = Record<string, any>> = {
+  entity: T
+  created: boolean
+}
+
+export type RecordLinkageCandidate = {
+  entityInstance: Record<string, any>
+  score: number
+  normalizedScore: number
+  matchedOn?: string[]
+  candidateStatus?: 'ACTIVE' | 'DELETED' | string
+}
+
 export type PermissionGrant = {
   subjectId: string
   resourceType: 'DOMAIN' | 'PROJECT' | 'GLOBAL' | string
@@ -190,12 +203,12 @@ class TrustDeck {
     return []
   }
 
-  private async request<T>(
+  private async requestWithStatus<T>(
     method: HttpMethod,
     path: string,
     body?: unknown,
     params?: QueryParams
-  ): Promise<T> {
+  ): Promise<{ data: T; status: number }> {
     this.requireAccessToken()
     const url = this.buildUrl(path, params)
     const headers: HeadersInit = {
@@ -218,7 +231,19 @@ class TrustDeck {
       )
     }
 
-    return this.parseResponse<T>(res)
+    return {
+      data: await this.parseResponse<T>(res),
+      status: res.status
+    }
+  }
+
+  private async request<T>(
+    method: HttpMethod,
+    path: string,
+    body?: unknown,
+    params?: QueryParams
+  ): Promise<T> {
+    return (await this.requestWithStatus<T>(method, path, body, params)).data
   }
 
   private async multipartRequest<T>(
@@ -403,12 +428,9 @@ class TrustDeck {
   }
 
   public async searchReadableDomains(query = '*') {
-    const response = await this.request<unknown>(
-      'GET',
-      '/domains',
-      undefined,
-      { query }
-    )
+    const response = await this.request<unknown>('GET', '/domains', undefined, {
+      query
+    })
     return this.asArray<Domain>(response)
   }
 
@@ -598,13 +620,24 @@ class TrustDeck {
     )
   }
 
-  public async postEntity(entityType: string, payload: unknown) {
+  public async postEntityWithResult(
+    entityType: string,
+    payload: unknown
+  ): Promise<EntityCreationResult> {
     const projectName = this.getSelectedProjectName()
-    return this.request<any>(
+    const response = await this.requestWithStatus<Record<string, any>>(
       'POST',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityType)}`,
       payload
     )
+    return {
+      entity: response.data,
+      created: response.status === 201
+    }
+  }
+
+  public async postEntity(entityType: string, payload: unknown) {
+    return (await this.postEntityWithResult(entityType, payload)).entity
   }
 
   public async putEntity(
@@ -649,17 +682,22 @@ class TrustDeck {
     entityTypeName: string,
     payload: unknown,
     projectAbbreviation?: string
-  ) {
+  ): Promise<RecordLinkageCandidate[]> {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
-    return this.request<any>(
+    const response = await this.request<unknown>(
       'POST',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityTypeName)}/record-linkage`,
       payload
     )
+    return this.asArray<RecordLinkageCandidate>(response)
+  }
+
+  public async postPersonWithResult(person: unknown) {
+    return this.postEntityWithResult('person', person)
   }
 
   public async postPerson(person: unknown) {
-    return this.postEntity('person', person)
+    return (await this.postPersonWithResult(person)).entity
   }
 
   public async getPerson(trustdeckID: string) {
@@ -672,10 +710,6 @@ class TrustDeck {
 
   public async postBiosample(biosample: BioSampleEntity) {
     return this.postEntity('biosample', biosample) as Promise<BioSampleEntity>
-  }
-
-  public async recordLinkagePerson(person: unknown) {
-    return this.recordLinkage('person', person)
   }
 
   // Pseudonyms

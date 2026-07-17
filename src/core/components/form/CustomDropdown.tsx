@@ -42,13 +42,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   filterPlaceholder,
   ...props
 }) => {
-  const floatingLabel = (placeholder || label || '').trim()
-  const showFloating = value !== ''
+  const fieldLabel = (label || placeholder || '').trim()
 
   return (
-    <div
-      className={`td-custom-dropdown relative w-full ${helpText ? 'td-custom-dropdown--with-help' : ''} ${className}`}
-    >
+    <div className={`td-custom-dropdown w-full ${className}`}>
+      {fieldLabel && (
+        <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
+          <span>{fieldLabel}</span>
+          {required && <span aria-hidden="true">*</span>}
+        </label>
+      )}
+
       <div className="relative w-full">
         <Dropdown
           id={id}
@@ -61,7 +65,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           filterPlaceholder={filterPlaceholder}
           className={`flex h-[44px] w-full items-center rounded-lg border font-font-text text-xl font-normal ${
             invalid ? 'border-red-500' : 'border-color-light-gray'
-          }`}
+          } ${helpText ? 'pr-9' : ''}`}
           pt={{
             input: {
               className: `flex h-[44px] items-center px-3 font-font-text text-xl font-normal ${textColor}`
@@ -73,17 +77,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           {...props}
         />
 
-        {floatingLabel && (
-          <label
-            htmlFor={id}
-            className={`td-floating-label pointer-events-none absolute left-3 font-font-text text-gray-500 transition-all dark:text-gray-300
-              ${showFloating ? 'td-floating-label--active -top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-              ${invalid ? 'td-floating-label--error font-semibold text-red-600' : ''}
-            `}
-          >
-            {floatingLabel}
-            {required && <span className="ml-1">*</span>}
-          </label>
+        {helpText && (
+          <HelpTooltip
+            text={helpText}
+            className="absolute right-10 top-1/2 z-30 -translate-y-1/2"
+          />
         )}
       </div>
 
@@ -91,13 +89,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         <p className="mt-1 text-sm font-medium text-red-600 dark:text-red-400">
           {errorMessage}
         </p>
-      )}
-
-      {helpText && (
-        <HelpTooltip
-          text={helpText}
-          className="td-custom-dropdown__help absolute top-1/2 z-30 -translate-y-1/2"
-        />
       )}
     </div>
   )

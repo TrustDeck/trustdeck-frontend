@@ -12,7 +12,6 @@
     "generateStandalone": "Generate pseudonym without entity",
     "forward": "Next"
   },
-  "infotext": "If you create a pseudonym for a subgroup, the system will automatically generate a chain of pseudonyms for each parent group.",
   "selectGroup": "Select groups",
   "standalone": {
     "description": "You can also generate a pseudonym that is not linked to an existing entity. TrustDeck will create an internal standalone identifier for this pseudonym.",
@@ -68,6 +67,8 @@
       "groupRequired": "Please select a group.",
       "entityRequired": "Please select an entity first.",
       "createFailed": "The pseudonym could not be generated."
-    }
+    },
+    "entityDetailsTitle": "Entity details",
+    "entityDetailsDescription": "Review all available values of the selected entity before using it for pseudonym generation."
   }
 }

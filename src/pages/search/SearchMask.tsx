@@ -4,6 +4,8 @@ import Panel from '../../core/components/common/Panel'
 import EntityMask from './components/EntityMask'
 import PseudonymMask from './components/PseudonymMask'
 import useSearchStore from './stores/SearchStore'
+import useSearchResultsStore from './stores/SearchResultsStore'
+import usePseudonymStore from './stores/PseudonymSearchResults'
 import PageHeader from '../../core/components/common/PageHeader'
 
 type SearchMode = 'entity' | 'pseudonym'
@@ -12,14 +14,33 @@ export default function SearchMask({ psn = false }) {
   const { t } = useTranslation('search')
   const [mode, setMode] = useState<SearchMode>('entity')
   const clearSearchInputs = useSearchStore((s) => s.clearSearchInputs)
+  const clearEntityResults = useSearchResultsStore((s) => s.clearResults)
+  const clearPseudonymResults = usePseudonymStore((s) => s.clearResults)
 
   useEffect(() => {
+    if (psn) return undefined
+
     clearSearchInputs()
-  }, [clearSearchInputs])
+    clearEntityResults()
+    clearPseudonymResults()
+
+    return () => {
+      clearSearchInputs()
+      clearEntityResults()
+      clearPseudonymResults()
+    }
+  }, [
+    clearEntityResults,
+    clearPseudonymResults,
+    clearSearchInputs,
+    psn
+  ])
 
   const handleModeClick = (selected: SearchMode) => {
     setMode(selected)
     clearSearchInputs()
+    clearEntityResults()
+    clearPseudonymResults()
   }
 
   const titleContent = psn ? (

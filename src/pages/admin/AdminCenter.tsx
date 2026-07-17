@@ -18,7 +18,7 @@ type ActionButtonProps = {
 const sections: { key: SectionKey; label: string; description: string }[] = [
   { key: 'projects', label: 'Projects', description: 'Project CRUD, image and statistics' },
   { key: 'domains', label: 'Domains', description: 'Group/domain tree and configuration' },
-  { key: 'entityTypes', label: 'Entity types', description: 'Base types and project entity schemas' },
+  { key: 'entityTypes', label: 'Entities', description: 'Base entities and project entity schemas' },
   { key: 'entities', label: 'Entities', description: 'Entity instances, linkage and pseudonyms' },
   { key: 'pseudonyms', label: 'Pseudonyms', description: 'Single and batch pseudonym workflows' },
   { key: 'permissions', label: 'Permissions', description: 'User, project, domain and global grants' },
@@ -193,7 +193,7 @@ const AdminCenter: React.FC = () => {
           <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <TextField label="Project abbreviation" value={projectName} onChange={setProjectName} />
             <TextField label="Domain/group name" value={domainName} onChange={setDomainName} />
-            <TextField label="Entity type" value={entityTypeName} onChange={setEntityTypeName} />
+            <TextField label="Entity" value={entityTypeName} onChange={setEntityTypeName} />
             <TextField label="Query" value={query} onChange={setQuery} />
           </div>
 
@@ -245,7 +245,7 @@ const AdminCenter: React.FC = () => {
 
           {activeSection === 'entityTypes' && (
             <div className="space-y-6">
-              <JsonField label="Entity type payload" value={jsonPayload} onChange={setJsonPayload} />
+              <JsonField label="Entity payload" value={jsonPayload} onChange={setJsonPayload} />
               <ActionRow>
                 <ActionButton label="Search base types" onClick={() => run('Search base types', () => TrustDeck.instance().getBaseTypes(query))} />
                 <ActionButton label="Create base type" onClick={() => run('Create base type', () => TrustDeck.instance().createBaseType(payload({}) as never))} />

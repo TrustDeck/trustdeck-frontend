@@ -1,9 +1,9 @@
 {
   "menu": {
     "logout": "Log out",
-    "identityManagement": "Identity Management",
-    "pseudonymManagement": "Pseudonym Management",
-    "groupManagement": "Pseudonym Group Management",
+    "identityManagement": "Entities",
+    "pseudonymManagement": "Pseudonyms",
+    "groupManagement": "Pseudonym domains",
     "projectSettings": "Project Settings",
     "search": "Search",
     "searchResults": "Search results",
@@ -16,10 +16,14 @@
     "backToProjects": "Back to projects",
     "permissionManagement": "Permission Management",
     "newProject": "New project",
-    "entityManagement": "Entity Management",
+    "entityManagement": "Entity types",
     "globalSettings": "Global Settings",
     "userManagement": "User Management",
-    "entityBuilder": "Entity Builder"
+    "entityBuilder": "Entity Builder",
+    "pseudonymDomains": "Pseudonym domains",
+    "entityTypes": "Entity types",
+    "entities": "Entities",
+    "pseudonyms": "Pseudonyms"
   },
   "logOut": {
     "loggingOut": "Logging you out",
@@ -41,7 +45,7 @@
   },
   "userManagement": {
     "title": "User Management",
-    "subtitle": "Manage your session, interface preferences, and account access.",
+    "subtitle": "Review your account, session status, and interface preferences.",
     "username": "Username",
     "sessionRemaining": "Session remaining",
     "darkMode": "Dark mode",
@@ -55,5 +59,9 @@
     "open": "Open sidebar",
     "close": "Close sidebar",
     "projectIconAlt": "Project icon"
+  },
+  "sidebarGroups": {
+    "configuration": "Configuration",
+    "management": "Management"
   }
 }

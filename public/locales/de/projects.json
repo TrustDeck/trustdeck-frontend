@@ -24,7 +24,7 @@
   "creationFailed": "Projekterstellung fehlgeschlagen",
   "noProjects": "Derzeit sind für Sie keine Projekte verfügbar. Sie können ein neues Projekt erstellen oder Ihre PI bzw. Projektleitung bitten, Ihnen Zugriff auf ein bestehendes Projekt zu gewähren.",
   "title": "Projekte",
-  "subtitle": "Wählen Sie ein Projekt aus, prüfen Sie seine Details oder bearbeiten Sie seine Einstellungen direkt in der Übersicht.",
+  "subtitle": "Erstellen Sie Projekte, wählen Sie das aktive Projekt aus und verwalten Sie Projektdetails und -bilder.",
   "filters": "Filter",
   "filterProjects": "Projekte filtern",
   "filterHelp": "Grenzen Sie die Liste nach Name, Status oder Startdatum ein.",

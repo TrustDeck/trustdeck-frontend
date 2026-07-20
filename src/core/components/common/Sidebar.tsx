@@ -222,6 +222,15 @@ export default function Sidebar({
   const projectScopedRoutes = sidebarRoutes.filter(
     (route) => !route.isNonProject
   )
+  const ungroupedProjectRoutes = projectScopedRoutes.filter(
+    (route) => !route.sidebarGroup
+  )
+  const configurationRoutes = projectScopedRoutes.filter(
+    (route) => route.sidebarGroup === 'configuration'
+  )
+  const managementRoutes = projectScopedRoutes.filter(
+    (route) => route.sidebarGroup === 'management'
+  )
   const nonProjectRoutes = sidebarRoutes.filter((route) => route.isNonProject)
 
   const closeSidebarOnNavigate = () => {
@@ -274,6 +283,27 @@ export default function Sidebar({
       )
     })
 
+  const renderExpandedRouteGroup = (title: string, items: RouteConfig[]) => {
+    if (items.length === 0) return null
+    return (
+      <li className="pt-2">
+        <div className="mb-2 px-4 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          {title}
+        </div>
+        <ul className="space-y-2">{renderNavLinks(items)}</ul>
+      </li>
+    )
+  }
+
+  const renderCollapsedRouteGroup = (items: RouteConfig[]) => {
+    if (items.length === 0) return null
+    return (
+      <li className="border-t border-gray-300 pt-6 dark:border-slate-700">
+        <ul className="space-y-8">{renderNavLinks(items, true)}</ul>
+      </li>
+    )
+  }
+
   return (
     <>
       <div className="sm:hidden">
@@ -293,7 +323,9 @@ export default function Sidebar({
           aria-label={t('layout:sidebar.open')}
         />
         <ul className="space-y-8">
-          {renderNavLinks(projectScopedRoutes, true)}
+          {renderNavLinks(ungroupedProjectRoutes, true)}
+          {renderCollapsedRouteGroup(configurationRoutes)}
+          {renderCollapsedRouteGroup(managementRoutes)}
           {nonProjectRoutes.length > 0 && (
             <li className="border-t border-gray-300 pt-8 dark:border-slate-700">
               <ul className="space-y-8">
@@ -342,7 +374,17 @@ export default function Sidebar({
 
         <Divider />
         <nav className="flex h-[calc(100vh-8rem)] flex-col overflow-y-auto pb-6">
-          <ul className="space-y-4">{renderNavLinks(projectScopedRoutes)}</ul>
+          <ul className="space-y-4">
+            {renderNavLinks(ungroupedProjectRoutes)}
+            {renderExpandedRouteGroup(
+              t('layout:sidebarGroups.configuration'),
+              configurationRoutes
+            )}
+            {renderExpandedRouteGroup(
+              t('layout:sidebarGroups.management'),
+              managementRoutes
+            )}
+          </ul>
           {nonProjectRoutes.length > 0 && (
             <div className="mt-auto pt-6">
               <Divider />

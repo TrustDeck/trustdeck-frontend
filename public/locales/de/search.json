@@ -199,7 +199,7 @@
   "noEntitySchema": "Für die ausgewählte Entität ist keine Definition verfügbar.",
   "listAll": "Alle auflisten",
   "ok": "Ok",
-  "subtitle": "Suchen Sie im ausgewählten Projekt nach Entitäten oder Pseudonymen.",
+  "subtitle": "Suchen Sie Entitäten und Pseudonyme im ausgewählten Projekt.",
   "trustDeckId": "TrustDeck-ID",
   "entityNotFoundById": "Für den Bezeichner {{id}} wurde kein Ergebnis gefunden.",
   "masterObjectIndex": "Master Object Index",
@@ -218,5 +218,6 @@
     "pageOf": "Seite {{page}} von {{pages}}",
     "resultsPerPage": "Ergebnisse pro Seite"
   },
-  "resultNumber": "Nr."
+  "resultNumber": "Nr.",
+  "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus."
 }

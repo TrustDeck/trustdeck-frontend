@@ -14,6 +14,7 @@ import { InlinePseudonymResults } from './InlineSearchResults'
 interface PseudonymMaskProps {
   psn?: boolean
   inlineResults?: boolean
+  showDomainSelector?: boolean
 }
 
 function flattenGroupOptions(nodes: any[]): { label: string; value: string }[] {
@@ -25,7 +26,8 @@ function flattenGroupOptions(nodes: any[]): { label: string; value: string }[] {
 
 const PseudonymMask: React.FC<PseudonymMaskProps> = ({
   psn = false,
-  inlineResults = false
+  inlineResults = false,
+  showDomainSelector = true
 }) => {
   const { t } = useTranslation('search')
   const [loading, setLoading] = useState(false)
@@ -38,6 +40,8 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
   const { setResults, clearSelectedResult } = usePseudonymStore()
 
   useEffect(() => {
+    if (!showDomainSelector) return undefined
+
     initialDomainSet.current = false
     GroupService.getGroups()
       .then((data) => {
@@ -55,20 +59,24 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
         console.error('Failed to load searchable groups', error)
         setGroups([])
       })
-  }, [group, selectedProject?.abbreviation, setGroup])
+  }, [group, selectedProject?.abbreviation, setGroup, showDomainSelector])
 
   const groupOptions = flattenGroupOptions(groups)
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const normalizedQuery = pseudonym.trim()
-    const domain = group || selectedProject?.abbreviation || ''
+    const domain =
+      group || (showDomainSelector ? selectedProject?.abbreviation || '' : '')
 
     if (!normalizedQuery) {
       setQueryError(t('queryRequired'))
       return
     }
-    if (!domain) return
+    if (!domain) {
+      setQueryError(t('domainRequired'))
+      return
+    }
 
     setQueryError('')
     setLoading(true)
@@ -101,19 +109,21 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
           </p>
         )}
         <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-end">
-          <label className="block w-full shrink-0 sm:w-64">
-            <span className="td-field-label mb-1 block">
-              {t('group.title')}
-            </span>
-            <CustomDropdown
-              id="pseudonym-search-domain"
-              value={group}
-              onChange={(event) => setGroup(String(event.value ?? ''))}
-              options={groupOptions}
-              className="w-full"
-              filter
-            />
-          </label>
+          {showDomainSelector && (
+            <label className="block w-full shrink-0 sm:w-64">
+              <span className="td-field-label mb-1 block">
+                {t('group.title')}
+              </span>
+              <CustomDropdown
+                id="pseudonym-search-domain"
+                value={group}
+                onChange={(event) => setGroup(String(event.value ?? ''))}
+                options={groupOptions}
+                className="w-full"
+                filter
+              />
+            </label>
+          )}
 
           <label className="block min-w-0 flex-1">
             <span className="td-field-label mb-1 block">
@@ -152,7 +162,10 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
 
       {inlineResults && (
         <InlinePseudonymResults
-          fallbackDomain={group || selectedProject?.abbreviation || ''}
+          fallbackDomain={
+            group ||
+            (showDomainSelector ? selectedProject?.abbreviation || '' : '')
+          }
         />
       )}
     </div>

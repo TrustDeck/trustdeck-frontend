@@ -1,10 +1,10 @@
 {
   "headers": {
-    "title": "Pseudonym Management",
+    "title": "Pseudonyms",
     "stepone": "Search for the entity that you want to pseudonymize.",
     "steptwo": "Select the entity that you want to pseudonymize.",
     "stepthree": "In which group should the pseudonym be saved?",
-    "subtitle": "Search, review, and generate pseudonyms for the selected project."
+    "subtitle": "Find, inspect, create, edit, and delete pseudonyms within pseudonym domains."
   },
   "buttons": {
     "back": "Back",
@@ -46,16 +46,17 @@
     "trustDeckIdHint": "Entity-based pseudonyms use the entity TrustDeckID with identifier type TrustDeckID, so the pseudonym can be listed as a link of the entity instance later."
   },
   "management": {
-    "searchTitle": "Find a pseudonym",
-    "searchDescription": "Search for an existing pseudonym in a specific group and open its detail view.",
+    "searchTitle": "Search",
+    "searchDescription": "Search for pseudonyms in the selected pseudonym domain and manage the results.",
     "generateTitle": "Generate a pseudonym",
-    "generateDescription": "Create a pseudonym for an existing entity or generate one independently.",
+    "generateDescription": "Create a pseudonym for an existing entity or from identifier data.",
     "entityTitle": "For an existing entity",
     "entityDescription": "Search for an entity, select it, and choose the pseudonym group in which the pseudonym should be generated.",
     "entityAction": "Start entity-based generation",
     "standaloneTitle": "Without an existing entity",
     "standaloneDescription": "Provide an identifier and ID Type directly, then choose the group and optional validity settings.",
-    "standaloneAction": "Generate without entity"
+    "standaloneAction": "Generate without entity",
+    "addPseudonym": "Add pseudonym"
   },
   "entityFlow": {
     "modalTitle": "Generate pseudonym for an entity",
@@ -70,5 +71,16 @@
     },
     "entityDetailsTitle": "Entity details",
     "entityDetailsDescription": "Review all available values of the selected entity before using it for pseudonym generation."
+  },
+  "domainContext": {
+    "title": "Pseudonym domain search context",
+    "description": "Search for and select the pseudonym domain in which pseudonyms should be found or created. Parent domains are shown as a hierarchy path.",
+    "searchLabel": "Search pseudonym domains",
+    "searchPlaceholder": "Enter at least two characters",
+    "loading": "Searching pseudonym domains...",
+    "searchFailed": "The pseudonym domains could not be searched.",
+    "enterMoreCharacters": "Enter at least two characters to search.",
+    "noResults": "No matching pseudonym domains were found.",
+    "clearSelection": "Clear selected pseudonym domain"
   }
 }

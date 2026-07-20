@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
@@ -16,7 +16,6 @@ import Panel from '../../core/components/common/Panel'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
-import CustomFloatLabel from '../../core/components/form/CustomFloatLabel'
 import Divider from '../../core/components/common/Divider'
 import useProjectStore from '../../core/stores/ProjectStore'
 import useToastStore from '../../core/stores/ToastStore'
@@ -608,6 +607,7 @@ export default function PreReg() {
     []
   )
   const [selectedTypeName, setSelectedTypeName] = useState<string>('')
+  const [typeSearchQuery, setTypeSearchQuery] = useState('')
   const [loadingTypes, setLoadingTypes] = useState(true)
   const [loadingInstances, setLoadingInstances] = useState(false)
   const [instances, setInstances] = useState<EntityInstance[]>([])
@@ -634,12 +634,23 @@ export default function PreReg() {
   const [saving, setSaving] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const createPanelRef = useRef<HTMLDivElement | null>(null)
 
   const selectedType = useMemo(
     () =>
       typeDefinitions.find((type) => type.name === selectedTypeName) ?? null,
     [selectedTypeName, typeDefinitions]
   )
+
+  const filteredTypeDefinitions = useMemo(() => {
+    const normalizedQuery = typeSearchQuery.trim().toLowerCase()
+    if (!normalizedQuery) return typeDefinitions
+    return typeDefinitions.filter((type) =>
+      [type.name, type.associatedDomainName]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedQuery))
+    )
+  }, [typeDefinitions, typeSearchQuery])
 
   const selectedSchemaAttributes = useMemo(() => {
     const definition = parseTypeDefinition(selectedType?.typeDefinition)
@@ -952,6 +963,7 @@ export default function PreReg() {
     setSelectedInstance(null)
     setLinkageCandidates([])
     setSelectedLinkageCandidate(null)
+    setModalOpen(false)
     setQuery('')
   }, [selectedTypeName])
 
@@ -972,6 +984,12 @@ export default function PreReg() {
     setSelectedLinkageCandidate(null)
     setFormData(buildInitialEntityData(selectedSchemaAttributes))
     setModalOpen(true)
+    window.requestAnimationFrame(() => {
+      createPanelRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      })
+    })
   }
 
   const openViewModal = async (instance: EntityInstance) => {
@@ -1269,9 +1287,12 @@ export default function PreReg() {
 
         <Panel
           noMaxWidth
-          className="mx-auto"
-          title={t('identity:crud.availableTypes')}
+          className="mx-auto w-full"
+          title={t('identity:crud.entityTypeSearchContext')}
         >
+          <p className="td-section-subtitle mb-5">
+            {t('identity:crud.entityTypeSearchContextHint')}
+          </p>
           {loadingTypes ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
               {t('entityBuilder:loadingEntityTypes')}
@@ -1292,57 +1313,71 @@ export default function PreReg() {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-left text-base dark:divide-slate-700">
-                <thead>
-                  <tr className="text-gray-600 dark:text-gray-300">
-                    <th className="px-4 py-3 font-semibold">
-                      {t('identity:crud.typeName')}
-                    </th>
-                    <th className="px-4 py-3 font-semibold">
-                      {t('identity:crud.associatedGroup')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                  {typeDefinitions.map((type) => {
+            <div className="space-y-4">
+              <label className="block">
+                <span className="td-field-label mb-1 block">
+                  {t('identity:crud.entityTypeSearchLabel')}
+                </span>
+                <input
+                  type="search"
+                  value={typeSearchQuery}
+                  onChange={(event) => setTypeSearchQuery(event.target.value)}
+                  placeholder={t('identity:crud.entityTypeSearchPlaceholder')}
+                  className="h-11 w-full rounded-lg border border-color-light-gray bg-white px-3 text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
+                />
+              </label>
+
+              <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-700">
+                {filteredTypeDefinitions.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-gray-600 dark:text-gray-300">
+                    {t('identity:crud.noEntityTypesMatch')}
+                  </p>
+                ) : (
+                  filteredTypeDefinitions.map((type) => {
                     const selected = type.name === selectedTypeName
                     return (
-                      <tr
+                      <button
                         key={`${type.name}-${type.version}`}
-                        aria-selected={selected}
-                        className={`cursor-pointer border-l-4 transition hover:bg-gray-50 dark:hover:bg-slate-800 ${
-                          selected
-                            ? 'border-color-blue bg-blue-50 dark:bg-slate-800'
-                            : 'border-transparent'
-                        }`}
+                        type="button"
+                        aria-pressed={selected}
                         onClick={() => setSelectedTypeName(type.name)}
+                        className={`grid w-full gap-1 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center dark:border-slate-800 ${
+                          selected
+                            ? 'bg-blue-50 dark:bg-slate-800'
+                            : 'bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800'
+                        }`}
                       >
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
                           {type.name}
-                        </td>
-                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                          {type.associatedDomainName || '-'}
-                        </td>
-                      </tr>
+                        </span>
+                        <span className="text-sm text-gray-600 md:text-right dark:text-gray-300">
+                          {t('identity:crud.associatedGroup')}:{' '}
+                          {type.associatedDomainName || '—'}
+                        </span>
+                      </button>
                     )
-                  })}
-                </tbody>
-              </table>
+                  })
+                )}
+              </div>
             </div>
           )}
         </Panel>
 
         {selectedType && (
-          <Panel noMaxWidth className="mx-auto">
+          <Panel noMaxWidth className="mx-auto w-full">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <h2 className="td-panel-title !mb-0">
-                {t('identity:crud.instancesTitle', {
-                  type: selectedType.name
-                })}
-              </h2>
+              <div>
+                <h2 className="td-panel-title !mb-0">
+                  {t('identity:crud.searchTitle')}
+                </h2>
+                <p className="td-section-subtitle mt-1">
+                  {t('identity:crud.searchDescription', {
+                    type: selectedType.name
+                  })}
+                </p>
+              </div>
               <PrimaryButton
-                label={t('identity:crud.addEntityInstance')}
+                label={t('identity:crud.addEntity')}
                 onClick={openCreateModal}
                 icon={<PlusIcon className="mr-1 h-5 w-5" />}
                 disabled={!canCreateInstances}
@@ -1355,8 +1390,10 @@ export default function PreReg() {
             </div>
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
-                <CustomFloatLabel
+                <input
                   id="identity-entity-instance-search"
+                  type="search"
+                  aria-label={t('identity:crud.searchPlaceholder')}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => {
@@ -1365,8 +1402,8 @@ export default function PreReg() {
                       handleSearchClick()
                     }
                   }}
-                  placeholder={t('identity:crud.searchPlaceholder')}
-                  inputPlaceholder={t('identity:crud.searchInputPlaceholder')}
+                  placeholder={t('identity:crud.searchInputPlaceholder')}
+                  className="h-11 w-full rounded-lg border border-color-light-gray bg-white px-3 text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
                 />
                 <div className="flex flex-wrap justify-end gap-2">
                   <PrimaryButton
@@ -1534,10 +1571,127 @@ export default function PreReg() {
             </div>
           </Panel>
         )}
+
+        {modalOpen && modalMode === 'create' && (
+          <div ref={createPanelRef}>
+            <Panel noMaxWidth className="mx-auto w-full" title={modalTitle}>
+              <div className="flex flex-col gap-4">
+                {selectedSchemaAttributes.length > 0 ? (
+                  <DynamicEntity
+                    entity={{
+                      data: formData,
+                      entityTypeName: selectedTypeName,
+                      type: selectedTypeName,
+                      trustdeckID: ''
+                    }}
+                    schemaAttributes={selectedSchemaAttributes}
+                    editMode
+                    formData={formData}
+                    onFieldChange={handleFieldChange}
+                    showIdentifierPanel={false}
+                  />
+                ) : (
+                  <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
+                    {t('search:noEntitySchema')}
+                  </p>
+                )}
+
+                {linkageCandidates.length > 0 && (
+                  <div className="mx-auto w-full max-w-[824px] rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
+                    <h3 className="text-base font-semibold text-amber-950 dark:text-amber-100">
+                      {t('identity:crud.linkageConflictTitle')}
+                    </h3>
+                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
+                      {t('identity:crud.linkageConflictText', {
+                        count: linkageCandidates.length
+                      })}
+                    </p>
+                    <div className="mt-4 overflow-x-auto rounded-lg border border-amber-200 bg-white dark:border-amber-900 dark:bg-slate-950">
+                      <table className="w-full min-w-[680px] text-left text-sm">
+                        <thead className="bg-amber-100/70 text-amber-950 dark:bg-amber-950/60 dark:text-amber-100">
+                          <tr>
+                            <th className="px-3 py-2 font-semibold">
+                              {t('identity:crud.identifier')}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t('identity:crud.linkageScore')}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t('identity:crud.linkageStatus')}
+                            </th>
+                            <th className="px-3 py-2 font-semibold">
+                              {t('identity:crud.linkageMatchedOn')}
+                            </th>
+                            <th className="w-16 px-3 py-2" />
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-amber-100 dark:divide-amber-950">
+                          {linkageCandidates.map((candidate, index) => (
+                            <tr
+                              key={`${entityId(candidate.entityInstance)}-${index}`}
+                            >
+                              <td className="px-3 py-2 font-mono">
+                                {entityId(candidate.entityInstance) || '—'}
+                              </td>
+                              <td className="px-3 py-2">
+                                {(
+                                  Number(candidate.normalizedScore ?? 0) * 100
+                                ).toLocaleString(i18n.language, {
+                                  maximumFractionDigits: 2
+                                })}
+                                %
+                              </td>
+                              <td className="px-3 py-2">
+                                {candidate.candidateStatus ?? '—'}
+                              </td>
+                              <td className="px-3 py-2">
+                                {(candidate.matchedOn ?? []).join(', ') || '—'}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                <IconActionButton
+                                  title={t('identity:crud.viewCandidate')}
+                                  onClick={() =>
+                                    setSelectedLinkageCandidate(candidate)
+                                  }
+                                >
+                                  <EyeIcon className="h-5 w-5" />
+                                </IconActionButton>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mx-auto flex w-full max-w-[824px] justify-end gap-2">
+                  <PrimaryButton
+                    label={t('identity:crud.create')}
+                    onClick={handleSave}
+                    loading={saving}
+                    disabled={
+                      !selectedTypeName ||
+                      selectedSchemaAttributes.length === 0 ||
+                      !canCreateInstances
+                    }
+                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                  />
+                  <PrimaryOutlinedButton
+                    label={t('identity:crud.cancel')}
+                    onClick={closeModal}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                    disabled={saving}
+                  />
+                </div>
+              </div>
+            </Panel>
+          </div>
+        )}
       </div>
 
       <Dialog
-        visible={modalOpen}
+        visible={modalOpen && modalMode !== 'create'}
         onHide={closeModal}
         header={modalTitle}
         closable

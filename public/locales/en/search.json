@@ -197,7 +197,7 @@
   "noEntitySchema": "No definition is available for the selected entity.",
   "listAll": "List all",
   "ok": "Ok",
-  "subtitle": "Search for entities or pseudonyms in the selected project.",
+  "subtitle": "Find entities and pseudonyms in the selected project.",
   "personView": "View person",
   "biosampleView": "View biosample",
   "trustDeckId": "TrustDeck ID",
@@ -218,5 +218,6 @@
     "pageOf": "Page {{page}} of {{pages}}",
     "resultsPerPage": "Results per page"
   },
-  "resultNumber": "No."
+  "resultNumber": "No.",
+  "domainRequired": "Select a pseudonym domain first."
 }

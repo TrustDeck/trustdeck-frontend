@@ -7,7 +7,7 @@
   },
   "currentUser": "Current user",
   "title": "Permission Management",
-  "intro": "Review your current TrustDeck roles and manage global, project, and group permissions for other users.",
+  "intro": "Review your rights and grant or revoke scoped permissions for other users.",
   "currentAccess": "Your current rights",
   "keycloakRoles": "Keycloak roles in token",
   "effectivePermissions": "Effective TrustDeck permissions",

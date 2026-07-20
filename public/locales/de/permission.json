@@ -7,7 +7,7 @@
   },
   "currentUser": "Aktueller Benutzer",
   "title": "Berechtigungsverwaltung",
-  "intro": "Prüfen Sie Ihre aktuellen TrustDeck-Rollen und verwalten Sie globale, Projekt- und Gruppenberechtigungen für andere Benutzer.",
+  "intro": "Prüfen Sie Ihre Rechte und erteilen oder entziehen Sie anderen Benutzern Berechtigungen für ausgewählte Geltungsbereiche.",
   "currentAccess": "Ihre aktuellen Rechte",
   "keycloakRoles": "Keycloak-Rollen im Token",
   "effectivePermissions": "Effektive TrustDeck-Berechtigungen",

@@ -43,6 +43,7 @@ export type RouteConfig = {
   sideboardOrder?: number
   isNonProject?: boolean
   requiresBaseTypeAccess?: boolean
+  sidebarGroup?: 'configuration' | 'management'
 }
 
 export const routes: RouteConfig[] = [
@@ -129,12 +130,13 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/entity/manager',
-    titleKey: 'layout:menu.entityManagement',
+    titleKey: 'layout:menu.entityTypes',
     component: EntityManager,
     Icon: CubeTransparentIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 4
+    sideboardOrder: 4,
+    sidebarGroup: 'configuration'
   },
   {
     path: '/entity/manager/new',
@@ -146,12 +148,13 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/identity',
-    titleKey: 'layout:menu.identityManagement',
+    titleKey: 'layout:menu.entities',
     component: PreReg,
     Icon: IdentificationIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 5
+    sideboardOrder: 5,
+    sidebarGroup: 'management'
   },
   {
     path: '/identity/register',
@@ -179,21 +182,23 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/pseudonym-management',
-    titleKey: 'layout:menu.pseudonymManagement',
+    titleKey: 'layout:menu.pseudonyms',
     component: SearchPsn,
     Icon: EyeSlashIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 6
+    sideboardOrder: 6,
+    sidebarGroup: 'management'
   },
   {
     path: '/group-management',
-    titleKey: 'layout:menu.groupManagement',
+    titleKey: 'layout:menu.pseudonymDomains',
     component: GroupManager,
     Icon: ArchiveBoxIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 3
+    sideboardOrder: 3,
+    sidebarGroup: 'configuration'
   },
   {
     path: '/search/pseudonym/:domainName/:pseudonymId',

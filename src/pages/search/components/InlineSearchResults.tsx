@@ -26,7 +26,7 @@ import {
 import InlineEntityDetail from './InlineEntityDetail'
 import InlinePseudonymDetail from './InlinePseudonymDetail'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
 
 type ActionButtonProps = {
   title: string
@@ -74,41 +74,70 @@ function resolveTrustDeckId(result: any): string {
 function Pagination({
   total,
   page,
-  onPageChange
+  pageSize,
+  onPageChange,
+  onPageSizeChange
 }: {
   total: number
   page: number
+  pageSize: number
   onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
 }) {
   const { t } = useTranslation('search')
-  const pageCount = Math.ceil(total / PAGE_SIZE)
-  if (pageCount <= 1) return null
+  const pageCount = Math.ceil(total / pageSize)
+  const pageSizeOptions = PAGE_SIZE_OPTIONS.filter(
+    (option) => option === 10 || option <= total
+  )
+
+  if (pageCount <= 1 && pageSizeOptions.length <= 1) return null
 
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 border-t border-gray-200 px-5 py-4 dark:border-slate-700">
-      <button
-        type="button"
-        title={t('pagination.previous')}
-        aria-label={t('pagination.previous')}
-        disabled={page === 0}
-        onClick={() => onPageChange(Math.max(0, page - 1))}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-      >
-        <ChevronLeftIcon className="h-5 w-5" />
-      </button>
-      <span className="text-base font-medium text-gray-700 dark:text-gray-200">
-        {t('pagination.pageOf', { page: page + 1, pages: pageCount })}
-      </span>
-      <button
-        type="button"
-        title={t('pagination.next')}
-        aria-label={t('pagination.next')}
-        disabled={page >= pageCount - 1}
-        onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-      >
-        <ChevronRightIcon className="h-5 w-5" />
-      </button>
+    <div className="flex flex-wrap items-center justify-center gap-4 border-t border-gray-200 px-5 py-4 dark:border-slate-700">
+      {pageSizeOptions.length > 1 && (
+        <label className="flex items-center gap-2 text-base font-medium text-gray-700 dark:text-gray-200">
+          <span>{t('pagination.resultsPerPage')}</span>
+          <select
+            value={pageSize}
+            onChange={(event) => onPageSizeChange(Number(event.target.value))}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+          >
+            {pageSizeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {pageCount > 1 && (
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            title={t('pagination.previous')}
+            aria-label={t('pagination.previous')}
+            disabled={page === 0}
+            onClick={() => onPageChange(Math.max(0, page - 1))}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+          >
+            <ChevronLeftIcon className="h-5 w-5" />
+          </button>
+          <span className="text-base font-medium text-gray-700 dark:text-gray-200">
+            {t('pagination.pageOf', { page: page + 1, pages: pageCount })}
+          </span>
+          <button
+            type="button"
+            title={t('pagination.next')}
+            aria-label={t('pagination.next')}
+            disabled={page >= pageCount - 1}
+            onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+          >
+            <ChevronRightIcon className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -127,6 +156,7 @@ export function InlineEntityResults({
   const [pendingDelete, setPendingDelete] = useState<any | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const [selectedIdentifier, setSelectedIdentifier] = useState('')
   const [selectedEditMode, setSelectedEditMode] = useState(false)
 
@@ -158,9 +188,9 @@ export function InlineEntityResults({
   }, [entityTypeName])
 
   useEffect(() => {
-    const maxPage = Math.max(0, Math.ceil(results.length / PAGE_SIZE) - 1)
+    const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
     if (page > maxPage) setPage(maxPage)
-  }, [page, results.length])
+  }, [page, pageSize, results.length])
 
   if (!hasSearched) return null
 
@@ -229,7 +259,12 @@ export function InlineEntityResults({
     }
   }
 
-  const pageResults = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const pageStart = page * pageSize
+  const pageResults = results.slice(pageStart, pageStart + pageSize)
+  const entityPageCount = Math.ceil(results.length / pageSize)
+  const entityFillerRows =
+    entityPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
+  const entityColumnCount = (summaryAttributes.length || 1) + 3
 
   return (
     <Panel className="mt-6 !w-full !p-0 overflow-hidden">
@@ -249,6 +284,9 @@ export function InlineEntityResults({
           <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
+                <th className="w-20 px-4 py-3 text-center text-base font-semibold">
+                  {t('resultNumber')}
+                </th>
                 <th className="w-[25%] px-5 py-3 text-base font-semibold">
                   {t('trustDeckId')}
                 </th>
@@ -271,14 +309,21 @@ export function InlineEntityResults({
               </tr>
             </thead>
             <tbody>
-              {pageResults.map((result) => {
+              {pageResults.map((result, resultIndex) => {
                 const identifier = resolveTrustDeckId(result)
                 const data = result?.data ?? {}
                 return (
                   <tr
                     key={identifier}
-                    className="border-t border-gray-200 align-middle hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+                    className={`border-t border-gray-200 align-middle transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
+                      resultIndex % 2 === 0
+                        ? 'bg-white dark:bg-slate-900'
+                        : 'bg-gray-50/80 dark:bg-slate-800/45'
+                    }`}
                   >
+                    <td className="px-4 py-4 text-center text-base font-semibold text-gray-600 dark:text-gray-300">
+                      {pageStart + resultIndex + 1}
+                    </td>
                     <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
                       {identifier || '—'}
                     </td>
@@ -321,12 +366,34 @@ export function InlineEntityResults({
                   </tr>
                 )
               })}
+              {Array.from({ length: entityFillerRows }, (_, fillerIndex) => (
+                <tr
+                  key={`entity-filler-${fillerIndex}`}
+                  aria-hidden="true"
+                  className={`h-[73px] border-t border-gray-200 dark:border-slate-700 ${
+                    (pageResults.length + fillerIndex) % 2 === 0
+                      ? 'bg-white dark:bg-slate-900'
+                      : 'bg-gray-50/80 dark:bg-slate-800/45'
+                  }`}
+                >
+                  <td colSpan={entityColumnCount}>&nbsp;</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-      <Pagination total={results.length} page={page} onPageChange={setPage} />
+      <Pagination
+        total={results.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(nextPageSize) => {
+          setPageSize(nextPageSize)
+          setPage(0)
+        }}
+      />
 
       <Dialog
         visible={Boolean(pendingDelete)}
@@ -376,6 +443,7 @@ export function InlinePseudonymResults({
   const [pendingDelete, setPendingDelete] = useState<Pseudonym | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
   const selectedPseudonym = useMemo(
     () =>
       results.find(
@@ -389,9 +457,9 @@ export function InlinePseudonymResults({
   )
 
   useEffect(() => {
-    const maxPage = Math.max(0, Math.ceil(results.length / PAGE_SIZE) - 1)
+    const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
     if (page > maxPage) setPage(maxPage)
-  }, [page, results.length])
+  }, [page, pageSize, results.length])
 
   if (!hasSearched) return null
 
@@ -466,7 +534,11 @@ export function InlinePseudonymResults({
     }
   }
 
-  const pageResults = results.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const pageStart = page * pageSize
+  const pageResults = results.slice(pageStart, pageStart + pageSize)
+  const pseudonymPageCount = Math.ceil(results.length / pageSize)
+  const pseudonymFillerRows =
+    pseudonymPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
 
   return (
     <Panel className="mt-6 !w-full !p-0 overflow-hidden">
@@ -486,6 +558,9 @@ export function InlinePseudonymResults({
           <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
+                <th className="w-20 px-4 py-3 text-center text-base font-semibold">
+                  {t('resultNumber')}
+                </th>
                 <th className="px-5 py-3 text-base font-semibold">
                   {t('pseudonym.value')}
                 </th>
@@ -504,13 +579,20 @@ export function InlinePseudonymResults({
               </tr>
             </thead>
             <tbody>
-              {pageResults.map((result) => {
+              {pageResults.map((result, resultIndex) => {
                 const domain = result.domainName || fallbackDomain
                 return (
                   <tr
                     key={`${domain}:${result.psn}`}
-                    className="border-t border-gray-200 align-middle hover:bg-gray-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+                    className={`border-t border-gray-200 align-middle transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
+                      resultIndex % 2 === 0
+                        ? 'bg-white dark:bg-slate-900'
+                        : 'bg-gray-50/80 dark:bg-slate-800/45'
+                    }`}
                   >
+                    <td className="px-4 py-4 text-center text-base font-semibold text-gray-600 dark:text-gray-300">
+                      {pageStart + resultIndex + 1}
+                    </td>
                     <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
                       {result.psn || '—'}
                     </td>
@@ -547,12 +629,34 @@ export function InlinePseudonymResults({
                   </tr>
                 )
               })}
+              {Array.from({ length: pseudonymFillerRows }, (_, fillerIndex) => (
+                <tr
+                  key={`pseudonym-filler-${fillerIndex}`}
+                  aria-hidden="true"
+                  className={`h-[73px] border-t border-gray-200 dark:border-slate-700 ${
+                    (pageResults.length + fillerIndex) % 2 === 0
+                      ? 'bg-white dark:bg-slate-900'
+                      : 'bg-gray-50/80 dark:bg-slate-800/45'
+                  }`}
+                >
+                  <td colSpan={6}>&nbsp;</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-      <Pagination total={results.length} page={page} onPageChange={setPage} />
+      <Pagination
+        total={results.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(nextPageSize) => {
+          setPageSize(nextPageSize)
+          setPage(0)
+        }}
+      />
 
       <Dialog
         visible={Boolean(pendingDelete)}

@@ -1334,13 +1334,25 @@ export default function PreReg() {
         </Panel>
 
         {selectedType && (
-          <Panel
-            noMaxWidth
-            className="mx-auto"
-            title={t('identity:crud.instancesTitle', {
-              type: selectedType.name
-            })}
-          >
+          <Panel noMaxWidth className="mx-auto">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="td-panel-title !mb-0">
+                {t('identity:crud.instancesTitle', {
+                  type: selectedType.name
+                })}
+              </h2>
+              <PrimaryButton
+                label={t('identity:crud.addEntityInstance')}
+                onClick={openCreateModal}
+                icon={<PlusIcon className="mr-1 h-5 w-5" />}
+                disabled={!canCreateInstances}
+                tooltip={
+                  !canCreateInstances
+                    ? t('identity:crud.noCreatePermission')
+                    : undefined
+                }
+              />
+            </div>
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
                 <CustomFloatLabel
@@ -1519,20 +1531,6 @@ export default function PreReg() {
                   </label>
                 </div>
               )}
-
-              <div className="flex justify-center pt-2">
-                <PrimaryButton
-                  label={t('identity:crud.addEntityInstance')}
-                  onClick={openCreateModal}
-                  icon={<PlusIcon className="h-5 w-5 mr-1" />}
-                  disabled={!canCreateInstances}
-                  tooltip={
-                    !canCreateInstances
-                      ? t('identity:crud.noCreatePermission')
-                      : undefined
-                  }
-                />
-              </div>
             </div>
           </Panel>
         )}

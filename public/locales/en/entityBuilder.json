@@ -174,7 +174,7 @@
     "exact": "Exact mode",
     "tags": "Tags",
     "pprlMethodOptions": {
-      "ngramBloomFilter": "n-gram Bloom Filter",
+      "ngramBloomFilter": "N-gram Bloom filter",
       "hmacExact": "HMAC-based exact matching"
     },
     "attributeTitle": "Attribute linkage settings",
@@ -184,7 +184,7 @@
     "tags": "Semantic tags describe what an attribute represents. By default, TrustDeck uses the entity name followed by the attribute name, for example person.firstName.",
     "privacyMode": "PPRL transforms linkage values before comparison. Plain mode keeps values usable for non-private blocking or comparison workflows.",
     "weight": "Relative importance of this attribute during record linkage. Higher values make a match on this attribute count more strongly.",
-    "pprlMethod": "n-gram Bloom Filter encodes approximate string similarity. HMAC-based exact matching supports exact equality without storing the clear value.",
+    "pprlMethod": "N-gram Bloom filter encodes approximate string similarity. HMAC-based exact matching supports exact equality without storing the clear value.",
     "ngramSize": "Number of characters per n-gram before Bloom-filter encoding. A value of 2 is common for names.",
     "bloomLength": "Length of the Bloom filter bit array. Larger values reduce collisions but increase storage size.",
     "hashPositions": "Number of hash-derived Bloom-filter positions set for each n-gram. Higher values can make similar values easier to match, but may also increase the chance of unrelated values overlapping. Default: 10.",
@@ -401,7 +401,7 @@
     "minNormalizedScore": "Minimum fraction of the possible query score required for a candidate. Enter a value between 0 and 1.",
     "bloomMinSimilarity": "Minimum Dice similarity at which a Bloom-filter attribute contributes to the entity score. Enter a value between 0 and 1.",
     "candidateLimit": "Maximum number of blocked candidates loaded before detailed scoring.",
-    "exactToken": "For n-gram Bloom Filter linkage, additionally creates a protected exact token so exact agreement can contribute strongly.",
+    "exactToken": "For N-gram Bloom filter linkage, additionally creates a protected exact token so exact agreement can contribute strongly.",
     "autoLinkOnCreate": "Runs entity-level record linkage before a new entity is stored.",
     "onMatch": "Reject returns the candidate list with HTTP 409. Return existing sends the best active matching entity instead of creating a duplicate."
   },

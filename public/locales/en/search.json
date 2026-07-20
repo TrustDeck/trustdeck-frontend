@@ -215,6 +215,8 @@
   "pagination": {
     "previous": "Previous page",
     "next": "Next page",
-    "pageOf": "Page {{page}} of {{pages}}"
-  }
+    "pageOf": "Page {{page}} of {{pages}}",
+    "resultsPerPage": "Results per page"
+  },
+  "resultNumber": "No."
 }

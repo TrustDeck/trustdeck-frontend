@@ -174,7 +174,7 @@
     "exact": "Exakter Modus",
     "tags": "Tags",
     "pprlMethodOptions": {
-      "ngramBloomFilter": "n-Gramm-Bloom-Filter",
+      "ngramBloomFilter": "N-Gramm-Bloom-Filter",
       "hmacExact": "HMAC-basierter exakter Abgleich"
     },
     "attributeTitle": "Linkage-Einstellungen des Attributs",
@@ -184,7 +184,7 @@
     "tags": "Semantische Tags beschreiben die Bedeutung eines Attributs. Standardmäßig verwendet TrustDeck den Entitätsnamen gefolgt vom Attributnamen, zum Beispiel person.firstName.",
     "privacyMode": "PPRL transformiert Linkage-Werte vor dem Vergleich. Klartext-Modus lässt Werte für nicht-private Blocking- oder Vergleichsworkflows nutzbar.",
     "weight": "Relative Bedeutung dieses Attributs beim Record Linkage. Höhere Werte lassen Treffer bei diesem Attribut stärker zählen.",
-    "pprlMethod": "n-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
+    "pprlMethod": "N-Gramm-Bloom-Filter kodiert ungefähnliche Textähnlichkeit. HMAC-basierter exakter Abgleich ermöglicht Gleichheitsprüfung ohne Klartextspeicherung.",
     "ngramSize": "Anzahl der Zeichen pro n-Gramm vor der Bloom-Filter-Kodierung. Für Namen ist 2 ein üblicher Wert.",
     "bloomLength": "Länge des Bloom-Filter-Bitarrays. Größere Werte reduzieren Kollisionen, benötigen aber mehr Speicher.",
     "hashPositions": "Anzahl hash-abgeleiteter Bloom-Filter-Positionen, die pro n-Gramm gesetzt werden. Höhere Werte können ähnliche Werte leichter vergleichbar machen, können aber auch die Wahrscheinlichkeit erhöhen, dass sich nicht zusammengehörige Werte überschneiden. Standard: 10.",
@@ -401,7 +401,7 @@
     "minNormalizedScore": "Minimaler Anteil des möglichen Abfragewerts für einen Kandidaten. Geben Sie einen Wert zwischen 0 und 1 ein.",
     "bloomMinSimilarity": "Minimale Dice-Ähnlichkeit, ab der ein Bloom-Filter-Attribut zum Entitätswert beiträgt. Geben Sie einen Wert zwischen 0 und 1 ein.",
     "candidateLimit": "Maximale Anzahl geblockter Kandidaten, die vor der detaillierten Bewertung geladen wird.",
-    "exactToken": "Erzeugt beim n-Gramm-Bloom-Filter zusätzlich ein geschütztes exaktes Token, damit exakte Übereinstimmungen stärker beitragen können.",
+    "exactToken": "Erzeugt beim N-Gramm-Bloom-Filter zusätzlich ein geschütztes exaktes Token, damit exakte Übereinstimmungen stärker beitragen können.",
     "autoLinkOnCreate": "Führt vor dem Speichern einer neuen Entität Record Linkage auf Entitätsebene aus.",
     "onMatch": "Ablehnen liefert die Kandidatenliste mit HTTP 409. Bestehende Entität zurückgeben liefert den besten aktiven Treffer, ohne ein Duplikat anzulegen."
   },

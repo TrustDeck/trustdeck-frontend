@@ -164,7 +164,8 @@
     "inheritedTooltip": "Inherited from the group configuration.",
     "inherited": "Inherited",
     "noLinkedPseudonyms": "No linked pseudonyms available.",
-    "searchHint": "Enter a pseudonym and select the group in which it should be searched."
+    "searchHint": "Enter a pseudonym and select the group in which it should be searched.",
+    "searchInputPlaceholder": "Pseudonym, identifier, or ID Type"
   },
   "group": {
     "title": "Group",

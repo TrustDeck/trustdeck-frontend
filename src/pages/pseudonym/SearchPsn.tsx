@@ -6,9 +6,7 @@ import { StepperPanel } from 'primereact/stepperpanel'
 import {
   ArrowLeftIcon,
   IdentificationIcon,
-  MagnifyingGlassIcon,
   PlusIcon,
-  SparklesIcon,
   UserIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
@@ -419,19 +417,14 @@ export default function SearchPsn() {
 
         <div ref={searchPanelRef}>
           <Panel noMaxWidth className="w-full !p-6">
-            <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-color-blue dark:bg-blue-950/50 dark:text-blue-300">
-                  <MagnifyingGlassIcon className="h-7 w-7" />
-                </span>
-                <div>
-                  <h2 className="td-panel-title">
-                    {t('pseudonyms:management.searchTitle')}
-                  </h2>
-                  <p className="td-section-subtitle mt-1">
-                    {t('pseudonyms:management.searchDescription')}
-                  </p>
-                </div>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="td-panel-title !mb-0">
+                  {t('pseudonyms:management.searchTitle')}
+                </h2>
+                <p className="td-section-subtitle mt-1">
+                  {t('pseudonyms:management.searchDescription')}
+                </p>
               </div>
               <PrimaryButton
                 label={t('pseudonyms:management.addPseudonym')}
@@ -445,18 +438,13 @@ export default function SearchPsn() {
 
         {generationMode && (
           <Panel noMaxWidth className="w-full !p-6">
-            <div className="mb-5 flex items-start gap-4">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                <SparklesIcon className="h-7 w-7" />
-              </span>
-              <div>
-                <h2 className="td-panel-title">
-                  {t('pseudonyms:management.addPseudonym')}
-                </h2>
-                <p className="td-section-subtitle mt-1">
-                  {t('pseudonyms:management.generateDescription')}
-                </p>
-              </div>
+            <div className="mb-5">
+              <h2 className="td-panel-title !mb-0">
+                {t('pseudonyms:management.addPseudonym')}
+              </h2>
+              <p className="td-section-subtitle mt-1">
+                {t('pseudonyms:management.generateDescription')}
+              </p>
             </div>
 
             {generationMode === 'choice' && (
@@ -473,9 +461,6 @@ export default function SearchPsn() {
                   <p className="td-section-subtitle mt-2 flex-1">
                     {t('pseudonyms:management.entityDescription')}
                   </p>
-                  <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
-                    {t('pseudonyms:management.entityAction')}
-                  </span>
                 </button>
 
                 <button
@@ -490,9 +475,6 @@ export default function SearchPsn() {
                   <p className="td-section-subtitle mt-2 flex-1">
                     {t('pseudonyms:management.standaloneDescription')}
                   </p>
-                  <span className="mt-5 font-semibold text-color-blue group-hover:underline dark:text-blue-300">
-                    {t('pseudonyms:management.standaloneAction')}
-                  </span>
                 </button>
                 <div className="lg:col-span-2">
                   <PrimaryOutlinedButton

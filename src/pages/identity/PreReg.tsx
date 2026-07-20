@@ -1589,6 +1589,7 @@ export default function PreReg() {
                     formData={formData}
                     onFieldChange={handleFieldChange}
                     showIdentifierPanel={false}
+                    plainAttributes
                   />
                 ) : (
                   <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
@@ -1597,7 +1598,7 @@ export default function PreReg() {
                 )}
 
                 {linkageCandidates.length > 0 && (
-                  <div className="mx-auto w-full max-w-[824px] rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
+                  <div className="w-full rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
                     <h3 className="text-base font-semibold text-amber-950 dark:text-amber-100">
                       {t('identity:crud.linkageConflictTitle')}
                     </h3>
@@ -1665,7 +1666,7 @@ export default function PreReg() {
                   </div>
                 )}
 
-                <div className="mx-auto flex w-full max-w-[824px] justify-end gap-2">
+                <div className="flex w-full flex-wrap justify-center gap-3 border-t border-gray-200 pt-5 dark:border-slate-700">
                   <PrimaryButton
                     label={t('identity:crud.create')}
                     onClick={handleSave}

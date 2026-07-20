@@ -1,9 +1,9 @@
 import React, { FormEvent, useEffect, useRef, useState } from 'react'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import CustomDropdown from '@component/form/CustomDropdown'
+import Divider from '../../../core/components/common/Divider'
 import GroupService from '../../groups/service/GroupService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
@@ -100,16 +100,23 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
     }
   }
 
+  const inputClassName = `h-11 w-full rounded-lg border bg-white px-3 text-base text-gray-900 outline-none transition focus:ring-1 dark:bg-slate-900 dark:text-gray-100 ${
+    queryError
+      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+      : 'border-color-light-gray focus:border-color-blue focus:ring-color-blue'
+  }`
+
   return (
     <div className="w-full">
-      <form onSubmit={handleSubmit} className="flex flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {psn && (
-          <p className="mt-4 text-base text-gray-600 dark:text-gray-300">
+          <p className="text-base text-gray-600 dark:text-gray-300">
             {t('pseudonym.searchHint')}
           </p>
         )}
-        <div className="my-4 flex flex-col gap-4 sm:flex-row sm:items-end">
-          {showDomainSelector && (
+
+        {showDomainSelector ? (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
             <label className="block w-full shrink-0 sm:w-64">
               <span className="td-field-label mb-1 block">
                 {t('group.title')}
@@ -123,50 +130,70 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
                 filter
               />
             </label>
-          )}
 
-          <label className="block min-w-0 flex-1">
-            <span className="td-field-label mb-1 block">
-              {t('searchQuery')}
-            </span>
+            <label className="block min-w-0 flex-1">
+              <span className="td-field-label mb-1 block">
+                {t('searchQuery')}
+              </span>
+              <input
+                id="pseudonym"
+                type="text"
+                value={pseudonym}
+                onChange={(event) => {
+                  setPseudonym(event.target.value)
+                  if (queryError) setQueryError('')
+                }}
+                aria-invalid={Boolean(queryError)}
+                className={inputClassName}
+              />
+            </label>
+
+            <PrimaryButton
+              label={t('submit')}
+              type="submit"
+              loading={loading}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
             <input
               id="pseudonym"
-              type="text"
+              type="search"
+              aria-label={t('pseudonym.searchInputPlaceholder')}
+              placeholder={t('pseudonym.searchInputPlaceholder')}
               value={pseudonym}
               onChange={(event) => {
                 setPseudonym(event.target.value)
                 if (queryError) setQueryError('')
               }}
               aria-invalid={Boolean(queryError)}
-              className={`h-[44px] w-full rounded-lg border bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:ring-1 dark:bg-slate-900 dark:text-gray-100 ${
-                queryError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                  : 'border-color-light-gray focus:border-color-blue focus:ring-color-blue'
-              }`}
+              className={inputClassName}
             />
-            {queryError && (
-              <span className="mt-1 block text-sm font-medium text-red-600">
-                {queryError}
-              </span>
-            )}
-          </label>
+            <PrimaryButton
+              label={t('submit')}
+              type="submit"
+              loading={loading}
+            />
+          </div>
+        )}
 
-          <PrimaryButton
-            label={<span className="hidden sm:inline">{t('submit')}</span>}
-            type="submit"
-            loading={loading}
-            icon={<MagnifyingGlassIcon className="mr-1 h-5 w-5" />}
-          />
-        </div>
+        {queryError && (
+          <span className="block text-sm font-medium text-red-600">
+            {queryError}
+          </span>
+        )}
       </form>
 
       {inlineResults && (
-        <InlinePseudonymResults
-          fallbackDomain={
-            group ||
-            (showDomainSelector ? selectedProject?.abbreviation || '' : '')
-          }
-        />
+        <>
+          <Divider />
+          <InlinePseudonymResults
+            fallbackDomain={
+              group ||
+              (showDomainSelector ? selectedProject?.abbreviation || '' : '')
+            }
+          />
+        </>
       )}
     </div>
   )

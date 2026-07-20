@@ -953,6 +953,7 @@ export default function Builder({
     null
   )
   const [dropIndicator, setDropIndicator] = useState<DropIndicator>(null)
+  const [entityLinkageCollapsed, setEntityLinkageCollapsed] = useState(true)
   const [collapsedLinkageKeys, setCollapsedLinkageKeys] = useState<
     Record<string, boolean>
   >({})
@@ -983,6 +984,7 @@ export default function Builder({
     setBaseEntityLinkageConfig(null)
     setDraggedAttributeKey(null)
     setDropIndicator(null)
+    setEntityLinkageCollapsed(true)
     setCollapsedLinkageKeys({})
     setCollapsedAttributeKeys({})
   }, [initialType, scope])
@@ -2199,11 +2201,32 @@ export default function Builder({
         </Panel>
       )}
 
-      <Panel title={t('entityLinkage.title')} className="!w-full" noMaxWidth>
-        <p className="mb-5 text-sm text-gray-500 dark:text-gray-300">
-          {t('entityLinkage.description')}
-        </p>
-        {renderEntityLinkageConfig()}
+      <Panel className="!w-full" noMaxWidth>
+        <button
+          type="button"
+          className="flex w-full items-start justify-between gap-4 text-left"
+          aria-expanded={!entityLinkageCollapsed}
+          onClick={() => setEntityLinkageCollapsed((collapsed) => !collapsed)}
+        >
+          <span className="min-w-0">
+            <span className="td-panel-title !mb-0 block">
+              {t('entityLinkage.title')}
+            </span>
+            <span className="td-section-subtitle mt-1 block">
+              {t('entityLinkage.description')}
+            </span>
+          </span>
+          {entityLinkageCollapsed ? (
+            <ChevronRightIcon className="mt-1 h-6 w-6 flex-none text-gray-500 dark:text-gray-300" />
+          ) : (
+            <ChevronDownIcon className="mt-1 h-6 w-6 flex-none text-gray-500 dark:text-gray-300" />
+          )}
+        </button>
+        {!entityLinkageCollapsed && (
+          <div className="mt-5 border-t border-gray-200 pt-5 dark:border-slate-700">
+            {renderEntityLinkageConfig()}
+          </div>
+        )}
       </Panel>
 
       <Panel title={t('visualPreview')} className="!w-full" noMaxWidth>

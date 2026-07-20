@@ -17,6 +17,7 @@ export type DynamicEntityProps = {
   formData: Record<string, any>
   onFieldChange: (path: Array<string | number>, value: any) => void
   showIdentifierPanel?: boolean
+  plainAttributes?: boolean
 }
 
 function formatValue(value: unknown): string {
@@ -85,12 +86,12 @@ export default function DynamicEntity({
   editMode,
   formData,
   onFieldChange,
-  showIdentifierPanel = true
+  showIdentifierPanel = true,
+  plainAttributes = false
 }: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
 
-  const resolveLabel = (attr: any) =>
-    resolveAttributeLabel(attr, i18n.language)
+  const resolveLabel = (attr: any) => resolveAttributeLabel(attr, i18n.language)
 
   const isEmptyValue = (value: unknown) =>
     value === undefined || value === null || String(value).trim() === ''
@@ -114,7 +115,9 @@ export default function DynamicEntity({
     if (!editMode || !attr.name) {
       return (
         <div key={key} className="min-w-0">
-          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
           <div className="min-h-[44px] break-words rounded-lg border border-color-light-gray bg-white px-3 py-2 text-xl text-gray-900 dark:bg-slate-950 dark:text-gray-100">
             {formatValue(rawValue) || '—'}
           </div>
@@ -125,7 +128,9 @@ export default function DynamicEntity({
     if (attr.type === 'enum') {
       return (
         <label key={key} className="block min-w-0">
-          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
           <CustomDropdown
             id={key}
             value={rawValue ?? ''}
@@ -144,7 +149,9 @@ export default function DynamicEntity({
     if (attr.type === 'date' || attr.type === 'datetime') {
       return (
         <label key={key} className="block min-w-0">
-          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
           <CustomCalendar
             id={key}
             value={parseDateValue(rawValue)}
@@ -172,7 +179,9 @@ export default function DynamicEntity({
     if (attr.type === 'integer' || attr.type === 'number') {
       return (
         <label key={key} className="block min-w-0">
-          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
           <CustomInputNumber
             id={key}
             value={
@@ -208,7 +217,9 @@ export default function DynamicEntity({
     if (attr.type === 'boolean') {
       return (
         <div key={key} className="min-w-0">
-          {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
           <label className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray bg-white px-3 text-xl font-font-text text-gray-700 dark:bg-slate-950 dark:text-gray-200">
             <input
               type="checkbox"
@@ -224,7 +235,9 @@ export default function DynamicEntity({
 
     return (
       <label key={key} className="block min-w-0">
-        {showLabel && <FieldLabel label={displayLabel} required={attr.required} />}
+        {showLabel && (
+          <FieldLabel label={displayLabel} required={attr.required} />
+        )}
         <input
           id={key}
           type="text"
@@ -258,6 +271,7 @@ export default function DynamicEntity({
         )
         onFieldChange(path, nextValues.length > 0 ? nextValues : [''])
       }
+      const addRepeatableValue = () => onFieldChange(path, [...values, ''])
 
       return (
         <div
@@ -283,6 +297,17 @@ export default function DynamicEntity({
                   false
                 )}
               </div>
+              {index === values.length - 1 && (
+                <button
+                  type="button"
+                  title={t('identity:crud.addValue')}
+                  aria-label={t('identity:crud.addValue')}
+                  onClick={addRepeatableValue}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                </button>
+              )}
               <button
                 type="button"
                 title={t('identity:crud.removeValue')}
@@ -295,14 +320,6 @@ export default function DynamicEntity({
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={() => onFieldChange(path, [...values, ''])}
-            className="inline-flex items-center gap-2 rounded-lg border border-color-blue px-3 py-2 text-sm font-medium text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
-          >
-            <PlusIcon className="h-4 w-4" />
-            {t('identity:crud.addValue')}
-          </button>
         </div>
       )
     }
@@ -372,6 +389,14 @@ export default function DynamicEntity({
 
       return renderLeaf(attr, context, key, [...pathPrefix, attr.name])
     })
+
+  if (plainAttributes) {
+    return (
+      <div className="w-full space-y-4">
+        {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
+      </div>
+    )
+  }
 
   const modalPanelClass =
     'w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'

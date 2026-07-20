@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  EyeIcon,
   PencilSquareIcon,
   PlusIcon,
-  TrashIcon,
-  XMarkIcon
+  TrashIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
 import TrustDeck from '../../core/services/TrustDeck'
@@ -15,14 +15,37 @@ import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
 import PageHeader from '../../core/components/common/PageHeader'
 
-function typeLabel(type: EntityTypePayload) {
-  return `${type.name}${type.version ? ` (${type.version})` : ''}`
-}
+type DetailMode = 'view' | 'edit' | 'create' | null
 
-function statusLabel(type: EntityTypePayload) {
-  if (type.isDeleted) return 'deleted'
-  if (type.isDeprecated) return 'deprecated'
-  return 'active'
+function IconActionButton({
+  title,
+  onClick,
+  danger = false,
+  children
+}: {
+  title: string
+  onClick: () => void
+  danger?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-label={title}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClick()
+      }}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition ${
+        danger
+          ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30'
+          : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50 hover:text-color-blue dark:border-slate-700 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/30 dark:hover:text-blue-200'
+      }`}
+    >
+      {children}
+    </button>
+  )
 }
 
 export default function BaseTypeManager() {
@@ -30,11 +53,12 @@ export default function BaseTypeManager() {
   const showToast = useToastStore((state) => state.show)
   const [baseTypes, setBaseTypes] = useState<EntityTypePayload[]>([])
   const [selectedTypeName, setSelectedTypeName] = useState('')
+  const [detailMode, setDetailMode] = useState<DetailMode>(null)
   const [loading, setLoading] = useState(true)
-  const [editorOpen, setEditorOpen] = useState(false)
-  const [editingType, setEditingType] = useState<EntityTypePayload | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<EntityTypePayload | null>(
+    null
+  )
 
   const selectedType = useMemo(
     () =>
@@ -52,16 +76,27 @@ export default function BaseTypeManager() {
           Array.isArray(response) ? response : []
         ) as EntityTypePayload[]
         setBaseTypes(definitions)
-        setSelectedTypeName(
-          preferredName &&
+
+        setSelectedTypeName((currentName) => {
+          if (
+            preferredName &&
             definitions.some((entry) => entry.name === preferredName)
-            ? preferredName
-            : ''
-        )
+          ) {
+            return preferredName
+          }
+          if (
+            currentName &&
+            !definitions.some((entry) => entry.name === currentName)
+          ) {
+            setDetailMode(null)
+            return ''
+          }
+          return currentName
+        })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         if (!message.includes('404')) {
-          console.error('Failed to load base entity types', error)
+          console.error('Failed to load base entities', error)
           showToast({
             severity: 'error',
             summary: t('common:error'),
@@ -71,6 +106,7 @@ export default function BaseTypeManager() {
         }
         setBaseTypes([])
         setSelectedTypeName('')
+        setDetailMode(null)
       } finally {
         setLoading(false)
       }
@@ -82,45 +118,42 @@ export default function BaseTypeManager() {
     void loadBaseTypes()
   }, [loadBaseTypes])
 
-  const openCreateModal = () => {
-    setEditingType(null)
-    setEditorOpen(true)
-  }
-
-  const openEditModal = () => {
-    if (!selectedType) return
-    setEditingType(selectedType)
-    setEditorOpen(true)
-  }
-
-  const closeEditor = () => {
-    setEditorOpen(false)
-    setEditingType(null)
+  const openBaseEntity = (
+    definition: EntityTypePayload,
+    mode: 'view' | 'edit'
+  ) => {
+    setSelectedTypeName(definition.name)
+    setDetailMode(mode)
   }
 
   const handleSaved = (savedType: EntityTypePayload) => {
-    closeEditor()
+    setSelectedTypeName(savedType.name)
+    setDetailMode('view')
     void loadBaseTypes(savedType.name)
   }
 
-  const deleteSelectedType = async () => {
-    if (!selectedType) return
+  const deleteBaseEntity = async () => {
+    if (!deleteTarget) return
     setDeleting(true)
     try {
-      await TrustDeck.instance().deleteBaseType(selectedType.name)
+      await TrustDeck.instance().deleteBaseType(deleteTarget.name)
       showToast({
         severity: 'success',
-        summary: t('toast.deletedSummary', 'Entity deleted'),
-        detail: t('toast.baseDeletedDetail', 'The base type was deleted.'),
+        summary: t('toast.deletedSummary'),
+        detail: t('toast.baseDeletedDetail'),
         life: 3500
       })
-      setDeleteConfirmOpen(false)
+      if (selectedTypeName === deleteTarget.name) {
+        setSelectedTypeName('')
+        setDetailMode(null)
+      }
+      setDeleteTarget(null)
       await loadBaseTypes()
     } catch (error) {
-      console.error('Could not delete base entity type', error)
+      console.error('Could not delete base entity', error)
       showToast({
         severity: 'error',
-        summary: t('toast.deleteFailed', 'Delete failed'),
+        summary: t('toast.deleteFailed'),
         detail: error instanceof Error ? error.message : String(error),
         life: 6000
       })
@@ -135,231 +168,192 @@ export default function BaseTypeManager() {
         title={t('globalSettingsTitle')}
         description={t('globalSettingsSubtitle')}
       />
+
       <div className="td-page-content flex w-full flex-col gap-6">
-        <Panel
-          noMaxWidth
-          className="mx-auto !w-full"
-          title={t('baseTypesSectionTitle', 'Base types')}
-        >
+        <Panel noMaxWidth className="mx-auto !w-full">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="td-panel-title !mb-0">
+                {t('baseTypesSectionTitle')}
+              </h2>
+              <p className="mt-2 text-base text-gray-600 dark:text-gray-300">
+                {t('baseTypesSectionDescription')}
+              </p>
+            </div>
+            <PrimaryButton
+              label={
+                <span className="inline-flex items-center gap-2">
+                  <PlusIcon className="h-5 w-5" />
+                  {t('addBaseType')}
+                </span>
+              }
+              onClick={() => {
+                setSelectedTypeName('')
+                setDetailMode('create')
+              }}
+            />
+          </div>
+
           {loading ? (
             <div className="py-10 text-center text-gray-500 dark:text-gray-300">
-              {t('loadingBaseTypes', 'Loading base types...')}
+              {t('loadingBaseTypes')}
+            </div>
+          ) : baseTypes.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
+              <h3 className="td-section-title">{t('noBaseTypesTitle')}</h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                {t('noBaseTypesManagerDetail')}
+              </p>
             </div>
           ) : (
-            <div className="mt-6 space-y-6">
-              <p className="text-base text-gray-600 dark:text-gray-300">
-                {t(
-                  'baseTypesSectionDescription',
-                  'Manage reusable base entities that can be extended by project-specific entities.'
-                )}
-              </p>
-
-              {baseTypes.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6 text-center dark:border-slate-700 dark:bg-slate-900">
-                  <h2 className="td-section-title">
-                    {t('noBaseTypesTitle', 'No base types available')}
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    {t(
-                      'noBaseTypesManagerDetail',
-                      'Create a base type before project-specific types can extend it.'
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-                  <div className="grid grid-cols-[1.7fr_0.8fr] gap-4 border-b border-gray-200 bg-gray-50 px-5 py-4 text-base font-semibold text-gray-600 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200">
-                    <span>{t('entityName')}</span>
-                    <span>{t('version', 'Version')}</span>
-                  </div>
-                  <div className="divide-y divide-gray-200 dark:divide-slate-700">
-                    {baseTypes.map((definition) => {
-                      const selected = selectedType?.name === definition.name
-                      return (
-                        <button
-                          key={`${definition.name}-${definition.version ?? ''}`}
-                          type="button"
-                          onClick={() => setSelectedTypeName(definition.name)}
-                          className={`grid w-full grid-cols-[1.7fr_0.8fr] gap-4 px-5 py-4 text-left text-base transition ${selected ? 'bg-blue-50 text-color-blue dark:bg-blue-950/40 dark:text-blue-100' : 'hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-slate-800'}`}
-                        >
-                          <span className="min-w-0 truncate font-semibold">
-                            {definition.name}
-                          </span>
-                          <span className="min-w-0 truncate text-gray-600 dark:text-gray-300">
-                            {definition.version ?? 'v1.0'}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-center">
-                <PrimaryButton
-                  label={
-                    <span className="inline-flex items-center gap-2">
-                      <PlusIcon className="h-5 w-5" />
-                      {t('addBaseType', 'Add base type')}
-                    </span>
-                  }
-                  onClick={openCreateModal}
-                />
-              </div>
-
-              <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900">
-                {selectedType ? (
-                  <div className="space-y-5">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h2 className="td-panel-title !mb-0">
-                          {selectedType.name}
-                        </h2>
-                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                          {t('versionLabel', {
-                            version: selectedType.version ?? 'v1.0',
-                            defaultValue: `Version ${selectedType.version ?? 'v1.0'}`
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <PrimaryOutlinedButton
-                          label={
-                            <span className="inline-flex items-center gap-2">
+            <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+              <table className="w-full table-fixed text-left">
+                <thead className="bg-gray-50 text-gray-600 dark:bg-slate-800 dark:text-gray-200">
+                  <tr>
+                    <th className="px-5 py-3 text-base font-semibold">
+                      {t('entityName')}
+                    </th>
+                    <th className="w-44 px-5 py-3 text-right text-base font-semibold">
+                      {t('common:actions')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+                  {baseTypes.map((definition) => {
+                    const selected = selectedTypeName === definition.name
+                    return (
+                      <tr
+                        key={`${definition.name}-${definition.version ?? ''}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openBaseEntity(definition, 'view')}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            openBaseEntity(definition, 'view')
+                          }
+                        }}
+                        className={`cursor-pointer text-base transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:hover:bg-slate-800 ${
+                          selected
+                            ? 'bg-blue-50 dark:bg-blue-950/30'
+                            : 'dark:text-gray-100'
+                        }`}
+                      >
+                        <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-100">
+                          {definition.name}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex justify-end gap-2">
+                            <IconActionButton
+                              title={t('common:view')}
+                              onClick={() => openBaseEntity(definition, 'view')}
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </IconActionButton>
+                            <IconActionButton
+                              title={t('common:edit')}
+                              onClick={() => openBaseEntity(definition, 'edit')}
+                            >
                               <PencilSquareIcon className="h-5 w-5" />
-                              {t('common:edit', 'Edit')}
-                            </span>
-                          }
-                          onClick={openEditModal}
-                        />
-                        <SecondaryOutlinedButton
-                          label={
-                            <span className="inline-flex items-center gap-2">
+                            </IconActionButton>
+                            <IconActionButton
+                              title={t('common:delete')}
+                              danger
+                              onClick={() => setDeleteTarget(definition)}
+                            >
                               <TrashIcon className="h-5 w-5" />
-                              {t('common:delete', 'Delete')}
-                            </span>
-                          }
-                          loading={deleting}
-                          onClick={() => setDeleteConfirmOpen(true)}
-                        />
-                      </div>
-                    </div>
-
-                    <dl className="grid gap-3 text-sm md:grid-cols-2">
-                      <div>
-                        <dt className="font-semibold text-gray-500 dark:text-gray-300">
-                          {t('entityName')}
-                        </dt>
-                        <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {selectedType.name}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="font-semibold text-gray-500 dark:text-gray-300">
-                          {t('version', 'Version')}
-                        </dt>
-                        <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {selectedType.version ?? 'v1.0'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="font-semibold text-gray-500 dark:text-gray-300">
-                          {t('status', 'Status')}
-                        </dt>
-                        <dd className="mt-1 text-gray-900 dark:text-gray-100">
-                          {t(`typeStatus.${statusLabel(selectedType)}`)}
-                        </dd>
-                      </div>
-                    </dl>
-
-                    <div>
-                      <h3 className="td-section-title mb-2">
-                        {t('typeDefinition', 'Type definition')}
-                      </h3>
-                      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-950">
-                        <Builder
-                          embedded
-                          readOnly
-                          scope="base"
-                          mode="edit"
-                          initialType={selectedType}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-10 text-center text-gray-500 dark:text-gray-300">
-                    {t(
-                      'selectBaseTypeHint',
-                      'Select a base type from the list or create a new one.'
-                    )}
-                  </div>
-                )}
-              </div>
+                            </IconActionButton>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </Panel>
-      </div>
 
-      {editorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[92vh] w-full max-w-6xl overflow-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="td-panel-title !mb-0">
-                  {editingType
-                    ? t('editBaseType', 'Edit base type')
-                    : t('addBaseType', 'Add base type')}
-                </h2>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-                  {t(
-                    'baseTypeModalHelp',
-                    'Create or update a reusable base type.'
-                  )}
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label={t('common:close', 'Close')}
-                onClick={closeEditor}
-                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-slate-800 dark:hover:text-white"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
+        {detailMode === 'create' && (
+          <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900">
+            <h2 className="td-panel-title !mb-1">{t('createBaseType')}</h2>
+            <p className="mb-5 text-sm text-gray-500 dark:text-gray-300">
+              {t('baseTypeCreateHelp')}
+            </p>
             <Builder
               embedded
               scope="base"
-              mode={editingType ? 'edit' : 'create'}
-              initialType={editingType}
+              mode="create"
               onSaved={handleSaved}
-              onCancel={closeEditor}
+              onCancel={() => setDetailMode(null)}
             />
           </div>
-        </div>
-      )}
+        )}
 
-      {deleteConfirmOpen && selectedType && (
+        {selectedType && (detailMode === 'view' || detailMode === 'edit') && (
+          <div className="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 text-left dark:border-slate-700 dark:bg-slate-900">
+            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="td-panel-title !mb-0">{selectedType.name}</h2>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
+                  {detailMode === 'edit'
+                    ? t('baseTypeEditHelp')
+                    : t('baseTypeViewHelp')}
+                </p>
+              </div>
+              {detailMode === 'view' && (
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                  onClick={() => setDetailMode(null)}
+                >
+                  {t('common:close')}
+                </button>
+              )}
+            </div>
+
+            {detailMode === 'view' ? (
+              <Builder
+                embedded
+                readOnly
+                hideBasicSettings
+                scope="base"
+                mode="edit"
+                initialType={selectedType}
+              />
+            ) : (
+              <Builder
+                embedded
+                hideBasicSettings
+                scope="base"
+                mode="edit"
+                initialType={selectedType}
+                onSaved={handleSaved}
+                onCancel={() => setDetailMode('view')}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
-            <h2 className="td-panel-title !mb-0">
-              {t('confirmDeleteTitle', 'Confirm deletion')}
-            </h2>
+            <h2 className="td-panel-title !mb-0">{t('confirmDeleteTitle')}</h2>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
               {t('confirmDeleteBaseType', {
-                type: typeLabel(selectedType),
-                defaultValue: `Delete base type ${typeLabel(selectedType)}?`
+                type: deleteTarget.name
               })}
             </p>
             <div className="mt-6 flex justify-end gap-2">
               <PrimaryOutlinedButton
-                label={t('common:cancel', 'Cancel')}
-                onClick={() => setDeleteConfirmOpen(false)}
+                label={t('common:cancel')}
+                onClick={() => setDeleteTarget(null)}
               />
               <SecondaryOutlinedButton
-                label={t('common:delete', 'Delete')}
+                label={t('common:delete')}
                 loading={deleting}
-                onClick={deleteSelectedType}
+                onClick={deleteBaseEntity}
               />
             </div>
           </div>

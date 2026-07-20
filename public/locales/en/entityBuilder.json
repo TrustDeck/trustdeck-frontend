@@ -404,5 +404,8 @@
     "exactToken": "For n-gram Bloom Filter linkage, additionally creates a protected exact token so exact agreement can contribute strongly.",
     "autoLinkOnCreate": "Runs entity-level record linkage before a new entity is stored.",
     "onMatch": "Reject returns the candidate list with HTTP 409. Return existing sends the best active matching entity instead of creating a duplicate."
-  }
+  },
+  "baseTypeCreateHelp": "Define a reusable base entity and its attributes.",
+  "baseTypeViewHelp": "Review the reusable entity definition and its attributes.",
+  "baseTypeEditHelp": "Edit the reusable entity definition and its attributes directly below."
 }

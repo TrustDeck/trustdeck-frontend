@@ -404,5 +404,8 @@
     "exactToken": "Erzeugt beim n-Gramm-Bloom-Filter zusätzlich ein geschütztes exaktes Token, damit exakte Übereinstimmungen stärker beitragen können.",
     "autoLinkOnCreate": "Führt vor dem Speichern einer neuen Entität Record Linkage auf Entitätsebene aus.",
     "onMatch": "Ablehnen liefert die Kandidatenliste mit HTTP 409. Bestehende Entität zurückgeben liefert den besten aktiven Treffer, ohne ein Duplikat anzulegen."
-  }
+  },
+  "baseTypeCreateHelp": "Definieren Sie eine wiederverwendbare Basisentität und ihre Attribute.",
+  "baseTypeViewHelp": "Prüfen Sie die wiederverwendbare Entitätsdefinition und ihre Attribute.",
+  "baseTypeEditHelp": "Bearbeiten Sie die wiederverwendbare Entitätsdefinition und ihre Attribute direkt unten."
 }

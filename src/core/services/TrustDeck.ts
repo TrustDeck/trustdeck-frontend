@@ -828,7 +828,12 @@ class TrustDeck {
     return this.request<unknown>(
       'DELETE',
       `/domains/${encodeURIComponent(domainName)}/pseudonyms`,
-      payload
+      undefined,
+      {
+        id: payload.identifierItem?.identifier,
+        idType: payload.identifierItem?.idType,
+        psn: payload.psn
+      }
     )
   }
 

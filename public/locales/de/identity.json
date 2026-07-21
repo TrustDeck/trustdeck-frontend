@@ -67,7 +67,7 @@
   "requiredFieldsHint": "Alle mit * markierten Felder sind Pflichtfelder und müssen ausgefüllt werden.",
   "crud": {
     "title": "Entitäten",
-    "subtitle": "Erstellen und verwalten Sie Instanzen der im ausgewählten Projekt verfügbaren Entitätstypen.",
+    "subtitle": "Suchen, erstellen und verwalten Sie Entitäten mit den Entitätstypen, auf die Sie zugreifen dürfen.",
     "availableTypes": "Suchkontext für Entitätstypen",
     "typeName": "Entitätstyp",
     "version": "Version",

@@ -395,15 +395,15 @@ export default function SearchPsn() {
 
   return (
     <div className="td-page-shell">
-      <PageHeader
-        title={t('pseudonyms:headers.title')}
-        description={t('pseudonyms:headers.subtitle')}
-      />
-
-      <div className="flex w-full flex-col gap-6">
+      <div className="td-page-content flex w-full flex-col gap-6">
+        <PageHeader
+          className="!mb-0"
+          title={t('pseudonyms:headers.title')}
+          description={t('pseudonyms:headers.subtitle')}
+        />
         <Panel
           noMaxWidth
-          className="w-full !p-6"
+          className="mx-auto w-full"
           title={t('pseudonyms:domainContext.title')}
         >
           <p className="td-section-subtitle mb-5">
@@ -416,7 +416,7 @@ export default function SearchPsn() {
         </Panel>
 
         <div ref={searchPanelRef}>
-          <Panel noMaxWidth className="w-full !p-6">
+          <Panel noMaxWidth className="mx-auto w-full">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="td-panel-title !mb-0">
@@ -437,7 +437,7 @@ export default function SearchPsn() {
         </div>
 
         {generationMode && (
-          <Panel noMaxWidth className="w-full !p-6">
+          <Panel noMaxWidth className="mx-auto w-full">
             <div className="mb-5">
               <h2 className="td-panel-title !mb-0">
                 {t('pseudonyms:management.addPseudonym')}

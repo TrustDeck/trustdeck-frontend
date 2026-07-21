@@ -16,7 +16,6 @@ import Panel from '../../core/components/common/Panel'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
-import Divider from '../../core/components/common/Divider'
 import useProjectStore from '../../core/stores/ProjectStore'
 import useToastStore from '../../core/stores/ToastStore'
 import TrustDeck, {
@@ -1280,7 +1279,7 @@ export default function PreReg() {
   return (
     <div className="td-page-shell">
       <div className="td-page-content flex w-full flex-col gap-6">
-        <div className="td-page-header">
+        <div className="td-page-header !mb-0">
           <h1 className="td-page-title">{t('identity:crud.title')}</h1>
           <p className="td-page-subtitle">{t('identity:crud.subtitle')}</p>
         </div>
@@ -1420,8 +1419,6 @@ export default function PreReg() {
                 </div>
               </div>
 
-              <Divider />
-
               {!permissionsReady ? (
                 <div className="py-10 text-center text-gray-500 dark:text-gray-300">
                   {t('identity:crud.checkingPermissions')}
@@ -1434,16 +1431,8 @@ export default function PreReg() {
                 <div className="py-10 text-center text-gray-500 dark:text-gray-300">
                   {t('identity:crud.loadingInstances')}
                 </div>
-              ) : !hasSearchedInstances && instances.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-                  <h3 className="td-section-title">
-                    {t('identity:crud.searchFirst')}
-                  </h3>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300">
-                    {t('identity:crud.searchFirstHint')}
-                  </p>
-                </div>
-              ) : instances.length === 0 ? (
+              ) : !hasSearchedInstances &&
+                instances.length === 0 ? null : instances.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
                   <h3 className="td-section-title">
                     {t('identity:crud.noInstances')}

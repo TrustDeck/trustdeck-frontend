@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import CustomDropdown from '@component/form/CustomDropdown'
-import Divider from '../../../core/components/common/Divider'
 import GroupService from '../../groups/service/GroupService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
@@ -185,15 +184,12 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
       </form>
 
       {inlineResults && (
-        <>
-          <Divider />
-          <InlinePseudonymResults
-            fallbackDomain={
-              group ||
-              (showDomainSelector ? selectedProject?.abbreviation || '' : '')
-            }
-          />
-        </>
+        <InlinePseudonymResults
+          fallbackDomain={
+            group ||
+            (showDomainSelector ? selectedProject?.abbreviation || '' : '')
+          }
+        />
       )}
     </div>
   )

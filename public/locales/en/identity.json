@@ -67,7 +67,7 @@
   "requiredFieldsHint": "All fields marked with an * are required and must be filled out.",
   "crud": {
     "title": "Entities",
-    "subtitle": "Create and manage instances of the entity types available in the selected project.",
+    "subtitle": "Search, create, and manage entities using the entity types you are permitted to access.",
     "availableTypes": "Entity type search context",
     "typeName": "Entity type",
     "version": "Version",

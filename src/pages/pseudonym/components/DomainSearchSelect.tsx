@@ -19,6 +19,48 @@ type DomainSearchSelectProps = {
   onChange: (domainName: string) => void
 }
 
+function DomainHierarchyTree({
+  hierarchy,
+  compact = false
+}: {
+  hierarchy: string[]
+  compact?: boolean
+}) {
+  return (
+    <div
+      className={`mt-2 space-y-0.5 ${compact ? 'text-xs' : 'text-sm'}`}
+      aria-label={hierarchy.join(' / ')}
+    >
+      {hierarchy.map((segment, index) => {
+        const isLeaf = index === hierarchy.length - 1
+        return (
+          <div
+            key={`${segment}-${index}`}
+            className="flex min-w-0 items-center text-gray-600 dark:text-gray-300"
+            style={{ paddingLeft: `${index * 1.1}rem` }}
+          >
+            {index > 0 && (
+              <span
+                aria-hidden="true"
+                className="mr-1.5 shrink-0 font-mono text-gray-400 dark:text-slate-500"
+              >
+                └─
+              </span>
+            )}
+            <span
+              className={`truncate ${
+                isLeaf ? 'font-semibold text-gray-900 dark:text-gray-100' : ''
+              }`}
+            >
+              {segment}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 async function resolveHierarchy(
   domain: Domain,
   cache: Map<string, Domain>
@@ -152,14 +194,9 @@ export default function DomainSearchSelect({
 
       {value && (
         <div className="flex items-start justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-900 dark:bg-blue-950/35">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
-              <CheckCircleIcon className="h-5 w-5 shrink-0 text-color-blue" />
-              <span className="truncate">{value}</span>
-            </div>
-            <p className="mt-1 truncate text-sm text-gray-600 dark:text-gray-300">
-              {selectedPath.join(' › ')}
-            </p>
+          <div className="flex min-w-0 items-start gap-2">
+            <CheckCircleIcon className="mt-2 h-5 w-5 shrink-0 text-color-blue" />
+            <DomainHierarchyTree hierarchy={selectedPath} compact />
           </div>
           <button
             type="button"
@@ -211,12 +248,7 @@ export default function DomainSearchSelect({
                     : 'bg-white dark:bg-slate-900'
                 }`}
               >
-                <span className="block font-semibold text-gray-900 dark:text-gray-100">
-                  {domain.name}
-                </span>
-                <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
-                  {hierarchy.join(' › ')}
-                </span>
+                <DomainHierarchyTree hierarchy={hierarchy} />
               </button>
             )
           })}

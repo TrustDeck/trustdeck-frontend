@@ -17,6 +17,10 @@ export type DynamicEntityProps = {
   onFieldChange: (path: Array<string | number>, value: any) => void
   showIdentifierPanel?: boolean
   plainAttributes?: boolean
+  onLinkedPseudonymSelect?: (
+    domainName: string,
+    pseudonym: string
+  ) => void | Promise<void>
 }
 
 function formatValue(value: unknown): string {
@@ -86,7 +90,8 @@ export default function DynamicEntity({
   formData,
   onFieldChange,
   showIdentifierPanel = true,
-  plainAttributes = false
+  plainAttributes = false,
+  onLinkedPseudonymSelect
 }: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
 
@@ -448,6 +453,7 @@ export default function DynamicEntity({
                 links: entity.links || []
               } as Entity
             }
+            onPseudonymSelect={onLinkedPseudonymSelect}
           />
         </Panel>
       )}

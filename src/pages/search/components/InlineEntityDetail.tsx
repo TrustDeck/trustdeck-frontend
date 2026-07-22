@@ -10,6 +10,8 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import DynamicEntity from './DynamicEntity'
+import InlinePseudonymDetail from './InlinePseudonymDetail'
+import PseudonymService from '../services/PseudonymService'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
@@ -17,6 +19,8 @@ import TrustDeck from '../../../core/services/TrustDeck'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import { pickSchemaData } from '../utils/schemaData'
+import type { Pseudonym } from '../../../core/types/Pseudonym'
+import type { Link } from '../../../core/types/Link'
 
 function resolveTrustDeckId(entity: any): string {
   return String(
@@ -67,6 +71,62 @@ function setValueAtPath(
   return next
 }
 
+function normalizeLinks(links: unknown): Link[] {
+  if (Array.isArray(links)) return links as Link[]
+  return links ? [links as Link] : []
+}
+
+function replaceLinkedPseudonym(
+  links: unknown,
+  previousDomain: string,
+  previousPseudonym: string,
+  nextDomain: string,
+  nextPseudonym: string
+): Link[] {
+  return normalizeLinks(links).map((link) => {
+    const matches =
+      String(link.group ?? '') === previousDomain &&
+      String(link.pseudonym ?? '') === previousPseudonym
+
+    return {
+      ...link,
+      group: matches ? nextDomain : link.group,
+      pseudonym: matches ? nextPseudonym : link.pseudonym,
+      children: link.children?.length
+        ? replaceLinkedPseudonym(
+            link.children,
+            previousDomain,
+            previousPseudonym,
+            nextDomain,
+            nextPseudonym
+          )
+        : link.children
+    }
+  })
+}
+
+function removeLinkedPseudonym(
+  links: unknown,
+  domainName: string,
+  pseudonym: string
+): Link[] {
+  return normalizeLinks(links).flatMap((link) => {
+    const matches =
+      String(link.group ?? '') === domainName &&
+      String(link.pseudonym ?? '') === pseudonym
+    if (matches) return []
+
+    return [
+      {
+        ...link,
+        children: link.children?.length
+          ? removeLinkedPseudonym(link.children, domainName, pseudonym)
+          : link.children
+      }
+    ]
+  })
+}
+
 type Props = {
   entity: any
   entityTypeName: string
@@ -93,6 +153,9 @@ export default function InlineEntityDetail({
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [linkedPseudonym, setLinkedPseudonym] = useState<Pseudonym | null>(null)
+  const [linkedPseudonymDomain, setLinkedPseudonymDomain] = useState('')
+  const [loadingLinkedPseudonym, setLoadingLinkedPseudonym] = useState(false)
 
   const schema = useMemo(
     () =>
@@ -118,6 +181,46 @@ export default function InlineEntityDetail({
     )
     setEditMode(initialEditMode)
   }, [entity, initialEditMode, schemaAttributes])
+
+  useEffect(() => {
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
+  }, [identifier])
+
+  const openLinkedPseudonym = async (
+    domainName: string,
+    pseudonymValue: string
+  ) => {
+    if (!domainName || !pseudonymValue || loadingLinkedPseudonym) return
+
+    setLoadingLinkedPseudonym(true)
+    try {
+      const result = await PseudonymService.searchPseudonym(
+        pseudonymValue,
+        domainName
+      )
+      if (!result) {
+        throw new Error(t('pseudonym.notFound'))
+      }
+      const normalized = {
+        ...result,
+        domainName: result.domainName || domainName
+      }
+      setLinkedPseudonym(normalized)
+      setLinkedPseudonymDomain(normalized.domainName)
+    } catch (error) {
+      console.error('Failed to open linked pseudonym inline', error)
+      showToast({
+        severity: 'error',
+        summary: t('pseudonymView'),
+        detail:
+          error instanceof Error ? error.message : t('pseudonym.loadFailed'),
+        life: 4500
+      })
+    } finally {
+      setLoadingLinkedPseudonym(false)
+    }
+  }
 
   const resetForm = () => {
     const source = entity?.data ?? {}
@@ -190,6 +293,53 @@ export default function InlineEntityDetail({
     }
   }
 
+  if (linkedPseudonym) {
+    return (
+      <InlinePseudonymDetail
+        pseudonym={linkedPseudonym}
+        fallbackDomain={linkedPseudonymDomain}
+        initialEditMode={false}
+        backLabel={t('backToEntityDetails')}
+        onClose={() => {
+          setLinkedPseudonym(null)
+          setLinkedPseudonymDomain('')
+        }}
+        onUpdated={(previousDomain, previousPseudonym, updated) => {
+          const normalized = {
+            ...updated,
+            domainName: updated.domainName || previousDomain
+          }
+          const nextEntity = {
+            ...entity,
+            links: replaceLinkedPseudonym(
+              entity.links,
+              previousDomain,
+              previousPseudonym,
+              normalized.domainName,
+              normalized.psn
+            )
+          }
+          setLinkedPseudonym(normalized)
+          setLinkedPseudonymDomain(normalized.domainName)
+          onUpdated(nextEntity)
+        }}
+        onDeleted={(domainName, pseudonymValue) => {
+          const nextEntity = {
+            ...entity,
+            links: removeLinkedPseudonym(
+              entity.links,
+              domainName,
+              pseudonymValue
+            )
+          }
+          onUpdated(nextEntity)
+          setLinkedPseudonym(null)
+          setLinkedPseudonymDomain('')
+        }}
+      />
+    )
+  }
+
   return (
     <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-5 py-4 dark:border-slate-700">
@@ -253,6 +403,7 @@ export default function InlineEntityDetail({
           onFieldChange={(path, value) =>
             setFormData((current) => setValueAtPath(current, path, value))
           }
+          onLinkedPseudonymSelect={openLinkedPseudonym}
         />
       </div>
 

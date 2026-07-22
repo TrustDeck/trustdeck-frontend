@@ -221,5 +221,6 @@
     "resultsPerPage": "Results shown"
   },
   "resultNumber": "No.",
-  "domainRequired": "Select a pseudonym domain first."
+  "domainRequired": "Select a pseudonym domain first.",
+  "backToEntityDetails": "Back to entity details"
 }

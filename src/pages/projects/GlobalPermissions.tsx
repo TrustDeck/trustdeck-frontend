@@ -7,7 +7,6 @@ import {
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
 import {
-  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   XMarkIcon
@@ -217,6 +216,22 @@ function scopeLabel(
   return `${t('scope.domain')}: ${option.resourceName || '—'}`
 }
 
+function PermissionStatusBadge({ granted }: { granted: boolean }) {
+  const { t } = useTranslation('permission')
+
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+        granted
+          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
+          : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
+      }`}
+    >
+      {granted ? t('status.granted') : t('status.notGranted')}
+    </span>
+  )
+}
+
 function PermissionRows({
   rows,
   grantedPermissions,
@@ -241,7 +256,7 @@ function PermissionRows({
   }
 
   return (
-    <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+    <ul className="divide-y divide-gray-200 dark:divide-slate-700">
       {rows.map((permission) => {
         const key = permissionKey(permission)
         const checked = editable
@@ -249,33 +264,35 @@ function PermissionRows({
           : permissionIsGranted(grantedPermissions, permission)
 
         return (
-          <label
-            key={key}
-            className={`flex min-h-[68px] items-center gap-3 rounded-xl border px-3 py-2.5 transition ${
-              checked
-                ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-900/60 dark:bg-emerald-950/30'
-                : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950/60'
-            } ${editable ? 'cursor-pointer' : ''}`}
-          >
-            <input
-              type="checkbox"
-              checked={checked}
-              disabled={!editable}
-              onChange={(event) => onChange?.(key, event.target.checked)}
-              className="h-4 w-4 shrink-0 rounded border-gray-300 text-color-blue focus:ring-color-blue disabled:opacity-70"
-            />
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
-                {formatPermissionAction(permission.action)}
+          <li key={key}>
+            <label
+              className={`flex items-center justify-between gap-4 px-1 py-3 transition ${
+                editable
+                  ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/60'
+                  : ''
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={!editable}
+                onChange={(event) => onChange?.(key, event.target.checked)}
+                className="sr-only"
+              />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  {formatPermissionAction(permission.action)}
+                </span>
+                <span className="mt-0.5 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {permission.action}
+                </span>
               </span>
-              <span className="mt-0.5 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
-                {permission.action}
-              </span>
-            </span>
-          </label>
+              <PermissionStatusBadge granted={checked} />
+            </label>
+          </li>
         )
       })}
-    </div>
+    </ul>
   )
 }
 
@@ -323,9 +340,11 @@ function buildGrantedPermissionSubgroups(
 
 function GrantedPermissionList({
   groups,
+  grantedPermissions,
   emptyText
 }: {
   groups: CurrentPermissionGroup[]
+  grantedPermissions: EffectivePermission[]
   emptyText: string
 }) {
   const { t } = useTranslation('permission')
@@ -349,6 +368,10 @@ function GrantedPermissionList({
       {groups.map((group) => {
         const isOpen = Boolean(openScopes[group.key])
         const subgroups = buildGrantedPermissionSubgroups(group, t)
+        const grantedCount = group.rows.filter((permission) =>
+          permissionIsGranted(grantedPermissions, permission)
+        ).length
+        const missingCount = group.rows.length - grantedCount
 
         return (
           <section
@@ -370,8 +393,15 @@ function GrantedPermissionList({
                 <span className="block truncate text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {group.label}
                 </span>
-                <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200">
-                  {t('grantedCount', { count: group.rows.length })}
+                <span className="mt-1 flex flex-wrap gap-2">
+                  <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200">
+                    {t('grantedCount', { count: grantedCount })}
+                  </span>
+                  {missingCount > 0 && (
+                    <span className="inline-flex rounded-full bg-gray-200 px-2.5 py-1 text-sm font-semibold text-gray-600 dark:bg-slate-700 dark:text-gray-300">
+                      {t('missingCount', { count: missingCount })}
+                    </span>
+                  )}
                 </span>
               </span>
               {isOpen ? (
@@ -388,13 +418,12 @@ function GrantedPermissionList({
                     <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       {subgroup.label}
                     </h4>
-                    <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+                    <ul className="divide-y divide-gray-200 dark:divide-slate-700">
                       {subgroup.rows.map((permission) => (
-                        <div
+                        <li
                           key={permissionKey(permission)}
-                          className="flex min-h-[64px] items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/25"
+                          className="flex items-center justify-between gap-4 px-1 py-3"
                         >
-                          <CheckCircleIcon className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-300" />
                           <span className="min-w-0">
                             <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
                               {formatPermissionAction(permission.action)}
@@ -403,9 +432,15 @@ function GrantedPermissionList({
                               {permission.action}
                             </span>
                           </span>
-                        </div>
+                          <PermissionStatusBadge
+                            granted={permissionIsGranted(
+                              grantedPermissions,
+                              permission
+                            )}
+                          />
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   </section>
                 ))}
               </div>
@@ -831,12 +866,14 @@ export default function GlobalPermissions({
 
   const groupedCurrentRows = useMemo(() => {
     const groups = new Map<string, EffectivePermission[]>()
-    scopedCurrentPermissions.forEach((permission) => {
-      const key = scopeKey(permission)
-      const entries = groups.get(key) ?? []
-      entries.push(permission)
-      groups.set(key, entries)
-    })
+    uniquePermissions([...scopeRows, ...scopedCurrentPermissions]).forEach(
+      (permission) => {
+        const key = scopeKey(permission)
+        const entries = groups.get(key) ?? []
+        entries.push(permission)
+        groups.set(key, entries)
+      }
+    )
 
     const resourceOrder: Record<string, number> = {
       GLOBAL: 0,
@@ -866,7 +903,7 @@ export default function GlobalPermissions({
           (resourceOrder[leftType] ?? 99) - (resourceOrder[rightType] ?? 99)
         return typeDifference || left.label.localeCompare(right.label)
       })
-  }, [scopedCurrentPermissions, selectedProject?.name, t])
+  }, [scopeRows, scopedCurrentPermissions, selectedProject?.name, t])
 
   const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
     if (!event.query.trim()) {
@@ -1053,6 +1090,7 @@ export default function GlobalPermissions({
       ) : (
         <GrantedPermissionList
           groups={groupedCurrentRows}
+          grantedPermissions={scopedCurrentPermissions}
           emptyText={t('empty.noRightsInScope')}
         />
       )}

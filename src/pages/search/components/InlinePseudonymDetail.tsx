@@ -76,6 +76,7 @@ type Props = {
     updated: Pseudonym
   ) => void
   onDeleted: (domainName: string, pseudonym: string) => void
+  backLabel?: string
 }
 
 export default function InlinePseudonymDetail({
@@ -84,7 +85,8 @@ export default function InlinePseudonymDetail({
   initialEditMode,
   onClose,
   onUpdated,
-  onDeleted
+  onDeleted,
+  backLabel
 }: Props) {
   const { t } = useTranslation(['search', 'common'])
   const showToast = useToastStore((state) => state.show)
@@ -315,8 +317,8 @@ export default function InlinePseudonymDetail({
           <button
             type="button"
             onClick={onClose}
-            title={t('search:backToResults')}
-            aria-label={t('search:backToResults')}
+            title={backLabel ?? t('search:backToResults')}
+            aria-label={backLabel ?? t('search:backToResults')}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
           >
             <ArrowLeftIcon className="h-5 w-5" />

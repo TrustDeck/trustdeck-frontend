@@ -7,6 +7,7 @@ import { Link } from '../../../core/types/Link'
 
 interface LinksTableProps {
   entity: Entity
+  onPseudonymSelect?: (domainName: string, pseudonym: string) => void | Promise<void>
 }
 
 type FlatLink = {
@@ -34,7 +35,10 @@ function flattenLinks(
   })
 }
 
-export default function LinksTable({ entity }: LinksTableProps) {
+export default function LinksTable({
+  entity,
+  onPseudonymSelect
+}: LinksTableProps) {
   const { t } = useTranslation('search')
   const navigate = useNavigate()
   const location = useLocation()
@@ -101,13 +105,17 @@ export default function LinksTable({ entity }: LinksTableProps) {
                   {link.pseudonym ? (
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        if (onPseudonymSelect) {
+                          void onPseudonymSelect(link.domain, link.pseudonym)
+                          return
+                        }
                         navigate(target, {
                           state: {
                             returnTo: `${location.pathname}${location.search}`
                           }
                         })
-                      }
+                      }}
                       className="flex min-h-11 w-full items-center break-all text-left font-mono text-base font-semibold text-blue-600 hover:underline dark:text-blue-300"
                     >
                       {link.pseudonym}

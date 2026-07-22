@@ -221,5 +221,6 @@
     "resultsPerPage": "Angezeigte Ergebnisse"
   },
   "resultNumber": "Nr.",
-  "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus."
+  "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus.",
+  "backToEntityDetails": "Zurück zu den Entitätsdetails"
 }

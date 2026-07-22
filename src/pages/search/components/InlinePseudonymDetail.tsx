@@ -77,6 +77,7 @@ type Props = {
   ) => void
   onDeleted: (domainName: string, pseudonym: string) => void
   backLabel?: string
+  embedded?: boolean
 }
 
 export default function InlinePseudonymDetail({
@@ -86,7 +87,8 @@ export default function InlinePseudonymDetail({
   onClose,
   onUpdated,
   onDeleted,
-  backLabel
+  backLabel,
+  embedded = false
 }: Props) {
   const { t } = useTranslation(['search', 'common'])
   const showToast = useToastStore((state) => state.show)
@@ -310,102 +312,128 @@ export default function InlinePseudonymDetail({
     )
   }
 
-  return (
-    <div className="mt-6 w-full">
-      <div className="relative mb-4 flex w-full items-center">
-        <PrimaryOutlinedButton
-          label={
-            <span className="hidden sm:inline">
-              {backLabel ?? t('search:back')}
-            </span>
-          }
-          onClick={onClose}
-          icon={<ArrowLeftIcon className="mr-1 h-5 w-5" />}
-          className="shrink-0"
-        />
-        <h1 className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
-          {t('search:pseudonymView')}
-        </h1>
-      </div>
-
-      <div className="flex w-full justify-center px-4">
-        <div className="flex w-full max-w-[1040px] flex-col items-start justify-center gap-6 xl:flex-row">
-          <section className="w-full max-w-[560px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-3xl font-semibold">
-                  {t('search:pseudonym.data')}
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {!editMode ? (
-                    <>
-                      <PrimaryButton
-                        label={t('common:edit')}
-                        onClick={() => setEditMode(true)}
-                        icon={<PencilIcon className="mr-1 h-5 w-5" />}
-                      />
-                      <SecondaryOutlinedButton
-                        label={t('common:delete')}
-                        onClick={() => setDeleteConfirmOpen(true)}
-                        icon={<TrashIcon className="mr-1 h-5 w-5" />}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <PrimaryButton
-                        label={t('common:save')}
-                        onClick={save}
-                        loading={saving}
-                        icon={<CheckIcon className="mr-1 h-5 w-5" />}
-                      />
-                      <PrimaryOutlinedButton
-                        label={t('common:cancel')}
-                        onClick={cancel}
-                        disabled={saving}
-                        icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {renderField(
-                  'domainName',
-                  t('search:pseudonym.group'),
-                  undefined,
-                  true
-                )}
-                {renderField(
-                  'psn',
-                  t('search:pseudonym.value'),
-                  undefined,
-                  false,
-                  true
-                )}
-                {renderField('identifier', t('search:pseudonym.id'))}
-                {renderField('idType', t('search:pseudonym.idType'))}
-                {renderField(
-                  'validFrom',
-                  t('search:pseudonym.validFrom'),
-                  'validFromInherited'
-                )}
-                {renderField(
-                  'validTo',
-                  t('search:pseudonym.validTo'),
-                  'validToInherited'
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+  const detailContent = (
+    <div
+      className={
+        embedded
+          ? 'grid w-full gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,1fr)]'
+          : 'flex w-full max-w-[1040px] flex-col items-start justify-center gap-6 xl:flex-row'
+      }
+    >
+      <section
+        className={
+          embedded
+            ? 'w-full rounded-xl bg-gray-50/70 p-5 dark:bg-slate-800/60'
+            : 'w-full max-w-[560px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-3xl font-semibold">
-              {t('search:pseudonym.linkedPseudonyms')}
+              {t('search:pseudonym.data')}
             </h2>
-            <PseudonymTable pseudonym={pseudonym} />
-          </section>
+            <div className="flex flex-wrap gap-2">
+              {!editMode ? (
+                <>
+                  <PrimaryButton
+                    label={t('common:edit')}
+                    onClick={() => setEditMode(true)}
+                    icon={<PencilIcon className="mr-1 h-5 w-5" />}
+                  />
+                  <SecondaryOutlinedButton
+                    label={t('common:delete')}
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    icon={<TrashIcon className="mr-1 h-5 w-5" />}
+                  />
+                </>
+              ) : (
+                <>
+                  <PrimaryButton
+                    label={t('common:save')}
+                    onClick={save}
+                    loading={saving}
+                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                  />
+                  <PrimaryOutlinedButton
+                    label={t('common:cancel')}
+                    onClick={cancel}
+                    disabled={saving}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {renderField(
+              'domainName',
+              t('search:pseudonym.group'),
+              undefined,
+              true
+            )}
+            {renderField(
+              'psn',
+              t('search:pseudonym.value'),
+              undefined,
+              false,
+              true
+            )}
+            {renderField('identifier', t('search:pseudonym.id'))}
+            {renderField('idType', t('search:pseudonym.idType'))}
+            {renderField(
+              'validFrom',
+              t('search:pseudonym.validFrom'),
+              'validFromInherited'
+            )}
+            {renderField(
+              'validTo',
+              t('search:pseudonym.validTo'),
+              'validToInherited'
+            )}
+          </div>
         </div>
-      </div>
+      </section>
+
+      <section
+        className={
+          embedded
+            ? 'h-fit w-full rounded-xl bg-gray-50/70 p-5 dark:bg-slate-800/60'
+            : 'h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
+        }
+      >
+        <h2 className="text-3xl font-semibold">
+          {t('search:pseudonym.linkedPseudonyms')}
+        </h2>
+        <PseudonymTable pseudonym={pseudonym} />
+      </section>
+    </div>
+  )
+
+  return (
+    <div className={embedded ? 'w-full' : 'mt-6 w-full'}>
+      {!embedded && (
+        <div className="relative mb-4 flex w-full items-center">
+          <PrimaryOutlinedButton
+            label={
+              <span className="hidden sm:inline">
+                {backLabel ?? t('search:back')}
+              </span>
+            }
+            onClick={onClose}
+            icon={<ArrowLeftIcon className="mr-1 h-5 w-5" />}
+            className="shrink-0"
+          />
+          <h1 className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+            {t('search:pseudonymView')}
+          </h1>
+        </div>
+      )}
+
+      {embedded ? (
+        detailContent
+      ) : (
+        <div className="flex w-full justify-center px-4">{detailContent}</div>
+      )}
 
       <Dialog
         visible={deleteConfirmOpen}

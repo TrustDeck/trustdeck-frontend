@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronRightIcon } from '@heroicons/react/24/outline'
 import { Entity } from '../types/Entity'
 import { Link } from '../../../core/types/Link'
@@ -39,6 +40,8 @@ export default function LinksTable({
   onPseudonymSelect
 }: LinksTableProps) {
   const { t } = useTranslation('search')
+  const navigate = useNavigate()
+  const location = useLocation()
   const [links, setLinks] = useState<FlatLink[]>([])
 
   useEffect(() => {
@@ -78,6 +81,10 @@ export default function LinksTable({
         </thead>
         <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
           {links.map((link) => {
+            const target = link.domain
+              ? `/search/pseudonym/${encodeURIComponent(link.domain)}/${encodeURIComponent(link.pseudonym)}`
+              : `/search/pseudonym/${encodeURIComponent(link.pseudonym)}`
+
             return (
               <tr key={link.key} className="align-middle">
                 <td className="px-4 py-3 text-base text-gray-800 dark:text-gray-100">
@@ -98,15 +105,18 @@ export default function LinksTable({
                   {link.pseudonym ? (
                     <button
                       type="button"
-                      onClick={() =>
-                        void onPseudonymSelect?.(link.domain, link.pseudonym)
-                      }
-                      disabled={!onPseudonymSelect}
-                      className={`flex min-h-11 w-full items-center break-all text-left font-mono text-base font-semibold ${
-                        onPseudonymSelect
-                          ? 'text-blue-600 hover:underline dark:text-blue-300'
-                          : 'cursor-default text-gray-900 dark:text-gray-100'
-                      }`}
+                      onClick={() => {
+                        if (onPseudonymSelect) {
+                          void onPseudonymSelect(link.domain, link.pseudonym)
+                          return
+                        }
+                        navigate(target, {
+                          state: {
+                            returnTo: `${location.pathname}${location.search}`
+                          }
+                        })
+                      }}
+                      className="flex min-h-11 w-full items-center break-all text-left font-mono text-base font-semibold text-blue-600 hover:underline dark:text-blue-300"
                     >
                       {link.pseudonym}
                     </button>

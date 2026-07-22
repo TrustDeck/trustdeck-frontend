@@ -314,7 +314,7 @@ export const useTreeStateStore = create<TreeState>((set) => ({
 
       const label = 'NewGroup'
       const prefix = 'NG-'
-      const psnlength = '8'
+      const psnlength = '16'
 
       const formatLocalDateTime = (date: Date) => {
         const day = String(date.getDate()).padStart(2, '0')
@@ -353,13 +353,13 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             alphabet: 'LETTERS_ONLY_ALPHABET',
             customAlphabetCharacters: '',
             algorithm: 'RANDOM_LET',
-            maxnumpsn: '',
-            randomAlgorithmDesiredSuccessProbability: '',
+            maxnumpsn: '100000000',
+            randomAlgorithmDesiredSuccessProbability: '0.99999998',
             consecutiveValueCounter: '1',
             saltLength: '32',
             validityTime: '',
             multiplepsn: false,
-            paddingchar: '',
+            paddingchar: '0',
             checkdigit: true,
             lengthIncludesCheckDigit: false,
             description: '',

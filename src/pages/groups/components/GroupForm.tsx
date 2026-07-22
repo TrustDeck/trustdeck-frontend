@@ -29,6 +29,7 @@ import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
 import useToastStore from '../../../core/stores/ToastStore'
 import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
+import GroupService from '../services/GroupService'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
@@ -154,7 +155,7 @@ export default function GroupForm() {
   const { t, i18n } = useTranslation(['groups'])
   const desiredPoolSizePlaceholder = formatIntegerForLocale(
     i18n.language,
-    1000000
+    100000000
   )
   const desiredSuccessProbabilityPlaceholder = formatDecimalForLocale(
     i18n.language,
@@ -354,7 +355,7 @@ export default function GroupForm() {
     setExamplePsn(`${temporal.prefix ?? ''}${body}${fakeCheckDigit}`)
   }, [temporal])
 
-  const changeParent = (parentValue: string) => {
+  const changeParent = async (parentValue: string) => {
     const parentName = parentValue === 'ROOT' ? '' : parentValue
 
     const isChild = (nodeKey: string, potentialChildKey: string): boolean => {
@@ -383,7 +384,18 @@ export default function GroupForm() {
 
     if (parentName) {
       const parentNode = findNodeByLabel(tree, parentName)
-      const parentData = parentNode?.data?.stored ?? null
+      let parentData = parentNode?.data?.stored ?? null
+
+      try {
+        const parentDomain = await GroupService.getGroup(parentName)
+        parentData = GroupService.normalizeGroup(
+          parentDomain,
+          parentDomain.superDomainName ?? null
+        )
+      } catch {
+        // Keep the hierarchy values when complete parent access is unavailable.
+      }
+
       applyParentDefaults(parentData)
     } else {
       clearInheritedFlags()
@@ -424,7 +436,7 @@ export default function GroupForm() {
             id="parentgroup"
             placeholder={t('groups:inputs.parentgroup.label')}
             value={temporal.parentgroup ?? 'ROOT'}
-            onChange={(event) => changeParent(event.value)}
+            onChange={(event) => void changeParent(event.value)}
             options={parentGroupOptions}
           />
           <CustomFloatLabel

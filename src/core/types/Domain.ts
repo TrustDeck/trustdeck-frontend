@@ -15,20 +15,20 @@ export type Algorithm = {
 export type Domain = {
   id?: number
   name: string
-  prefix: string
-  validFrom: string
-  validFromInherited: boolean
-  validTo: string
+  prefix?: string
+  validFrom?: string
+  validFromInherited?: boolean
+  validTo?: string
   validityTime?: string // Only needed for creation
-  validToInherited: boolean
-  enforceStartDateValidity: boolean
-  enforceStartDateValidityInherited: boolean
-  enforceEndDateValidity: boolean
-  enforceEndDateValidityInherited: boolean
-  algorithm?: Algorithm
-  algorithmInherited: boolean
-  multiplePsnAllowed: boolean
-  multiplePsnAllowedInherited: boolean
+  validToInherited?: boolean
+  enforceStartDateValidity?: boolean
+  enforceStartDateValidityInherited?: boolean
+  enforceEndDateValidity?: boolean
+  enforceEndDateValidityInherited?: boolean
+  algorithm?: Algorithm | null
+  algorithmInherited?: boolean
+  multiplePsnAllowed?: boolean
+  multiplePsnAllowedInherited?: boolean
   description?: string
   superDomainID?: number
   superDomainName?: string

@@ -293,51 +293,9 @@ export default function InlineEntityDetail({
     }
   }
 
-  if (linkedPseudonym) {
-    return (
-      <InlinePseudonymDetail
-        pseudonym={linkedPseudonym}
-        fallbackDomain={linkedPseudonymDomain}
-        initialEditMode={false}
-        backLabel={t('backToEntityDetails')}
-        onClose={() => {
-          setLinkedPseudonym(null)
-          setLinkedPseudonymDomain('')
-        }}
-        onUpdated={(previousDomain, previousPseudonym, updated) => {
-          const normalized = {
-            ...updated,
-            domainName: updated.domainName || previousDomain
-          }
-          const nextEntity = {
-            ...entity,
-            links: replaceLinkedPseudonym(
-              entity.links,
-              previousDomain,
-              previousPseudonym,
-              normalized.domainName,
-              normalized.psn
-            )
-          }
-          setLinkedPseudonym(normalized)
-          setLinkedPseudonymDomain(normalized.domainName)
-          onUpdated(nextEntity)
-        }}
-        onDeleted={(domainName, pseudonymValue) => {
-          const nextEntity = {
-            ...entity,
-            links: removeLinkedPseudonym(
-              entity.links,
-              domainName,
-              pseudonymValue
-            )
-          }
-          onUpdated(nextEntity)
-          setLinkedPseudonym(null)
-          setLinkedPseudonymDomain('')
-        }}
-      />
-    )
+  const closeLinkedPseudonym = () => {
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
   }
 
   return (
@@ -346,65 +304,114 @@ export default function InlineEntityDetail({
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            onClick={onClose}
-            title={t('backToResults')}
-            aria-label={t('backToResults')}
+            onClick={linkedPseudonym ? closeLinkedPseudonym : onClose}
+            title={
+              linkedPseudonym ? t('backToEntityDetails') : t('backToResults')
+            }
+            aria-label={
+              linkedPseudonym ? t('backToEntityDetails') : t('backToResults')
+            }
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
           >
             <ArrowLeftIcon className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <h3 className="td-panel-title">{t('entityView')}</h3>
+            <h3 className="td-panel-title">
+              {linkedPseudonym ? t('pseudonymView') : t('entityView')}
+            </h3>
             <p className="mt-1 break-all font-mono text-base text-gray-600 dark:text-gray-300">
-              {identifier}
+              {linkedPseudonym ? linkedPseudonym.psn : identifier}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {!editMode ? (
-            <>
-              <PrimaryButton
-                label={t('edit')}
-                onClick={() => setEditMode(true)}
-                icon={<PencilIcon className="mr-1 h-5 w-5" />}
-              />
-              <SecondaryOutlinedButton
-                label={t('delete')}
-                onClick={() => setDeleteConfirmOpen(true)}
-                icon={<TrashIcon className="mr-1 h-5 w-5" />}
-              />
-            </>
-          ) : (
-            <>
-              <PrimaryButton
-                label={t('save')}
-                onClick={save}
-                loading={saving}
-                icon={<CheckIcon className="mr-1 h-5 w-5" />}
-              />
-              <PrimaryOutlinedButton
-                label={t('cancel')}
-                onClick={resetForm}
-                disabled={saving}
-                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-              />
-            </>
-          )}
-        </div>
+        {!linkedPseudonym && (
+          <div className="flex flex-wrap gap-2">
+            {!editMode ? (
+              <>
+                <PrimaryButton
+                  label={t('edit')}
+                  onClick={() => setEditMode(true)}
+                  icon={<PencilIcon className="mr-1 h-5 w-5" />}
+                />
+                <SecondaryOutlinedButton
+                  label={t('delete')}
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  icon={<TrashIcon className="mr-1 h-5 w-5" />}
+                />
+              </>
+            ) : (
+              <>
+                <PrimaryButton
+                  label={t('save')}
+                  onClick={save}
+                  loading={saving}
+                  icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                />
+                <PrimaryOutlinedButton
+                  label={t('cancel')}
+                  onClick={resetForm}
+                  disabled={saving}
+                  icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="px-5 py-5">
-        <DynamicEntity
-          entity={entity}
-          schemaAttributes={schemaAttributes}
-          editMode={editMode}
-          formData={formData}
-          onFieldChange={(path, value) =>
-            setFormData((current) => setValueAtPath(current, path, value))
-          }
-          onLinkedPseudonymSelect={openLinkedPseudonym}
-        />
+        {linkedPseudonym ? (
+          <InlinePseudonymDetail
+            embedded
+            pseudonym={linkedPseudonym}
+            fallbackDomain={linkedPseudonymDomain}
+            initialEditMode={false}
+            onClose={closeLinkedPseudonym}
+            onUpdated={(previousDomain, previousPseudonym, updated) => {
+              const normalized = {
+                ...updated,
+                domainName: updated.domainName || previousDomain
+              }
+              const nextEntity = {
+                ...entity,
+                links: replaceLinkedPseudonym(
+                  entity.links,
+                  previousDomain,
+                  previousPseudonym,
+                  normalized.domainName,
+                  normalized.psn
+                )
+              }
+              setLinkedPseudonym(normalized)
+              setLinkedPseudonymDomain(normalized.domainName)
+              onUpdated(nextEntity)
+            }}
+            onDeleted={(domainName, pseudonymValue) => {
+              const nextEntity = {
+                ...entity,
+                links: removeLinkedPseudonym(
+                  entity.links,
+                  domainName,
+                  pseudonymValue
+                )
+              }
+              onUpdated(nextEntity)
+              closeLinkedPseudonym()
+            }}
+          />
+        ) : (
+          <DynamicEntity
+            entity={entity}
+            schemaAttributes={schemaAttributes}
+            editMode={editMode}
+            formData={formData}
+            onFieldChange={(path, value) =>
+              setFormData((current) => setValueAtPath(current, path, value))
+            }
+            onLinkedPseudonymSelect={openLinkedPseudonym}
+          />
+        )}
       </div>
 
       <Dialog

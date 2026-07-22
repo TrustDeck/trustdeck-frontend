@@ -8,7 +8,7 @@ import GroupForm from './GroupForm'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import useToastStore from '../../../core/stores/ToastStore'
-import { findNodeByKey } from '../utils/findNodeByKey'
+import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 
@@ -19,9 +19,11 @@ export default function RegistrationGroupOption() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const {
     tree,
+    setTree,
     setGroupOption,
     storeNodeChanges,
     selectedNodeKey,
+    setSelectedNodeKey,
     deleteNode
   } = useTreeStateStore()
   const [showSaveAllDialog, setShowSaveAllDialog] = useState(false)
@@ -59,56 +61,65 @@ export default function RegistrationGroupOption() {
     setGroupOption('default')
   }
 
-  const confirmSaveAll = () => {
+  const confirmSaveAll = async () => {
+    setIsCreating(true)
+    setShowSaveAllDialog(false)
+
     try {
-      setIsCreating(true)
-      setShowSaveAllDialog(false)
-
-      //get the selectednode and try to find out if it is the newly created node
       const currentDataNode = findNodeByKey(tree, selectedNodeKey)
+      const createPayload = currentDataNode?.data?.temporal
+      const createdName = String(createPayload?.label ?? '').trim()
+      if (!currentDataNode || !createPayload || !createdName) {
+        throw new Error('The new domain could not be resolved from the tree.')
+      }
 
-      GroupService.updateGroups(tree, currentDataNode)
-        .then(() => {
-          GroupService.createGroup(currentDataNode?.data?.temporal)
-            .then(() => {
-              setGroupOption('edit')
-              setIsCreating(false)
-              storeNodeChanges()
-              showToast({
-                severity: 'success',
-                summary: t('common:success'),
-                detail: t('groups:crud.createSuccessDetail'),
-                life: 4000
-              })
-              setGroupOption('edit')
-            })
-            .catch((error) => {
-              console.error(error)
-              setIsCreating(false)
-              setGroupOption('registration')
-              showToast({
-                severity: 'error',
-                summary: t('common:error'),
-                detail: t('groups:crud.createFailedDetail'),
-                life: 4000
-              })
-            })
-        })
-        .catch((error) => {
-          console.error(error)
-          setIsCreating(false)
-          setShowSaveAllDialog(false)
-          showToast({
-            severity: 'error',
-            summary: t('common:error'),
-            detail: t('groups:crud.updateFailedDetail'),
-            life: 4000
-          })
-        })
+      await GroupService.updateGroups(tree, currentDataNode)
+      let createdDomain = await GroupService.createGroup(createPayload)
 
-      //then call createGroup
+      try {
+        createdDomain = await GroupService.getGroup(createdName)
+      } catch {
+        // The create response already contains the best available representation.
+      }
+
+      let refreshedTree = GroupService.hydrateGroupTree(
+        useTreeStateStore.getState().tree,
+        createdName,
+        createdDomain
+      )
+      try {
+        refreshedTree = GroupService.hydrateGroupTree(
+          await GroupService.getGroups(),
+          createdName,
+          createdDomain
+        )
+      } catch {
+        // Keep the locally hydrated tree when hierarchy reloading is unavailable.
+      }
+
+      setTree(refreshedTree)
+      const createdNode = findNodeByLabel(refreshedTree, createdName)
+      if (createdNode) setSelectedNodeKey(createdNode.key)
+      else storeNodeChanges()
+      setGroupOption('edit')
+
+      showToast({
+        severity: 'success',
+        summary: t('common:success'),
+        detail: t('groups:crud.createSuccessDetail'),
+        life: 4000
+      })
     } catch (error) {
       console.error(error)
+      setGroupOption('registration')
+      showToast({
+        severity: 'error',
+        summary: t('common:error'),
+        detail: t('groups:crud.createFailedDetail'),
+        life: 4000
+      })
+    } finally {
+      setIsCreating(false)
     }
   }
   return (

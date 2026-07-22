@@ -7,10 +7,11 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import GroupForm from './GroupForm'
-import { findNodeByKey } from '../utils/findNodeByKey'
+import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import GroupService from '../services/GroupService'
 import useToastStore from '../../../core/stores/ToastStore'
+import type { Domain } from '../../../core/types/Domain'
 
 type EditGroupOptionProps = {
   onCancel?: () => void
@@ -19,7 +20,9 @@ type EditGroupOptionProps = {
 export default function EditGroupOption({ onCancel }: EditGroupOptionProps) {
   const {
     tree,
+    setTree,
     selectedNodeKey,
+    setSelectedNodeKey,
     setGroupOption,
     storeNodeChanges,
     deleteNode
@@ -85,35 +88,72 @@ export default function EditGroupOption({ onCancel }: EditGroupOptionProps) {
       })
   }
 
-  const confirmSaveAll = () => {
+  const confirmSaveAll = async () => {
+    setIsCreating(true)
+    setShowSaveAllDialog(false)
+
+    const selectedNode = findNodeByKey(tree, selectedNodeKey)
+    const previousName = String(selectedNode?.data?.stored?.label ?? '').trim()
+    const requestedName = String(
+      selectedNode?.data?.temporal?.label ?? previousName
+    ).trim()
+
     try {
-      setIsCreating(true)
-      GroupService.updateGroups(tree, undefined)
-        .then(() => {
-          setIsCreating(false)
-          setShowSaveAllDialog(false)
-          storeNodeChanges()
-          showToast({
-            severity: 'success',
-            summary: t('common:success'),
-            detail: t('groups:crud.updateSuccessDetail'),
-            life: 4000
-          })
-          setGroupOption('edit')
-        })
-        .catch((error) => {
-          console.error(error)
-          setIsCreating(false)
-          setShowSaveAllDialog(false)
-          showToast({
-            severity: 'error',
-            summary: t('common:error'),
-            detail: t('groups:crud.updateFailedDetail'),
-            life: 4000
-          })
-        })
+      await GroupService.updateGroups(tree, undefined)
+
+      let completeDomain: Domain | null = null
+      for (const candidateName of [requestedName, previousName]) {
+        if (!candidateName || completeDomain) continue
+        try {
+          completeDomain = await GroupService.getGroup(candidateName)
+        } catch {
+          // Try the next candidate name.
+        }
+      }
+
+      let refreshedTree = useTreeStateStore.getState().tree
+      try {
+        refreshedTree = await GroupService.getGroups()
+      } catch {
+        // Keep the local tree if hierarchy reloading is unavailable.
+      }
+
+      if (completeDomain) {
+        const lookupName = findNodeByLabel(refreshedTree, completeDomain.name)
+          ? completeDomain.name
+          : previousName
+        refreshedTree = GroupService.hydrateGroupTree(
+          refreshedTree,
+          lookupName,
+          completeDomain
+        )
+      }
+
+      setTree(refreshedTree)
+      const selectedAfterSave = findNodeByLabel(
+        refreshedTree,
+        completeDomain?.name || requestedName || previousName
+      )
+      if (selectedAfterSave) setSelectedNodeKey(selectedAfterSave.key)
+      else storeNodeChanges()
+
+      showToast({
+        severity: 'success',
+        summary: t('common:success'),
+        detail: t('groups:crud.updateSuccessDetail'),
+        life: 4000
+      })
+      setGroupOption('edit')
     } catch (error) {
       console.error(error)
+      showToast({
+        severity: 'error',
+        summary: t('common:error'),
+        detail: t('groups:crud.updateFailedDetail'),
+        life: 4000
+      })
+    } finally {
+      setIsCreating(false)
     }
   }
 

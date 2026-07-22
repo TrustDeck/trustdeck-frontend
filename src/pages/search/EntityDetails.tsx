@@ -335,47 +335,9 @@ const EntityDetails: React.FC = () => {
     }
   }
 
-  if (linkedPseudonym) {
-    return (
-      <InlinePseudonymDetail
-        pseudonym={linkedPseudonym}
-        fallbackDomain={linkedPseudonymDomain}
-        initialEditMode={false}
-        backLabel={t('search:backToEntityDetails')}
-        onClose={() => {
-          setLinkedPseudonym(null)
-          setLinkedPseudonymDomain('')
-        }}
-        onUpdated={(
-          previousDomain,
-          previousPseudonym,
-          updatedPseudonym
-        ) => {
-          const normalized = {
-            ...updatedPseudonym,
-            domainName: updatedPseudonym.domainName || previousDomain
-          }
-          updateEntityLinks(
-            replaceLinkedPseudonym(
-              entity.links,
-              previousDomain,
-              previousPseudonym,
-              normalized.domainName,
-              normalized.psn
-            )
-          )
-          setLinkedPseudonym(normalized)
-          setLinkedPseudonymDomain(normalized.domainName)
-        }}
-        onDeleted={(domainName, pseudonymValue) => {
-          updateEntityLinks(
-            removeLinkedPseudonym(entity.links, domainName, pseudonymValue)
-          )
-          setLinkedPseudonym(null)
-          setLinkedPseudonymDomain('')
-        }}
-      />
-    )
+  const closeLinkedPseudonym = () => {
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
   }
 
   return (
@@ -384,63 +346,118 @@ const EntityDetails: React.FC = () => {
         <div className="flex-shrink-0">
           <PrimaryOutlinedButton
             label={<span className="hidden sm:inline">{t('search:back')}</span>}
-            onClick={() => navigate(returnTo)}
+            onClick={() =>
+              linkedPseudonym ? closeLinkedPseudonym() : navigate(returnTo)
+            }
             icon={<ArrowLeftIcon className="mr-1 h-5 w-5" />}
           />
         </div>
 
         <h1 className="absolute left-1/2 -translate-x-1/2 text-center">
-          {t('search:entityView')}
+          {linkedPseudonym
+            ? t('search:pseudonymView')
+            : t('search:entityView')}
         </h1>
 
-        <div className="flex flex-shrink-0 gap-2">
-          {!editMode ? (
-            <>
-              <PrimaryButton
-                label={
-                  <span className="hidden sm:inline">{t('search:edit')}</span>
-                }
-                onClick={() => setEditMode(true)}
-                icon={<PencilIcon className="mr-1 h-5 w-5" />}
-              />
-              <SecondaryOutlinedButton
-                label={
-                  <span className="hidden sm:inline">{t('search:delete')}</span>
-                }
-                onClick={() => setDeleteConfirmOpen(true)}
-                icon={<TrashIcon className="mr-1 h-5 w-5" />}
-                loading={deleting}
-              />
-            </>
-          ) : (
-            <>
-              <PrimaryOutlinedButton
-                label={
-                  <span className="hidden sm:inline">{t('search:cancel')}</span>
-                }
-                onClick={handleCancel}
-                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-              />
-              <PrimaryButton
-                label={
-                  <span className="hidden sm:inline">{t('search:save')}</span>
-                }
-                onClick={handleSave}
-                icon={<CheckIcon className="mr-1 h-5 w-5" />}
-              />
-            </>
-          )}
-        </div>
+        {!linkedPseudonym && (
+          <div className="flex flex-shrink-0 gap-2">
+            {!editMode ? (
+              <>
+                <PrimaryButton
+                  label={
+                    <span className="hidden sm:inline">{t('search:edit')}</span>
+                  }
+                  onClick={() => setEditMode(true)}
+                  icon={<PencilIcon className="mr-1 h-5 w-5" />}
+                />
+                <SecondaryOutlinedButton
+                  label={
+                    <span className="hidden sm:inline">
+                      {t('search:delete')}
+                    </span>
+                  }
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  icon={<TrashIcon className="mr-1 h-5 w-5" />}
+                  loading={deleting}
+                />
+              </>
+            ) : (
+              <>
+                <PrimaryOutlinedButton
+                  label={
+                    <span className="hidden sm:inline">
+                      {t('search:cancel')}
+                    </span>
+                  }
+                  onClick={handleCancel}
+                  icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                />
+                <PrimaryButton
+                  label={
+                    <span className="hidden sm:inline">
+                      {t('search:save')}
+                    </span>
+                  }
+                  onClick={handleSave}
+                  icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                />
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      <DynamicEntity
-        entity={entity}
-        schemaAttributes={schema?.typeDefinition?.attributes ?? []}
-        editMode={editMode}
-        formData={formData}
-        onFieldChange={handleFieldChange}
-        onLinkedPseudonymSelect={openLinkedPseudonym}
-      />
+      {linkedPseudonym ? (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <InlinePseudonymDetail
+            embedded
+            pseudonym={linkedPseudonym}
+            fallbackDomain={linkedPseudonymDomain}
+            initialEditMode={false}
+            onClose={closeLinkedPseudonym}
+            onUpdated={(
+              previousDomain,
+              previousPseudonym,
+              updatedPseudonym
+            ) => {
+              const normalized = {
+                ...updatedPseudonym,
+                domainName: updatedPseudonym.domainName || previousDomain
+              }
+              updateEntityLinks(
+                replaceLinkedPseudonym(
+                  entity.links,
+                  previousDomain,
+                  previousPseudonym,
+                  normalized.domainName,
+                  normalized.psn
+                )
+              )
+              setLinkedPseudonym(normalized)
+              setLinkedPseudonymDomain(normalized.domainName)
+            }}
+            onDeleted={(domainName, pseudonymValue) => {
+              updateEntityLinks(
+                removeLinkedPseudonym(
+                  entity.links,
+                  domainName,
+                  pseudonymValue
+                )
+              )
+              closeLinkedPseudonym()
+            }}
+          />
+        </div>
+      ) : (
+        <DynamicEntity
+          entity={entity}
+          schemaAttributes={schema?.typeDefinition?.attributes ?? []}
+          editMode={editMode}
+          formData={formData}
+          onFieldChange={handleFieldChange}
+          onLinkedPseudonymSelect={openLinkedPseudonym}
+        />
+      )}
 
       <Dialog
         visible={deleteConfirmOpen}

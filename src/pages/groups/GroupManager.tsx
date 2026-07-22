@@ -26,7 +26,7 @@ import { CustomTreeNode } from './types/CustomTreeNode'
 import useToastStore from '../../core/stores/ToastStore'
 import { findNodeByKey, findNodeByLabel } from './utils/findNodeByKey'
 import TrustDeck from '../../core/services/TrustDeck'
-import type { Domain } from '../../core/types/Domain'
+import type { Algorithm, Domain } from '../../core/types/Domain'
 import { formatDateTime } from '../../core/utils/date'
 import {
   CachedUserAccess,
@@ -35,47 +35,102 @@ import {
 } from '../../core/services/PermissionCache'
 
 type DomainDetailField = {
-  key: keyof Domain
-  inheritedKey?: keyof Domain
+  key: string
+  getValue: (domain: Domain) => unknown
+  isInherited?: (domain: Domain) => boolean
 }
 
+const domainValue = (key: keyof Domain) => (domain: Domain) => domain[key]
+const algorithmValue = (key: keyof Algorithm) => (domain: Domain) =>
+  domain.algorithm?.[key]
+const algorithmInherited = (domain: Domain) => Boolean(domain.algorithmInherited)
+
 const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
-  { key: 'name' },
-  { key: 'prefix' },
-  { key: 'superDomainName' },
-  { key: 'description' },
-  { key: 'algorithm', inheritedKey: 'algorithmInherited' },
-  { key: 'alphabet', inheritedKey: 'alphabetInherited' },
-  { key: 'pseudonymLength', inheritedKey: 'pseudonymLengthInherited' },
+  { key: 'name', getValue: domainValue('name') },
+  { key: 'prefix', getValue: domainValue('prefix') },
+  { key: 'superDomainName', getValue: domainValue('superDomainName') },
+  { key: 'description', getValue: domainValue('description') },
+  {
+    key: 'algorithm',
+    getValue: algorithmValue('name'),
+    isInherited: algorithmInherited
+  },
+  {
+    key: 'alphabet',
+    getValue: algorithmValue('alphabet'),
+    isInherited: algorithmInherited
+  },
+  {
+    key: 'pseudonymLength',
+    getValue: algorithmValue('pseudonymLength'),
+    isInherited: algorithmInherited
+  },
   {
     key: 'randomAlgorithmDesiredSize',
-    inheritedKey: 'randomAlgorithmDesiredSizeInherited'
+    getValue: algorithmValue('randomAlgorithmDesiredSize'),
+    isInherited: algorithmInherited
   },
   {
     key: 'randomAlgorithmDesiredSuccessProbability',
-    inheritedKey: 'randomAlgorithmDesiredSuccessProbabilityInherited'
+    getValue: algorithmValue('randomAlgorithmDesiredSuccessProbability'),
+    isInherited: algorithmInherited
   },
-  { key: 'multiplePsnAllowed', inheritedKey: 'multiplePsnAllowedInherited' },
-  { key: 'paddingCharacter', inheritedKey: 'paddingCharacterInherited' },
-  { key: 'addCheckDigit', inheritedKey: 'addCheckDigitInherited' },
+  {
+    key: 'multiplePsnAllowed',
+    getValue: domainValue('multiplePsnAllowed'),
+    isInherited: (domain) => Boolean(domain.multiplePsnAllowedInherited)
+  },
+  {
+    key: 'paddingCharacter',
+    getValue: algorithmValue('paddingCharacter'),
+    isInherited: algorithmInherited
+  },
+  {
+    key: 'addCheckDigit',
+    getValue: algorithmValue('addCheckDigit'),
+    isInherited: algorithmInherited
+  },
   {
     key: 'lengthIncludesCheckDigit',
-    inheritedKey: 'lengthIncludesCheckDigitInherited'
+    getValue: algorithmValue('lengthIncludesCheckDigit'),
+    isInherited: algorithmInherited
   },
-  { key: 'validFrom', inheritedKey: 'validFromInherited' },
-  { key: 'validTo', inheritedKey: 'validToInherited' },
-  { key: 'validityTime' },
+  {
+    key: 'validFrom',
+    getValue: domainValue('validFrom'),
+    isInherited: (domain) => Boolean(domain.validFromInherited)
+  },
+  {
+    key: 'validTo',
+    getValue: domainValue('validTo'),
+    isInherited: (domain) => Boolean(domain.validToInherited)
+  },
+  { key: 'validityTime', getValue: domainValue('validityTime') },
   {
     key: 'enforceStartDateValidity',
-    inheritedKey: 'enforceStartDateValidityInherited'
+    getValue: domainValue('enforceStartDateValidity'),
+    isInherited: (domain) => Boolean(domain.enforceStartDateValidityInherited)
   },
   {
     key: 'enforceEndDateValidity',
-    inheritedKey: 'enforceEndDateValidityInherited'
+    getValue: domainValue('enforceEndDateValidity'),
+    isInherited: (domain) => Boolean(domain.enforceEndDateValidityInherited)
   },
-  { key: 'consecutiveValueCounter' },
-  { key: 'saltLength' },
-  { key: 'salt' }
+  {
+    key: 'consecutiveValueCounter',
+    getValue: algorithmValue('consecutiveValueCounter'),
+    isInherited: algorithmInherited
+  },
+  {
+    key: 'saltLength',
+    getValue: algorithmValue('saltLength'),
+    isInherited: algorithmInherited
+  },
+  {
+    key: 'salt',
+    getValue: algorithmValue('salt'),
+    isInherited: algorithmInherited
+  }
 ]
 
 type ViewMode = 'details' | 'edit' | 'create'
@@ -654,7 +709,7 @@ export default function GroupManager() {
     </>
   )
 
-  const formatValue = (key: keyof Domain, value: unknown): string => {
+  const formatValue = (key: string, value: unknown): string => {
     if (value === null || value === undefined || value === '') return '—'
     if (key === 'validFrom' || key === 'validTo') {
       return formatDateTime(String(value)) || '—'
@@ -708,10 +763,9 @@ export default function GroupManager() {
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
           <table className="min-w-full text-lg">
             <tbody>
-              {visibleDetailFields.map(({ key, inheritedKey }) => {
-                const inherited = Boolean(
-                  inheritedKey && selectedGroup[inheritedKey]
-                )
+              {visibleDetailFields.map(({ key, getValue, isInherited }) => {
+                const inherited = Boolean(isInherited?.(selectedGroup))
+                const value = getValue(selectedGroup)
                 return (
                   <tr
                     key={key}
@@ -739,7 +793,7 @@ export default function GroupManager() {
                       </span>
                     </th>
                     <td className="break-all px-5 py-4 text-xl text-gray-900 dark:text-gray-100">
-                      {formatValue(key, selectedGroup[key])}
+                      {formatValue(key, value)}
                     </td>
                   </tr>
                 )

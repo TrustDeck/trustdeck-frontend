@@ -50,12 +50,15 @@ const numberToString = (value?: number | string | null): string | undefined => {
   return String(value)
 }
 
-/** Maps an API domain to the group form's stored representation. */
+/** Maps an API domain and its nested algorithm to the group form's flat stored representation. */
 const normalizeDomain = (
   g: Domain,
   superDomainName?: string | null
 ): GroupStoredAttributes => {
-  const alphabetKey = getAlphabetKeyByCharacters(g.alphabet)
+  const algorithm = g.algorithm
+  const alphabetKey = getAlphabetKeyByCharacters(algorithm?.alphabet ?? '')
+  const algorithmInherited = Boolean(g.algorithmInherited)
+
   return {
     label: g.name ?? '',
     validFrom: formatDate(g.validFrom),
@@ -64,36 +67,38 @@ const normalizeDomain = (
     validityTime: g.validityTime ?? '',
     validToInherited: g.validToInherited,
     prefix: g.prefix ?? '',
-    psnlength: numberToString(g.pseudonymLength),
-    pseudonymLengthInherited: g.pseudonymLengthInherited,
+    psnlength: numberToString(algorithm?.pseudonymLength),
+    pseudonymLengthInherited: algorithmInherited,
     alphabet: alphabetKey ?? CUSTOM_ALPHABET_VALUE,
-    alphabetInherited: g.alphabetInherited,
-    ...(alphabetKey === null && g.alphabet != null
-      ? { customAlphabetCharacters: g.alphabet }
+    alphabetInherited: algorithmInherited,
+    ...(alphabetKey === null && algorithm?.alphabet != null
+      ? { customAlphabetCharacters: algorithm.alphabet }
       : {}),
-    algorithm: g.algorithm ?? '',
-    algorithmInherited: g.algorithmInherited,
-    maxnumpsn: numberToString(g.randomAlgorithmDesiredSize) ?? '',
-    randomAlgorithmDesiredSizeInherited: g.randomAlgorithmDesiredSizeInherited,
+    algorithm: algorithm?.name ?? '',
+    algorithmInherited,
+    maxnumpsn: numberToString(algorithm?.randomAlgorithmDesiredSize) ?? '',
+    randomAlgorithmDesiredSizeInherited: algorithmInherited,
     randomAlgorithmDesiredSuccessProbability:
-      numberToString(g.randomAlgorithmDesiredSuccessProbability) ?? '',
-    randomAlgorithmDesiredSuccessProbabilityInherited:
-      g.randomAlgorithmDesiredSuccessProbabilityInherited,
+      numberToString(algorithm?.randomAlgorithmDesiredSuccessProbability) ?? '',
+    randomAlgorithmDesiredSuccessProbabilityInherited: algorithmInherited,
     multiplepsn: Boolean(g.multiplePsnAllowed ?? false),
     multiplePsnAllowedInherited: g.multiplePsnAllowedInherited,
-    consecutiveValueCounter: numberToString(g.consecutiveValueCounter) ?? '1',
-    paddingchar: g.paddingCharacter ?? '',
-    paddingCharacterInherited: g.paddingCharacterInherited,
-    checkdigit: Boolean(g.addCheckDigit ?? false),
-    addCheckDigitInherited: g.addCheckDigitInherited,
-    lengthIncludesCheckDigit: Boolean(g.lengthIncludesCheckDigit ?? false),
-    lengthIncludesCheckDigitInherited: g.lengthIncludesCheckDigitInherited,
+    consecutiveValueCounter:
+      numberToString(algorithm?.consecutiveValueCounter) ?? '1',
+    paddingchar: algorithm?.paddingCharacter ?? '',
+    paddingCharacterInherited: algorithmInherited,
+    checkdigit: Boolean(algorithm?.addCheckDigit ?? false),
+    addCheckDigitInherited: algorithmInherited,
+    lengthIncludesCheckDigit: Boolean(
+      algorithm?.lengthIncludesCheckDigit ?? false
+    ),
+    lengthIncludesCheckDigitInherited: algorithmInherited,
     enforceStartDateValidity: Boolean(g.enforceStartDateValidity ?? false),
     enforceStartDateValidityInherited: g.enforceStartDateValidityInherited,
     enforceEndDateValidity: Boolean(g.enforceEndDateValidity ?? false),
     enforceEndDateValidityInherited: g.enforceEndDateValidityInherited,
-    salt: g.salt ?? '',
-    saltLength: numberToString(g.saltLength) ?? '32',
+    salt: algorithm?.salt ?? '',
+    saltLength: numberToString(algorithm?.saltLength) ?? '32',
     description: g.description ?? '',
     parentgroup: superDomainName || g.superDomainName || 'ROOT'
   }
@@ -168,12 +173,36 @@ const toDecimalNumberOrNull = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-/** Converts form data to the domain API payload and omits empty values. */
-const mapDomain = (payload: GroupStoredAttributes): any => {
+/** Converts form data to the nested domain/algorithm API payload. */
+const mapDomain = (payload: GroupStoredAttributes): Record<string, unknown> => {
   const alphabet =
     payload.alphabet === CUSTOM_ALPHABET_VALUE
       ? (payload.customAlphabetCharacters ?? '')
       : characters[payload.alphabet as keyof typeof characters] || ''
+
+  const algorithmName = String(payload.algorithm ?? '').trim()
+  const algorithm: Record<string, unknown> | undefined =
+    payload.algorithmInherited || !algorithmName
+      ? undefined
+      : {
+          name: algorithmName,
+          alphabet,
+          randomAlgorithmDesiredSize: toNumberOrNull(payload.maxnumpsn),
+          randomAlgorithmDesiredSuccessProbability: toDecimalNumberOrNull(
+            payload.randomAlgorithmDesiredSuccessProbability
+          ),
+          consecutiveValueCounter:
+            algorithmName.toUpperCase() === 'CONSECUTIVE'
+              ? toNumberOrNull(payload.consecutiveValueCounter)
+              : 1,
+          pseudonymLength: toNumberOrNull(payload.psnlength),
+          paddingCharacter: payload.paddingchar,
+          addCheckDigit: payload.checkdigit ?? false,
+          lengthIncludesCheckDigit:
+            payload.lengthIncludesCheckDigit ?? false,
+          salt: payload.salt || undefined,
+          saltLength: toNumberOrNull(payload.saltLength)
+        }
 
   const out: Record<string, unknown> = {
     name: payload.label,
@@ -183,29 +212,12 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
     prefix: payload.prefix,
     description: payload.description,
     multiplePsnAllowed: payload.multiplepsn,
-    paddingCharacter: payload.paddingchar,
-    pseudonymLength: toNumberOrNull(payload.psnlength),
-    randomAlgorithmDesiredSize: toNumberOrNull(payload.maxnumpsn),
-    randomAlgorithmDesiredSuccessProbability: toDecimalNumberOrNull(
-      payload.randomAlgorithmDesiredSuccessProbability
-    ),
-    consecutiveValueCounter:
-      String(payload.algorithm ?? '')
-        .trim()
-        .toUpperCase() === 'CONSECUTIVE'
-        ? toNumberOrNull(payload.consecutiveValueCounter)
-        : 1,
-    salt: payload.salt || undefined,
-    saltLength: toNumberOrNull(payload.saltLength),
-    addCheckDigit: payload.checkdigit ?? false,
-    lengthIncludesCheckDigit: payload.lengthIncludesCheckDigit ?? false,
     enforceStartDateValidity: payload.enforceStartDateValidity ?? false,
     enforceEndDateValidity: payload.enforceEndDateValidity ?? false,
     validFrom: toLocalDateTime(payload.validFrom),
     validTo: toLocalDateTime(payload.validTo),
     validityTime: payload.validityTime,
-    algorithm: payload.algorithm,
-    alphabet
+    algorithm
   }
 
   Object.keys(out).forEach((key) => {
@@ -213,6 +225,15 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
       delete out[key]
     }
   })
+
+  if (algorithm) {
+    Object.keys(algorithm).forEach((key) => {
+      const value = algorithm[key]
+      if (value === null || value === undefined || value === '') {
+        delete algorithm[key]
+      }
+    })
+  }
 
   return out
 }

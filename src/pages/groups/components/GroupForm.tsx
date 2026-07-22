@@ -61,6 +61,9 @@ const INHERITABLE_VALUE_FIELDS: Array<keyof GroupStoredAttributes> = [
   'customAlphabetCharacters',
   'maxnumpsn',
   'randomAlgorithmDesiredSuccessProbability',
+  'consecutiveValueCounter',
+  'salt',
+  'saltLength',
   'multiplepsn',
   'paddingchar',
   'checkdigit',
@@ -83,6 +86,17 @@ const INHERITED_FLAGS: Array<keyof GroupStoredAttributes> = [
   'lengthIncludesCheckDigitInherited',
   'enforceStartDateValidityInherited',
   'enforceEndDateValidityInherited'
+]
+
+const ALGORITHM_INHERITED_FLAGS: Array<keyof GroupStoredAttributes> = [
+  'algorithmInherited',
+  'alphabetInherited',
+  'randomAlgorithmDesiredSizeInherited',
+  'randomAlgorithmDesiredSuccessProbabilityInherited',
+  'pseudonymLengthInherited',
+  'paddingCharacterInherited',
+  'addCheckDigitInherited',
+  'lengthIncludesCheckDigitInherited'
 ]
 
 function SectionCard({
@@ -178,6 +192,12 @@ export default function GroupForm() {
     updateNodeAttribute(selectedNodeKey, flag, false)
   }
 
+  const markAlgorithmOverridden = () => {
+    ALGORITHM_INHERITED_FLAGS.forEach((flag) =>
+      updateNodeAttribute(selectedNodeKey, flag, false)
+    )
+  }
+
   const clearInheritedFlags = () => {
     INHERITED_FLAGS.forEach((flag) =>
       updateNodeAttribute(selectedNodeKey, flag, false)
@@ -202,50 +222,14 @@ export default function GroupForm() {
       'validToInherited',
       hasValue(parent.validTo)
     )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'pseudonymLengthInherited',
-      hasValue(parent.psnlength)
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'algorithmInherited',
-      hasValue(parent.algorithm)
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'alphabetInherited',
-      hasValue(parent.alphabet)
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'randomAlgorithmDesiredSizeInherited',
-      hasValue(parent.maxnumpsn)
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'randomAlgorithmDesiredSuccessProbabilityInherited',
-      hasValue(parent.randomAlgorithmDesiredSuccessProbability)
+    const inheritsAlgorithm = hasValue(parent.algorithm)
+    ALGORITHM_INHERITED_FLAGS.forEach((flag) =>
+      updateNodeAttribute(selectedNodeKey, flag, inheritsAlgorithm)
     )
     updateNodeAttribute(
       selectedNodeKey,
       'multiplePsnAllowedInherited',
       parent.multiplepsn !== undefined
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'paddingCharacterInherited',
-      hasValue(parent.paddingchar)
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'addCheckDigitInherited',
-      parent.checkdigit !== undefined
-    )
-    updateNodeAttribute(
-      selectedNodeKey,
-      'lengthIncludesCheckDigitInherited',
-      parent.lengthIncludesCheckDigit !== undefined
     )
     updateNodeAttribute(
       selectedNodeKey,
@@ -465,7 +449,7 @@ export default function GroupForm() {
               value={temporal.psnlength ?? ''}
               onChange={(event) => {
                 updateNodeAttribute(selectedNodeKey, 'psnlength', event.value)
-                markFieldOverridden('pseudonymLengthInherited')
+                markAlgorithmOverridden()
               }}
               options={psnLengthOptions}
             />
@@ -590,8 +574,7 @@ export default function GroupForm() {
                     '1'
                   )
                 }
-                markFieldOverridden('algorithmInherited')
-                markFieldOverridden('alphabetInherited')
+                markAlgorithmOverridden()
               }}
               options={algorithmOptions}
             />
@@ -621,7 +604,7 @@ export default function GroupForm() {
                 }
                 setAlphabetSelectionError(false)
                 updateNodeAttribute(selectedNodeKey, 'alphabet', event.value)
-                markFieldOverridden('alphabetInherited')
+                markAlgorithmOverridden()
               }}
               options={alphabetOptions}
               helpText={t('groups:inputs.alphabet.help')}
@@ -656,7 +639,7 @@ export default function GroupForm() {
                       'customAlphabetCharacters',
                       event.target.value
                     )
-                    markFieldOverridden('alphabetInherited')
+                    markAlgorithmOverridden()
                   }}
                 />
               </InheritedField>
@@ -678,7 +661,7 @@ export default function GroupForm() {
                   'maxnumpsn',
                   filtered ? Number(filtered) : ''
                 )
-                markFieldOverridden('randomAlgorithmDesiredSizeInherited')
+                markAlgorithmOverridden()
               }}
               placeholder={t('groups:inputs.maxnumpsn.label')}
               inputPlaceholder={desiredPoolSizePlaceholder}
@@ -704,9 +687,7 @@ export default function GroupForm() {
                   'randomAlgorithmDesiredSuccessProbability',
                   event.target.value
                 )
-                markFieldOverridden(
-                  'randomAlgorithmDesiredSuccessProbabilityInherited'
-                )
+                markAlgorithmOverridden()
               }}
               placeholder={t(
                 'groups:inputs.randomAlgorithmDesiredSuccessProbability.label'
@@ -720,21 +701,28 @@ export default function GroupForm() {
           </InheritedField>
 
           {isConsecutiveAlgorithm(temporal.algorithm) && (
-            <CustomFloatLabel
-              id="consecutiveValueCounter"
-              value={temporal.consecutiveValueCounter ?? '1'}
-              onChange={(event) =>
-                updateNodeAttribute(
-                  selectedNodeKey,
-                  'consecutiveValueCounter',
-                  event.target.value
-                )
-              }
-              placeholder={t('groups:inputs.consecutiveValueCounter.label')}
-              inputPlaceholder="1"
-              helpText={t('groups:inputs.consecutiveValueCounter.help')}
-              helpIconInside
-            />
+            <InheritedField
+              inherited={Boolean(temporal.algorithmInherited)}
+              title={inheritedTitle}
+              iconClassName="right-10 top-1/2 -translate-y-1/2"
+            >
+              <CustomFloatLabel
+                id="consecutiveValueCounter"
+                value={temporal.consecutiveValueCounter ?? '1'}
+                onChange={(event) => {
+                  updateNodeAttribute(
+                    selectedNodeKey,
+                    'consecutiveValueCounter',
+                    event.target.value
+                  )
+                  markAlgorithmOverridden()
+                }}
+                placeholder={t('groups:inputs.consecutiveValueCounter.label')}
+                inputPlaceholder="1"
+                helpText={t('groups:inputs.consecutiveValueCounter.help')}
+                helpIconInside
+              />
+            </InheritedField>
           )}
         </div>
       </SectionCard>
@@ -758,35 +746,49 @@ export default function GroupForm() {
               {t('groups:form.advancedSubtitle')}
             </p>
             <div className="grid gap-5 md:grid-cols-2">
-              <CustomFloatLabel
-                id="saltLength"
-                value={temporal.saltLength ?? BACKEND_DEFAULT_SALT_LENGTH}
-                onChange={(event) =>
-                  updateNodeAttribute(
-                    selectedNodeKey,
-                    'saltLength',
-                    event.target.value
-                  )
-                }
-                placeholder={t('groups:inputs.saltLength.label')}
-                inputPlaceholder={BACKEND_DEFAULT_SALT_LENGTH}
-                helpText={t('groups:inputs.saltLength.help')}
-                helpIconInside
-              />
-              <CustomFloatLabel
-                id="salt"
-                value={temporal.salt ?? ''}
-                onChange={(event) =>
-                  updateNodeAttribute(
-                    selectedNodeKey,
-                    'salt',
-                    event.target.value
-                  )
-                }
-                placeholder={t('groups:inputs.salt.label')}
-                helpText={t('groups:inputs.salt.help')}
-                helpIconInside
-              />
+              <InheritedField
+                inherited={Boolean(temporal.algorithmInherited)}
+                title={inheritedTitle}
+                iconClassName="right-10 top-1/2 -translate-y-1/2"
+              >
+                <CustomFloatLabel
+                  id="saltLength"
+                  value={temporal.saltLength ?? BACKEND_DEFAULT_SALT_LENGTH}
+                  onChange={(event) => {
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'saltLength',
+                      event.target.value
+                    )
+                    markAlgorithmOverridden()
+                  }}
+                  placeholder={t('groups:inputs.saltLength.label')}
+                  inputPlaceholder={BACKEND_DEFAULT_SALT_LENGTH}
+                  helpText={t('groups:inputs.saltLength.help')}
+                  helpIconInside
+                />
+              </InheritedField>
+              <InheritedField
+                inherited={Boolean(temporal.algorithmInherited)}
+                title={inheritedTitle}
+                iconClassName="right-10 top-1/2 -translate-y-1/2"
+              >
+                <CustomFloatLabel
+                  id="salt"
+                  value={temporal.salt ?? ''}
+                  onChange={(event) => {
+                    updateNodeAttribute(
+                      selectedNodeKey,
+                      'salt',
+                      event.target.value
+                    )
+                    markAlgorithmOverridden()
+                  }}
+                  placeholder={t('groups:inputs.salt.label')}
+                  helpText={t('groups:inputs.salt.help')}
+                  helpIconInside
+                />
+              </InheritedField>
 
               {!isRandomnessAlgorithm(temporal.algorithm) && (
                 <div className="md:col-span-2">
@@ -805,7 +807,7 @@ export default function GroupForm() {
                           'paddingchar',
                           event.target.value.slice(0, 1)
                         )
-                        markFieldOverridden('paddingCharacterInherited')
+                        markAlgorithmOverridden()
                       }}
                     />
                   </InheritedField>
@@ -822,7 +824,7 @@ export default function GroupForm() {
                   value={Boolean(temporal.checkdigit)}
                   onChange={(value) => {
                     updateNodeAttribute(selectedNodeKey, 'checkdigit', value)
-                    markFieldOverridden('addCheckDigitInherited')
+                    markAlgorithmOverridden()
                   }}
                 />
               </InheritedField>
@@ -840,7 +842,7 @@ export default function GroupForm() {
                       'lengthIncludesCheckDigit',
                       value
                     )
-                    markFieldOverridden('lengthIncludesCheckDigitInherited')
+                    markAlgorithmOverridden()
                   }}
                 />
               </InheritedField>

@@ -2,7 +2,7 @@ import TrustDeck from '../../../core/services/TrustDeck'
 
 const PersonRecordLinkage = {
   async recordLinkage(person: any) {
-    return TrustDeck.instance().recordLinkagePerson(person)
+    return TrustDeck.instance().recordLinkage('person', person)
   }
 }
 

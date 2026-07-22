@@ -222,7 +222,12 @@ const resolveAlphabet = (
     payload.alphabet === CUSTOM_ALPHABET_VALUE
       ? String(payload.customAlphabetCharacters ?? '')
       : characters[payload.alphabet as keyof typeof characters] || ''
-  return selected || fallback?.alphabet || DEFAULT_ALGORITHM.alphabet
+  return (
+    selected ||
+    fallback?.alphabet ||
+    DEFAULT_ALGORITHM.alphabet ||
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  )
 }
 
 /** Builds the complete nested algorithm DTO expected by the backend. */
@@ -318,7 +323,6 @@ const mapCreateDomain = (
     ...(payload.validFromInherited
       ? {}
       : { validFrom: toLocalDateTime(payload.validFrom) }),
-    validFromInherited: Boolean(payload.validFromInherited),
     ...(payload.validToInherited
       ? {}
       : payload.validTo
@@ -326,7 +330,6 @@ const mapCreateDomain = (
         : payload.validityTime
           ? { validityTime: payload.validityTime }
           : {}),
-    validToInherited: Boolean(payload.validToInherited),
     ...(payload.enforceStartDateValidityInherited
       ? {}
       : {
@@ -334,24 +337,14 @@ const mapCreateDomain = (
             payload.enforceStartDateValidity
           )
         }),
-    enforceStartDateValidityInherited: Boolean(
-      payload.enforceStartDateValidityInherited
-    ),
     ...(payload.enforceEndDateValidityInherited
       ? {}
       : {
           enforceEndDateValidity: Boolean(payload.enforceEndDateValidity)
         }),
-    enforceEndDateValidityInherited: Boolean(
-      payload.enforceEndDateValidityInherited
-    ),
     ...(payload.multiplePsnAllowedInherited
       ? {}
       : { multiplePsnAllowed: Boolean(payload.multiplepsn) }),
-    multiplePsnAllowedInherited: Boolean(
-      payload.multiplePsnAllowedInherited
-    ),
-    algorithmInherited: inheritAlgorithm,
     ...(inheritAlgorithm ? {} : { algorithm: buildAlgorithm(payload) })
   }
 

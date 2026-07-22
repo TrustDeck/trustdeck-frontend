@@ -254,7 +254,7 @@ export default function Sidebar({
     }
 
     async function loadSidebarAccess() {
-      TrustDeck.instance().setToken(accessToken)
+      TrustDeck.instance().setToken(accessToken!)
       let access: CachedUserAccess
       try {
         access = await getCurrentUserAccess(false)

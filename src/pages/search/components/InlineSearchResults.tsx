@@ -76,13 +76,15 @@ function Pagination({
   page,
   pageSize,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
+  alwaysShowPageSize = false
 }: {
   total: number
   page: number
   pageSize: number
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
+  alwaysShowPageSize?: boolean
 }) {
   const { t } = useTranslation('search')
   const pageCount = Math.ceil(total / pageSize)
@@ -90,11 +92,16 @@ function Pagination({
     (option) => option === 10 || option <= total
   )
 
-  if (pageCount <= 1 && pageSizeOptions.length <= 1) return null
+  if (
+    pageCount <= 1 &&
+    pageSizeOptions.length <= 1 &&
+    !alwaysShowPageSize
+  )
+    return null
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-4 border-t border-gray-200 px-5 py-4 dark:border-slate-700">
-      {pageSizeOptions.length > 1 && (
+      {(alwaysShowPageSize || pageSizeOptions.length > 1) && (
         <label className="flex items-center gap-2 text-base font-medium text-gray-700 dark:text-gray-200">
           <span>{t('pagination.resultsPerPage')}</span>
           <select
@@ -652,6 +659,7 @@ export function InlinePseudonymResults({
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
+        alwaysShowPageSize
         onPageSizeChange={(nextPageSize) => {
           setPageSize(nextPageSize)
           setPage(0)

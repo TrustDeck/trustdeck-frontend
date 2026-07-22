@@ -298,7 +298,7 @@
   right: 0.75rem;
 }
 
-/* Identity management result modal: keep content centered independently of the action row. */
+/* Entities result detail: keep content centered independently of the action row. */
 .td-identity-entity-dialog .p-dialog-header,
 .td-identity-entity-dialog .p-dialog-content {
   padding-left: clamp(1.25rem, 3vw, 2rem) !important;

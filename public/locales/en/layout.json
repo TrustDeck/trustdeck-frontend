@@ -14,7 +14,6 @@
     "resolveDuplicates": "Resolve duplicates",
     "projects": "Projects",
     "backToProjects": "Back to projects",
-    "permissionManagement": "Permission Management",
     "newProject": "New project",
     "entityManagement": "Entity types",
     "globalSettings": "Global Settings",
@@ -23,7 +22,8 @@
     "pseudonymDomains": "Pseudonym domains",
     "entityTypes": "Entity types",
     "entities": "Entities",
-    "pseudonyms": "Pseudonyms"
+    "pseudonyms": "Pseudonyms",
+    "permissions": "Permissions"
   },
   "logOut": {
     "loggingOut": "Logging you out",

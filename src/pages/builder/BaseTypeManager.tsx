@@ -14,6 +14,7 @@ import SecondaryOutlinedButton from '../../core/components/form/buttons/Secondar
 import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
 import PageHeader from '../../core/components/common/PageHeader'
+import GlobalPermissions from '../projects/GlobalPermissions'
 
 type DetailMode = 'view' | 'edit' | 'create' | null
 
@@ -334,6 +335,7 @@ export default function BaseTypeManager() {
             )}
           </div>
         )}
+        <GlobalPermissions scopeMode="global" embedded />
       </div>
 
       {deleteTarget && (

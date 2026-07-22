@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Panel from '../../../core/components/common/Panel'
-import Divider from '../../../core/components/common/Divider'
 import LinksTable from './LinksTable'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
@@ -398,20 +397,34 @@ export default function DynamicEntity({
     )
   }
 
-  const modalPanelClass =
-    'w-full rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
+  const detailPanelClass =
+    'w-full rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-900'
 
   return (
     <div
       className={
         showIdentifierPanel
-          ? 'mx-auto grid w-full max-w-[1100px] grid-cols-1 items-start justify-center gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.8fr)]'
-          : 'mx-auto flex w-full max-w-4xl justify-center'
+          ? 'mx-auto grid w-full grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.85fr)]'
+          : 'mx-auto flex w-full justify-center'
       }
     >
-      <Panel noBasePanel noMaxWidth className={modalPanelClass}>
-        <div className="space-y-3">
-          <Divider text={t('search:entityLabel')} />
+      <Panel
+        title={t('search:entityLabel')}
+        noBasePanel
+        noMaxWidth
+        className={detailPanelClass}
+      >
+        <div className="space-y-4">
+          {showIdentifierPanel && (
+            <div className="rounded-xl border border-color-light-gray bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950">
+              <div className="td-field-label mb-1">
+                {t('search:trustDeckId')}
+              </div>
+              <div className="break-all font-mono text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {resolveTrustDeckId(entity) || '—'}
+              </div>
+            </div>
+          )}
           {renderAttributes(
             schemaAttributes,
             formData ?? {},
@@ -422,33 +435,21 @@ export default function DynamicEntity({
       </Panel>
 
       {showIdentifierPanel && (
-        <div className="flex w-full flex-col gap-4">
-          <Panel noBasePanel noMaxWidth className={`${modalPanelClass} h-fit`}>
-            <Divider text={t('search:identifier')} />
-            <div className="flex flex-col gap-4">
-              <div className="rounded-lg border border-color-light-gray bg-white px-3 py-3 dark:bg-slate-950">
-                <div className="td-field-label mb-1">
-                  {t('search:trustDeckId')}
-                </div>
-                <div className="break-all font-mono text-lg text-gray-900 dark:text-gray-100">
-                  {resolveTrustDeckId(entity) || '—'}
-                </div>
-              </div>
-            </div>
-          </Panel>
-
-          <Panel noBasePanel noMaxWidth className={`${modalPanelClass} h-fit`}>
-            <Divider text={t('search:links')} />
-            <LinksTable
-              entity={
-                {
-                  id: resolveTrustDeckId(entity),
-                  links: entity.links || []
-                } as Entity
-              }
-            />
-          </Panel>
-        </div>
+        <Panel
+          title={t('search:links')}
+          noBasePanel
+          noMaxWidth
+          className={`${detailPanelClass} h-fit`}
+        >
+          <LinksTable
+            entity={
+              {
+                id: resolveTrustDeckId(entity),
+                links: entity.links || []
+              } as Entity
+            }
+          />
+        </Panel>
       )}
     </div>
   )

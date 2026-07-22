@@ -27,7 +27,6 @@ import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
 import GlobalPermissions from '../../pages/projects/GlobalPermissions'
-import PermissionsRedirect from '../../pages/projects/PermissionsRedirect'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
 import BaseTypeManager from '../../pages/builder/BaseTypeManager'
@@ -43,6 +42,7 @@ export type RouteConfig = {
   sideboardOrder?: number
   isNonProject?: boolean
   requiresBaseTypeAccess?: boolean
+  requiresScopedPermission?: 'project-domain'
   sidebarGroup?: 'configuration' | 'management'
 }
 
@@ -92,13 +92,14 @@ export const routes: RouteConfig[] = [
   },
   {
     path: '/permissions',
-    titleKey: 'layout:menu.permissionManagement',
+    titleKey: 'layout:menu.permissions',
     component: GlobalPermissions,
     Icon: ShieldCheckIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 9,
-    isNonProject: true
+    sideboardOrder: 5,
+    sidebarGroup: 'configuration',
+    requiresScopedPermission: 'project-domain'
   },
   {
     path: '/user-management',
@@ -119,14 +120,6 @@ export const routes: RouteConfig[] = [
     isSidebar: true,
     sideboardOrder: 8,
     isNonProject: true
-  },
-  {
-    path: '/projects/global-permissions',
-    titleKey: 'layout:menu.permissionManagement',
-    component: PermissionsRedirect,
-    Icon: ShieldCheckIcon,
-    isProtected: true,
-    isSidebar: false
   },
   {
     path: '/entity/manager',
@@ -153,7 +146,7 @@ export const routes: RouteConfig[] = [
     Icon: IdentificationIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 5,
+    sideboardOrder: 6,
     sidebarGroup: 'management'
   },
   {
@@ -187,7 +180,7 @@ export const routes: RouteConfig[] = [
     Icon: EyeSlashIcon,
     isProtected: true,
     isSidebar: true,
-    sideboardOrder: 6,
+    sideboardOrder: 7,
     sidebarGroup: 'management'
   },
   {

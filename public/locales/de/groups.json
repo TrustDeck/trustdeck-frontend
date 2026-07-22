@@ -1,37 +1,37 @@
 {
-  "modal": "Diese Seite zeigt alle Gruppen und Untergruppen in Ihrem Projekt an. Die erste Gruppe wurde bereits für Sie erstellt. Um eine Untergruppe dafür anzulegen, klicken Sie auf den Knopf „Neue Gruppe“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
+  "modal": "Diese Seite zeigt alle Pseudonym-Domänen und Unterdomänen in Ihrem Projekt an. Die erste Pseudonym-Domäne wurde bereits für Sie erstellt. Um eine Unterdomäne dafür anzulegen, klicken Sie auf den Knopf „Neue Pseudonym-Domäne“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
   "headers": {
     "title": "Pseudonym-Domänen",
-    "left": "Gruppen",
+    "left": "Pseudonym-Domänen",
     "modalHeader": "Wie diese Seite zu verwenden ist:",
     "subtitle": "Erstellen und konfigurieren Sie Pseudonym-Domänen und organisieren Sie deren Vererbungshierarchie."
   },
   "buttons": {
-    "newGroup": "Neue Gruppe",
-    "createGroup": "Gruppe erstellen",
+    "newGroup": "Neue Pseudonym-Domäne",
+    "createGroup": "Pseudonym-Domäne erstellen",
     "edit": "Bearbeiten",
     "save": "Änderungen speichern",
     "discardChanges": "Änderungen verwerfen",
-    "delete": "Gruppe löschen",
+    "delete": "Pseudonym-Domäne löschen",
     "yesDelete": "Ja, löschen",
-    "noDelete": "Gruppe behalten",
+    "noDelete": "Pseudonym-Domäne behalten",
     "okay": "Verstanden!",
     "view": "Anzeigen",
     "refresh": "Aktualisieren",
     "backToDetails": "Zurück zu den Details",
-    "addGroups": "Gruppe hinzufügen",
+    "addGroups": "Pseudonym-Domäne hinzufügen",
     "cancel": "Abbrechen",
     "closeEditView": "Bearbeitungsansicht schließen.",
     "closeCreateView": "Erstellungsansicht schließen."
   },
   "default": {
-    "text": "Wählen Sie eine Entität oder Gruppe aus, um deren Einstellungen hier anzuzeigen."
+    "text": "Wählen Sie eine Entität oder Pseudonym-Domäne aus, um deren Einstellungen hier anzuzeigen."
   },
   "inputs": {
     "psnexample": "Das Pseudonym sieht so aus:",
     "groupname": {
-      "label": "Gruppenname",
-      "error": "Bitte geben Sie einen Gruppennamen ein"
+      "label": "Pseudonym-Domänenname",
+      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein"
     },
     "prefix": {
       "label": "Präfix",
@@ -58,8 +58,8 @@
       "label": "Enddatum"
     },
     "parentgroup": {
-      "label": "Übergeordnete Gruppe",
-      "none": "Keine übergeordnete Gruppe"
+      "label": "Übergeordnete Pseudonym-Domäne",
+      "none": "Keine übergeordnete Pseudonym-Domäne"
     },
     "description": {
       "label": "Beschreibung",
@@ -71,7 +71,7 @@
     "maxnumpsn": {
       "label": "Max. Anzahl an Pseudonymen",
       "error": "Bitte geben Sie eine Zahl ein",
-      "help": "Geschätzte Obergrenze für die maximal benötigte Anzahl an Pseudonymen in dieser Gruppe. Dieser Wert wird zur Berechnung einer optimalen Pseudonymlänge verwendet."
+      "help": "Geschätzte Obergrenze für die maximal benötigte Anzahl an Pseudonymen in dieser Pseudonym-Domäne. Dieser Wert wird zur Berechnung einer optimalen Pseudonymlänge verwendet."
     },
     "multiplepsn": {
       "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
@@ -83,7 +83,7 @@
     "checkdigit": {
       "label": "Prüfziffer"
     },
-    "inheritFromParent": "Von Elterngruppe übernehmen",
+    "inheritFromParent": "Von der übergeordneten Pseudonym-Domäne übernehmen",
     "psnexampleNew": "Das Pseudonym sieht so aus:",
     "validityTime": {
       "label": "Gültigkeitsdauer",
@@ -109,8 +109,8 @@
     "lengthIncludesCheckDigit": {
       "label": "Länge enthält Prüfziffer"
     },
-    "inheritedEditable": "Von der Elterngruppe übernommen; kann überschrieben werden.",
-    "inheritedReadonly": "Von der übergeordneten Gruppe übernommen.",
+    "inheritedEditable": "Von der übergeordneten Pseudonym-Domäne übernommen; kann überschrieben werden.",
+    "inheritedReadonly": "Von der übergeordneten Pseudonym-Domäne übernommen.",
     "enforceStartDateValidity": {
       "label": "Gültigkeit ab Startdatum erzwingen"
     },
@@ -118,52 +118,52 @@
       "label": "Gültigkeit bis Enddatum erzwingen"
     }
   },
-  "savingGroup": "Ihre Gruppe wird erstellt...",
-  "groupCreated": "Ihre Gruppe wurde erstellt.",
+  "savingGroup": "Ihre Pseudonym-Domäne wird erstellt...",
+  "groupCreated": "Ihre Pseudonym-Domäne wurde erstellt.",
   "messages": {
-    "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
+    "deleteConfirmation": "Möchten Sie wirklich diese Pseudonym-Domäne löschen?",
     "confirmDelete": "Löschen bestätigen",
     "unsavedChangesHeader": "Ungespeicherte Änderungen",
     "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?",
     "saveOtherChanges": "Es gibt weitere ungespeicherte Änderungen. Diese müssen ebenfalls gespeichert werden, bevor Sie fortfahren können.",
     "saveOtherChangesHeader": "Weitere Änderungen speichern?",
     "saveOtherChangesAction": "Ja, alle Änderungen speichern",
-    "invalidParentSummary": "Übergeordnete Gruppe konnte nicht geändert werden",
-    "invalidParentDetail": "Eine Gruppe kann weder sich selbst noch eine eigene Untergruppe als übergeordnete Gruppe verwenden."
+    "invalidParentSummary": "Übergeordnete Pseudonym-Domäne konnte nicht geändert werden",
+    "invalidParentDetail": "Eine Pseudonym-Domäne kann weder sich selbst noch eine eigene Unterdomäne als übergeordnete Pseudonym-Domäne verwenden."
   },
   "crud": {
-    "loadFailedSummary": "Gruppen konnten nicht geladen werden",
-    "loadFailedDetail": "Die Gruppenliste konnte nicht geladen werden.",
-    "deleteSuccessSummary": "Gruppe gelöscht",
-    "deleteSuccessDetail": "Die Gruppe wurde erfolgreich gelöscht.",
-    "deleteFailedSummary": "Gruppe konnte nicht gelöscht werden",
-    "deleteFailedDetail": "Die Gruppe konnte nicht gelöscht werden.",
+    "loadFailedSummary": "Pseudonym-Domänen konnten nicht geladen werden",
+    "loadFailedDetail": "Die Pseudonym-Domänenliste konnte nicht geladen werden.",
+    "deleteSuccessSummary": "Pseudonym-Domäne gelöscht",
+    "deleteSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich gelöscht.",
+    "deleteFailedSummary": "Pseudonym-Domäne konnte nicht gelöscht werden",
+    "deleteFailedDetail": "Die Pseudonym-Domäne konnte nicht gelöscht werden.",
     "assignedToCurrentProject": "Dem aktuellen Projekt zugeordnet",
     "notAssignedToAnyProject": "Keinem Projekt zugeordnet",
     "assignedElsewhere": "Einem anderen Projekt zugeordnet",
     "scopeCurrentProject": "Aktuelles Projekt",
     "scopeUnassigned": "Nicht zugeordnet",
     "scopeOtherProject": "Anderes Projekt",
-    "noGroupsInSection": "Keine Gruppen in diesem Bereich.",
-    "selectGroupHint": "Wähle eine Gruppe aus der Liste oder Hierarchie aus, um Details zu sehen.",
-    "detailSubtitle": "Alle verfügbaren Gruppenattribute werden unten angezeigt. Nicht konfigurierte Werte werden als — dargestellt.",
-    "hierarchyTitle": "Gruppenhierarchie",
-    "hierarchySubtitle": "Die Hierarchieansicht bleibt erhalten, um über- und untergeordnete Gruppen nachvollziehen zu können.",
-    "createTitle": "Gruppe erstellen",
-    "editTitle": "Gruppe bearbeiten",
+    "noGroupsInSection": "Keine Pseudonym-Domänen in diesem Bereich.",
+    "selectGroupHint": "Wähle eine Pseudonym-Domäne aus der Liste oder Hierarchie aus, um Details zu sehen.",
+    "detailSubtitle": "Alle verfügbaren Pseudonym-Domänenattribute werden unten angezeigt. Nicht konfigurierte Werte werden als — dargestellt.",
+    "hierarchyTitle": "Pseudonym-Domänen-Hierarchie",
+    "hierarchySubtitle": "Die Hierarchieansicht bleibt erhalten, um über- und untergeordnete Pseudonym-Domänen nachvollziehen zu können.",
+    "createTitle": "Pseudonym-Domäne erstellen",
+    "editTitle": "Pseudonym-Domäne bearbeiten",
     "table": {
       "name": "Name",
       "prefix": "Präfix",
-      "parent": "Übergeordnete Gruppe",
+      "parent": "Übergeordnete Pseudonym-Domäne",
       "assignment": "Zuordnung",
       "actions": "Aktionen"
     },
-    "createSuccessDetail": "Die Gruppe wurde erfolgreich erstellt.",
-    "createFailedDetail": "Die Gruppe konnte nicht erstellt werden.",
-    "updateSuccessDetail": "Die Gruppenänderungen wurden erfolgreich gespeichert.",
-    "updateFailedDetail": "Die Gruppenänderungen konnten nicht gespeichert werden.",
+    "createSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich erstellt.",
+    "createFailedDetail": "Die Pseudonym-Domäne konnte nicht erstellt werden.",
+    "updateSuccessDetail": "Die Pseudonym-Domänenänderungen wurden erfolgreich gespeichert.",
+    "updateFailedDetail": "Die Pseudonym-Domänenänderungen konnten nicht gespeichert werden.",
     "createSubtitle": "Definieren Sie Hierarchie, Pseudonymregeln, Gültigkeit und optionale erweiterte Einstellungen.",
-    "editSubtitle": "Bearbeiten Sie die änderbare Konfiguration der ausgewählten Pseudonymgruppe."
+    "editSubtitle": "Bearbeiten Sie die änderbare Konfiguration der ausgewählten Pseudonym-Domäne."
   },
   "details": {
     "name": "Name",
@@ -199,17 +199,17 @@
     "salt": "Salt",
     "saltLength": "Salt-Länge",
     "description": "Beschreibung",
-    "superDomainID": "ID der übergeordneten Gruppe",
-    "superDomainName": "Übergeordnete Gruppe"
+    "superDomainID": "ID der übergeordneten Pseudonym-Domäne",
+    "superDomainName": "Übergeordnete Pseudonym-Domäne"
   },
   "status": {
-    "creating": "Die Gruppe wird erstellt...",
-    "updating": "Die Gruppe wird aktualisiert...",
-    "deleting": "Die Gruppe wird gelöscht..."
+    "creating": "Die Pseudonym-Domäne wird erstellt...",
+    "updating": "Die Pseudonym-Domäne wird aktualisiert...",
+    "deleting": "Die Pseudonym-Domäne wird gelöscht..."
   },
   "form": {
     "basicTitle": "Grundeinstellungen",
-    "basicSubtitle": "Legen Sie Gruppenname, Hierarchie, Präfix, Pseudonymlänge und Beschreibung fest.",
+    "basicSubtitle": "Legen Sie Pseudonym-Domänenname, Hierarchie, Präfix, Pseudonymlänge und Beschreibung fest.",
     "validityTitle": "Gültigkeit",
     "validitySubtitle": "Definieren Sie, wann erzeugte Pseudonyme gültig sind und wie das Enddatum berechnet wird.",
     "generationTitle": "Pseudonymgenerierung",

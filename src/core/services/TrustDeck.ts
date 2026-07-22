@@ -998,7 +998,7 @@ class TrustDeck {
   public async updateDomainPermissionGrants(
     domainName: string,
     userId: string,
-    permissions: PermissionUpdate[]
+    permissions: PermissionUpdate[] | PermissionGrant[]
   ) {
     return this.request<unknown>(
       'PUT',
@@ -1013,7 +1013,7 @@ class TrustDeck {
   public async updateProjectPermissionGrants(
     projectAbbreviation: string,
     userId: string,
-    permissions: PermissionUpdate[]
+    permissions: PermissionUpdate[] | PermissionGrant[]
   ) {
     return this.request<unknown>(
       'PUT',

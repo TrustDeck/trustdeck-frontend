@@ -14,7 +14,6 @@
     "resolveDuplicates": "Dubletten auflösen",
     "projects": "Projekte",
     "backToProjects": "Zurück zu Projekten",
-    "permissionManagement": "Berechtigungsverwaltung",
     "newProject": "Neues Projekt",
     "identityManagement": "Entitäten",
     "entityManagement": "Entitätstypen",
@@ -23,7 +22,8 @@
     "pseudonymDomains": "Pseudonym-Domänen",
     "entityTypes": "Entitätstypen",
     "entities": "Entitäten",
-    "pseudonyms": "Pseudonyme"
+    "pseudonyms": "Pseudonyme",
+    "permissions": "Berechtigungen"
   },
   "logOut": {
     "loggingOut": "Sie werden abgemeldet",

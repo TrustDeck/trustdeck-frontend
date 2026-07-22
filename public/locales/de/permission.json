@@ -6,25 +6,27 @@
     "full": "Vollzugriff"
   },
   "currentUser": "Aktueller Benutzer",
-  "title": "Berechtigungsverwaltung",
-  "intro": "Prüfen Sie Ihre Rechte und erteilen oder entziehen Sie anderen Benutzern Berechtigungen für ausgewählte Geltungsbereiche.",
+  "title": "Berechtigungen",
+  "intro": "Prüfen und verwalten Sie Projekt- und Pseudonym-Domänen-Berechtigungen für das ausgewählte Projekt.",
   "currentAccess": "Ihre aktuellen Rechte",
   "keycloakRoles": "Keycloak-Rollen im Token",
   "effectivePermissions": "Effektive TrustDeck-Berechtigungen",
   "grantOrRevoke": "Berechtigungen vergeben oder entziehen",
-  "searchHelp": "Suchen Sie nach einem Benutzer und passen Sie dessen globale, Projekt- und Gruppenberechtigungen über alle verwaltbaren Bereiche hinweg an.",
+  "searchHelp": "Suchen Sie nach einem Benutzer und ändern Sie nur Berechtigungen, die Sie weitergeben dürfen.",
   "globalPermissions": "Globale Berechtigungen",
-  "projectAndGroupPermissionsFor": "Projekt- und Gruppenberechtigungen für {{project}}",
-  "selectProjectFirst": "Wählen Sie zuerst ein Projekt aus, um hier Projekt- und Gruppenberechtigungen zu verwalten.",
+  "projectAndGroupPermissionsFor": "Projekt- und Pseudonym-Domänen-Berechtigungen für {{project}}",
+  "selectProjectFirst": "Wählen Sie zuerst ein Projekt aus, um Projekt- und Pseudonym-Domänen-Berechtigungen zu verwalten.",
   "grantedCount": "{{count}} vergeben",
   "missingCount": "{{count}} nicht vergeben",
   "scope": {
     "global": "Globale Berechtigungen",
     "project": "Projekt",
-    "group": "Gruppe",
+    "group": "Pseudonym-Domäne",
     "permissions": "Berechtigungen",
     "projectPermissions": "Projektspezifische Berechtigungen",
-    "groupPermissions": "Gruppenspezifische Berechtigungen"
+    "groupPermissions": "Berechtigungen für Pseudonym-Domänen",
+    "domain": "Pseudonym-Domäne",
+    "selectScope": "Projekt oder Pseudonym-Domäne"
   },
   "status": {
     "granted": "Vergeben",
@@ -36,23 +38,28 @@
     "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten.",
     "noGrantedInScope": "In diesem Bereich sind aktuell keine Rechte vergeben.",
     "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben.",
-    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
+    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Pseudonym-Domänen-Berechtigungen verfügbar.",
     "missingRightsUnavailable": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Daher können nur vergebene Rechte angezeigt werden; nicht vergebene Rechte können noch nicht berechnet werden.",
     "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind.",
-    "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Gruppenberechtigungsdefinitionen verfügbar.",
+    "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Pseudonym-Domänen-Berechtigungen verfügbar.",
     "noProjectRows": "Es sind keine projektspezifischen Berechtigungsdefinitionen verfügbar.",
-    "noGroupRows": "Es sind keine gruppenspezifischen Berechtigungsdefinitionen verfügbar."
+    "noGroupRows": "Es sind keine Berechtigungsdefinitionen für Pseudonym-Domänen verfügbar.",
+    "noRightsInScope": "Sie besitzen aktuell keine Rechte in diesem Geltungsbereich.",
+    "noManageableRights": "In diesem Geltungsbereich gibt es keine Rechte, die Sie vergeben oder entziehen dürfen."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",
-    "permissionDefinitions": "Berechtigungsdefinitionen werden geladen..."
+    "permissionDefinitions": "Berechtigungsdefinitionen werden geladen...",
+    "selectedUserPermissions": "Berechtigungen des ausgewählten Benutzers werden geladen..."
   },
   "errors": {
     "effectiveForbidden": "Ihr aktuelles Konto darf die effektiven TrustDeck-Berechtigungen nicht aus dem Backend lesen.",
     "effectiveError": "Effektive TrustDeck-Berechtigungen konnten nicht geladen werden.",
     "definitionsForbidden": "Berechtigungsdefinitionen sind aktuell nicht verfügbar, da Ihnen die notwendige Rolle zum Anzeigen und/oder Bearbeiten von Berechtigungen fehlt.",
     "retryExplanation": "Aktualisieren Sie das Zugriffstoken und versuchen Sie es erneut, wenn Ihre Berechtigungen kürzlich geändert wurden.",
-    "definitionsError": "Berechtigungsdefinitionen konnten nicht geladen werden. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut."
+    "definitionsError": "Berechtigungsdefinitionen konnten nicht geladen werden. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut.",
+    "usingHeldRightsOnly": "Der vollständige Berechtigungskatalog ist nicht verfügbar. Es werden nur Rechte angezeigt, die Sie selbst besitzen und weitergeben dürfen.",
+    "selectedUserPermissions": "Die Berechtigungen des ausgewählten Benutzers konnten für diesen Geltungsbereich nicht geladen werden."
   },
   "actions": {
     "refreshing": "Aktualisiere...",
@@ -60,7 +67,8 @@
     "retrying": "Versuche erneut...",
     "retry": "Erneut versuchen",
     "saving": "Speichern...",
-    "savePermissions": "Berechtigungen speichern"
+    "savePermissions": "Berechtigungen speichern",
+    "useUserId": "Benutzer-ID verwenden"
   },
   "toast": {
     "permissionsRefreshed": "Berechtigungen aktualisiert",
@@ -82,7 +90,7 @@
       "instance": "Instanz"
     },
     "group": {
-      "domain": "Gruppe",
+      "domain": "Pseudonym-Domäne",
       "pseudonym": "Pseudonym",
       "pseudonym-batch": "Pseudonym-Stapel"
     }
@@ -91,7 +99,14 @@
     "grantedRights": "Vergebene Rechte",
     "missingRights": "Nicht vergebene Rechte"
   },
-  "allProjectAndGroupPermissions": "Alle Projekt- und Gruppenberechtigungen",
+  "allProjectAndGroupPermissions": "Alle Projekt- und Pseudonym-Domänen-Berechtigungen",
   "selectedUserRoles": "Rollen des ausgewählten Benutzers",
-  "assignmentNote": "Berechtigungen können jeweils nur für ein Projekt oder eine Gruppe vergeben werden. Sie können nur Rechte weitergeben, über die Sie selbst bereits verfügen; eine Rechteausweitung ist nicht möglich."
+  "assignmentNote": "Berechtigungen werden jeweils für ein Projekt oder eine Pseudonym-Domäne vergeben. Sie können nur Rechte weitergeben, die Sie selbst besitzen; eine Rechteausweitung ist nicht möglich.",
+  "projectDomainTitle": "Berechtigungen",
+  "projectDomainIntro": "Prüfen Sie Ihre Projekt- und Pseudonym-Domänen-Rechte und vergeben Sie nur Rechte, die Sie selbst besitzen.",
+  "globalBoxTitle": "Globale Berechtigungen",
+  "globalBoxSubtitle": "Prüfen und verwalten Sie globale Rechte, die in TrustDeck projektübergreifend gelten.",
+  "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
+  "projectDomainSearchHelp": "Suchen Sie nach einem Benutzer, wählen Sie ein Projekt oder eine Pseudonym-Domäne und vergeben oder entziehen Sie nur eigene Rechte.",
+  "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden."
 }

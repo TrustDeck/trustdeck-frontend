@@ -147,8 +147,8 @@
     "idType": "ID Type",
     "createdOn": "Created on:",
     "expiresOn": "Expires on:",
-    "parentGroup": "Parent group",
-    "group": "Group",
+    "parentGroup": "Parent pseudonym domain",
+    "group": "Pseudonym domain",
     "validFrom": "Valid from",
     "validFromInherited": "Valid from inherited",
     "validTo": "Valid to",
@@ -161,18 +161,19 @@
     "deleteSuccess": "Pseudonym deleted successfully.",
     "deleteFailed": "Failed to delete pseudonym.",
     "confirmDeleteText": "This will delete the selected pseudonym. This action cannot be undone.",
-    "inheritedTooltip": "Inherited from the group configuration.",
+    "inheritedTooltip": "Inherited from the pseudonym-domain configuration.",
     "inherited": "Inherited",
     "noLinkedPseudonyms": "No linked pseudonyms available.",
-    "searchHint": "Enter a pseudonym and select the group in which it should be searched.",
-    "searchInputPlaceholder": "Pseudonym, identifier, or ID Type"
+    "searchHint": "Enter a pseudonym and select the pseudonym domain in which it should be searched.",
+    "searchInputPlaceholder": "Pseudonym, identifier, or ID Type",
+    "domain": "Pseudonym domain"
   },
   "group": {
-    "title": "Group",
-    "placeholder": "Group",
-    "help": "Enter a group",
-    "error": "Invalid group",
-    "searchHint": "Enter a group name to search for it."
+    "title": "Pseudonym domain",
+    "placeholder": "Pseudonym domain",
+    "help": "Select a pseudonym domain",
+    "error": "Invalid pseudonym domain",
+    "searchHint": "Enter a pseudonym-domain name to search for it."
   },
   "headers": {
     "personalData": "Personal data",
@@ -217,7 +218,7 @@
     "previous": "Previous page",
     "next": "Next page",
     "pageOf": "Page {{page}} of {{pages}}",
-    "resultsPerPage": "Results per page"
+    "resultsPerPage": "Results shown"
   },
   "resultNumber": "No.",
   "domainRequired": "Select a pseudonym domain first."

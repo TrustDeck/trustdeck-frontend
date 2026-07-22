@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
@@ -696,7 +696,7 @@ export default function PreReg() {
   const selectedProjectAbbreviation = selectedProject?.abbreviation
 
   useEffect(() => {
-    // Do not call the permission-management endpoint from Identity Management.
+    // Do not call the permission-management endpoint from Entities.
     // That endpoint is not available to all users and can return 404/403 even
     // when the user is allowed to work with entity instances. Token roles and
     // cached effective permissions are used for optimistic UI hints; the backend
@@ -1010,7 +1010,7 @@ export default function PreReg() {
     setSelectedInstance(enrichedInstance)
   }
 
-  const openEditModal = (instance: EntityInstance) => {
+  const openEditModal = async (instance: EntityInstance) => {
     if (!canUpdateInstances) {
       showToast({
         severity: 'warn',
@@ -1028,11 +1028,15 @@ export default function PreReg() {
         : (instance.data ?? {})
     )
     setModalOpen(true)
+
+    const enrichedInstance = await attachPseudonymLinks(instance)
+    setSelectedInstance(enrichedInstance)
   }
 
   const closeModal = () => {
     if (saving) return
     setModalOpen(false)
+    setSelectedInstance(null)
     setLinkageCandidates([])
     setSelectedLinkageCandidate(null)
   }
@@ -1466,70 +1470,190 @@ export default function PreReg() {
                       {visibleInstances.map((instance, index) => {
                         const id =
                           entityId(instance) || `${selectedType.name}-${index}`
+                        const expanded =
+                          modalOpen &&
+                          modalMode !== 'create' &&
+                          entityId(selectedInstance) === id
+                        const detailColumnCount = displayAttributes.length + 2
+
                         return (
-                          <tr
-                            key={id}
-                            className="hover:bg-gray-50 dark:hover:bg-slate-800"
-                          >
-                            <td className="min-w-[18rem] px-4 py-3 font-mono text-base text-gray-700 dark:text-gray-300">
-                              <span className="block break-all">
-                                {id || '-'}
-                              </span>
-                            </td>
-                            {displayAttributes.map((attr) => (
-                              <td
-                                key={`${id}-${attr.name}`}
-                                className="px-4 py-3 text-gray-700 dark:text-gray-300"
-                              >
-                                {formatValue(
-                                  attr.name
-                                    ? valueAtPath(instance.data, attr.name)
-                                    : undefined
-                                )}
+                          <Fragment key={id}>
+                            <tr
+                              className={`transition hover:bg-gray-50 dark:hover:bg-slate-800 ${
+                                expanded
+                                  ? 'bg-blue-50/70 dark:bg-blue-950/20'
+                                  : ''
+                              }`}
+                            >
+                              <td className="min-w-[18rem] px-4 py-3 font-mono text-base text-gray-700 dark:text-gray-300">
+                                <span className="block break-all">
+                                  {id || '-'}
+                                </span>
                               </td>
-                            ))}
-                            <td className="px-4 py-3">
-                              <div className="flex justify-end gap-2">
-                                <IconActionButton
-                                  title={
-                                    canReadInstances
-                                      ? t('identity:crud.view')
-                                      : t('identity:crud.noReadPermission')
-                                  }
-                                  onClick={() => openViewModal(instance)}
-                                  disabled={!canReadInstances}
+                              {displayAttributes.map((attr) => (
+                                <td
+                                  key={`${id}-${attr.name}`}
+                                  className="px-4 py-3 text-gray-700 dark:text-gray-300"
                                 >
-                                  <EyeIcon className="h-5 w-5" />
-                                </IconActionButton>
-                                <IconActionButton
-                                  title={
-                                    canUpdateInstances
-                                      ? t('identity:crud.edit')
-                                      : t('identity:crud.noUpdatePermission')
-                                  }
-                                  onClick={() => openEditModal(instance)}
-                                  disabled={!canUpdateInstances}
-                                >
-                                  <PencilIcon className="h-5 w-5" />
-                                </IconActionButton>
-                                <IconActionButton
-                                  title={
-                                    canDeleteInstances
-                                      ? t('identity:crud.delete')
-                                      : t('identity:crud.noDeletePermission')
-                                  }
-                                  onClick={() => {
-                                    setSelectedInstance(instance)
-                                    setDeleteConfirmOpen(true)
-                                  }}
-                                  disabled={!canDeleteInstances}
-                                  variant="danger"
-                                >
-                                  <TrashIcon className="h-5 w-5" />
-                                </IconActionButton>
-                              </div>
-                            </td>
-                          </tr>
+                                  {formatValue(
+                                    attr.name
+                                      ? valueAtPath(instance.data, attr.name)
+                                      : undefined
+                                  )}
+                                </td>
+                              ))}
+                              <td className="px-4 py-3">
+                                <div className="flex justify-end gap-2">
+                                  <IconActionButton
+                                    title={
+                                      canReadInstances
+                                        ? t('identity:crud.view')
+                                        : t('identity:crud.noReadPermission')
+                                    }
+                                    onClick={() => openViewModal(instance)}
+                                    disabled={!canReadInstances}
+                                  >
+                                    <EyeIcon className="h-5 w-5" />
+                                  </IconActionButton>
+                                  <IconActionButton
+                                    title={
+                                      canUpdateInstances
+                                        ? t('identity:crud.edit')
+                                        : t('identity:crud.noUpdatePermission')
+                                    }
+                                    onClick={() => openEditModal(instance)}
+                                    disabled={!canUpdateInstances}
+                                  >
+                                    <PencilIcon className="h-5 w-5" />
+                                  </IconActionButton>
+                                  <IconActionButton
+                                    title={
+                                      canDeleteInstances
+                                        ? t('identity:crud.delete')
+                                        : t('identity:crud.noDeletePermission')
+                                    }
+                                    onClick={() => {
+                                      setSelectedInstance(instance)
+                                      setDeleteConfirmOpen(true)
+                                    }}
+                                    disabled={!canDeleteInstances}
+                                    variant="danger"
+                                  >
+                                    <TrashIcon className="h-5 w-5" />
+                                  </IconActionButton>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {expanded && (
+                              <tr className="border-t border-blue-100 bg-blue-50/30 dark:border-blue-950 dark:bg-slate-900/80">
+                                <td colSpan={detailColumnCount} className="p-0">
+                                  <div className="space-y-5 px-5 py-6">
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                      <div>
+                                        <h3 className="td-panel-title !mb-0">
+                                          {modalTitle}
+                                        </h3>
+                                        <p className="td-section-subtitle mt-1">
+                                          {modalMode === 'edit'
+                                            ? t('identity:crud.editInlineDescription')
+                                            : t('identity:crud.viewInlineDescription')}
+                                        </p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        title={t('identity:crud.close')}
+                                        aria-label={t('identity:crud.close')}
+                                        onClick={closeModal}
+                                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                                      >
+                                        <XMarkIcon className="h-5 w-5" />
+                                      </button>
+                                    </div>
+
+                                    {selectedSchemaAttributes.length > 0 ? (
+                                      <DynamicEntity
+                                        entity={{
+                                          ...(selectedInstance ?? {}),
+                                          data: formData,
+                                          entityTypeName: selectedTypeName,
+                                          type: selectedTypeName,
+                                          trustdeckID:
+                                            entityId(selectedInstance) || ''
+                                        }}
+                                        schemaAttributes={selectedSchemaAttributes}
+                                        editMode={modalMode === 'edit'}
+                                        formData={formData}
+                                        onFieldChange={handleFieldChange}
+                                        showIdentifierPanel
+                                      />
+                                    ) : (
+                                      <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
+                                        {t('search:noEntitySchema')}
+                                      </p>
+                                    )}
+
+                                    <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 dark:border-slate-700">
+                                      {modalMode === 'view' &&
+                                        selectedInstance && (
+                                          <PrimaryButton
+                                            label={t('identity:crud.edit')}
+                                            onClick={() =>
+                                              openEditModal(selectedInstance)
+                                            }
+                                            disabled={!canUpdateInstances}
+                                            tooltip={
+                                              !canUpdateInstances
+                                                ? t(
+                                                    'identity:crud.noUpdatePermission'
+                                                  )
+                                                : undefined
+                                            }
+                                            icon={
+                                              <PencilIcon className="mr-1 h-5 w-5" />
+                                            }
+                                          />
+                                        )}
+                                      {modalMode === 'edit' && (
+                                        <PrimaryButton
+                                          label={t('identity:crud.save')}
+                                          onClick={handleSave}
+                                          loading={saving}
+                                          disabled={
+                                            !selectedTypeName ||
+                                            selectedSchemaAttributes.length ===
+                                              0 ||
+                                            !canUpdateInstances
+                                          }
+                                          icon={
+                                            <CheckIcon className="mr-1 h-5 w-5" />
+                                          }
+                                        />
+                                      )}
+                                      <PrimaryOutlinedButton
+                                        label={
+                                          modalMode === 'view'
+                                            ? t('identity:crud.close')
+                                            : t('identity:crud.cancel')
+                                        }
+                                        onClick={
+                                          modalMode === 'edit' &&
+                                          selectedInstance
+                                            ? () =>
+                                                openViewModal(selectedInstance)
+                                            : closeModal
+                                        }
+                                        icon={
+                                          <XMarkIcon className="mr-1 h-5 w-5" />
+                                        }
+                                        disabled={saving}
+                                      />
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
                         )
                       })}
                     </tbody>
@@ -1679,155 +1803,6 @@ export default function PreReg() {
           </div>
         )}
       </div>
-
-      <Dialog
-        visible={modalOpen && modalMode !== 'create'}
-        onHide={closeModal}
-        header={modalTitle}
-        closable
-        dismissableMask={!saving}
-        style={{
-          width: modalMode === 'create' ? '760px' : '980px',
-          maxWidth: '95vw'
-        }}
-        className="mx-auto td-identity-entity-dialog"
-      >
-        <div className="flex flex-col gap-4">
-          {selectedSchemaAttributes.length > 0 ? (
-            <DynamicEntity
-              entity={{
-                ...(selectedInstance ?? {}),
-                data: formData,
-                entityTypeName: selectedTypeName,
-                type: selectedTypeName,
-                trustdeckID: entityId(selectedInstance) || ''
-              }}
-              schemaAttributes={selectedSchemaAttributes}
-              editMode={modalMode !== 'view'}
-              formData={formData}
-              onFieldChange={handleFieldChange}
-              showIdentifierPanel={modalMode !== 'create'}
-            />
-          ) : (
-            <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
-              {t('search:noEntitySchema')}
-            </p>
-          )}
-
-          {modalMode === 'create' && linkageCandidates.length > 0 && (
-            <div className="mx-auto w-full max-w-[824px] rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
-              <h3 className="text-base font-semibold text-amber-950 dark:text-amber-100">
-                {t('identity:crud.linkageConflictTitle')}
-              </h3>
-              <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
-                {t('identity:crud.linkageConflictText', {
-                  count: linkageCandidates.length
-                })}
-              </p>
-              <div className="mt-4 overflow-x-auto rounded-lg border border-amber-200 bg-white dark:border-amber-900 dark:bg-slate-950">
-                <table className="w-full min-w-[680px] text-left text-sm">
-                  <thead className="bg-amber-100/70 text-amber-950 dark:bg-amber-950/60 dark:text-amber-100">
-                    <tr>
-                      <th className="px-3 py-2 font-semibold">
-                        {t('identity:crud.identifier')}
-                      </th>
-                      <th className="px-3 py-2 font-semibold">
-                        {t('identity:crud.linkageScore')}
-                      </th>
-                      <th className="px-3 py-2 font-semibold">
-                        {t('identity:crud.linkageStatus')}
-                      </th>
-                      <th className="px-3 py-2 font-semibold">
-                        {t('identity:crud.linkageMatchedOn')}
-                      </th>
-                      <th className="w-16 px-3 py-2" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-amber-100 dark:divide-amber-950">
-                    {linkageCandidates.map((candidate, index) => (
-                      <tr
-                        key={`${entityId(candidate.entityInstance)}-${index}`}
-                      >
-                        <td className="px-3 py-2 font-mono">
-                          {entityId(candidate.entityInstance) || '—'}
-                        </td>
-                        <td className="px-3 py-2">
-                          {(
-                            Number(candidate.normalizedScore ?? 0) * 100
-                          ).toLocaleString(i18n.language, {
-                            maximumFractionDigits: 2
-                          })}
-                          %
-                        </td>
-                        <td className="px-3 py-2">
-                          {candidate.candidateStatus ?? '—'}
-                        </td>
-                        <td className="px-3 py-2">
-                          {(candidate.matchedOn ?? []).join(', ') || '—'}
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <IconActionButton
-                            title={t('identity:crud.viewCandidate')}
-                            onClick={() =>
-                              setSelectedLinkageCandidate(candidate)
-                            }
-                          >
-                            <EyeIcon className="h-5 w-5" />
-                          </IconActionButton>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          <div className="mx-auto flex w-full max-w-[824px] justify-end gap-2">
-            {modalMode === 'view' && selectedInstance && (
-              <PrimaryButton
-                label={t('identity:crud.edit')}
-                onClick={() => openEditModal(selectedInstance)}
-                disabled={!canUpdateInstances}
-                tooltip={
-                  !canUpdateInstances
-                    ? t('identity:crud.noUpdatePermission')
-                    : undefined
-                }
-                icon={<PencilIcon className="h-5 w-5 mr-1" />}
-              />
-            )}
-            {modalMode !== 'view' && (
-              <PrimaryButton
-                label={
-                  modalMode === 'create'
-                    ? t('identity:crud.create')
-                    : t('identity:crud.save')
-                }
-                onClick={handleSave}
-                loading={saving}
-                disabled={
-                  !selectedTypeName ||
-                  selectedSchemaAttributes.length === 0 ||
-                  (modalMode === 'create' && !canCreateInstances) ||
-                  (modalMode === 'edit' && !canUpdateInstances)
-                }
-                icon={<CheckIcon className="h-5 w-5 mr-1" />}
-              />
-            )}
-            <PrimaryOutlinedButton
-              label={
-                modalMode === 'view'
-                  ? t('identity:crud.close')
-                  : t('identity:crud.cancel')
-              }
-              onClick={closeModal}
-              icon={<XMarkIcon className="h-5 w-5 mr-1" />}
-              disabled={saving}
-            />
-          </div>
-        </div>
-      </Dialog>
 
       <Dialog
         visible={Boolean(selectedLinkageCandidate)}

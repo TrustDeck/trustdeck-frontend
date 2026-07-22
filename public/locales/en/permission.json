@@ -6,25 +6,27 @@
     "full": "Full Access"
   },
   "currentUser": "Current user",
-  "title": "Permission Management",
-  "intro": "Review your rights and grant or revoke scoped permissions for other users.",
+  "title": "Permissions",
+  "intro": "Inspect and manage project and pseudonym-domain permissions for the selected project.",
   "currentAccess": "Your current rights",
   "keycloakRoles": "Keycloak roles in token",
   "effectivePermissions": "Effective TrustDeck permissions",
   "grantOrRevoke": "Grant or revoke permissions",
-  "searchHelp": "Search for a user and adjust their global, project, and group permissions across all scopes you are allowed to manage.",
+  "searchHelp": "Search for a user and adjust only the permissions you are allowed to delegate.",
   "globalPermissions": "Global permissions",
-  "projectAndGroupPermissionsFor": "Project and group permissions for {{project}}",
-  "selectProjectFirst": "Select a project first to manage project and group permissions here.",
+  "projectAndGroupPermissionsFor": "Project and pseudonym-domain permissions for {{project}}",
+  "selectProjectFirst": "Select a project first to manage project and pseudonym-domain permissions.",
   "grantedCount": "{{count}} granted",
   "missingCount": "{{count}} not granted",
   "scope": {
     "global": "Global permissions",
     "project": "Project",
-    "group": "Group",
+    "group": "Pseudonym domain",
     "permissions": "Permissions",
     "projectPermissions": "Project-specific permissions",
-    "groupPermissions": "Group-specific permissions"
+    "groupPermissions": "Pseudonym-domain permissions",
+    "domain": "Pseudonym domain",
+    "selectScope": "Project or pseudonym domain"
   },
   "status": {
     "granted": "Granted",
@@ -36,23 +38,28 @@
     "noTokenRoles": "No roles were present in the current access token.",
     "noGrantedInScope": "No rights are currently granted in this section.",
     "noMissingInScope": "All rights in this section are currently granted.",
-    "noProjectOrGroupRows": "No project or group permission definitions are available for this project.",
+    "noProjectOrGroupRows": "No project or pseudonym-domain permission definitions are available for this project.",
     "missingRightsUnavailable": "Permission definitions are currently unavailable, so only granted rights can be shown. Missing rights cannot be calculated yet.",
     "missingRightsUnavailableShort": "Missing rights cannot be calculated until permission definitions are available.",
-    "noProjectOrGroupRowsAll": "No project or group permission definitions are available.",
+    "noProjectOrGroupRowsAll": "No project or pseudonym-domain permission definitions are available.",
     "noProjectRows": "No project-specific permission definitions are available.",
-    "noGroupRows": "No group-specific permission definitions are available."
+    "noGroupRows": "No pseudonym-domain permission definitions are available.",
+    "noRightsInScope": "You do not currently hold any rights in this scope.",
+    "noManageableRights": "There are no rights in this scope that you are allowed to grant or revoke."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",
-    "permissionDefinitions": "Loading permission definitions..."
+    "permissionDefinitions": "Loading permission definitions...",
+    "selectedUserPermissions": "Loading the selected user’s permissions..."
   },
   "errors": {
     "effectiveForbidden": "Your current account is not allowed to read effective TrustDeck permissions from the backend.",
     "effectiveError": "Effective TrustDeck permissions could not be loaded.",
     "definitionsForbidden": "Permission definitions are currently not available because you do not have the necessary role to view and/or edit permissions.",
     "retryExplanation": "Refresh the access token and retry if your permissions were changed recently.",
-    "definitionsError": "Permission definitions could not be loaded. Please check the backend logs or try again later."
+    "definitionsError": "Permission definitions could not be loaded. Please check the backend logs or try again later.",
+    "usingHeldRightsOnly": "The complete permission catalogue is not available. Only rights you currently hold are shown and can be delegated.",
+    "selectedUserPermissions": "The selected user’s permissions could not be loaded for this scope."
   },
   "actions": {
     "refreshing": "Refreshing...",
@@ -60,7 +67,8 @@
     "retrying": "Retrying...",
     "retry": "Retry",
     "saving": "Saving...",
-    "savePermissions": "Save permissions"
+    "savePermissions": "Save permissions",
+    "useUserId": "Use user ID"
   },
   "toast": {
     "permissionsRefreshed": "Permissions refreshed",
@@ -82,7 +90,7 @@
       "instance": "Instance"
     },
     "group": {
-      "domain": "Group",
+      "domain": "Pseudonym domain",
       "pseudonym": "Pseudonym",
       "pseudonym-batch": "Pseudonym batch"
     }
@@ -91,7 +99,14 @@
     "grantedRights": "Granted rights",
     "missingRights": "Rights not granted"
   },
-  "allProjectAndGroupPermissions": "All project and group permissions",
+  "allProjectAndGroupPermissions": "All project and pseudonym-domain permissions",
   "selectedUserRoles": "Roles for selected user",
-  "assignmentNote": "Permissions can only be assigned for one project or group at a time. You can only grant rights that you already hold yourself; privilege escalation is not permitted."
+  "assignmentNote": "Permissions are assigned for one project or pseudonym domain at a time. You can only grant rights that you already hold yourself; privilege escalation is not permitted.",
+  "projectDomainTitle": "Permissions",
+  "projectDomainIntro": "Inspect your project and pseudonym-domain rights and assign rights you already hold to other users.",
+  "globalBoxTitle": "Global permissions",
+  "globalBoxSubtitle": "Inspect and manage global rights that apply across TrustDeck.",
+  "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
+  "projectDomainSearchHelp": "Search for a user, select one project or pseudonym domain, and grant or revoke rights that you already hold yourself.",
+  "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly."
 }

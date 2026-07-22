@@ -148,8 +148,8 @@
     "idType": "ID-Typ",
     "createdOn": "Erstellt am:",
     "expiresOn": "Läuft ab am:",
-    "parentGroup": "Übergeordnete Gruppe",
-    "group": "Gruppe",
+    "parentGroup": "Übergeordnete Pseudonym-Domäne",
+    "group": "Pseudonym-Domäne",
     "validFrom": "Gültig ab",
     "validFromInherited": "Gültig ab geerbt",
     "validTo": "Gültig bis",
@@ -162,18 +162,19 @@
     "deleteSuccess": "Pseudonym wurde erfolgreich gelöscht.",
     "deleteFailed": "Pseudonym konnte nicht gelöscht werden.",
     "confirmDeleteText": "Das ausgewählte Pseudonym wird gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
-    "inheritedTooltip": "Aus der Gruppenkonfiguration geerbt.",
+    "inheritedTooltip": "Aus der Konfiguration der Pseudonym-Domäne übernommen.",
     "inherited": "Geerbt",
     "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden.",
-    "searchHint": "Geben Sie ein Pseudonym ein und wählen Sie die Gruppe aus, in der gesucht werden soll.",
-    "searchInputPlaceholder": "Pseudonym, Identifier oder ID-Typ"
+    "searchHint": "Geben Sie ein Pseudonym ein und wählen Sie die Pseudonym-Domäne, in der gesucht werden soll.",
+    "searchInputPlaceholder": "Pseudonym, Identifier oder ID-Typ",
+    "domain": "Pseudonym-Domäne"
   },
   "group": {
-    "title": "Gruppe",
-    "placeholder": "Gruppe",
-    "help": "Geben Sie eine Gruppe ein",
-    "error": "Ungültige Gruppe",
-    "searchHint": "Geben Sie einen Gruppennamen ein, um danach zu suchen."
+    "title": "Pseudonym-Domäne",
+    "placeholder": "Pseudonym-Domäne",
+    "help": "Pseudonym-Domäne auswählen",
+    "error": "Ungültige Pseudonym-Domäne",
+    "searchHint": "Geben Sie den Namen einer Pseudonym-Domäne ein, um danach zu suchen."
   },
   "headers": {
     "personalData": "Stammdaten",
@@ -217,7 +218,7 @@
     "previous": "Vorherige Seite",
     "next": "Nächste Seite",
     "pageOf": "Seite {{page}} von {{pages}}",
-    "resultsPerPage": "Ergebnisse pro Seite"
+    "resultsPerPage": "Angezeigte Ergebnisse"
   },
   "resultNumber": "Nr.",
   "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus."

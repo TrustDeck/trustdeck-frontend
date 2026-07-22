@@ -1,3 +1,20 @@
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { CustomTreeNode, GroupStoredAttributes } from '../types/CustomTreeNode'
 import TrustDeck from '@service/TrustDeck'
 import type { Domain } from '../../../core/types/Domain'
@@ -5,13 +22,15 @@ import {
   characters,
   CUSTOM_ALPHABET_VALUE,
   getAlphabetKeyByCharacters
-} from '../utils/alphabetOptions.ts'
+} from '../utils/alphabetOptions'
 
+/** Represents the nested domain response returned by the hierarchy API. */
 type DomainTreeDto = {
   domain?: Domain
   children?: DomainTreeDto[]
 }
 
+/** Formats an API date for the editable domain form. */
 const formatDate = (dateString?: string | null): string => {
   if (!dateString) return ''
   const date = new Date(dateString)
@@ -25,11 +44,13 @@ const formatDate = (dateString?: string | null): string => {
   return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`
 }
 
+/** Preserves optional numeric form values as strings. */
 const numberToString = (value?: number | string | null): string | undefined => {
   if (value === null || value === undefined || value === '') return undefined
   return String(value)
 }
 
+/** Maps an API domain to the group form's stored representation. */
 const normalizeDomain = (
   g: Domain,
   superDomainName?: string | null
@@ -78,6 +99,7 @@ const normalizeDomain = (
   }
 }
 
+/** Converts supported date input formats to a valid local ISO date-time. */
 const toLocalDateTime = (input?: string | null): string | null => {
   if (!input) return null
   const raw = input.trim()
@@ -113,6 +135,7 @@ const toLocalDateTime = (input?: string | null): string | null => {
   return Number.isNaN(new Date(candidate).getTime()) ? null : candidate
 }
 
+/** Parses locale-formatted numbers used by the group form. */
 const toNumberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number') return Number.isNaN(value) ? null : value
@@ -128,6 +151,7 @@ const toNumberOrNull = (value: unknown): number | null => {
   return Number.isNaN(parsed) ? null : parsed
 }
 
+/** Parses a finite decimal probability from a form value. */
 const toDecimalNumberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
@@ -144,6 +168,7 @@ const toDecimalNumberOrNull = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+/** Converts form data to the domain API payload and omits empty values. */
 const mapDomain = (payload: GroupStoredAttributes): any => {
   const alphabet =
     payload.alphabet === CUSTOM_ALPHABET_VALUE
@@ -192,6 +217,7 @@ const mapDomain = (payload: GroupStoredAttributes): any => {
   return out
 }
 
+/** Converts a nested domain response to the editable tree shape. */
 const mapTree = (
   item: DomainTreeDto,
   idx: string,
@@ -217,6 +243,7 @@ const mapTree = (
   }
 }
 
+/** Converts a flat domain response to a tree node. */
 const mapFlatDomainToNode = (domain: Domain, idx: string): CustomTreeNode => {
   const stored = normalizeDomain(domain, domain.superDomainName)
   return {
@@ -232,6 +259,7 @@ const mapFlatDomainToNode = (domain: Domain, idx: string): CustomTreeNode => {
   }
 }
 
+/** Flattens an editable domain tree to its backing domain records. */
 const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
   const out: Domain[] = []
   const walk = (node: CustomTreeNode) => {
@@ -244,6 +272,7 @@ const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
   return out
 }
 
+/** Provides domain-group operations and request/response mapping. */
 const GroupService = {
   normalizeGroup: (group: Domain, superDomainName?: string | null) =>
     normalizeDomain(group, superDomainName),

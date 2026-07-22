@@ -1,3 +1,20 @@
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
@@ -34,8 +51,8 @@ import type {
   EffectivePermission,
   GlobalPermissionUpdate,
   ProjectPermissionUpdate
-} from '../project/types'
-import { permissionKey } from '../project/utils/permissionRows'
+} from './types/Permission'
+import { permissionKey } from './utils/permissionRows'
 import {
   DOMAIN_SUBGROUP_LABELS,
   DOMAIN_SUBGROUP_ORDER,
@@ -43,8 +60,9 @@ import {
   PROJECT_SUBGROUP_ORDER,
   domainPermissionSubgroup,
   projectPermissionSubgroup
-} from '../project/utils/permissionSubgroups'
+} from './utils/permissionSubgroups'
 
+/** Selects the permission scopes available in the view. */
 export type PermissionScopeMode = 'global' | 'project-domain'
 
 type ScopedPermissionsProps = {
@@ -464,6 +482,7 @@ function GrantedPermissionList({
   )
 }
 
+/** Displays and updates permission grants for the selected scope and operator. */
 export default function GlobalPermissions({
   scopeMode = 'project-domain',
   embedded = false

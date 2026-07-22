@@ -1,4 +1,4 @@
-import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
+import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import { AttributeType, useEntityTypeStore } from '../stores/EntityTypeStore'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'

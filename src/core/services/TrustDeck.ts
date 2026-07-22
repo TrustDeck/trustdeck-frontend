@@ -1,13 +1,32 @@
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { Operator, Permission } from 'core/types/Permission'
 import { Domain } from '../types/Domain'
 import { ProjectType } from '../../pages/projects/types/ProjectType'
-import useProjectStore from '../stores/ProjectStore.ts'
-import { PersonType } from '../types/PersonEntity.ts'
-import { BioSampleEntity } from 'core/types/BioSampleEntity.ts'
-import { Pseudonym } from '../../core/types/Pseudonym.ts'
+import useProjectStore from '../stores/ProjectStore'
+import { PersonType } from '../types/PersonEntity'
+import { BioSampleEntity } from 'core/types/BioSampleEntity'
+import { Pseudonym } from '../../core/types/Pseudonym'
 
+/** Identifies an HTTP method supported by the API client. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
+/** Represents a failed API response, including its status and body. */
 export class TrustDeckHttpError extends Error {
   status: number
   body: string
@@ -19,16 +38,20 @@ export class TrustDeckHttpError extends Error {
     this.body = body
   }
 }
+
+/** Represents supported URL query parameter values. */
 export type QueryParams = Record<
   string,
   string | number | boolean | null | undefined
 >
 
+/** Identifies an external identifier and its type. */
 export type IdentifierItem = {
   identifier: string
   idType: string
 }
 
+/** Defines the request payload for creating a pseudonym. */
 export type PseudonymCreatePayload = {
   identifierItem: IdentifierItem
   psn?: string
@@ -38,6 +61,7 @@ export type PseudonymCreatePayload = {
   omitPrefix?: boolean
 }
 
+/** Defines the request payload for updating a pseudonym. */
 export type PseudonymUpdatePayload = {
   oldIdentifierItem?: IdentifierItem
   oldPsn?: string
@@ -51,6 +75,7 @@ export type PseudonymUpdatePayload = {
   newDomainName?: string
 }
 
+/** Defines an entity type configuration sent to the API. */
 export type EntityTypePayload = {
   name: string
   version: string
@@ -62,10 +87,12 @@ export type EntityTypePayload = {
   projectName?: string
 }
 
+/** Defines an entity instance payload sent to the API. */
 export type EntityInstancePayload = {
   data: unknown
 }
 
+/** Contains a created entity and whether the API created a new record. */
 export type EntityCreationResult<T = Record<string, any>> = {
   entity: T
   created: boolean
@@ -116,6 +143,11 @@ export type TableStorageInfo = {
   [key: string]: unknown
 }
 
+/**
+ * Central, authenticated client for the TrustDeck backend API.
+ *
+ * The client is a singleton because all feature services must share the active token.
+ */
 class TrustDeck {
   private static thisInstance: TrustDeck
   private token = ''
@@ -130,6 +162,7 @@ class TrustDeck {
     this.baseUrl = baseUrl.replace(/\/+$/, '')
   }
 
+  /** Returns the shared API client instance. */
   public static instance(): TrustDeck {
     if (!TrustDeck.thisInstance) {
       TrustDeck.thisInstance = new TrustDeck()
@@ -137,34 +170,41 @@ class TrustDeck {
     return TrustDeck.thisInstance
   }
 
+  /** Sets the bearer token used by subsequent API requests. */
   public setToken(token: string) {
     this.token = token
   }
 
+  /** Removes the bearer token after logout or session expiry. */
   public clearToken() {
     this.token = ''
   }
 
+  /** Indicates whether an API token is currently available. */
   public hasAccessToken() {
     return Boolean(this.token)
   }
 
+  /** Returns the current bearer token. */
   public getAccessToken() {
     return this.token
   }
 
+  /** Throws before an authenticated request is sent without a token. */
   private requireAccessToken() {
     if (!this.token) {
       throw new Error('No access token available; backend request was not sent')
     }
   }
 
+  /** Returns the abbreviation of the project currently selected in the store. */
   private getSelectedProjectName(): string {
     const selectedProject = useProjectStore.getState().selectedProject
     if (!selectedProject) throw new Error('No project selected')
     return selectedProject.abbreviation
   }
 
+  /** Builds an API URL and omits empty optional query parameters. */
   private buildUrl(path: string, params?: QueryParams): URL {
     const url = new URL(
       `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`
@@ -179,6 +219,7 @@ class TrustDeck {
     return url
   }
 
+  /** Parses a successful API response according to its content type. */
   private async parseResponse<T>(res: Response): Promise<T> {
     if (res.status === 204) return {} as T
 
@@ -192,6 +233,7 @@ class TrustDeck {
     return text as T
   }
 
+  /** Extracts an array from the response envelopes used by the backend. */
   private asArray<T>(value: unknown): T[] {
     if (Array.isArray(value)) return value as T[]
     if (value === null || value === undefined) return []
@@ -205,6 +247,7 @@ class TrustDeck {
     return []
   }
 
+  /** Sends an authenticated JSON request and keeps the response status. */
   private async requestWithStatus<T>(
     method: HttpMethod,
     path: string,
@@ -239,6 +282,7 @@ class TrustDeck {
     }
   }
 
+  /** Sends an authenticated JSON request and returns its response data. */
   private async request<T>(
     method: HttpMethod,
     path: string,
@@ -248,6 +292,7 @@ class TrustDeck {
     return (await this.requestWithStatus<T>(method, path, body, params)).data
   }
 
+  /** Sends an authenticated multipart request without overriding its boundary. */
   private async multipartRequest<T>(
     method: 'POST' | 'PUT',
     path: string,

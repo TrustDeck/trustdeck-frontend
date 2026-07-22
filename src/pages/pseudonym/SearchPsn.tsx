@@ -31,7 +31,7 @@ import {
   formatDisplayValue,
   readDisplayValue
 } from '../search/utils/entityDisplay'
-import GroupService from '../groups/service/GroupService'
+import GroupService from '../groups/services/GroupService'
 import useGroupStore from './stores/GroupStore'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import useStepperControlStore from './stores/StepperControlStore'

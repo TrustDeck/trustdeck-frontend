@@ -1,9 +1,28 @@
-import type { DefinedPermission, EffectivePermission } from '../types'
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+import type { DefinedPermission, EffectivePermission } from '../types/Permission'
+
+/** Returns a stable identifier for a permission in a resource scope. */
 export function permissionKey(p: EffectivePermission): string {
   return `${p.resourceType}:${p.resourceName ?? '*'}:${p.action}`
 }
 
+/** Filters effective permissions to the selected project and its domains. */
 export function filterEffectivePermissions(
   effective: EffectivePermission[] | undefined,
   projectAbbreviation: string | undefined,
@@ -22,6 +41,7 @@ export function filterEffectivePermissions(
   })
 }
 
+/** Builds the complete, deduplicated set of permissions for a project scope. */
 export function buildAllPermissionRows(
   definedPermissions: DefinedPermission[],
   selectedProjectAbbreviation: string | undefined,
@@ -73,6 +93,7 @@ export function buildAllPermissionRows(
   return Array.from(unique.values())
 }
 
+/** Groups permissions by their resource type and resource name. */
 export function groupPermissionsByScope(
   rows: EffectivePermission[]
 ): Record<string, EffectivePermission[]> {

@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
-import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
+import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import { ProgressSpinner } from 'primereact/progressspinner'
-import GroupService from '../service/GroupService.tsx'
-import GroupForm from './GroupForm.tsx'
+import GroupService from '../services/GroupService'
+import GroupForm from './GroupForm'
 import { useTreeStateStore } from '../stores/TreeStateStore'
-import ConfirmDialog from '../../../core/components/common/ConfirmDialog.tsx'
-import useToastStore from '../../../core/stores/ToastStore.ts'
-import { findNodeByKey } from '../utils/findNodeByKey.ts'
+import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
+import useToastStore from '../../../core/stores/ToastStore'
+import { findNodeByKey } from '../utils/findNodeByKey'
 
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 

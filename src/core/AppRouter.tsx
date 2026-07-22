@@ -1,3 +1,20 @@
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {
   Routes,
   Route,
@@ -10,21 +27,22 @@ import Layout from './components/common/Layout'
 import { useAuth } from 'react-oidc-context'
 import { FC, useEffect, useRef } from 'react'
 import { routes } from './configs/routes'
-import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
-import useUserStore from './stores/UserStore.tsx' // Import the UserStore
+import useLayoutStore from './stores/LayoutStore'
+import useUserStore from './stores/UserStore'
 import TrustDeck from '@service/TrustDeck'
-import { useSyncApiToken } from './services/setupApi.ts'
-import { refreshAccessTokenForNavigation } from './services/tokenRefresh.ts'
+import { useSyncApiToken } from './services/setupApi'
+import { refreshAccessTokenForNavigation } from './services/tokenRefresh'
 import RequireProject from './components/routing/RequireProject'
 import { hasValidOidcUser, isMarkedLoggedOut, isTimestampExpired, markLoggedOut } from './services/authSession'
 
-// Higher-Order Component to handle protected routes dynamically
+/** Defines the authentication state needed to render a route. */
 interface ProtectedRouteProps {
   checkAuth: boolean
   component: FC
   isProtected: boolean
 }
 
+/** Renders a route only when the current OIDC or persisted session is valid. */
 const ProtectedRoute: FC<ProtectedRouteProps> = ({
   checkAuth,
   component: Component,
@@ -58,6 +76,7 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
 }
 
 
+/** Refreshes the access token when the user changes between main application areas. */
 const TokenRefreshOnMainNavigation: React.FC = () => {
   const auth = useAuth()
   const location = useLocation()
@@ -76,10 +95,11 @@ const TokenRefreshOnMainNavigation: React.FC = () => {
   return null
 }
 
+/** Synchronizes token expiry and cross-tab authentication state with routing. */
 const AuthStateListener: React.FC = () => {
-  const navigate = useNavigate() // Initialize useNavigate
+  const navigate = useNavigate()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const isTabActive = useLayoutStore((state) => state.isTabActive) // Use isTabActive from LayoutStore
+  const isTabActive = useLayoutStore((state) => state.isTabActive)
   const location = useLocation()
   const auth = useAuth()
   const hadLiveSessionRef = useRef(false)
@@ -126,18 +146,17 @@ const AuthStateListener: React.FC = () => {
     return () => unsubscribe()
   }, [isAuthenticated, isTabActive, location, navigate])
 
-  // Listen for token expiration warnings - automaticSilentRenew should handle refresh before this
+  // OIDC renews proactively; this listener registers the lifecycle event intentionally.
   useEffect(() => {
     const handleTokenExpiring = () => {
-      // Token is about to expire - automaticSilentRenew should refresh it
-      // This event helps ensure we're aware of refresh attempts
+      // `automaticSilentRenew` performs the refresh; registering keeps the event lifecycle explicit.
     }
 
     const unsubscribeExpiring = auth.events.addAccessTokenExpiring(handleTokenExpiring)
     return () => unsubscribeExpiring()
   }, [auth.events])
 
-  //this mavigates every tab as soon as the token is expired for any reason and then performs the logout in each tab. while the "real" logout itself only happens in the active tab
+  // Every tab routes to the logged-out view; only the active tab starts provider logout.
   useEffect(() => {
     // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
@@ -156,6 +175,7 @@ const AuthStateListener: React.FC = () => {
   return null
 }
 
+/** Mounts application routes and the authentication lifecycle listeners. */
 const AppRouter: FC = () => {
   useSyncApiToken()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)

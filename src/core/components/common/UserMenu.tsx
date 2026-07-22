@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Avatar } from 'primereact/avatar'
-import useUserStore from '../../stores/UserStore.tsx'
-import { oidcConfig } from '../../configs/oidc.ts'
+import useUserStore from '../../stores/UserStore'
+import { oidcConfig } from '../../configs/oidc'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowTopRightOnSquareIcon, MoonIcon, SunIcon } from '@heroicons/react/24/outline'
-import { markLoggedOut } from '../../services/authSession.ts'
+import { markLoggedOut } from '../../services/authSession'
 
 function getInitials(name: string | undefined, email?: string) {
   const source = (name && name.trim()) || email || ''

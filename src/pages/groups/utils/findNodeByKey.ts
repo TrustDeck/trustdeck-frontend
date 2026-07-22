@@ -1,5 +1,5 @@
 //May cut this to utilitites
-import { CustomTreeNode } from '../types/CustomTreeNode.ts'
+import { CustomTreeNode } from '../types/CustomTreeNode'
 export function findNodeByKey(
   nodes: any[] | undefined,
   key?: string | null

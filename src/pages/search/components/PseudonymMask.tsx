@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import CustomDropdown from '@component/form/CustomDropdown'
-import GroupService from '../../groups/service/GroupService'
+import GroupService from '../../groups/services/GroupService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
 import usePseudonymStore from '../stores/PseudonymSearchResults'

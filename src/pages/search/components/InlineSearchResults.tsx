@@ -99,27 +99,12 @@ function Pagination({
   )
     return null
 
-  return (
-    <div className="flex flex-wrap items-center justify-center gap-4 border-t border-gray-200 px-5 py-4 dark:border-slate-700">
-      {(alwaysShowPageSize || pageSizeOptions.length > 1) && (
-        <label className="flex items-center gap-2 text-base font-medium text-gray-700 dark:text-gray-200">
-          <span>{t('pagination.resultsPerPage')}</span>
-          <select
-            value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-          >
-            {pageSizeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+  const showPageSize = alwaysShowPageSize || pageSizeOptions.length > 1
 
+  return (
+    <div className="grid grid-cols-1 items-center gap-4 px-5 py-4 sm:grid-cols-[1fr_auto_1fr]">
       {pageCount > 1 && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-self-center gap-3 sm:col-start-2">
           <button
             type="button"
             title={t('pagination.previous')}
@@ -144,6 +129,23 @@ function Pagination({
             <ChevronRightIcon className="h-5 w-5" />
           </button>
         </div>
+      )}
+
+      {showPageSize && (
+        <label className="flex items-center justify-self-end gap-2 text-base font-medium text-gray-700 dark:text-gray-200 sm:col-start-3">
+          <span>{t('pagination.resultsPerPage')}</span>
+          <select
+            value={pageSize}
+            onChange={(event) => onPageSizeChange(Number(event.target.value))}
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+          >
+            {pageSizeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
     </div>
   )
@@ -396,6 +398,7 @@ export function InlineEntityResults({
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
+        alwaysShowPageSize
         onPageSizeChange={(nextPageSize) => {
           setPageSize(nextPageSize)
           setPage(0)

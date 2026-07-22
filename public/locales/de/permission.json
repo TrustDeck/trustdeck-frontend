@@ -26,7 +26,9 @@
     "projectPermissions": "Projektspezifische Berechtigungen",
     "groupPermissions": "Berechtigungen für Pseudonym-Domänen",
     "domain": "Pseudonym-Domäne",
-    "selectScope": "Projekt oder Pseudonym-Domäne"
+    "selectScope": "Projekt oder Pseudonym-Domäne",
+    "selectDescription": "Wählen Sie den Projektbereich oder suchen und wählen Sie eine Pseudonym-Domäne aus.",
+    "projectCardDescription": "Berechtigungen verwalten, die für das ausgewählte Projekt gelten."
   },
   "status": {
     "granted": "Vergeben",
@@ -68,7 +70,11 @@
     "retry": "Erneut versuchen",
     "saving": "Speichern...",
     "savePermissions": "Berechtigungen speichern",
-    "useUserId": "Benutzer-ID verwenden"
+    "useUserId": "Benutzer-ID verwenden",
+    "editPermissions": "Berechtigungen bearbeiten",
+    "cancelEditing": "Abbrechen",
+    "clickToGrant": "Zum Vergeben auswählen",
+    "clickToRevoke": "Zum Entziehen auswählen"
   },
   "toast": {
     "permissionsRefreshed": "Berechtigungen aktualisiert",
@@ -109,5 +115,24 @@
   "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
   "projectDomainSearchHelp": "Suchen Sie nach einem Benutzer, wählen Sie ein Projekt oder eine Pseudonym-Domäne und vergeben oder entziehen Sie nur eigene Rechte.",
   "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden.",
-  "selectedUserPrefix": "Aktuell ausgewählter Benutzer für die Vergabe / den Entzug von Berechtigungen:"
+  "selectedUserPrefix": "Ausgewählter Benutzer:",
+  "mode": {
+    "view": "Nur anzeigen",
+    "edit": "Bearbeitung"
+  },
+  "viewModeHint": "Die Berechtigungen werden schreibgeschützt angezeigt. Wählen Sie „Berechtigungen bearbeiten“, um Änderungen vorzunehmen.",
+  "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen.",
+  "domainSearch": {
+    "label": "Pseudonym-Domänen suchen",
+    "placeholder": "Mindestens zwei Zeichen oder * eingeben",
+    "loading": "Pseudonym-Domänen werden gesucht...",
+    "searchFailed": "Pseudonym-Domänen konnten nicht gesucht werden.",
+    "enterMoreCharacters": "Geben Sie mindestens zwei Zeichen ein oder verwenden Sie *, um alle verfügbaren Domänen anzuzeigen.",
+    "noResults": "Keine verwaltbare Pseudonym-Domäne entspricht dieser Suche.",
+    "resultCount": "{{count}} Domänen-Treffer",
+    "resultCount_other": "{{count}} Domänen-Treffer",
+    "page": "Seite {{page}} von {{pageCount}}",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite"
+  }
 }

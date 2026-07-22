@@ -26,7 +26,9 @@
     "projectPermissions": "Project-specific permissions",
     "groupPermissions": "Pseudonym-domain permissions",
     "domain": "Pseudonym domain",
-    "selectScope": "Project or pseudonym domain"
+    "selectScope": "Project or pseudonym domain",
+    "selectDescription": "Choose the project scope or search and select a pseudonym domain.",
+    "projectCardDescription": "Manage permissions that apply to the selected project."
   },
   "status": {
     "granted": "Granted",
@@ -68,7 +70,11 @@
     "retry": "Retry",
     "saving": "Saving...",
     "savePermissions": "Save permissions",
-    "useUserId": "Use user ID"
+    "useUserId": "Use user ID",
+    "editPermissions": "Edit permissions",
+    "cancelEditing": "Cancel",
+    "clickToGrant": "Select to grant",
+    "clickToRevoke": "Select to revoke"
   },
   "toast": {
     "permissionsRefreshed": "Permissions refreshed",
@@ -109,5 +115,24 @@
   "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
   "projectDomainSearchHelp": "Search for a user, select one project or pseudonym domain, and grant or revoke rights that you already hold yourself.",
   "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly.",
-  "selectedUserPrefix": "Currently selected user for granting / revoking permissions:"
+  "selectedUserPrefix": "Selected user:",
+  "mode": {
+    "view": "View only",
+    "edit": "Editing"
+  },
+  "viewModeHint": "Permissions are shown read-only. Select Edit permissions to make changes.",
+  "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving.",
+  "domainSearch": {
+    "label": "Search pseudonym domains",
+    "placeholder": "Enter at least two characters or *",
+    "loading": "Searching pseudonym domains...",
+    "searchFailed": "Pseudonym domains could not be searched.",
+    "enterMoreCharacters": "Enter at least two characters or use * to show all available domains.",
+    "noResults": "No manageable pseudonym domains match this search.",
+    "resultCount": "{{count}} domain result",
+    "resultCount_other": "{{count}} domain results",
+    "page": "Page {{page}} of {{pageCount}}",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  }
 }

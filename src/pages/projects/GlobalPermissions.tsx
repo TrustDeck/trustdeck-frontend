@@ -7,14 +7,18 @@ import {
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
 import {
+  CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  PencilSquareIcon,
+  XCircleIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
 
 import Panel from '@component/common/Panel'
 import PageHeader from '@component/common/PageHeader'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
+import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import TrustDeck, { TrustDeckHttpError } from '../../core/services/TrustDeck'
 import { refreshAccessTokenForNavigation } from '../../core/services/tokenRefresh'
@@ -31,6 +35,7 @@ import type {
   ProjectPermissionUpdate
 } from '../project/types'
 import { permissionKey } from '../project/utils/permissionRows'
+import DomainPermissionSearch from './components/DomainPermissionSearch'
 import {
   DOMAIN_SUBGROUP_LABELS,
   DOMAIN_SUBGROUP_ORDER,
@@ -216,22 +221,6 @@ function scopeLabel(
   return `${t('scope.domain')}: ${option.resourceName || '—'}`
 }
 
-function PermissionStatusBadge({ granted }: { granted: boolean }) {
-  const { t } = useTranslation('permission')
-
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-        granted
-          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
-          : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
-      }`}
-    >
-      {granted ? t('status.granted') : t('status.notGranted')}
-    </span>
-  )
-}
-
 function PermissionRows({
   rows,
   grantedPermissions,
@@ -247,6 +236,8 @@ function PermissionRows({
   onChange?: (key: string, checked: boolean) => void
   emptyText: string
 }) {
+  const { t } = useTranslation('permission')
+
   if (!rows.length) {
     return (
       <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
@@ -256,7 +247,7 @@ function PermissionRows({
   }
 
   return (
-    <ul className="divide-y divide-gray-200 dark:divide-slate-700">
+    <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
       {rows.map((permission) => {
         const key = permissionKey(permission)
         const checked = editable
@@ -264,35 +255,58 @@ function PermissionRows({
           : permissionIsGranted(grantedPermissions, permission)
 
         return (
-          <li key={key}>
-            <label
-              className={`flex items-center justify-between gap-4 px-1 py-3 transition ${
-                editable
-                  ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/60'
-                  : ''
+          <label
+            key={key}
+            className={`flex min-h-36 flex-col rounded-xl border p-4 transition ${
+              editable
+                ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus-within:ring-2 focus-within:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
+                : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950'
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              disabled={!editable}
+              onChange={(event) => onChange?.(key, event.target.checked)}
+              className="sr-only"
+            />
+
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-semibold text-gray-900 dark:text-gray-100">
+                {formatPermissionAction(permission.action)}
+              </span>
+              <span className="mt-1 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
+                {permission.action}
+              </span>
+            </span>
+
+            <span
+              className={`mt-4 flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
+                checked
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100'
+                  : 'border-gray-300 bg-white text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200'
               }`}
             >
-              <input
-                type="checkbox"
-                checked={checked}
-                disabled={!editable}
-                onChange={(event) => onChange?.(key, event.target.checked)}
-                className="sr-only"
-              />
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  {formatPermissionAction(permission.action)}
-                </span>
-                <span className="mt-0.5 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
-                  {permission.action}
-                </span>
+              <span className="flex items-center gap-2 font-semibold">
+                {checked ? (
+                  <CheckCircleIcon className="h-5 w-5 shrink-0" />
+                ) : (
+                  <XCircleIcon className="h-5 w-5 shrink-0" />
+                )}
+                {checked ? t('status.granted') : t('status.notGranted')}
               </span>
-              <PermissionStatusBadge granted={checked} />
-            </label>
-          </li>
+              {editable && (
+                <span className="text-right text-xs font-semibold">
+                  {checked
+                    ? t('actions.clickToRevoke')
+                    : t('actions.clickToGrant')}
+                </span>
+              )}
+            </span>
+          </label>
         )
       })}
-    </ul>
+    </div>
   )
 }
 
@@ -418,29 +432,12 @@ function GrantedPermissionList({
                     <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       {subgroup.label}
                     </h4>
-                    <ul className="divide-y divide-gray-200 dark:divide-slate-700">
-                      {subgroup.rows.map((permission) => (
-                        <li
-                          key={permissionKey(permission)}
-                          className="flex items-center justify-between gap-4 px-1 py-3"
-                        >
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
-                              {formatPermissionAction(permission.action)}
-                            </span>
-                            <span className="mt-0.5 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
-                              {permission.action}
-                            </span>
-                          </span>
-                          <PermissionStatusBadge
-                            granted={permissionIsGranted(
-                              grantedPermissions,
-                              permission
-                            )}
-                          />
-                        </li>
-                      ))}
-                    </ul>
+                    <PermissionRows
+                      rows={subgroup.rows}
+                      grantedPermissions={grantedPermissions}
+                      editable={false}
+                      emptyText={emptyText}
+                    />
                   </section>
                 ))}
               </div>
@@ -473,6 +470,7 @@ export default function GlobalPermissions({
   const [permissionApiState, setPermissionApiState] = useState<LoadingState>('idle')
   const [currentAccessState, setCurrentAccessState] = useState<LoadingState>('idle')
   const [saving, setSaving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [retrying, setRetrying] = useState(false)
   const [targetScopePermissions, setTargetScopePermissions] = useState<EffectivePermission[]>([])
   const [targetAccessState, setTargetAccessState] = useState<LoadingState>('idle')
@@ -790,6 +788,38 @@ export default function GlobalPermissions({
     [scopeOptions, selectedScopeKey]
   )
 
+  const projectScopeOption = useMemo(
+    () => scopeOptions.find((option) => option.resourceType === 'PROJECT'),
+    [scopeOptions]
+  )
+
+  const domainScopeOptions = useMemo(
+    () =>
+      scopeOptions
+        .filter(
+          (option) => option.resourceType === 'DOMAIN' && option.resourceName
+        )
+        .sort((left, right) =>
+          String(left.resourceName).localeCompare(String(right.resourceName))
+        ),
+    [scopeOptions]
+  )
+
+  const domainScopeNames = useMemo(
+    () => domainScopeOptions.map((option) => option.resourceName!),
+    [domainScopeOptions]
+  )
+
+  const selectedDomainName =
+    selectedScope?.resourceType === 'DOMAIN'
+      ? selectedScope.resourceName
+      : undefined
+
+  const selectScope = useCallback((scopeKey: string) => {
+    setSelectedScopeKey(scopeKey)
+    setIsEditing(false)
+  }, [])
+
   const loadTargetPermissions = useCallback(async () => {
     const userId = selectedPerson?.userId
     if (!userId || !selectedScope) {
@@ -843,12 +873,7 @@ export default function GlobalPermissions({
 
   const selectedPersonPermissions = targetScopePermissions
 
-  useEffect(() => {
-    if (!selectedPerson || targetAccessState === 'loading') {
-      setPermissionState({})
-      return
-    }
-
+  const resetPermissionState = useCallback(() => {
     const next: Record<string, boolean> = {}
     selectedScopeRows.forEach((permission) => {
       next[permissionKey(permission)] = permissionIsGranted(
@@ -857,12 +882,28 @@ export default function GlobalPermissions({
       )
     })
     setPermissionState(next)
-  }, [
-    selectedPerson,
-    selectedPersonPermissions,
-    selectedScopeRows,
-    targetAccessState
-  ])
+  }, [selectedPersonPermissions, selectedScopeRows])
+
+  useEffect(() => {
+    setIsEditing(false)
+    if (!selectedPerson || targetAccessState === 'loading') {
+      setPermissionState({})
+      return
+    }
+    resetPermissionState()
+  }, [selectedPerson, resetPermissionState, targetAccessState])
+
+  const hasPermissionChanges = useMemo(
+    () =>
+      selectedScopeRows.some((permission) => {
+        const key = permissionKey(permission)
+        return (
+          Boolean(permissionState[key]) !==
+          permissionIsGranted(selectedPersonPermissions, permission)
+        )
+      }),
+    [permissionState, selectedPersonPermissions, selectedScopeRows]
+  )
 
   const groupedCurrentRows = useMemo(() => {
     const groups = new Map<string, EffectivePermission[]>()
@@ -934,6 +975,7 @@ export default function GlobalPermissions({
     if (value && typeof value === 'object' && 'username' in value) {
       const person = value as PersonSuggestion
       setSelectedPerson(person)
+      setIsEditing(false)
       setPersonValue(
         [person.name, person.email ? `(${person.email})` : '']
           .filter(Boolean)
@@ -944,6 +986,7 @@ export default function GlobalPermissions({
 
     setPersonValue(String(value ?? ''))
     setSelectedPerson(null)
+    setIsEditing(false)
   }
 
   const clearPersonSelection = () => {
@@ -951,11 +994,13 @@ export default function GlobalPermissions({
     setSelectedPerson(null)
     setPersonSuggestions([])
     setPermissionState({})
+    setIsEditing(false)
   }
 
   const useEnteredUserId = () => {
     const userId = personValue.trim()
     if (!userId) return
+    setIsEditing(false)
     setSelectedPerson({
       userId,
       username: userId,
@@ -1032,6 +1077,7 @@ export default function GlobalPermissions({
       }
 
       await loadTargetPermissions()
+      setIsEditing(false)
       showToast({
         severity: 'success',
         summary: t('common:success'),
@@ -1049,6 +1095,11 @@ export default function GlobalPermissions({
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleCancelEditing = () => {
+    resetPermissionState()
+    setIsEditing(false)
   }
 
   const handleRetry = async () => {
@@ -1176,37 +1227,103 @@ export default function GlobalPermissions({
           </div>
 
           {selectedPerson && (
-            <div className="space-y-5">
-              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-200">
-                <span className="font-semibold">
-                  {t('selectedUserPrefix')}
-                </span>{' '}
-                <span>{selectedPerson.name}</span>
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-200">
+                <div>
+                  <span className="font-semibold">
+                    {t('selectedUserPrefix')}
+                  </span>{' '}
+                  <span>{selectedPerson.name}</span>
+                </div>
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+                    isEditing
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200'
+                      : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200'
+                  }`}
+                >
+                  {isEditing ? t('mode.edit') : t('mode.view')}
+                </span>
               </div>
 
               {scopeMode === 'project-domain' && (
-                <label className="block max-w-2xl">
-                  <span className="td-field-label mb-1 block">
-                    {t('scope.selectScope')}
-                  </span>
-                  <select
-                    value={selectedScopeKey}
-                    onChange={(event) => setSelectedScopeKey(event.target.value)}
-                    className="h-11 w-full rounded-lg border border-color-light-gray bg-white px-3 text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
-                  >
-                    {scopeOptions.map((option) => (
-                      <option key={option.key} value={option.key}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <section className="space-y-4 border-t border-gray-200 pt-5 dark:border-slate-700">
+                  <div>
+                    <h3 className="td-section-title">
+                      {t('scope.selectScope')}
+                    </h3>
+                    <p className="td-section-subtitle mt-1">
+                      {t('scope.selectDescription')}
+                    </p>
+                  </div>
+
+                  {projectScopeOption && (
+                    <button
+                      type="button"
+                      onClick={() => selectScope(projectScopeOption.key)}
+                      aria-pressed={selectedScopeKey === projectScopeOption.key}
+                      className={`flex w-full items-center justify-between gap-4 rounded-xl border-2 px-5 py-4 text-left transition focus:outline-none focus:ring-2 focus:ring-color-blue/30 ${
+                        selectedScopeKey === projectScopeOption.key
+                          ? 'border-color-blue bg-blue-50 dark:border-blue-500 dark:bg-blue-950/35'
+                          : 'border-gray-200 bg-white hover:border-color-blue hover:bg-blue-50/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
+                      }`}
+                    >
+                      <span>
+                        <span className="block text-base font-semibold text-gray-900 dark:text-gray-100">
+                          {projectScopeOption.label}
+                        </span>
+                        <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
+                          {t('scope.projectCardDescription')}
+                        </span>
+                      </span>
+                      {selectedScopeKey === projectScopeOption.key && (
+                        <CheckCircleIcon className="h-6 w-6 shrink-0 text-color-blue" />
+                      )}
+                    </button>
+                  )}
+
+                  {domainScopeOptions.length > 0 ? (
+                    <DomainPermissionSearch
+                      availableDomainNames={domainScopeNames}
+                      selectedDomainName={selectedDomainName}
+                      onSelect={(domainName) =>
+                        selectScope(`DOMAIN:${domainName}`)
+                      }
+                    />
+                  ) : (
+                    <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+                      {t('empty.noGroupRows')}
+                    </p>
+                  )}
+                </section>
               )}
 
               <section className="border-t border-gray-200 pt-5 dark:border-slate-700">
-                <h3 className="td-section-title mb-3">
-                  {selectedScope?.label || t('scope.global')}
-                </h3>
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="td-section-title">
+                      {selectedScope?.label || t('scope.global')}
+                    </h3>
+                    <p className="td-section-subtitle mt-1">
+                      {isEditing ? t('editModeHint') : t('viewModeHint')}
+                    </p>
+                  </div>
+
+                  {!isEditing && (
+                    <PrimaryOutlinedButton
+                      label={t('actions.editPermissions')}
+                      icon={<PencilSquareIcon className="h-5 w-5" />}
+                      onClick={() => setIsEditing(true)}
+                      disabled={
+                        !selectedScopeRows.length ||
+                        targetAccessState === 'loading' ||
+                        targetAccessState === 'forbidden' ||
+                        targetAccessState === 'error'
+                      }
+                    />
+                  )}
+                </div>
+
                 {targetAccessState === 'loading' ? (
                   <p className="text-base text-gray-500 dark:text-gray-300">
                     {t('loading.selectedUserPermissions')}
@@ -1220,7 +1337,7 @@ export default function GlobalPermissions({
                   <PermissionRows
                     rows={selectedScopeRows}
                     grantedPermissions={selectedPersonPermissions}
-                    editable
+                    editable={isEditing}
                     permissionState={permissionState}
                     onChange={(key, checked) =>
                       setPermissionState((current) => ({
@@ -1233,19 +1350,31 @@ export default function GlobalPermissions({
                 )}
               </section>
 
-              <div className="flex justify-center">
-                <PrimaryButton
-                  label={saving ? t('actions.saving') : t('actions.savePermissions')}
-                  onClick={handleSave}
-                  loading={saving}
-                  disabled={
-                    !selectedScopeRows.length ||
-                    targetAccessState === 'loading' ||
-                    targetAccessState === 'forbidden' ||
-                    targetAccessState === 'error'
-                  }
-                />
-              </div>
+              {isEditing && (
+                <div className="flex flex-wrap justify-end gap-3 border-t border-gray-200 pt-5 dark:border-slate-700">
+                  <SecondaryOutlinedButton
+                    label={t('actions.cancelEditing')}
+                    onClick={handleCancelEditing}
+                    disabled={saving}
+                  />
+                  <PrimaryButton
+                    label={
+                      saving
+                        ? t('actions.saving')
+                        : t('actions.savePermissions')
+                    }
+                    onClick={handleSave}
+                    loading={saving}
+                    disabled={
+                      !hasPermissionChanges ||
+                      !selectedScopeRows.length ||
+                      targetAccessState === 'loading' ||
+                      targetAccessState === 'forbidden' ||
+                      targetAccessState === 'error'
+                    }
+                  />
+                </div>
+              )}
             </div>
           )}
         </>

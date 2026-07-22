@@ -1,6 +1,6 @@
 /*
  * Trust Deck Services
- * Copyright 2024-2026 Armin Müller and Eric Wündisch
+ * Copyright 2024-2026 Armin Müller and Loic Khodarkovsky
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

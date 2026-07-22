@@ -77,7 +77,8 @@ function Pagination({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  alwaysShowPageSize = false
+  alwaysShowPageSize = false,
+  offerAllPageSizes = false
 }: {
   total: number
   page: number
@@ -85,12 +86,15 @@ function Pagination({
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
   alwaysShowPageSize?: boolean
+  offerAllPageSizes?: boolean
 }) {
   const { t } = useTranslation('search')
   const pageCount = Math.ceil(total / pageSize)
-  const pageSizeOptions = PAGE_SIZE_OPTIONS.filter(
-    (option) => option === 10 || option <= total
-  )
+  const pageSizeOptions = offerAllPageSizes
+    ? [...PAGE_SIZE_OPTIONS]
+    : PAGE_SIZE_OPTIONS.filter(
+        (option) => option === 10 || option <= total
+      )
 
   if (
     pageCount <= 1 &&
@@ -552,13 +556,6 @@ export function InlinePseudonymResults({
 
   return (
     <Panel className="mt-6 !w-full !p-0 overflow-hidden">
-      <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
-        <h3 className="td-panel-title">{t('results')}</h3>
-        <p className="td-section-subtitle mt-1">
-          {t('pseudonymResultsDescription', { count: results.length })}
-        </p>
-      </div>
-
       {results.length === 0 ? (
         <p className="px-5 py-8 text-center text-lg text-gray-600 dark:text-gray-300">
           {t('noResults')}
@@ -568,22 +565,22 @@ export function InlinePseudonymResults({
           <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
-                <th className="w-20 px-4 py-3 text-center text-base font-semibold">
+                <th className="w-20 whitespace-nowrap px-4 py-3 text-center text-base font-semibold">
                   {t('resultNumber')}
                 </th>
-                <th className="px-5 py-3 text-base font-semibold">
+                <th className="min-w-56 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.value')}
                 </th>
-                <th className="px-5 py-3 text-base font-semibold">
+                <th className="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.id')}
                 </th>
-                <th className="px-5 py-3 text-base font-semibold">
+                <th className="min-w-32 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.idType')}
                 </th>
-                <th className="px-5 py-3 text-base font-semibold">
+                <th className="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.group')}
                 </th>
-                <th className="w-40 px-5 py-3 text-right text-base font-semibold">
+                <th className="w-40 whitespace-nowrap px-5 py-3 text-right text-base font-semibold">
                   {t('actions')}
                 </th>
               </tr>
@@ -603,7 +600,7 @@ export function InlinePseudonymResults({
                     <td className="px-4 py-4 text-center text-base font-semibold text-gray-600 dark:text-gray-300">
                       {pageStart + resultIndex + 1}
                     </td>
-                    <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
+                    <td className="break-all px-5 py-4 font-mono text-lg font-normal">
                       {result.psn || '—'}
                     </td>
                     <td className="break-all px-5 py-4 text-base">
@@ -657,17 +654,22 @@ export function InlinePseudonymResults({
         </div>
       )}
 
-      <Pagination
-        total={results.length}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        alwaysShowPageSize
-        onPageSizeChange={(nextPageSize) => {
-          setPageSize(nextPageSize)
-          setPage(0)
-        }}
-      />
+      {results.length > 0 && (
+        <div className="w-full bg-white dark:bg-slate-900">
+          <Pagination
+            total={results.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            alwaysShowPageSize
+            offerAllPageSizes
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize)
+              setPage(0)
+            }}
+          />
+        </div>
+      )}
 
       <Dialog
         visible={Boolean(pendingDelete)}

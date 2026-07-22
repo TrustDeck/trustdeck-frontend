@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import CustomDropdown from '@component/form/CustomDropdown'
-import GroupService from '../../groups/services/GroupService'
+import DomainService from '../../domains/services/DomainService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
 import usePseudonymStore from '../stores/PseudonymSearchResults'
@@ -42,7 +42,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
     if (!showDomainSelector) return undefined
 
     initialDomainSet.current = false
-    GroupService.getGroups()
+    DomainService.getGroups()
       .then((data) => {
         setGroups(data ?? [])
         if (

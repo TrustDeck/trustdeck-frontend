@@ -1,4 +1,4 @@
-export type GroupOptionType =
+export type DomainOptionType =
   | 'default'
   | 'edit'
   | 'registration'

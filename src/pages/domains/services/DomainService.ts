@@ -580,7 +580,7 @@ const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
 }
 
 /** Provides domain-group operations and request/response mapping. */
-const GroupService = {
+const DomainService = {
   normalizeGroup: (group: Domain, superDomainName?: string | null) =>
     normalizeDomain(group, superDomainName),
 
@@ -612,7 +612,7 @@ const GroupService = {
 
   getReadableGroups: async (): Promise<Domain[]> => {
     try {
-      const tree = await GroupService.getGroups()
+      const tree = await DomainService.getGroups()
       const treeDomains = flattenTree(tree)
       if (treeDomains.length > 0) return treeDomains
     } catch {
@@ -683,4 +683,4 @@ const GroupService = {
   }
 }
 
-export default GroupService
+export default DomainService

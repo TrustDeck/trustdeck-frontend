@@ -1,26 +1,26 @@
 import React, { FormEvent, useState } from 'react'
 import useSearchStore from '../stores/SearchStore'
 import useSearchResultsStore from '../stores/SearchResultsStore'
-import GroupService from '../services/GroupService'
+import DomainService from '../services/DomainService'
 import { useTranslation } from 'react-i18next'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 
 /**
- * The `GroupMask` component is used to search for groups by their name.
+ * The `DomainMask` component is used to search for pseudonym domains by name.
  *
  * It maintains the loading state while the search is being performed.
  * The search results are saved into the global search results store.
  *
- * @returns {JSX.Element} The rendered `GroupMask` component.
+ * @returns {JSX.Element} The rendered `DomainMask` component.
  */
 
-interface GroupMaskProps {
+interface DomainMaskProps {
   psn?: boolean
 }
 
-const GroupMask: React.FC<GroupMaskProps> = ({ psn }) => {
+const DomainMask: React.FC<DomainMaskProps> = ({ psn }) => {
   const { t } = useTranslation() // Use multiple namespaces
   const [loading, setLoading] = useState(false)
 
@@ -31,7 +31,7 @@ const GroupMask: React.FC<GroupMaskProps> = ({ psn }) => {
     e.preventDefault()
     setLoading(true)
 
-    const result = await GroupService.searchGroup(group)
+    const result = await DomainService.searchDomain(group)
     setResults(result)
     setLoading(false)
   }
@@ -64,4 +64,4 @@ const GroupMask: React.FC<GroupMaskProps> = ({ psn }) => {
   )
 }
 
-export default GroupMask
+export default DomainMask

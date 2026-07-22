@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 
-export default function DefaultGroupOption() {
+export default function DefaultDomainOption() {
   const { t } = useTranslation()
 
   return (

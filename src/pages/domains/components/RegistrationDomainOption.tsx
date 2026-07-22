@@ -3,8 +3,9 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import { ProgressSpinner } from 'primereact/progressspinner'
-import GroupService from '../services/GroupService'
-import GroupForm from './GroupForm'
+import DomainService from '../services/DomainService'
+import TrustDeck from '../../../core/services/TrustDeck'
+import DomainForm from './DomainForm'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -12,10 +13,12 @@ import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 
-export default function RegistrationGroupOption({
-  useCompleteEndpoint
+export default function RegistrationDomainOption({
+  useCompleteEndpoint,
+  accessToken
 }: {
   useCompleteEndpoint: boolean
+  accessToken?: string
 }) {
   const { t } = useTranslation(['groups', 'common'])
   const [isCreating, setIsCreating] = useState(false)
@@ -70,6 +73,8 @@ export default function RegistrationGroupOption({
     setShowSaveAllDialog(false)
 
     try {
+      if (!accessToken) throw new Error('Your session has expired.')
+      TrustDeck.instance().setToken(accessToken)
       const currentDataNode = findNodeByKey(tree, selectedNodeKey)
       const createPayload = currentDataNode?.data?.temporal
       const createdName = String(createPayload?.label ?? '').trim()
@@ -77,26 +82,26 @@ export default function RegistrationGroupOption({
         throw new Error('The new domain could not be resolved from the tree.')
       }
 
-      await GroupService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
-      let createdDomain = await GroupService.createGroup(
+      await DomainService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
+      let createdDomain = await DomainService.createGroup(
         createPayload,
         useCompleteEndpoint
       )
 
       try {
-        createdDomain = await GroupService.getGroup(createdName)
+        createdDomain = await DomainService.getGroup(createdName)
       } catch {
         // The create response already contains the best available representation.
       }
 
-      let refreshedTree = GroupService.hydrateGroupTree(
+      let refreshedTree = DomainService.hydrateGroupTree(
         useTreeStateStore.getState().tree,
         createdName,
         createdDomain
       )
       try {
-        refreshedTree = GroupService.hydrateGroupTree(
-          await GroupService.getGroups(),
+        refreshedTree = DomainService.hydrateGroupTree(
+          await DomainService.getGroups(),
           createdName,
           createdDomain
         )
@@ -156,7 +161,7 @@ export default function RegistrationGroupOption({
             onHide={() => setShowSaveAllDialog(false)}
             onAccept={() => confirmSaveAll()}
           />
-          <GroupForm />
+          <DomainForm />
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <SecondaryOutlinedButton
               label={t('groups:buttons.discardChanges')}

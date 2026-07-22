@@ -5,7 +5,7 @@ import AuthCallback from '../../pages/general/AuthCallback'
 import SearchMask from '../../pages/search/SearchMask'
 import SearchPsn from '../../pages/pseudonym/SearchPsn'
 import PreReg from '../../pages/identity/PreReg'
-import GroupManager from '../../pages/groups/GroupManager'
+import DomainManager from '../../pages/domains/DomainManager'
 import EntityDetails from '../../pages/search/EntityDetails'
 import {
   Bars3Icon,
@@ -186,7 +186,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/domain-management',
     titleKey: 'layout:menu.pseudonymDomains',
-    component: GroupManager,
+    component: DomainManager,
     Icon: ArchiveBoxIcon,
     isProtected: true,
     isSidebar: true,

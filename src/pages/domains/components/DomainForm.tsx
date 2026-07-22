@@ -29,7 +29,7 @@ import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
 import useToastStore from '../../../core/stores/ToastStore'
 import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
-import GroupService from '../services/GroupService'
+import DomainService from '../services/DomainService'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
@@ -144,7 +144,7 @@ function InheritedField({
   )
 }
 
-export default function GroupForm() {
+export default function DomainForm() {
   const [examplePsn, setExamplePsn] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [alphabetSelectionError, setAlphabetSelectionError] = useState(false)
@@ -387,8 +387,8 @@ export default function GroupForm() {
       let parentData = parentNode?.data?.stored ?? null
 
       try {
-        const parentDomain = await GroupService.getGroup(parentName)
-        parentData = GroupService.normalizeGroup(
+        const parentDomain = await DomainService.getGroup(parentName)
+        parentData = DomainService.normalizeGroup(
           parentDomain,
           parentDomain.superDomainName ?? null
         )

@@ -6,21 +6,24 @@ import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedBu
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import { useTreeStateStore } from '../stores/TreeStateStore'
-import GroupForm from './GroupForm'
+import DomainForm from './DomainForm'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 import { ProgressSpinner } from 'primereact/progressspinner'
-import GroupService from '../services/GroupService'
+import DomainService from '../services/DomainService'
+import TrustDeck from '../../../core/services/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
 import type { Domain } from '../../../core/types/Domain'
 
 type EditGroupOptionProps = {
   onCancel?: () => void
   useCompleteEndpoint: boolean
+  accessToken?: string
 }
 
-export default function EditGroupOption({
+export default function EditDomainOption({
   onCancel,
-  useCompleteEndpoint
+  useCompleteEndpoint,
+  accessToken
 }: EditGroupOptionProps) {
   const {
     tree,
@@ -66,9 +69,19 @@ export default function EditGroupOption({
   }
 
   const deleteNodes = () => {
+    if (!accessToken) {
+      showToast({
+        severity: 'error',
+        summary: t('common:error'),
+        detail: 'Your session has expired.',
+        life: 4000
+      })
+      return
+    }
     setIsDeleting(true)
     setShowDeleteDialog(false)
-    GroupService.deleteGroup(findNodeByKey(tree, selectedNodeKey)?.label || '')
+    TrustDeck.instance().setToken(accessToken)
+    DomainService.deleteGroup(findNodeByKey(tree, selectedNodeKey)?.label || '')
       .then(() => {
         deleteNode(selectedNodeKey)
         setGroupOption('default')
@@ -103,13 +116,15 @@ export default function EditGroupOption({
     ).trim()
 
     try {
-      await GroupService.updateGroups(tree, undefined, useCompleteEndpoint)
+      if (!accessToken) throw new Error('Your session has expired.')
+      TrustDeck.instance().setToken(accessToken)
+      await DomainService.updateGroups(tree, undefined, useCompleteEndpoint)
 
       let completeDomain: Domain | null = null
       for (const candidateName of [requestedName, previousName]) {
         if (!candidateName || completeDomain) continue
         try {
-          completeDomain = await GroupService.getGroup(candidateName)
+          completeDomain = await DomainService.getGroup(candidateName)
         } catch {
           // Try the next candidate name.
         }
@@ -117,7 +132,7 @@ export default function EditGroupOption({
 
       let refreshedTree = useTreeStateStore.getState().tree
       try {
-        refreshedTree = await GroupService.getGroups()
+        refreshedTree = await DomainService.getGroups()
       } catch {
         // Keep the local tree if hierarchy reloading is unavailable.
       }
@@ -126,7 +141,7 @@ export default function EditGroupOption({
         const lookupName = findNodeByLabel(refreshedTree, completeDomain.name)
           ? completeDomain.name
           : previousName
-        refreshedTree = GroupService.hydrateGroupTree(
+        refreshedTree = DomainService.hydrateGroupTree(
           refreshedTree,
           lookupName,
           completeDomain
@@ -199,7 +214,7 @@ export default function EditGroupOption({
             </h3>
           </div>
           <Divider />
-          <GroupForm />
+          <DomainForm />
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <PrimaryButton
               label={t('groups:buttons.save')}

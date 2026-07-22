@@ -31,8 +31,8 @@ import {
   formatDisplayValue,
   readDisplayValue
 } from '../search/utils/entityDisplay'
-import GroupService from '../groups/services/GroupService'
-import useGroupStore from './stores/GroupStore'
+import DomainService from '../domains/services/DomainService'
+import useDomainStore from './stores/DomainStore'
 import useSelectedEntityStore from './stores/SelectedEntityStore'
 import useStepperControlStore from './stores/StepperControlStore'
 import { PseudonymService } from './services/PseudonymService'
@@ -138,7 +138,7 @@ export default function SearchPsn() {
     clearResults: clearEntityResults
   } = useSearchResultsStore()
   const { setStepperRef, previousStep } = useStepperControlStore()
-  const { groups, selectedGroup, setGroups, setSelectedGroup } = useGroupStore()
+  const { groups, selectedGroup, setGroups, setSelectedGroup } = useDomainStore()
   const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t, i18n } = useTranslation()
   const entityDefinitions = useProjectStore((state) => state.entityAttributes)
@@ -210,7 +210,7 @@ export default function SearchPsn() {
     setPseudonymGroup('')
 
     const loadGroups = async () => {
-      const data = await GroupService.getGroups()
+      const data = await DomainService.getGroups()
       setGroups(data)
     }
 

@@ -18,8 +18,8 @@ import Divider from '../../core/components/common/Divider'
 import ConfirmDialog from '../../core/components/common/ConfirmDialog'
 import PageHeader from '../../core/components/common/PageHeader'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
-import GroupService from './services/GroupService'
-import GroupOption from './components/GroupOption'
+import DomainService from './services/DomainService'
+import DomainOption from './components/DomainOption'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { useTreeStateStore } from './stores/TreeStateStore'
 import { CustomTreeNode } from './types/CustomTreeNode'
@@ -231,7 +231,7 @@ function hydrateGroupNode(
 
     if (node.label !== groupName) return { ...node, children }
 
-    const normalized = GroupService.normalizeGroup(
+    const normalized = DomainService.normalizeGroup(
       group,
       group.superDomainName ?? null
     )
@@ -249,7 +249,7 @@ function hydrateGroupNode(
   })
 }
 
-export default function GroupManager() {
+export default function DomainManager() {
   const {
     tree,
     setTree,
@@ -454,12 +454,12 @@ export default function GroupManager() {
   const fetchGroups = useCallback(async () => {
     setIsLoading(true)
     try {
-      const groupTree = await GroupService.getGroups()
+      const groupTree = await DomainService.getGroups()
       setTree(groupTree as CustomTreeNode[])
       const treeDomains = flattenTree(groupTree).flatMap((node) =>
         node.data?.raw ? [node.data.raw] : []
       )
-      const readableGroups = await GroupService.getReadableGroups()
+      const readableGroups = await DomainService.getReadableGroups()
       setGroups(mergeDomains(readableGroups, treeDomains))
       await fetchAssignmentInfo()
     } catch (error) {
@@ -514,7 +514,7 @@ export default function GroupManager() {
       const fallback = groups.find((group) => group.name === groupName) ?? null
       setSelectedGroup(fallback)
       try {
-        const complete = await GroupService.getGroup(groupName)
+        const complete = await DomainService.getGroup(groupName)
         // A user may be allowed to list complete hierarchy data but receive a
         // reduced per-domain view. Keep any algorithm data already available.
         setSelectedGroup({
@@ -572,10 +572,21 @@ export default function GroupManager() {
 
   const deleteSelectedGroup = async () => {
     if (!selectedGroupName || !canDeleteGroup(selectedGroupName)) return
+    const accessToken = auth.user?.access_token
+    if (!accessToken) {
+      showToast({
+        severity: 'error',
+        summary: t('common:error'),
+        detail: 'Your session has expired.',
+        life: 4000
+      })
+      return
+    }
     setIsDeleting(true)
     setShowDeleteDialog(false)
     try {
-      await GroupService.deleteGroup(selectedGroupName)
+      TrustDeck.instance().setToken(accessToken)
+      await DomainService.deleteGroup(selectedGroupName)
       const node = findNodeByLabel(tree, selectedGroupName)
       if (node) deleteNode(node.key)
       setSelectedGroup(null)
@@ -980,8 +991,9 @@ export default function GroupManager() {
                     </button>
                   </div>
                   <Divider />
-                  <GroupOption
+                  <DomainOption
                     onClose={closeEditor}
+                    accessToken={auth.user?.access_token}
                     useCompleteEndpoint={
                       viewMode === 'create'
                         ? canCreateCompleteGroups

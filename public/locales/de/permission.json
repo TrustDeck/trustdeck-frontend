@@ -86,8 +86,8 @@
     "project": {
       "project": "Projekt",
       "image": "Bild",
-      "type": "Typ",
-      "instance": "Instanz"
+      "type": "Entitätstypen",
+      "instance": "Entitäten"
     },
     "group": {
       "domain": "Pseudonym-Domäne",
@@ -108,5 +108,6 @@
   "globalBoxSubtitle": "Prüfen und verwalten Sie globale Rechte, die in TrustDeck projektübergreifend gelten.",
   "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
   "projectDomainSearchHelp": "Suchen Sie nach einem Benutzer, wählen Sie ein Projekt oder eine Pseudonym-Domäne und vergeben oder entziehen Sie nur eigene Rechte.",
-  "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden."
+  "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden.",
+  "selectedUserPrefix": "Aktuell ausgewählter Benutzer für die Vergabe / den Entzug von Berechtigungen:"
 }

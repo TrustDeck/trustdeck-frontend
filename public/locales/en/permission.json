@@ -86,8 +86,8 @@
     "project": {
       "project": "Project",
       "image": "Image",
-      "type": "Type",
-      "instance": "Instance"
+      "type": "Entity types",
+      "instance": "Entities"
     },
     "group": {
       "domain": "Pseudonym domain",
@@ -108,5 +108,6 @@
   "globalBoxSubtitle": "Inspect and manage global rights that apply across TrustDeck.",
   "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
   "projectDomainSearchHelp": "Search for a user, select one project or pseudonym domain, and grant or revoke rights that you already hold yourself.",
-  "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly."
+  "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly.",
+  "selectedUserPrefix": "Currently selected user for granting / revoking permissions:"
 }

@@ -280,21 +280,22 @@ export function InlineEntityResults({
   const entityColumnCount = (summaryAttributes.length || 1) + 3
 
   return (
-    <Panel className="mt-6 !w-full !p-0 overflow-hidden">
-      <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
-        <h3 className="td-panel-title">{t('results')}</h3>
-        <p className="td-section-subtitle mt-1">
-          {t('entityResultsDescription', { count: results.length })}
-        </p>
-      </div>
+    <>
+      <Panel className="mt-6 !w-full !p-0 !shadow-none overflow-hidden">
+        <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
+          <h3 className="td-panel-title">{t('results')}</h3>
+          <p className="td-section-subtitle mt-1">
+            {t('entityResultsDescription', { count: results.length })}
+          </p>
+        </div>
 
-      {results.length === 0 ? (
-        <p className="px-5 py-8 text-center text-lg text-gray-600 dark:text-gray-300">
-          {t('noResults')}
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
+        {results.length === 0 ? (
+          <p className="px-5 py-8 text-center text-lg text-gray-600 dark:text-gray-300">
+            {t('noResults')}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
                 <th className="w-20 px-4 py-3 text-center text-base font-semibold">
@@ -394,20 +395,25 @@ export function InlineEntityResults({
               ))}
             </tbody>
           </table>
+          </div>
+        )}
+      </Panel>
+
+      {results.length > 0 && (
+        <div className="w-full">
+          <Pagination
+            total={results.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            alwaysShowPageSize
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize)
+              setPage(0)
+            }}
+          />
         </div>
       )}
-
-      <Pagination
-        total={results.length}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        alwaysShowPageSize
-        onPageSizeChange={(nextPageSize) => {
-          setPageSize(nextPageSize)
-          setPage(0)
-        }}
-      />
 
       <Dialog
         visible={Boolean(pendingDelete)}
@@ -433,7 +439,7 @@ export function InlineEntityResults({
           </div>
         </div>
       </Dialog>
-    </Panel>
+    </>
   )
 }
 
@@ -555,14 +561,15 @@ export function InlinePseudonymResults({
     pseudonymPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
 
   return (
-    <Panel className="mt-6 !w-full !p-0 overflow-hidden">
-      {results.length === 0 ? (
-        <p className="px-5 py-8 text-center text-lg text-gray-600 dark:text-gray-300">
-          {t('noResults')}
-        </p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] border-collapse text-left">
+    <>
+      <Panel className="mt-6 !w-full !p-0 !shadow-none overflow-hidden">
+        {results.length === 0 ? (
+          <p className="px-5 py-8 text-center text-lg text-gray-600 dark:text-gray-300">
+            {t('noResults')}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
               <tr>
                 <th className="w-20 whitespace-nowrap px-4 py-3 text-center text-base font-semibold">
@@ -651,11 +658,12 @@ export function InlinePseudonymResults({
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+          </div>
+        )}
+      </Panel>
 
       {results.length > 0 && (
-        <div className="w-full bg-white dark:bg-slate-900">
+        <div className="w-full">
           <Pagination
             total={results.length}
             page={page}
@@ -695,6 +703,6 @@ export function InlinePseudonymResults({
           </div>
         </div>
       </Dialog>
-    </Panel>
+    </>
   )
 }

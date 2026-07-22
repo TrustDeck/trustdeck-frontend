@@ -6,7 +6,12 @@ import {
   AutoCompleteChangeEvent,
   AutoCompleteCompleteEvent
 } from 'primereact/autocomplete'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
 
 import Panel from '@component/common/Panel'
 import PageHeader from '@component/common/PageHeader'
@@ -27,6 +32,14 @@ import type {
   ProjectPermissionUpdate
 } from '../project/types'
 import { permissionKey } from '../project/utils/permissionRows'
+import {
+  DOMAIN_SUBGROUP_LABELS,
+  DOMAIN_SUBGROUP_ORDER,
+  PROJECT_SUBGROUP_LABELS,
+  PROJECT_SUBGROUP_ORDER,
+  domainPermissionSubgroup,
+  projectPermissionSubgroup
+} from '../project/utils/permissionSubgroups'
 
 export type PermissionScopeMode = 'global' | 'project-domain'
 
@@ -47,6 +60,18 @@ type ScopeOption = {
   label: string
   resourceType: 'GLOBAL' | 'PROJECT' | 'DOMAIN'
   resourceName?: string
+}
+
+type CurrentPermissionGroup = {
+  key: string
+  label: string
+  rows: EffectivePermission[]
+}
+
+type PermissionSubgroup = {
+  key: string
+  label: string
+  rows: EffectivePermission[]
 }
 
 function uniquePermissions(permissions: EffectivePermission[]) {
@@ -248,6 +273,144 @@ function PermissionRows({
               </span>
             </span>
           </label>
+        )
+      })}
+    </div>
+  )
+}
+
+function buildGrantedPermissionSubgroups(
+  group: CurrentPermissionGroup,
+  t: ReturnType<typeof useTranslation>['t']
+): PermissionSubgroup[] {
+  const resourceType = group.rows[0]?.resourceType
+
+  if (resourceType === 'PROJECT') {
+    return PROJECT_SUBGROUP_ORDER.map((subgroup) => ({
+      key: subgroup,
+      label: t(
+        `subgroup.project.${subgroup}`,
+        PROJECT_SUBGROUP_LABELS[subgroup]
+      ),
+      rows: group.rows.filter(
+        (permission) =>
+          projectPermissionSubgroup(permission.action) === subgroup
+      )
+    })).filter((subgroup) => subgroup.rows.length > 0)
+  }
+
+  if (resourceType === 'DOMAIN') {
+    return DOMAIN_SUBGROUP_ORDER.map((subgroup) => ({
+      key: subgroup,
+      label: t(
+        `subgroup.group.${subgroup}`,
+        DOMAIN_SUBGROUP_LABELS[subgroup]
+      ),
+      rows: group.rows.filter(
+        (permission) => domainPermissionSubgroup(permission.action) === subgroup
+      )
+    })).filter((subgroup) => subgroup.rows.length > 0)
+  }
+
+  return [
+    {
+      key: 'permissions',
+      label: t('scope.permissions'),
+      rows: group.rows
+    }
+  ]
+}
+
+function GrantedPermissionList({
+  groups,
+  emptyText
+}: {
+  groups: CurrentPermissionGroup[]
+  emptyText: string
+}) {
+  const { t } = useTranslation('permission')
+  const [openScopes, setOpenScopes] = useState<Record<string, boolean>>({})
+  const groupSignature = groups.map((group) => group.key).join('|')
+
+  useEffect(() => {
+    setOpenScopes({})
+  }, [groupSignature])
+
+  if (!groups.length) {
+    return (
+      <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+        {emptyText}
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {groups.map((group) => {
+        const isOpen = Boolean(openScopes[group.key])
+        const subgroups = buildGrantedPermissionSubgroups(group, t)
+
+        return (
+          <section
+            key={group.key}
+            className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+          >
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
+              onClick={() =>
+                setOpenScopes((current) => ({
+                  ...current,
+                  [group.key]: !isOpen
+                }))
+              }
+              aria-expanded={isOpen}
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {group.label}
+                </span>
+                <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-200">
+                  {t('grantedCount', { count: group.rows.length })}
+                </span>
+              </span>
+              {isOpen ? (
+                <ChevronDownIcon className="h-5 w-5 shrink-0" />
+              ) : (
+                <ChevronRightIcon className="h-5 w-5 shrink-0" />
+              )}
+            </button>
+
+            {isOpen && (
+              <div className="space-y-5 border-t border-gray-200 px-5 py-5 dark:border-slate-700">
+                {subgroups.map((subgroup) => (
+                  <section key={`${group.key}:${subgroup.key}`}>
+                    <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      {subgroup.label}
+                    </h4>
+                    <div className="grid gap-2 md:grid-cols-2 2xl:grid-cols-3">
+                      {subgroup.rows.map((permission) => (
+                        <div
+                          key={permissionKey(permission)}
+                          className="flex min-h-[64px] items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 dark:border-emerald-900/60 dark:bg-emerald-950/25"
+                        >
+                          <CheckCircleIcon className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {formatPermissionAction(permission.action)}
+                            </span>
+                            <span className="mt-0.5 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
+                              {permission.action}
+                            </span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            )}
+          </section>
         )
       })}
     </div>
@@ -675,20 +838,34 @@ export default function GlobalPermissions({
       groups.set(key, entries)
     })
 
-    return Array.from(groups.entries()).map(([key, rows]) => {
-      const [resourceType, resourceName = '*'] = key.split(':')
-      const option: ScopeOption = {
-        key,
-        resourceType: resourceType as ScopeOption['resourceType'],
-        resourceName: resourceName === '*' ? undefined : resourceName,
-        label: ''
-      }
-      return {
-        key,
-        label: scopeLabel(option, t, selectedProject?.name),
-        rows: uniquePermissions(rows)
-      }
-    })
+    const resourceOrder: Record<string, number> = {
+      GLOBAL: 0,
+      PROJECT: 1,
+      DOMAIN: 2
+    }
+
+    return Array.from(groups.entries())
+      .map(([key, rows]) => {
+        const [resourceType, resourceName = '*'] = key.split(':')
+        const option: ScopeOption = {
+          key,
+          resourceType: resourceType as ScopeOption['resourceType'],
+          resourceName: resourceName === '*' ? undefined : resourceName,
+          label: ''
+        }
+        return {
+          key,
+          label: scopeLabel(option, t, selectedProject?.name),
+          rows: uniquePermissions(rows)
+        }
+      })
+      .sort((left, right) => {
+        const leftType = left.rows[0]?.resourceType ?? ''
+        const rightType = right.rows[0]?.resourceType ?? ''
+        const typeDifference =
+          (resourceOrder[leftType] ?? 99) - (resourceOrder[rightType] ?? 99)
+        return typeDifference || left.label.localeCompare(right.label)
+      })
   }, [scopedCurrentPermissions, selectedProject?.name, t])
 
   const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
@@ -873,27 +1050,11 @@ export default function GlobalPermissions({
         <p className="text-base text-amber-700 dark:text-amber-300">
           {t('errors.effectiveError')}
         </p>
-      ) : groupedCurrentRows.length ? (
-        <div className="space-y-5">
-          {groupedCurrentRows.map((group, index) => (
-            <section
-              key={group.key}
-              className={index > 0 ? 'border-t border-gray-200 pt-5 dark:border-slate-700' : ''}
-            >
-              <h3 className="td-section-title mb-3">{group.label}</h3>
-              <PermissionRows
-                rows={group.rows}
-                grantedPermissions={scopedCurrentPermissions}
-                editable={false}
-                emptyText={t('empty.noExplicitPermissions')}
-              />
-            </section>
-          ))}
-        </div>
       ) : (
-        <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-          {t('empty.noRightsInScope')}
-        </p>
+        <GrantedPermissionList
+          groups={groupedCurrentRows}
+          emptyText={t('empty.noRightsInScope')}
+        />
       )}
     </div>
   )
@@ -978,9 +1139,11 @@ export default function GlobalPermissions({
 
           {selectedPerson && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-200">
-                <span className="font-semibold">{selectedPerson.name}</span>
-                <span className="ml-2 font-mono">{selectedPerson.userId}</span>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base text-gray-700 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-200">
+                <span className="font-semibold">
+                  {t('selectedUserPrefix')}
+                </span>{' '}
+                <span>{selectedPerson.name}</span>
               </div>
 
               {scopeMode === 'project-domain' && (

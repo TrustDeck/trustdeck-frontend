@@ -24,9 +24,13 @@ import TrustDeck, {
   TrustDeckHttpError
 } from '../../core/services/TrustDeck'
 import DynamicEntity from '../search/components/DynamicEntity'
+import InlinePseudonymDetail from '../search/components/InlinePseudonymDetail'
+import PseudonymService from '../search/services/PseudonymService'
 import RecordLinkageCandidateReview from './components/RecordLinkageCandidateReview'
 import { pickSchemaData } from '../search/utils/schemaData'
 import type { Attribute } from '../../core/stores/ProjectStore'
+import type { Link } from '../../core/types/Link'
+import type { Pseudonym } from '../../core/types/Pseudonym'
 import {
   CachedUserAccess,
   canUseProjectAction,
@@ -595,6 +599,65 @@ function pseudonymsToLinks(pseudonyms: any[] = []): Array<{
     .filter((link) => link.group || link.pseudonym)
 }
 
+function updateLinkedPseudonym(
+  links: unknown,
+  previousDomain: string,
+  previousPseudonym: string,
+  nextDomain: string,
+  nextPseudonym: string
+): Link[] {
+  const normalizedLinks = Array.isArray(links)
+    ? (links as Link[])
+    : links
+      ? [links as Link]
+      : []
+
+  return normalizedLinks.map((link) => {
+    const matches =
+      link.group === previousDomain && link.pseudonym === previousPseudonym
+
+    return {
+      ...link,
+      group: matches ? nextDomain : link.group,
+      pseudonym: matches ? nextPseudonym : link.pseudonym,
+      children: link.children?.length
+        ? updateLinkedPseudonym(
+            link.children,
+            previousDomain,
+            previousPseudonym,
+            nextDomain,
+            nextPseudonym
+          )
+        : link.children
+    }
+  })
+}
+
+function removeLinkedPseudonym(
+  links: unknown,
+  domainName: string,
+  pseudonym: string
+): Link[] {
+  const normalizedLinks = Array.isArray(links)
+    ? (links as Link[])
+    : links
+      ? [links as Link]
+      : []
+
+  return normalizedLinks.flatMap((link) => {
+    if (link.group === domainName && link.pseudonym === pseudonym) return []
+
+    return [
+      {
+        ...link,
+        children: link.children?.length
+          ? removeLinkedPseudonym(link.children, domainName, pseudonym)
+          : link.children
+      }
+    ]
+  })
+}
+
 export default function PreReg() {
   const navigate = useNavigate()
   const auth = useAuth()
@@ -626,6 +689,11 @@ export default function PreReg() {
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedInstance, setSelectedInstance] =
     useState<EntityInstance | null>(null)
+  const [linkedPseudonym, setLinkedPseudonym] = useState<Pseudonym | null>(
+    null
+  )
+  const [linkedPseudonymDomain, setLinkedPseudonymDomain] = useState('')
+  const [loadingLinkedPseudonym, setLoadingLinkedPseudonym] = useState(false)
   const [linkageCandidates, setLinkageCandidates] = useState<
     RecordLinkageCandidate[]
   >([])
@@ -962,6 +1030,8 @@ export default function PreReg() {
     setInstances([])
     setHasSearchedInstances(false)
     setSelectedInstance(null)
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
     setLinkageCandidates([])
     setLinkageOriginalData({})
     setModalOpen(false)
@@ -1006,6 +1076,8 @@ export default function PreReg() {
     setModalMode('view')
     setSelectedInstance(instance)
     setFormData(instance.data ?? {})
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
     setModalOpen(true)
 
     const enrichedInstance = await attachPseudonymLinks(instance)
@@ -1030,6 +1102,8 @@ export default function PreReg() {
         : (instance.data ?? {})
     )
     setModalOpen(true)
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
 
     const enrichedInstance = await attachPseudonymLinks(instance)
     setSelectedInstance(enrichedInstance)
@@ -1039,6 +1113,8 @@ export default function PreReg() {
     if (saving) return
     setModalOpen(false)
     setSelectedInstance(null)
+    setLinkedPseudonym(null)
+    setLinkedPseudonymDomain('')
     setLinkageCandidates([])
     setLinkageOriginalData({})
   }
@@ -1048,6 +1124,42 @@ export default function PreReg() {
     if (modalMode === 'create' && linkageCandidates.length > 0) {
       setLinkageCandidates([])
       setLinkageOriginalData({})
+    }
+  }
+
+  const openLinkedPseudonym = async (
+    domainName: string,
+    pseudonymValue: string
+  ) => {
+    if (!pseudonymValue || loadingLinkedPseudonym) return
+
+    setLoadingLinkedPseudonym(true)
+    try {
+      const result = await PseudonymService.searchPseudonym(
+        pseudonymValue,
+        domainName || undefined
+      )
+      if (!result) throw new Error(t('search:pseudonym.notFound'))
+
+      const normalized = {
+        ...result,
+        domainName: result.domainName || domainName
+      }
+      setLinkedPseudonym(normalized)
+      setLinkedPseudonymDomain(normalized.domainName)
+    } catch (error) {
+      console.error('Failed to load linked pseudonym', error)
+      showToast({
+        severity: 'error',
+        summary: t('search:pseudonymView'),
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('search:pseudonym.loadFailed'),
+        life: 4500
+      })
+    } finally {
+      setLoadingLinkedPseudonym(false)
     }
   }
 
@@ -1690,30 +1802,105 @@ export default function PreReg() {
                               <tr className="border-t border-blue-100 bg-blue-50/30 dark:border-blue-950 dark:bg-slate-900/80">
                                 <td colSpan={detailColumnCount} className="p-0">
                                   <div className="space-y-5 px-5 py-6">
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                      <div>
-                                        <h3 className="td-panel-title !mb-0">
-                                          {modalTitle}
-                                        </h3>
-                                        <p className="td-section-subtitle mt-1">
-                                          {modalMode === 'edit'
-                                            ? t('identity:crud.editInlineDescription')
-                                            : t('identity:crud.viewInlineDescription')}
-                                        </p>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        title={t('identity:crud.close')}
-                                        aria-label={t('identity:crud.close')}
-                                        onClick={closeModal}
-                                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
-                                      >
-                                        <XMarkIcon className="h-5 w-5" />
-                                      </button>
-                                    </div>
+                                     <div className="flex flex-wrap items-start justify-between gap-3">
+                                       <div>
+                                         <h3 className="td-panel-title !mb-0">
+                                           {linkedPseudonym
+                                             ? t('search:pseudonymView')
+                                             : modalTitle}
+                                         </h3>
+                                         <p className="td-section-subtitle mt-1">
+                                           {linkedPseudonym
+                                             ? linkedPseudonym.psn
+                                             : modalMode === 'edit'
+                                               ? t('identity:crud.editInlineDescription')
+                                               : t('identity:crud.viewInlineDescription')}
+                                         </p>
+                                       </div>
+                                       <div className="flex gap-2">
+                                         {linkedPseudonym && (
+                                           <PrimaryOutlinedButton
+                                             label={t('search:backToEntityDetails')}
+                                             onClick={() => {
+                                               setLinkedPseudonym(null)
+                                               setLinkedPseudonymDomain('')
+                                             }}
+                                           />
+                                         )}
+                                         <button
+                                           type="button"
+                                           title={t('identity:crud.close')}
+                                           aria-label={t('identity:crud.close')}
+                                           onClick={closeModal}
+                                           className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-100 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                                         >
+                                           <XMarkIcon className="h-5 w-5" />
+                                         </button>
+                                       </div>
+                                     </div>
 
-                                    {selectedSchemaAttributes.length > 0 ? (
-                                      <DynamicEntity
+                                     {linkedPseudonym ? (
+                                       <InlinePseudonymDetail
+                                         embedded
+                                         pseudonym={linkedPseudonym}
+                                         fallbackDomain={linkedPseudonymDomain}
+                                         initialEditMode={false}
+                                         onClose={() => {
+                                           setLinkedPseudonym(null)
+                                           setLinkedPseudonymDomain('')
+                                         }}
+                                         onUpdated={(
+                                           previousDomain,
+                                           previousPseudonym,
+                                           updatedPseudonym
+                                         ) => {
+                                           const normalized = {
+                                             ...updatedPseudonym,
+                                             domainName:
+                                               updatedPseudonym.domainName ||
+                                               previousDomain
+                                           }
+                                           setSelectedInstance((current) =>
+                                             current
+                                               ? {
+                                                   ...current,
+                                                   links: updateLinkedPseudonym(
+                                                     current.links,
+                                                     previousDomain,
+                                                     previousPseudonym,
+                                                     normalized.domainName,
+                                                     normalized.psn
+                                                   )
+                                                 }
+                                               : current
+                                           )
+                                           setLinkedPseudonym(normalized)
+                                           setLinkedPseudonymDomain(
+                                             normalized.domainName
+                                           )
+                                         }}
+                                         onDeleted={(
+                                           domainName,
+                                           pseudonymValue
+                                         ) => {
+                                           setSelectedInstance((current) =>
+                                             current
+                                               ? {
+                                                   ...current,
+                                                   links: removeLinkedPseudonym(
+                                                     current.links,
+                                                     domainName,
+                                                     pseudonymValue
+                                                   )
+                                                 }
+                                               : current
+                                           )
+                                           setLinkedPseudonym(null)
+                                           setLinkedPseudonymDomain('')
+                                         }}
+                                       />
+                                     ) : selectedSchemaAttributes.length > 0 ? (
+                                       <DynamicEntity
                                         entity={{
                                           ...(selectedInstance ?? {}),
                                           data: formData,
@@ -1725,16 +1912,20 @@ export default function PreReg() {
                                         schemaAttributes={selectedSchemaAttributes}
                                         editMode={modalMode === 'edit'}
                                         formData={formData}
-                                        onFieldChange={handleFieldChange}
-                                        showIdentifierPanel
-                                      />
+                                         onFieldChange={handleFieldChange}
+                                         showIdentifierPanel
+                                         onLinkedPseudonymSelect={
+                                           openLinkedPseudonym
+                                         }
+                                       />
                                     ) : (
                                       <p className="rounded-lg border border-dashed border-gray-300 p-4 text-gray-600 dark:border-slate-700 dark:text-gray-300">
                                         {t('search:noEntitySchema')}
                                       </p>
                                     )}
 
-                                    <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 dark:border-slate-700">
+                                     {!linkedPseudonym && (
+                                       <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 dark:border-slate-700">
                                       {modalMode === 'view' &&
                                         selectedInstance && (
                                           <PrimaryButton
@@ -1789,7 +1980,8 @@ export default function PreReg() {
                                         }
                                         disabled={saving}
                                       />
-                                    </div>
+                                       </div>
+                                     )}
                                   </div>
                                 </td>
                               </tr>

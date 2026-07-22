@@ -307,20 +307,22 @@ export default function GroupManager() {
     }
   }, [auth.user?.access_token])
 
-  const canCreateGroups =
-    canUseDomainAction(permissionAccess, undefined, 'domain:create') ||
-    canUseDomainAction(permissionAccess, undefined, 'domain:create-complete')
+  // The domain form submits a nested AlgorithmDTO to /domains/complete.
+  const canCreateGroups = canUseDomainAction(
+    permissionAccess,
+    undefined,
+    'domain:create-complete'
+  )
 
   const canEditGroup = useCallback(
     (groupName?: string) =>
       Boolean(
         groupName &&
-          (canUseDomainAction(permissionAccess, groupName, 'domain:update') ||
-            canUseDomainAction(
-              permissionAccess,
-              groupName,
-              'domain:update-complete'
-            ))
+          canUseDomainAction(
+            permissionAccess,
+            groupName,
+            'domain:update-complete'
+          )
       ),
     [permissionAccess]
   )
@@ -501,7 +503,15 @@ export default function GroupManager() {
       setSelectedGroup(fallback)
       try {
         const complete = await GroupService.getGroup(groupName)
-        setSelectedGroup(complete)
+        // A user may be allowed to list complete hierarchy data but receive a
+        // reduced per-domain view. Keep any algorithm data already available.
+        setSelectedGroup({
+          ...fallback,
+          ...complete,
+          algorithm: complete.algorithm ?? fallback?.algorithm,
+          algorithmInherited:
+            complete.algorithmInherited ?? fallback?.algorithmInherited
+        })
         if (mode === 'edit') {
           const currentTree = useTreeStateStore.getState().tree
           setTree(hydrateGroupNode(currentTree, groupName, complete))

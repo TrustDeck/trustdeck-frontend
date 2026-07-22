@@ -1,15 +1,15 @@
 export type Algorithm = {
-  name: string
-  alphabet: string
-  randomAlgorithmDesiredSize: number // int64
-  randomAlgorithmDesiredSuccessProbability: number // double
-  consecutiveValueCounter: number // int64
-  pseudonymLength: number
-  paddingCharacter: string
-  addCheckDigit: boolean
-  lengthIncludesCheckDigit: boolean
+  name?: string
+  alphabet?: string
+  randomAlgorithmDesiredSize?: number // int64
+  randomAlgorithmDesiredSuccessProbability?: number // double
+  consecutiveValueCounter?: number // int64
+  pseudonymLength?: number
+  paddingCharacter?: string
+  addCheckDigit?: boolean
+  lengthIncludesCheckDigit?: boolean
   salt?: string
-  saltLength: number
+  saltLength?: number
 }
 
 export type Domain = {

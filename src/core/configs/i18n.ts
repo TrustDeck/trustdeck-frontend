@@ -22,7 +22,7 @@ export function normalizeUiLanguage(locale?: string | null): 'en' | 'de' {
 
 // Change this value whenever locale files are changed. It prevents browsers from
 // continuing to use an older cached translation file after a frontend update.
-const translationVersion = '2026-07-22-record-linkage-candidate-review'
+const translationVersion = '2026-07-22-inline-entity-pseudonym-detail'
 
 i18n
   .use(HttpApi)

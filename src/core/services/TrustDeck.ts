@@ -258,6 +258,7 @@ class TrustDeck {
     const url = this.buildUrl(path, params)
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      Accept: 'application/json',
       Authorization: `Bearer ${this.token}`
     }
 

@@ -27,8 +27,8 @@
     "groupPermissions": "Pseudonym-domain permissions",
     "domain": "Pseudonym domain",
     "selectScope": "Project or pseudonym domain",
-    "selectDescription": "Choose the project scope or search and select a pseudonym domain.",
-    "projectCardDescription": "Manage permissions that apply to the selected project."
+    "selectDescription": "Select the project or a pseudonym domain. Use the search field in the dropdown to filter the list.",
+    "searchPlaceholder": "Search project or pseudonym domain"
   },
   "status": {
     "granted": "Granted",
@@ -121,18 +121,5 @@
     "edit": "Editing"
   },
   "viewModeHint": "Permissions are shown read-only. Select Edit permissions to make changes.",
-  "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving.",
-  "domainSearch": {
-    "label": "Search pseudonym domains",
-    "placeholder": "Enter at least two characters or *",
-    "loading": "Searching pseudonym domains...",
-    "searchFailed": "Pseudonym domains could not be searched.",
-    "enterMoreCharacters": "Enter at least two characters or use * to show all available domains.",
-    "noResults": "No manageable pseudonym domains match this search.",
-    "resultCount": "{{count}} domain result",
-    "resultCount_other": "{{count}} domain results",
-    "page": "Page {{page}} of {{pageCount}}",
-    "previousPage": "Previous page",
-    "nextPage": "Next page"
-  }
+  "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving."
 }

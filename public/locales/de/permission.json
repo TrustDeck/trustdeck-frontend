@@ -27,8 +27,8 @@
     "groupPermissions": "Berechtigungen für Pseudonym-Domänen",
     "domain": "Pseudonym-Domäne",
     "selectScope": "Projekt oder Pseudonym-Domäne",
-    "selectDescription": "Wählen Sie den Projektbereich oder suchen und wählen Sie eine Pseudonym-Domäne aus.",
-    "projectCardDescription": "Berechtigungen verwalten, die für das ausgewählte Projekt gelten."
+    "selectDescription": "Wählen Sie das Projekt oder eine Pseudonym-Domäne aus. Mit dem Suchfeld im Dropdown können Sie die Liste filtern.",
+    "searchPlaceholder": "Projekt oder Pseudonym-Domäne suchen"
   },
   "status": {
     "granted": "Vergeben",
@@ -121,18 +121,5 @@
     "edit": "Bearbeitung"
   },
   "viewModeHint": "Die Berechtigungen werden schreibgeschützt angezeigt. Wählen Sie „Berechtigungen bearbeiten“, um Änderungen vorzunehmen.",
-  "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen.",
-  "domainSearch": {
-    "label": "Pseudonym-Domänen suchen",
-    "placeholder": "Mindestens zwei Zeichen oder * eingeben",
-    "loading": "Pseudonym-Domänen werden gesucht...",
-    "searchFailed": "Pseudonym-Domänen konnten nicht gesucht werden.",
-    "enterMoreCharacters": "Geben Sie mindestens zwei Zeichen ein oder verwenden Sie *, um alle verfügbaren Domänen anzuzeigen.",
-    "noResults": "Keine verwaltbare Pseudonym-Domäne entspricht dieser Suche.",
-    "resultCount": "{{count}} Domänen-Treffer",
-    "resultCount_other": "{{count}} Domänen-Treffer",
-    "page": "Seite {{page}} von {{pageCount}}",
-    "previousPage": "Vorherige Seite",
-    "nextPage": "Nächste Seite"
-  }
+  "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen."
 }

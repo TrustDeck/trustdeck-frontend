@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 import Panel from '@component/common/Panel'
+import CustomDropdown from '@component/form/CustomDropdown'
 import PageHeader from '@component/common/PageHeader'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
@@ -35,7 +36,6 @@ import type {
   ProjectPermissionUpdate
 } from '../project/types'
 import { permissionKey } from '../project/utils/permissionRows'
-import DomainPermissionSearch from './components/DomainPermissionSearch'
 import {
   DOMAIN_SUBGROUP_LABELS,
   DOMAIN_SUBGROUP_ORDER,
@@ -280,29 +280,44 @@ function PermissionRows({
               </span>
             </span>
 
-            <span
-              className={`mt-4 flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
-                checked
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100'
-                  : 'border-gray-300 bg-white text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200'
-              }`}
-            >
-              <span className="flex items-center gap-2 font-semibold">
-                {checked ? (
-                  <CheckCircleIcon className="h-5 w-5 shrink-0" />
-                ) : (
-                  <XCircleIcon className="h-5 w-5 shrink-0" />
-                )}
-                {checked ? t('status.granted') : t('status.notGranted')}
-              </span>
-              {editable && (
+            {editable ? (
+              <span
+                className={`mt-4 flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
+                  checked
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100'
+                    : 'border-gray-300 bg-white text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200'
+                }`}
+              >
+                <span className="flex items-center gap-2 font-semibold">
+                  {checked ? (
+                    <CheckCircleIcon className="h-5 w-5 shrink-0" />
+                  ) : (
+                    <XCircleIcon className="h-5 w-5 shrink-0" />
+                  )}
+                  {checked ? t('status.granted') : t('status.notGranted')}
+                </span>
                 <span className="text-right text-xs font-semibold">
                   {checked
                     ? t('actions.clickToRevoke')
                     : t('actions.clickToGrant')}
                 </span>
-              )}
-            </span>
+              </span>
+            ) : (
+              <span
+                className={`mt-4 inline-flex w-fit items-center gap-2 self-start rounded-full px-3 py-1.5 text-sm font-semibold ${
+                  checked
+                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
+                    : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
+                }`}
+              >
+                {checked ? (
+                  <CheckCircleIcon className="h-4 w-4 shrink-0" />
+                ) : (
+                  <XCircleIcon className="h-4 w-4 shrink-0" />
+                )}
+                {checked ? t('status.granted') : t('status.notGranted')}
+              </span>
+            )}
           </label>
         )
       })}
@@ -788,32 +803,14 @@ export default function GlobalPermissions({
     [scopeOptions, selectedScopeKey]
   )
 
-  const projectScopeOption = useMemo(
-    () => scopeOptions.find((option) => option.resourceType === 'PROJECT'),
-    [scopeOptions]
-  )
-
-  const domainScopeOptions = useMemo(
+  const scopeDropdownOptions = useMemo(
     () =>
-      scopeOptions
-        .filter(
-          (option) => option.resourceType === 'DOMAIN' && option.resourceName
-        )
-        .sort((left, right) =>
-          String(left.resourceName).localeCompare(String(right.resourceName))
-        ),
+      scopeOptions.map((option) => ({
+        label: option.label,
+        value: option.key
+      })),
     [scopeOptions]
   )
-
-  const domainScopeNames = useMemo(
-    () => domainScopeOptions.map((option) => option.resourceName!),
-    [domainScopeOptions]
-  )
-
-  const selectedDomainName =
-    selectedScope?.resourceType === 'DOMAIN'
-      ? selectedScope.resourceName
-      : undefined
 
   const selectScope = useCallback((scopeKey: string) => {
     setSelectedScopeKey(scopeKey)
@@ -1257,42 +1254,21 @@ export default function GlobalPermissions({
                     </p>
                   </div>
 
-                  {projectScopeOption && (
-                    <button
-                      type="button"
-                      onClick={() => selectScope(projectScopeOption.key)}
-                      aria-pressed={selectedScopeKey === projectScopeOption.key}
-                      className={`flex w-full items-center justify-between gap-4 rounded-xl border-2 px-5 py-4 text-left transition focus:outline-none focus:ring-2 focus:ring-color-blue/30 ${
-                        selectedScopeKey === projectScopeOption.key
-                          ? 'border-color-blue bg-blue-50 dark:border-blue-500 dark:bg-blue-950/35'
-                          : 'border-gray-200 bg-white hover:border-color-blue hover:bg-blue-50/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
-                      }`}
-                    >
-                      <span>
-                        <span className="block text-base font-semibold text-gray-900 dark:text-gray-100">
-                          {projectScopeOption.label}
-                        </span>
-                        <span className="mt-1 block text-sm text-gray-600 dark:text-gray-300">
-                          {t('scope.projectCardDescription')}
-                        </span>
-                      </span>
-                      {selectedScopeKey === projectScopeOption.key && (
-                        <CheckCircleIcon className="h-6 w-6 shrink-0 text-color-blue" />
-                      )}
-                    </button>
-                  )}
-
-                  {domainScopeOptions.length > 0 ? (
-                    <DomainPermissionSearch
-                      availableDomainNames={domainScopeNames}
-                      selectedDomainName={selectedDomainName}
-                      onSelect={(domainName) =>
-                        selectScope(`DOMAIN:${domainName}`)
+                  {scopeDropdownOptions.length > 0 ? (
+                    <CustomDropdown
+                      id="permission-scope"
+                      label={t('scope.selectScope')}
+                      value={selectedScopeKey}
+                      options={scopeDropdownOptions}
+                      onChange={(event) =>
+                        selectScope(String(event.value ?? ''))
                       }
+                      filter
+                      filterPlaceholder={t('scope.searchPlaceholder')}
                     />
                   ) : (
                     <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-                      {t('empty.noGroupRows')}
+                      {t('empty.noProjectOrGroupRows')}
                     </p>
                   )}
                 </section>

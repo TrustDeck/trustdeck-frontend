@@ -191,13 +191,13 @@ export default function InlineEntityDetail({
     domainName: string,
     pseudonymValue: string
   ) => {
-    if (!domainName || !pseudonymValue || loadingLinkedPseudonym) return
+    if (!pseudonymValue || loadingLinkedPseudonym) return
 
     setLoadingLinkedPseudonym(true)
     try {
       const result = await PseudonymService.searchPseudonym(
         pseudonymValue,
-        domainName
+        domainName || undefined
       )
       if (!result) {
         throw new Error(t('pseudonym.notFound'))

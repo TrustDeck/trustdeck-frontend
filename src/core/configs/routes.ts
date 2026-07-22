@@ -184,7 +184,7 @@ export const routes: RouteConfig[] = [
     sidebarGroup: 'management'
   },
   {
-    path: '/group-management',
+    path: '/domain-management',
     titleKey: 'layout:menu.pseudonymDomains',
     component: GroupManager,
     Icon: ArchiveBoxIcon,

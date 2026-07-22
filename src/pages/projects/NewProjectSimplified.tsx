@@ -104,7 +104,7 @@ export default function NewProjectSimplified() {
       setEntities([])
       setEntityAttributes([])
       setTimeout(() => {
-        navigate('/group-management')
+        navigate('/domain-management')
       }, 2000)
     } catch (error) {
       console.error(error)

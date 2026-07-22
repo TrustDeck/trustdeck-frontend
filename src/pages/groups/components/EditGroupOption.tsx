@@ -15,9 +15,13 @@ import type { Domain } from '../../../core/types/Domain'
 
 type EditGroupOptionProps = {
   onCancel?: () => void
+  useCompleteEndpoint: boolean
 }
 
-export default function EditGroupOption({ onCancel }: EditGroupOptionProps) {
+export default function EditGroupOption({
+  onCancel,
+  useCompleteEndpoint
+}: EditGroupOptionProps) {
   const {
     tree,
     setTree,
@@ -99,7 +103,7 @@ export default function EditGroupOption({ onCancel }: EditGroupOptionProps) {
     ).trim()
 
     try {
-      await GroupService.updateGroups(tree, undefined)
+      await GroupService.updateGroups(tree, undefined, useCompleteEndpoint)
 
       let completeDomain: Domain | null = null
       for (const candidateName of [requestedName, previousName]) {

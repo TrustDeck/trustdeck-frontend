@@ -307,14 +307,16 @@ export default function GroupManager() {
     }
   }, [auth.user?.access_token])
 
-  // The domain form submits a nested AlgorithmDTO to /domains/complete.
-  const canCreateGroups = canUseDomainAction(
+  const canCreateCompleteGroups = canUseDomainAction(
     permissionAccess,
     undefined,
     'domain:create-complete'
   )
+  const canCreateGroups =
+    canCreateCompleteGroups ||
+    canUseDomainAction(permissionAccess, undefined, 'domain:create')
 
-  const canEditGroup = useCallback(
+  const canEditCompleteGroup = useCallback(
     (groupName?: string) =>
       Boolean(
         groupName &&
@@ -323,8 +325,18 @@ export default function GroupManager() {
             groupName,
             'domain:update-complete'
           )
-      ),
+    ),
     [permissionAccess]
+  )
+
+  const canEditGroup = useCallback(
+    (groupName?: string) =>
+      canEditCompleteGroup(groupName) ||
+      Boolean(
+        groupName &&
+          canUseDomainAction(permissionAccess, groupName, 'domain:update')
+      ),
+    [canEditCompleteGroup, permissionAccess]
   )
 
   const canDeleteGroup = useCallback(
@@ -968,7 +980,14 @@ export default function GroupManager() {
                     </button>
                   </div>
                   <Divider />
-                  <GroupOption onClose={closeEditor} />
+                  <GroupOption
+                    onClose={closeEditor}
+                    useCompleteEndpoint={
+                      viewMode === 'create'
+                        ? canCreateCompleteGroups
+                        : canEditCompleteGroup(selectedGroupName)
+                    }
+                  />
                 </div>
               )}
             </Panel>

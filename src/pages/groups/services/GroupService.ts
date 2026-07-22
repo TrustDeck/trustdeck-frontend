@@ -362,6 +362,32 @@ const mapCreateDomain = (
   return output
 }
 
+/** Creates the reduced request body accepted by POST /domains. */
+const mapStandardCreateDomain = (
+  payload: GroupStoredAttributes
+): Record<string, unknown> => {
+  const output: Record<string, unknown> = {
+    name: payload.label,
+    prefix: payload.prefix,
+    ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
+      ? { superDomainName: payload.parentgroup }
+      : {}),
+    description: payload.description,
+    validFrom: toLocalDateTime(payload.validFrom),
+    ...(payload.validTo
+      ? { validTo: toLocalDateTime(payload.validTo) }
+      : payload.validityTime
+        ? { validityTime: payload.validityTime }
+        : {})
+  }
+
+  Object.keys(output).forEach((key) => {
+    if (output[key] === undefined || output[key] === null) delete output[key]
+  })
+
+  return output
+}
+
 /** Creates a partial request body for PUT /domains/complete. */
 const mapUpdateDomain = (node: CustomTreeNode): Record<string, unknown> => {
   const stored = node.data.stored
@@ -428,6 +454,48 @@ const mapUpdateDomain = (node: CustomTreeNode): Record<string, unknown> => {
   Object.keys(output).forEach((key) => {
     if (output[key] === undefined) delete output[key]
   })
+
+  return output
+}
+
+/** Creates the reduced request body accepted by PUT /domains. */
+const mapStandardUpdateDomain = (
+  node: CustomTreeNode
+): Record<string, unknown> => {
+  const stored = node.data.stored
+  const temporal = node.data.temporal
+  const output: Record<string, unknown> = {}
+
+  assignIfChanged(output, 'name', stored.label, temporal.label)
+  assignIfChanged(output, 'prefix', stored.prefix, temporal.prefix)
+  assignIfChanged(output, 'description', stored.description, temporal.description)
+  assignIfChanged(
+    output,
+    'validFrom',
+    stored.validFrom,
+    temporal.validFrom,
+    (value) => toLocalDateTime(String(value ?? ''))
+  )
+  assignIfChanged(
+    output,
+    'validTo',
+    stored.validTo,
+    temporal.validTo,
+    (value) => toLocalDateTime(String(value ?? ''))
+  )
+  assignIfChanged(
+    output,
+    'validityTime',
+    stored.validityTime,
+    temporal.validityTime
+  )
+  assignIfChanged(
+    output,
+    'multiplePsnAllowed',
+    stored.multiplepsn,
+    temporal.multiplepsn,
+    Boolean
+  )
 
   return output
 }
@@ -563,10 +631,13 @@ const GroupService = {
   getGroup: async (groupName: string): Promise<Domain> =>
     TrustDeck.instance().getDomain(groupName),
 
-  createGroup: async (payload: GroupStoredAttributes): Promise<Domain> => {
-    const created = await TrustDeck.instance().createGroupComplete(
-      mapCreateDomain(payload)
-    )
+  createGroup: async (
+    payload: GroupStoredAttributes,
+    complete = true
+  ): Promise<Domain> => {
+    const created = complete
+      ? await TrustDeck.instance().createGroupComplete(mapCreateDomain(payload))
+      : await TrustDeck.instance().createGroup(mapStandardCreateDomain(payload))
     if (created && typeof created === 'object' && created.name) {
       return created as Domain
     }
@@ -580,7 +651,8 @@ const GroupService = {
 
   updateGroups: async (
     trees: CustomTreeNode[],
-    exclude?: CustomTreeNode
+    exclude?: CustomTreeNode,
+    complete = true
   ): Promise<void> => {
     const flattenLeavesFirst = (nodes: CustomTreeNode[]): CustomTreeNode[] => {
       const output: CustomTreeNode[] = []
@@ -601,13 +673,15 @@ const GroupService = {
     for (const node of nodesToUpdate) {
       const storedName = node.data.stored.label
       if (!storedName) continue
-      const payload = mapUpdateDomain(node)
+      const payload = complete
+        ? mapUpdateDomain(node)
+        : mapStandardUpdateDomain(node)
       if (Object.keys(payload).length === 0) continue
-      await TrustDeck.instance().updateGroupComplete(
-        storedName,
-        true,
-        payload
-      )
+      if (complete) {
+        await TrustDeck.instance().updateGroupComplete(storedName, true, payload)
+      } else {
+        await TrustDeck.instance().updateGroup(storedName, payload)
+      }
     }
   },
 

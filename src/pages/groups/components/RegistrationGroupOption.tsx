@@ -12,7 +12,11 @@ import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 
-export default function RegistrationGroupOption() {
+export default function RegistrationGroupOption({
+  useCompleteEndpoint
+}: {
+  useCompleteEndpoint: boolean
+}) {
   const { t } = useTranslation(['groups', 'common'])
   const [isCreating, setIsCreating] = useState(false)
   const showToast = useToastStore((state) => state.show)
@@ -73,8 +77,11 @@ export default function RegistrationGroupOption() {
         throw new Error('The new domain could not be resolved from the tree.')
       }
 
-      await GroupService.updateGroups(tree, currentDataNode)
-      let createdDomain = await GroupService.createGroup(createPayload)
+      await GroupService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
+      let createdDomain = await GroupService.createGroup(
+        createPayload,
+        useCompleteEndpoint
+      )
 
       try {
         createdDomain = await GroupService.getGroup(createdName)

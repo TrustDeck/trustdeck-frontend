@@ -71,6 +71,8 @@ export type EntityCreationResult<T = Record<string, any>> = {
   created: boolean
 }
 
+export type RecordLinkageCreationResolution = 'CREATE_ORIGINAL'
+
 export type RecordLinkageCandidate = {
   entityInstance: Record<string, any>
   score: number
@@ -622,13 +624,17 @@ class TrustDeck {
 
   public async postEntityWithResult(
     entityType: string,
-    payload: unknown
+    payload: unknown,
+    recordLinkageResolution?: RecordLinkageCreationResolution
   ): Promise<EntityCreationResult> {
     const projectName = this.getSelectedProjectName()
     const response = await this.requestWithStatus<Record<string, any>>(
       'POST',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityType)}`,
-      payload
+      payload,
+      recordLinkageResolution
+        ? { recordLinkageResolution }
+        : undefined
     )
     return {
       entity: response.data,

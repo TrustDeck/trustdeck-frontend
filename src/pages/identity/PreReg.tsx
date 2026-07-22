@@ -24,6 +24,7 @@ import TrustDeck, {
   TrustDeckHttpError
 } from '../../core/services/TrustDeck'
 import DynamicEntity from '../search/components/DynamicEntity'
+import RecordLinkageCandidateReview from './components/RecordLinkageCandidateReview'
 import { pickSchemaData } from '../search/utils/schemaData'
 import type { Attribute } from '../../core/stores/ProjectStore'
 import {
@@ -628,8 +629,9 @@ export default function PreReg() {
   const [linkageCandidates, setLinkageCandidates] = useState<
     RecordLinkageCandidate[]
   >([])
-  const [selectedLinkageCandidate, setSelectedLinkageCandidate] =
-    useState<RecordLinkageCandidate | null>(null)
+  const [linkageOriginalData, setLinkageOriginalData] = useState<
+    Record<string, any>
+  >({})
   const [saving, setSaving] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -961,7 +963,7 @@ export default function PreReg() {
     setHasSearchedInstances(false)
     setSelectedInstance(null)
     setLinkageCandidates([])
-    setSelectedLinkageCandidate(null)
+    setLinkageOriginalData({})
     setModalOpen(false)
     setQuery('')
   }, [selectedTypeName])
@@ -980,7 +982,7 @@ export default function PreReg() {
     setModalMode('create')
     setSelectedInstance(null)
     setLinkageCandidates([])
-    setSelectedLinkageCandidate(null)
+    setLinkageOriginalData({})
     setFormData(buildInitialEntityData(selectedSchemaAttributes))
     setModalOpen(true)
     window.requestAnimationFrame(() => {
@@ -1038,14 +1040,191 @@ export default function PreReg() {
     setModalOpen(false)
     setSelectedInstance(null)
     setLinkageCandidates([])
-    setSelectedLinkageCandidate(null)
+    setLinkageOriginalData({})
   }
 
   const handleFieldChange = (path: Array<string | number>, value: any) => {
     setFormData((prev) => setValueAtPath(prev, path, value))
     if (modalMode === 'create' && linkageCandidates.length > 0) {
       setLinkageCandidates([])
-      setSelectedLinkageCandidate(null)
+      setLinkageOriginalData({})
+    }
+  }
+
+  const prepareEntityData = (
+    inputData: Record<string, any>
+  ): Record<string, any> | null => {
+    const pickedData = selectedSchemaAttributes.length
+      ? pickSchemaData(selectedSchemaAttributes, inputData)
+      : inputData
+    const dataForValidation = selectedSchemaAttributes.length
+      ? pruneEmptyOptionalEntityData(selectedSchemaAttributes, pickedData)
+      : pickedData
+    const validationErrors = validateEntityData(
+      selectedSchemaAttributes,
+      dataForValidation,
+      i18n.language,
+      t
+    )
+
+    if (validationErrors.length > 0) {
+      showToast({
+        severity: 'warn',
+        summary: t('identity:crud.validationFailed'),
+        detail: validationErrors.slice(0, 3).join(' '),
+        life: 6000
+      })
+      return null
+    }
+
+    return selectedSchemaAttributes.length
+      ? coerceEntityDataTypes(selectedSchemaAttributes, dataForValidation)
+      : dataForValidation
+  }
+
+  const showResolvedEntity = async (
+    rawEntity: EntityInstance,
+    fallbackData: Record<string, any>,
+    successMessage: string
+  ) => {
+    const normalized = await attachPseudonymLinks(
+      normalizeInstance({
+        ...rawEntity,
+        data: rawEntity?.data ?? fallbackData
+      })
+    )
+    const identifier = entityId(normalized)
+    setInstances((current) => [
+      normalized,
+      ...current.filter((entry) => entityId(entry) !== identifier)
+    ])
+    setHasSearchedInstances(true)
+    setSelectedInstance(normalized)
+    setLinkageCandidates([])
+    setLinkageOriginalData({})
+    setModalMode('view')
+    setFormData(normalized.data ?? fallbackData)
+    showToast({
+      severity: 'success',
+      summary: t('identity:crud.create'),
+      detail: successMessage,
+      life: 4000
+    })
+  }
+
+  const handleUseLinkageCandidate = async (
+    candidate: RecordLinkageCandidate
+  ) => {
+    if (!candidate?.entityInstance) return
+    setSaving(true)
+    try {
+      await showResolvedEntity(
+        candidate.entityInstance,
+        candidate.entityInstance.data ?? {},
+        t('identity:crud.candidateSelectedSuccess')
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCreateOriginalAfterReview = async () => {
+    if (!selectedTypeName || !canCreateInstances) return
+    const dataToSave = prepareEntityData(linkageOriginalData)
+    if (!dataToSave) return
+
+    setSaving(true)
+    try {
+      const creationResult = await TrustDeck.instance().postEntityWithResult(
+        selectedTypeName,
+        { data: dataToSave },
+        'CREATE_ORIGINAL'
+      )
+      await showResolvedEntity(
+        creationResult.entity,
+        dataToSave,
+        creationResult.created
+          ? t('identity:crud.createSuccess')
+          : t('identity:crud.existingEntityReturned')
+      )
+    } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 409) {
+        showToast({
+          severity: 'error',
+          summary: t('identity:crud.resolveLinkageFailed'),
+          detail: t('identity:crud.createOriginalBackendRequired'),
+          life: 7000
+        })
+        return
+      }
+      if (error instanceof TrustDeckHttpError && error.status === 403) {
+        markBackendDenied('instance:create')
+      }
+      console.error('Failed to create the original entity after linkage review', error)
+      showToast({
+        severity: 'error',
+        summary: t('identity:crud.resolveLinkageFailed'),
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('identity:crud.saveFailed'),
+        life: 5000
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleMergeLinkageCandidate = async (
+    candidate: RecordLinkageCandidate,
+    mergedData: Record<string, any>
+  ) => {
+    if (!selectedTypeName || !canUpdateInstances) return
+    const identifier = entityId(candidate.entityInstance)
+    if (!identifier) return
+    const dataToSave = prepareEntityData(mergedData)
+    if (!dataToSave) return
+
+    setSaving(true)
+    try {
+      const response = await TrustDeck.instance().putEntity(
+        selectedTypeName,
+        { data: dataToSave },
+        identifier
+      )
+      const updated = {
+        ...candidate.entityInstance,
+        ...(response && typeof response === 'object' ? response : {}),
+        data: (response as any)?.data ?? dataToSave
+      }
+      await showResolvedEntity(
+        updated,
+        dataToSave,
+        t('identity:crud.mergeCandidateSuccess')
+      )
+    } catch (error) {
+      if (error instanceof TrustDeckHttpError && error.status === 403) {
+        markBackendDenied('instance:update')
+        showToast({
+          severity: 'warn',
+          summary: t('identity:crud.update'),
+          detail: t('identity:crud.noUpdatePermission'),
+          life: 5000
+        })
+        return
+      }
+      console.error('Failed to merge the entered entity into a linkage candidate', error)
+      showToast({
+        severity: 'error',
+        summary: t('identity:crud.resolveLinkageFailed'),
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('identity:crud.saveFailed'),
+        life: 5000
+      })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -1072,67 +1251,28 @@ export default function PreReg() {
       return
     }
 
-    const pickedData = selectedSchemaAttributes.length
-      ? pickSchemaData(selectedSchemaAttributes, formData)
-      : formData
-    const dataForValidation = selectedSchemaAttributes.length
-      ? pruneEmptyOptionalEntityData(selectedSchemaAttributes, pickedData)
-      : pickedData
-    const validationErrors = validateEntityData(
-      selectedSchemaAttributes,
-      dataForValidation,
-      i18n.language,
-      t
-    )
-
-    if (validationErrors.length > 0) {
-      showToast({
-        severity: 'warn',
-        summary: t('identity:crud.validationFailed'),
-        detail: validationErrors.slice(0, 3).join(' '),
-        life: 6000
-      })
-      return
-    }
+    const dataToSave = prepareEntityData(formData)
+    if (!dataToSave) return
 
     setSaving(true)
     try {
-      const dataToSave = selectedSchemaAttributes.length
-        ? coerceEntityDataTypes(selectedSchemaAttributes, dataForValidation)
-        : dataForValidation
-
       if (modalMode === 'create') {
         const creationResult = await TrustDeck.instance().postEntityWithResult(
           selectedTypeName,
-          {
-            data: dataToSave
-          }
+          { data: dataToSave }
         )
-        const normalized = await attachPseudonymLinks(
-          normalizeInstance(creationResult.entity)
-        )
-        setInstances((current) => [normalized, ...current])
-        setHasSearchedInstances(true)
-        setSelectedInstance(normalized)
-        setLinkageCandidates([])
-        setSelectedLinkageCandidate(null)
-        setModalMode('view')
-        setFormData(normalized.data ?? dataToSave)
-        showToast({
-          severity: 'success',
-          summary: t('identity:crud.create'),
-          detail: creationResult.created
+        await showResolvedEntity(
+          creationResult.entity,
+          dataToSave,
+          creationResult.created
             ? t('identity:crud.createSuccess')
-            : t('identity:crud.existingEntityReturned'),
-          life: 4000
-        })
+            : t('identity:crud.existingEntityReturned')
+        )
       } else if (modalMode === 'edit' && selectedInstance) {
         const identifier = entityId(selectedInstance)
         await TrustDeck.instance().putEntity(
           selectedTypeName,
-          {
-            data: dataToSave
-          },
+          { data: dataToSave },
           identifier
         )
         const updated = { ...selectedInstance, data: dataToSave }
@@ -1160,6 +1300,7 @@ export default function PreReg() {
         const candidates = parseRecordLinkageCandidates(error.body)
         if (candidates.length > 0) {
           setLinkageCandidates(candidates)
+          setLinkageOriginalData(structuredClone(dataToSave))
           showToast({
             severity: 'warn',
             summary: t('identity:crud.linkageConflictTitle'),
@@ -1689,7 +1830,22 @@ export default function PreReg() {
           <div ref={createPanelRef}>
             <Panel noMaxWidth className="mx-auto w-full" title={modalTitle}>
               <div className="flex flex-col gap-4">
-                {selectedSchemaAttributes.length > 0 ? (
+                {linkageCandidates.length > 0 ? (
+                  <RecordLinkageCandidateReview
+                    candidates={linkageCandidates}
+                    originalData={linkageOriginalData}
+                    schemaAttributes={selectedSchemaAttributes}
+                    canUpdateCandidates={canUpdateInstances}
+                    resolving={saving}
+                    onUseCandidate={handleUseLinkageCandidate}
+                    onCreateOriginal={handleCreateOriginalAfterReview}
+                    onMergeCandidate={handleMergeLinkageCandidate}
+                    onBackToOriginal={() => {
+                      setLinkageCandidates([])
+                      setLinkageOriginalData({})
+                    }}
+                  />
+                ) : selectedSchemaAttributes.length > 0 ? (
                   <DynamicEntity
                     entity={{
                       data: formData,
@@ -1710,134 +1866,33 @@ export default function PreReg() {
                   </p>
                 )}
 
-                {linkageCandidates.length > 0 && (
-                  <div className="w-full rounded-xl border border-amber-300 bg-amber-50 p-4 text-left dark:border-amber-800 dark:bg-amber-950/30">
-                    <h3 className="text-base font-semibold text-amber-950 dark:text-amber-100">
-                      {t('identity:crud.linkageConflictTitle')}
-                    </h3>
-                    <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
-                      {t('identity:crud.linkageConflictText', {
-                        count: linkageCandidates.length
-                      })}
-                    </p>
-                    <div className="mt-4 overflow-x-auto rounded-lg border border-amber-200 bg-white dark:border-amber-900 dark:bg-slate-950">
-                      <table className="w-full min-w-[680px] text-left text-sm">
-                        <thead className="bg-amber-100/70 text-amber-950 dark:bg-amber-950/60 dark:text-amber-100">
-                          <tr>
-                            <th className="px-3 py-2 font-semibold">
-                              {t('identity:crud.identifier')}
-                            </th>
-                            <th className="px-3 py-2 font-semibold">
-                              {t('identity:crud.linkageScore')}
-                            </th>
-                            <th className="px-3 py-2 font-semibold">
-                              {t('identity:crud.linkageStatus')}
-                            </th>
-                            <th className="px-3 py-2 font-semibold">
-                              {t('identity:crud.linkageMatchedOn')}
-                            </th>
-                            <th className="w-16 px-3 py-2" />
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-amber-100 dark:divide-amber-950">
-                          {linkageCandidates.map((candidate, index) => (
-                            <tr
-                              key={`${entityId(candidate.entityInstance)}-${index}`}
-                            >
-                              <td className="px-3 py-2 font-mono">
-                                {entityId(candidate.entityInstance) || '—'}
-                              </td>
-                              <td className="px-3 py-2">
-                                {(
-                                  Number(candidate.normalizedScore ?? 0) * 100
-                                ).toLocaleString(i18n.language, {
-                                  maximumFractionDigits: 2
-                                })}
-                                %
-                              </td>
-                              <td className="px-3 py-2">
-                                {candidate.candidateStatus ?? '—'}
-                              </td>
-                              <td className="px-3 py-2">
-                                {(candidate.matchedOn ?? []).join(', ') || '—'}
-                              </td>
-                              <td className="px-3 py-2 text-right">
-                                <IconActionButton
-                                  title={t('identity:crud.viewCandidate')}
-                                  onClick={() =>
-                                    setSelectedLinkageCandidate(candidate)
-                                  }
-                                >
-                                  <EyeIcon className="h-5 w-5" />
-                                </IconActionButton>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                {linkageCandidates.length === 0 && (
+                  <div className="flex w-full flex-wrap justify-center gap-3 border-t border-gray-200 pt-5 dark:border-slate-700">
+                    <PrimaryButton
+                      label={t('identity:crud.create')}
+                      onClick={handleSave}
+                      loading={saving}
+                      disabled={
+                        !selectedTypeName ||
+                        selectedSchemaAttributes.length === 0 ||
+                        !canCreateInstances
+                      }
+                      icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                    />
+                    <PrimaryOutlinedButton
+                      label={t('identity:crud.cancel')}
+                      onClick={closeModal}
+                      icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                      disabled={saving}
+                    />
                   </div>
                 )}
-
-                <div className="flex w-full flex-wrap justify-center gap-3 border-t border-gray-200 pt-5 dark:border-slate-700">
-                  <PrimaryButton
-                    label={t('identity:crud.create')}
-                    onClick={handleSave}
-                    loading={saving}
-                    disabled={
-                      !selectedTypeName ||
-                      selectedSchemaAttributes.length === 0 ||
-                      !canCreateInstances
-                    }
-                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
-                  />
-                  <PrimaryOutlinedButton
-                    label={t('identity:crud.cancel')}
-                    onClick={closeModal}
-                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-                    disabled={saving}
-                  />
-                </div>
               </div>
             </Panel>
           </div>
         )}
       </div>
 
-      <Dialog
-        visible={Boolean(selectedLinkageCandidate)}
-        onHide={() => setSelectedLinkageCandidate(null)}
-        header={t('identity:crud.candidateDetails')}
-        closable
-        style={{ width: '980px', maxWidth: '95vw' }}
-        className="mx-auto td-identity-entity-dialog"
-      >
-        {selectedLinkageCandidate && (
-          <div className="flex flex-col gap-4">
-            <DynamicEntity
-              entity={{
-                ...selectedLinkageCandidate.entityInstance,
-                data: selectedLinkageCandidate.entityInstance.data ?? {},
-                entityTypeName: selectedTypeName,
-                type: selectedTypeName,
-                trustdeckID: entityId(selectedLinkageCandidate.entityInstance)
-              }}
-              schemaAttributes={selectedSchemaAttributes}
-              editMode={false}
-              formData={selectedLinkageCandidate.entityInstance.data ?? {}}
-              onFieldChange={() => undefined}
-              showIdentifierPanel
-            />
-            <div className="flex justify-end">
-              <PrimaryOutlinedButton
-                label={t('identity:crud.close')}
-                onClick={() => setSelectedLinkageCandidate(null)}
-                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-              />
-            </div>
-          </div>
-        )}
-      </Dialog>
 
       <Dialog
         visible={deleteConfirmOpen}

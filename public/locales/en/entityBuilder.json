@@ -177,7 +177,7 @@
       "ngramBloomFilter": "N-gram Bloom filter",
       "hmacExact": "HMAC-based exact matching"
     },
-    "attributeTitle": "Attribute linkage settings",
+    "attributeTitle": "Record Linkage",
     "attributeDescription": "Choose how this attribute participates in the entity-level linkage process: normalization, encoding, blocking, and weight."
   },
   "linkageConfigHelp": {
@@ -381,14 +381,13 @@
   "editEntityHelp": "Edit the entity settings and attribute definition directly below.",
   "viewEntityHelp": "Review the associated pseudonym domain, base entity, and entity attributes.",
   "entityLinkage": {
-    "title": "Entity-level record linkage",
+    "title": "Record Linkage",
     "description": "Configure whether record linkage is used for this entity and how candidates are scored, protected, and handled during creation.",
     "enabled": "Enable record linkage for this entity",
     "minScore": "Minimum raw score",
     "minNormalizedScore": "Minimum normalized score",
     "bloomMinSimilarity": "Minimum Bloom similarity",
     "candidateLimit": "Candidate limit",
-    "exactToken": "Generate an additional exact HMAC token",
     "autoLinkOnCreate": "Check for matching entities automatically before creation",
     "onMatch": "Behavior when a match is found",
     "onMatchReject": "Reject creation and return candidates",
@@ -401,7 +400,6 @@
     "minNormalizedScore": "Minimum fraction of the possible query score required for a candidate. Enter a value between 0 and 1.",
     "bloomMinSimilarity": "Minimum Dice similarity at which a Bloom-filter attribute contributes to the entity score. Enter a value between 0 and 1.",
     "candidateLimit": "Maximum number of blocked candidates loaded before detailed scoring.",
-    "exactToken": "For N-gram Bloom filter linkage, additionally creates a protected exact token so exact agreement can contribute strongly.",
     "autoLinkOnCreate": "Runs entity-level record linkage before a new entity is stored.",
     "onMatch": "Reject returns the candidate list with HTTP 409. Return existing sends the best active matching entity instead of creating a duplicate."
   },

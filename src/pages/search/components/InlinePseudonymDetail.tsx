@@ -17,7 +17,6 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
-import Divider from '../../../core/components/common/Divider'
 import useToastStore from '../../../core/stores/ToastStore'
 import { formatDateTime } from '../../../core/utils/date'
 import PseudonymTable from './PseudonymTable'
@@ -369,8 +368,6 @@ export default function InlinePseudonymDetail({
                   )}
                 </div>
               </div>
-              <Divider />
-
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {renderField(
                   'domainName',
@@ -405,7 +402,6 @@ export default function InlinePseudonymDetail({
             <h2 className="text-3xl font-semibold">
               {t('search:pseudonym.linkedPseudonyms')}
             </h2>
-            <Divider />
             <PseudonymTable pseudonym={pseudonym} />
           </section>
         </div>

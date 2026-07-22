@@ -480,7 +480,7 @@ export default function GlobalPermissions({
   const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
   const definedPermissionsRef = useRef<DefinedPermission[] | null>(null)
   const [currentEffectivePermissions, setCurrentEffectivePermissions] = useState<EffectivePermission[]>([])
-  const [projectDomainNames, setProjectDomainNames] = useState<Set<string>>(new Set<string>())
+  const [permissionDomainNames, setPermissionDomainNames] = useState<Set<string>>(new Set<string>())
   const [permissionState, setPermissionState] = useState<Record<string, boolean>>({})
   const [permissionApiState, setPermissionApiState] = useState<LoadingState>('idle')
   const [currentAccessState, setCurrentAccessState] = useState<LoadingState>('idle')
@@ -563,13 +563,15 @@ export default function GlobalPermissions({
   useEffect(() => {
     let active = true
 
-    async function loadProjectDomains() {
+    async function loadPermissionDomains() {
       if (scopeMode !== 'project-domain' || !selectedProject?.abbreviation) {
-        if (active) setProjectDomainNames(new Set<string>())
+        if (active) setPermissionDomainNames(new Set<string>())
         return
       }
 
-      const assigned = new Set<string>()
+      const currentProjectAssigned = new Set<string>()
+      const allAssigned = new Set<string>()
+
       try {
         const entityTypes = await TrustDeck.instance().getProjectEntities(
           '*',
@@ -577,26 +579,85 @@ export default function GlobalPermissions({
         )
         entityTypes.forEach((entityType: any) => {
           const domain = String(entityType?.associatedDomainName ?? '').trim()
-          if (domain) assigned.add(domain)
+          if (!domain) return
+          currentProjectAssigned.add(domain)
+          allAssigned.add(domain)
         })
       } catch (error) {
         console.warn('Could not load project pseudonym domains', error)
       }
 
-      const resolved = new Set(assigned)
-      if (assigned.size > 0) {
+      const resolved = new Set(currentProjectAssigned)
+      let domainHierarchy: any[] = []
+      try {
+        domainHierarchy = await TrustDeck.instance().getDomainsHierarchy()
+        if (currentProjectAssigned.size > 0) {
+          collectAssignedDomainHierarchy(
+            domainHierarchy,
+            currentProjectAssigned,
+            resolved
+          )
+        }
+      } catch (error) {
+        console.warn('Could not load the pseudonym-domain hierarchy', error)
+      }
+
+      let assignmentLookupComplete = false
+      try {
+        const projects = await TrustDeck.instance().getProjects()
+        const results = await Promise.allSettled(
+          projects.map(async (project: any) => {
+            const abbreviation = String(project?.abbreviation ?? '').trim()
+            if (!abbreviation) return []
+            return TrustDeck.instance().getProjectEntities('*', abbreviation)
+          })
+        )
+
+        results.forEach((result) => {
+          if (result.status !== 'fulfilled') return
+          result.value.forEach((entityType: any) => {
+            const domain = String(entityType?.associatedDomainName ?? '').trim()
+            if (domain) allAssigned.add(domain)
+          })
+        })
+        assignmentLookupComplete = results.every(
+          (result) => result.status === 'fulfilled'
+        )
+      } catch (error) {
+        console.warn(
+          'Could not determine domain assignments across projects',
+          error
+        )
+      }
+
+      if (assignmentLookupComplete) {
+        const assignedWithAncestors = new Set(allAssigned)
+        if (domainHierarchy.length > 0 && allAssigned.size > 0) {
+          collectAssignedDomainHierarchy(
+            domainHierarchy,
+            allAssigned,
+            assignedWithAncestors
+          )
+        }
+
         try {
-          const hierarchy = await TrustDeck.instance().getDomainsHierarchy()
-          collectAssignedDomainHierarchy(hierarchy, assigned, resolved)
+          const readableDomains =
+            await TrustDeck.instance().searchReadableDomains('*')
+          readableDomains.forEach((domain) => {
+            const domainName = String(domain?.name ?? '').trim()
+            if (domainName && !assignedWithAncestors.has(domainName)) {
+              resolved.add(domainName)
+            }
+          })
         } catch (error) {
-          console.warn('Could not enrich project domain hierarchy', error)
+          console.warn('Could not load unassigned pseudonym domains', error)
         }
       }
 
-      if (active) setProjectDomainNames(resolved)
+      if (active) setPermissionDomainNames(resolved)
     }
 
-    void loadProjectDomains()
+    void loadPermissionDomains()
     return () => {
       active = false
     }
@@ -648,7 +709,7 @@ export default function GlobalPermissions({
             ) as Promise<unknown[]>
           ]
 
-          Array.from(projectDomainNames).forEach((domainName) => {
+          Array.from(permissionDomainNames).forEach((domainName) => {
             requests.push(
               TrustDeck.instance().getDomainPermissions(
                 domainName,
@@ -691,7 +752,7 @@ export default function GlobalPermissions({
     auth.isAuthenticated,
     auth.isLoading,
     auth.user?.profile?.sub,
-    projectDomainNames,
+    permissionDomainNames,
     scopeMode,
     selectedProject?.abbreviation
   ])
@@ -716,7 +777,7 @@ export default function GlobalPermissions({
           })
         )
 
-      Array.from(projectDomainNames)
+      Array.from(permissionDomainNames)
         .sort((a, b) => a.localeCompare(b))
         .forEach((domainName) => {
           definedPermissions
@@ -732,7 +793,7 @@ export default function GlobalPermissions({
     }
 
     return uniquePermissions(rows)
-  }, [definedPermissions, projectDomainNames, scopeMode, selectedProject?.abbreviation])
+  }, [definedPermissions, permissionDomainNames, scopeMode, selectedProject?.abbreviation])
 
   const scopedCurrentPermissions = useMemo(() => {
     return currentEffectivePermissions.filter((permission) => {
@@ -746,10 +807,10 @@ export default function GlobalPermissions({
       return (
         permission.resourceType === 'DOMAIN' &&
         Boolean(permission.resourceName) &&
-        projectDomainNames.has(permission.resourceName!)
+        permissionDomainNames.has(permission.resourceName!)
       )
     })
-  }, [currentEffectivePermissions, projectDomainNames, scopeMode, selectedProject?.abbreviation])
+  }, [currentEffectivePermissions, permissionDomainNames, scopeMode, selectedProject?.abbreviation])
 
   const canManageAll = privilegedRole(currentUserRoles ?? [])
   const manageableRows = useMemo(() => {
@@ -1257,7 +1318,6 @@ export default function GlobalPermissions({
                   {scopeDropdownOptions.length > 0 ? (
                     <CustomDropdown
                       id="permission-scope"
-                      label={t('scope.selectScope')}
                       value={selectedScopeKey}
                       options={scopeDropdownOptions}
                       onChange={(event) =>

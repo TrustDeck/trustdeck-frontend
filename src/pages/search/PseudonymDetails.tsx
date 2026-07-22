@@ -15,7 +15,6 @@ import usePseudonymStore from './stores/PseudonymSearchResults'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
-import Divider from '../../core/components/common/Divider'
 import PseudonymTable from './components/PseudonymTable'
 import TrustDeck, {
   PseudonymUpdatePayload
@@ -477,9 +476,7 @@ const PseudonymDetails: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <Divider />
-
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {renderField(
                     'domainName',
                     t('search:pseudonym.group'),
@@ -507,8 +504,7 @@ const PseudonymDetails: React.FC = () => {
               <h2 className="text-3xl font-semibold">
                 {t('search:pseudonym.linkedPseudonyms')}
               </h2>
-              <Divider />
-              <PseudonymTable pseudonym={currentPseudonym} />
+                <PseudonymTable pseudonym={currentPseudonym} />
             </section>
           </div>
         </div>

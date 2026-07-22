@@ -27,7 +27,7 @@
     "groupPermissions": "Pseudonym-domain permissions",
     "domain": "Pseudonym domain",
     "selectScope": "Project or pseudonym domain",
-    "selectDescription": "Select the project or a pseudonym domain. Use the search field in the dropdown to filter the list.",
+    "selectDescription": "Select the project, a project-associated pseudonym domain, or a domain that is not assigned to any project. Use the search field in the dropdown to filter the list.",
     "searchPlaceholder": "Search project or pseudonym domain"
   },
   "status": {
@@ -40,7 +40,7 @@
     "noTokenRoles": "No roles were present in the current access token.",
     "noGrantedInScope": "No rights are currently granted in this section.",
     "noMissingInScope": "All rights in this section are currently granted.",
-    "noProjectOrGroupRows": "No project or pseudonym-domain permission definitions are available for this project.",
+    "noProjectOrGroupRows": "No project, project-associated pseudonym-domain, or unassigned pseudonym-domain permission definitions are available.",
     "missingRightsUnavailable": "Permission definitions are currently unavailable, so only granted rights can be shown. Missing rights cannot be calculated yet.",
     "missingRightsUnavailableShort": "Missing rights cannot be calculated until permission definitions are available.",
     "noProjectOrGroupRowsAll": "No project or pseudonym-domain permission definitions are available.",

@@ -27,7 +27,7 @@
     "groupPermissions": "Berechtigungen für Pseudonym-Domänen",
     "domain": "Pseudonym-Domäne",
     "selectScope": "Projekt oder Pseudonym-Domäne",
-    "selectDescription": "Wählen Sie das Projekt oder eine Pseudonym-Domäne aus. Mit dem Suchfeld im Dropdown können Sie die Liste filtern.",
+    "selectDescription": "Wählen Sie das Projekt, eine dem Projekt zugeordnete Pseudonym-Domäne oder eine Pseudonym-Domäne aus, die keinem Projekt zugeordnet ist. Mit dem Suchfeld im Dropdown können Sie die Liste filtern.",
     "searchPlaceholder": "Projekt oder Pseudonym-Domäne suchen"
   },
   "status": {
@@ -40,7 +40,7 @@
     "noTokenRoles": "Im aktuellen Access Token sind keine Rollen enthalten.",
     "noGrantedInScope": "In diesem Bereich sind aktuell keine Rechte vergeben.",
     "noMissingInScope": "In diesem Bereich sind aktuell alle Rechte vergeben.",
-    "noProjectOrGroupRows": "Für dieses Projekt sind keine Projekt- oder Pseudonym-Domänen-Berechtigungen verfügbar.",
+    "noProjectOrGroupRows": "Es sind keine Berechtigungsdefinitionen für das Projekt, zugeordnete Pseudonym-Domänen oder nicht zugeordnete Pseudonym-Domänen verfügbar.",
     "missingRightsUnavailable": "Berechtigungsdefinitionen sind aktuell nicht verfügbar. Daher können nur vergebene Rechte angezeigt werden; nicht vergebene Rechte können noch nicht berechnet werden.",
     "missingRightsUnavailableShort": "Nicht vergebene Rechte können erst berechnet werden, wenn Berechtigungsdefinitionen verfügbar sind.",
     "noProjectOrGroupRowsAll": "Es sind keine Projekt- oder Pseudonym-Domänen-Berechtigungen verfügbar.",

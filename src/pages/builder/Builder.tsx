@@ -1675,17 +1675,6 @@ export default function Builder({
                       updateEntityLinkageConfig({ bloomMinSimilarity: value })
                     }
                   />
-                  <ToggleWithInfo
-                    id="entity-linkage-exact-token"
-                    label={t('entityLinkage.exactToken')}
-                    description={t('entityLinkageHelp.exactToken')}
-                    checked={Boolean(pprl.exact)}
-                    disabled={settingsDisabled}
-                    inherited={isEntityPprlSettingInherited('exact')}
-                    onChange={(checked) =>
-                      updateEntityPprlConfig({ exact: checked })
-                    }
-                  />
                 </>
               )}
             </div>

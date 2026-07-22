@@ -177,7 +177,7 @@
       "ngramBloomFilter": "N-Gramm-Bloom-Filter",
       "hmacExact": "HMAC-basierter exakter Abgleich"
     },
-    "attributeTitle": "Linkage-Einstellungen des Attributs",
+    "attributeTitle": "Record Linkage",
     "attributeDescription": "Legen Sie fest, wie dieses Attribut am Linkage-Prozess der Entität teilnimmt: Normalisierung, Kodierung, Blocking und Gewichtung."
   },
   "linkageConfigHelp": {
@@ -381,14 +381,13 @@
   "editEntityHelp": "Bearbeiten Sie die Entitätseinstellungen und Attributdefinition direkt unten.",
   "viewEntityHelp": "Prüfen Sie die zugeordnete Pseudonym-Domäne, die Basisentität und die Entitätsattribute.",
   "entityLinkage": {
-    "title": "Record Linkage auf Entitätsebene",
+    "title": "Record Linkage",
     "description": "Legen Sie fest, ob Record Linkage für diese Entität verwendet wird und wie Kandidaten bewertet, geschützt und bei der Erstellung behandelt werden.",
     "enabled": "Record Linkage für diese Entität aktivieren",
     "minScore": "Minimaler Rohwert",
     "minNormalizedScore": "Minimaler normalisierter Wert",
     "bloomMinSimilarity": "Minimale Bloom-Ähnlichkeit",
     "candidateLimit": "Kandidatenlimit",
-    "exactToken": "Zusätzliches exaktes HMAC-Token erzeugen",
     "autoLinkOnCreate": "Vor der Erstellung automatisch nach passenden Entitäten suchen",
     "onMatch": "Verhalten bei einem Treffer",
     "onMatchReject": "Erstellung ablehnen und Kandidaten zurückgeben",
@@ -401,7 +400,6 @@
     "minNormalizedScore": "Minimaler Anteil des möglichen Abfragewerts für einen Kandidaten. Geben Sie einen Wert zwischen 0 und 1 ein.",
     "bloomMinSimilarity": "Minimale Dice-Ähnlichkeit, ab der ein Bloom-Filter-Attribut zum Entitätswert beiträgt. Geben Sie einen Wert zwischen 0 und 1 ein.",
     "candidateLimit": "Maximale Anzahl geblockter Kandidaten, die vor der detaillierten Bewertung geladen wird.",
-    "exactToken": "Erzeugt beim N-Gramm-Bloom-Filter zusätzlich ein geschütztes exaktes Token, damit exakte Übereinstimmungen stärker beitragen können.",
     "autoLinkOnCreate": "Führt vor dem Speichern einer neuen Entität Record Linkage auf Entitätsebene aus.",
     "onMatch": "Ablehnen liefert die Kandidatenliste mit HTTP 409. Bestehende Entität zurückgeben liefert den besten aktiven Treffer, ohne ein Duplikat anzulegen."
   },

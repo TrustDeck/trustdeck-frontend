@@ -11,10 +11,24 @@ import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
 import PersonService from '../services/PersonService'
 import ProjectService from '../../projects/services/ProjectService'
 import { InlineEntityResults } from './InlineSearchResults'
+import TrustDeck from '../../../core/services/TrustDeck'
+import type { Link } from '../../../core/types/Link'
 
 interface EntityMaskProps {
   psn?: boolean
   inlineResults?: boolean
+}
+
+function pseudonymsToLinks(pseudonyms: any[] = []): Link[] {
+  return pseudonyms
+    .map((pseudonym) => ({
+      group: pseudonym?.domainName ?? pseudonym?.group ?? '',
+      pseudonym: pseudonym?.psn ?? pseudonym?.pseudonym ?? '',
+      children: Array.isArray(pseudonym?.children)
+        ? pseudonymsToLinks(pseudonym.children)
+        : undefined
+    }))
+    .filter((link) => link.group || link.pseudonym)
 }
 
 const EntityMask: React.FC<EntityMaskProps> = ({
@@ -24,12 +38,8 @@ const EntityMask: React.FC<EntityMaskProps> = ({
   const { t } = useTranslation('search')
   const [loading, setLoading] = useState(false)
   const [queryError, setQueryError] = useState('')
-  const {
-    entities,
-    selectedProject,
-    setEntities,
-    setEntityAttributes
-  } = useProjectStore()
+  const { entities, selectedProject, setEntities, setEntityAttributes } =
+    useProjectStore()
   const [selectedType, setSelectedType] = useState<string>(entities[0] ?? '')
   const { nextStep, stepperRef } = useStepperControlStore()
   const { quick, setQuick } = useSearchStore()
@@ -137,7 +147,25 @@ const EntityMask: React.FC<EntityMaskProps> = ({
         selectedProject.abbreviation
       )
       const normalizedResults = Array.isArray(result)
-        ? result.map(normalizeEntityResult)
+        ? await Promise.all(
+            result.map(async (entry) => {
+              const entity = normalizeEntityResult(entry)
+              if (!entity.trustdeckID) return entity
+
+              try {
+                const pseudonyms =
+                  await TrustDeck.instance().getEntityPseudonyms(
+                    selectedType,
+                    entity.trustdeckID,
+                    selectedProject.abbreviation
+                  )
+                return { ...entity, links: pseudonymsToLinks(pseudonyms) }
+              } catch (error) {
+                console.error('Failed to load entity pseudonyms:', error)
+                return entity
+              }
+            })
+          )
         : []
 
       setResults(normalizedResults, selectedType)
@@ -174,9 +202,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
             <CustomDropdown
               id="selectedType"
               value={selectedType}
-              onChange={(event) =>
-                setSelectedType(String(event.value ?? ''))
-              }
+              onChange={(event) => setSelectedType(String(event.value ?? ''))}
               options={entityDropdownOptions}
               className="w-full"
             />

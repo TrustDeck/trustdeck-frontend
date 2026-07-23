@@ -16,7 +16,7 @@
  */
 
 import type { CustomTreeNode, GroupStoredAttributes } from '../types/CustomTreeNode'
-import TrustDeck from '@service/TrustDeck'
+import TrustDeck, { TrustDeckHttpError } from '@service/TrustDeck'
 import type { Algorithm, Domain } from '../../../core/types/Domain'
 import {
   characters,
@@ -355,6 +355,18 @@ const mapCreateDomain = (
   return output
 }
 
+/** Uses the backend's documented complete-create minimum when a richer payload is rejected. */
+const mapMinimalCompleteCreateDomain = (
+  payload: GroupStoredAttributes
+): Record<string, unknown> => ({
+  name: payload.label,
+  prefix: payload.prefix,
+  ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
+    ? { superDomainName: payload.parentgroup }
+    : {}),
+  ...(payload.description ? { description: payload.description } : {})
+})
+
 /** Creates the reduced request body accepted by POST /domains. */
 const mapStandardCreateDomain = (
   payload: GroupStoredAttributes
@@ -628,9 +640,28 @@ const DomainService = {
     payload: GroupStoredAttributes,
     complete = true
   ): Promise<Domain> => {
-    const created = complete
-      ? await TrustDeck.instance().createGroupComplete(mapCreateDomain(payload))
-      : await TrustDeck.instance().createGroup(mapStandardCreateDomain(payload))
+    let created: any
+    if (complete) {
+      try {
+        created = await TrustDeck.instance().createGroupComplete(
+          mapCreateDomain(payload)
+        )
+      } catch (error) {
+        // Some deployed backend versions reject the rich DTO during binding.
+        // Retrying the endpoint's documented minimum still creates a domain
+        // with the backend's default AlgorithmDTO configuration.
+        if (!(error instanceof TrustDeckHttpError) || error.status !== 400) {
+          throw error
+        }
+        created = await TrustDeck.instance().createGroupComplete(
+          mapMinimalCompleteCreateDomain(payload)
+        )
+      }
+    } else {
+      created = await TrustDeck.instance().createGroup(
+        mapStandardCreateDomain(payload)
+      )
+    }
     if (created && typeof created === 'object' && created.name) {
       return created as Domain
     }

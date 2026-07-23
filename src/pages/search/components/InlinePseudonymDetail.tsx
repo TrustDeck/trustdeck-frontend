@@ -329,7 +329,7 @@ export default function InlinePseudonymDetail({
       >
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-3xl font-semibold">
+            <h2 className="td-panel-title !mb-0">
               {t('search:pseudonym.data')}
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -401,7 +401,7 @@ export default function InlinePseudonymDetail({
             : 'h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
         }
       >
-        <h2 className="text-3xl font-semibold">
+        <h2 className="td-panel-title !mb-0">
           {t('search:pseudonym.linkedPseudonyms')}
         </h2>
         <PseudonymTable pseudonym={pseudonym} />
@@ -423,7 +423,7 @@ export default function InlinePseudonymDetail({
             icon={<ArrowLeftIcon className="mr-1 h-5 w-5" />}
             className="shrink-0"
           />
-          <h1 className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap">
+          <h1 className="td-panel-title absolute left-1/2 !mb-0 -translate-x-1/2 whitespace-nowrap">
             {t('search:pseudonymView')}
           </h1>
         </div>
@@ -444,7 +444,7 @@ export default function InlinePseudonymDetail({
         style={{ width: '520px', maxWidth: '95vw' }}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-lg">{t('search:pseudonym.confirmDeleteText')}</p>
+          <p>{t('search:pseudonym.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
             <PrimaryOutlinedButton
               label={t('common:cancel')}

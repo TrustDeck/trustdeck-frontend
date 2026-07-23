@@ -135,7 +135,6 @@ const PseudonymDetails: React.FC = () => {
     'Inherited from the group configuration.'
   )
 
-
   useEffect(() => {
     if (openInEditMode) setEditMode(true)
   }, [openInEditMode])
@@ -416,7 +415,7 @@ const PseudonymDetails: React.FC = () => {
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0"
         />
-        <h1 className="absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+        <h1 className="td-panel-title absolute left-1/2 !mb-0 -translate-x-1/2 whitespace-nowrap">
           {t('search:pseudonymView')}
         </h1>
       </div>
@@ -428,7 +427,7 @@ const PseudonymDetails: React.FC = () => {
       {!loading && !currentPseudonym && (
         <div className="mx-auto w-full max-w-[720px]">
           <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-slate-700 dark:bg-slate-900">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="td-panel-title !mb-0">
               {t('search:pseudonym.notFound')}
             </h2>
           </div>
@@ -441,7 +440,7 @@ const PseudonymDetails: React.FC = () => {
             <section className="w-full max-w-[560px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-3xl font-semibold">
+                  <h2 className="td-panel-title !mb-0">
                     {t('search:pseudonym.data')}
                   </h2>
                   <div className="flex flex-wrap gap-2">
@@ -476,7 +475,7 @@ const PseudonymDetails: React.FC = () => {
                     )}
                   </div>
                 </div>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {renderField(
                     'domainName',
                     t('search:pseudonym.group'),
@@ -501,10 +500,10 @@ const PseudonymDetails: React.FC = () => {
             </section>
 
             <section className="h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-              <h2 className="text-3xl font-semibold">
+              <h2 className="td-panel-title !mb-0">
                 {t('search:pseudonym.linkedPseudonyms')}
               </h2>
-                <PseudonymTable pseudonym={currentPseudonym} />
+              <PseudonymTable pseudonym={currentPseudonym} />
             </section>
           </div>
         </div>
@@ -519,7 +518,7 @@ const PseudonymDetails: React.FC = () => {
         style={{ width: '520px', maxWidth: '95vw' }}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-lg">{t('search:pseudonym.confirmDeleteText')}</p>
+          <p>{t('search:pseudonym.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
             <PrimaryOutlinedButton
               label={t('common:cancel')}

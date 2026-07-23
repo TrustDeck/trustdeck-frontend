@@ -58,7 +58,7 @@ export default function BulkRegistration() {
 
   return (
     <Panel>
-      <h2>{t('identity:headers.data')}</h2>
+      <h2 className="td-section-title">{t('identity:headers.data')}</h2>
       <Divider />
 
       <div

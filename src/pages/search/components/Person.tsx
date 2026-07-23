@@ -177,7 +177,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           />
         </div>
 
-        <h2 className="mt-4">{t('search:headers.address')}</h2>
+        <h2 className="td-section-title mt-4">{t('search:headers.address')}</h2>
         <Divider />
         <div className="space-y-5">
           <div className="flex space-x-3">
@@ -239,7 +239,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           )}
         </div>
 
-        <h2 className="mt-4">{t('search:headers.emergencyContact')}</h2>
+        <h2 className="td-section-title mt-4">
+          {t('search:headers.emergencyContact')}
+        </h2>
         <Divider />
         <div className="space-y-5">
           <div className="flex space-x-3">
@@ -307,7 +309,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           <LinksTable entity={entity as unknown as Entity} />
         </div>
 
-        <h2 className="mt-8">{t('search:headers.identifiers')}</h2>
+        <h2 className="td-section-title mt-8">
+          {t('search:headers.identifiers')}
+        </h2>
         <Divider />
         <div className="space-y-5">
           <CustomFloatLabel

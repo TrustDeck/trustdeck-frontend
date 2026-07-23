@@ -40,40 +40,47 @@ export default function DuplicateResults() {
           // TODO: fix alignment of 'back' button on screensize small and larger
           className="absolute left-4 sm:left-20"
         />
-        <h1 className="mb-3">{t('identity:duplicate.header')}</h1>
+        <h1 className="td-page-title mb-3">{t('identity:duplicate.header')}</h1>
       </div>
 
       <Panel className="mb-6 !border-2 !border-red-600">
         <div className="flex items-center justify-between border-solid">
           <ExclamationTriangleIcon className="hidden sm:inline h-14 w-14 text-red-600 flex-none" />
-          <h3 className="ml-4">{t('identity:duplicate.duplicateFound')}</h3>
+          <h3 className="td-panel-title !mb-0 ml-4">
+            {t('identity:duplicate.duplicateFound')}
+          </h3>
         </div>
       </Panel>
-        <SearchResult
-          result={{
-            id: 'new-person',
-            firstname: newEntry?.firstName ?? '',
-            lastname: newEntry?.lastName ?? '',
-            dateOfBirth: newEntry?.dateOfBirth ? new Date(newEntry.dateOfBirth).toISOString().split('T')[0] : '',
-            gender: newEntry?.administrativeGender ?? '',
-            phones: newEntry?.phoneNumber ?? [],
-            emails: newEntry?.email ?? [],
-            addresses: newEntry?.street ?? [],
-            contactPersons: newEntry?.contactFirstName ?? []
-          }}
-          duplicate
-          newPerson
-        />
+      <SearchResult
+        result={{
+          id: 'new-person',
+          firstname: newEntry?.firstName ?? '',
+          lastname: newEntry?.lastName ?? '',
+          dateOfBirth: newEntry?.dateOfBirth
+            ? new Date(newEntry.dateOfBirth).toISOString().split('T')[0]
+            : '',
+          gender: newEntry?.administrativeGender ?? '',
+          phones: newEntry?.phoneNumber ?? [],
+          emails: newEntry?.email ?? [],
+          addresses: newEntry?.street ?? [],
+          contactPersons: newEntry?.contactFirstName ?? []
+        }}
+        duplicate
+        newPerson
+      />
       <Divider />
       <Panel className="mb-6 !border-2 !border-red-600">
         <div className="flex items-center justify-between border-solid">
-          <h4 className="ml-4">
+          <h4 className="td-panel-title !mb-0 ml-4">
             {t('identity:duplicate.compareData')}
           </h4>
         </div>
       </Panel>
       {duplicates.map((duplicate) => (
-        <div key={duplicate.identifiers[0].identifier} className="my-2 flex w-full justify-center">
+        <div
+          key={duplicate.identifiers[0].identifier}
+          className="my-2 flex w-full justify-center"
+        >
           <SearchResult result={duplicate} duplicate />
         </div>
       ))}

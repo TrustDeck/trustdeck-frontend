@@ -54,13 +54,15 @@ export default function CustomCard({
         className={`${compactClass} ${background} border-black rounded-lg border-2 flex justify-start items-center p-4 space-x-4 ${className}`}
       >
         <div className="text-black w-12 h-12">{icon}</div>
-        <h3>{title}</h3>
+        <h3 className="td-panel-title !mb-0">{title}</h3>
       </div>
       {/* screens small and up */}
       <Card
         className={`${expandedClass} ${background} text-center rounded-lg border-2 border-black cursor-pointer ${className}`}
         header={
-          <h2 className="text-black break-words mt-8 max-w-[300px]">{title}</h2>
+          <h2 className="td-panel-title mt-8 max-w-[300px] break-words text-black">
+            {title}
+          </h2>
         }
       >
         <div className="w-full h-40 flex items-center justify-center">

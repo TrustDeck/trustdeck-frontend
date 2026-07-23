@@ -43,7 +43,8 @@ type DomainDetailField = {
 const domainValue = (key: keyof Domain) => (domain: Domain) => domain[key]
 const algorithmValue = (key: keyof Algorithm) => (domain: Domain) =>
   domain.algorithm?.[key]
-const algorithmInherited = (domain: Domain) => Boolean(domain.algorithmInherited)
+const algorithmInherited = (domain: Domain) =>
+  Boolean(domain.algorithmInherited)
 
 const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
   { key: 'name', getValue: domainValue('name') },
@@ -325,7 +326,7 @@ export default function DomainManager() {
             groupName,
             'domain:update-complete'
           )
-    ),
+      ),
     [permissionAccess]
   )
 
@@ -666,7 +667,7 @@ export default function DomainManager() {
     if (items.length === 0) {
       return (
         <tr>
-          <td className="px-5 py-4 text-lg text-gray-500" colSpan={5}>
+          <td className="px-5 py-4 text-base text-gray-500" colSpan={5}>
             {t('groups:crud.noGroupsInSection')}
           </td>
         </tr>
@@ -794,7 +795,7 @@ export default function DomainManager() {
         </div>
         <Divider />
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
-          <table className="min-w-full text-lg">
+          <table className="min-w-full text-base">
             <tbody>
               {visibleDetailFields.map(({ key, getValue, isInherited }) => {
                 const inherited = Boolean(isInherited?.(selectedGroup))
@@ -809,7 +810,7 @@ export default function DomainManager() {
                     }`}
                   >
                     <th
-                      className={`w-[42%] px-5 py-4 text-left text-lg font-semibold ${
+                      className={`w-[42%] px-5 py-4 text-left text-base font-semibold ${
                         inherited
                           ? 'text-blue-700 dark:text-blue-300'
                           : 'text-gray-700 dark:text-gray-200'
@@ -820,12 +821,12 @@ export default function DomainManager() {
                         {inherited && (
                           <InheritanceIndicator
                             title={t('groups:inputs.inheritedReadonly')}
-                            className="text-lg"
+                            className="text-base"
                           />
                         )}
                       </span>
                     </th>
-                    <td className="break-all px-5 py-4 text-xl text-gray-900 dark:text-gray-100">
+                    <td className="break-all px-5 py-4 text-base text-gray-900 dark:text-gray-100">
                       {formatValue(key, value)}
                     </td>
                   </tr>
@@ -879,7 +880,7 @@ export default function DomainManager() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
-                  <table className="w-full table-fixed text-lg">
+                  <table className="w-full table-fixed text-base">
                     <colgroup>
                       <col className="w-[24%]" />
                       <col className="w-[14%]" />
@@ -887,7 +888,7 @@ export default function DomainManager() {
                       <col className="w-[20%]" />
                       <col className="w-[20%]" />
                     </colgroup>
-                    <thead className="bg-gray-50 text-left text-lg font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
+                    <thead className="bg-gray-50 text-left text-base font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
                       <tr>
                         <th className="px-5 py-4">
                           {t('groups:crud.table.name')}

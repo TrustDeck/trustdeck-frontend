@@ -143,7 +143,9 @@ export default function SingleProject({
   return (
     <Panel
       className={`transition-all duration-300 ${
-        expandedMode ? '!max-w-none' : 'hover:bg-gray-50 dark:hover:bg-slate-800/60'
+        expandedMode
+          ? '!max-w-none'
+          : 'hover:bg-gray-50 dark:hover:bg-slate-800/60'
       }`}
     >
       <div
@@ -174,7 +176,7 @@ export default function SingleProject({
               </div>
             )}
             <div className="min-w-0">
-              <h2 className="my-1 truncate" title={project.name}>
+              <h2 className="td-panel-title my-1 truncate" title={project.name}>
                 {project.name}
               </h2>
               <p className="text-sm text-gray-500 dark:text-gray-300">

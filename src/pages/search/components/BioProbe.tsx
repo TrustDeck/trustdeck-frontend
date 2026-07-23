@@ -110,7 +110,9 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
           <LinksTable entity={entity as unknown as Entity} />
         </div>
 
-        <h2 className="mt-8">{t('search:headers.identifiers')}</h2>
+        <h2 className="td-section-title mt-8">
+          {t('search:headers.identifiers')}
+        </h2>
         <Divider />
         <CustomFloatLabel
           id="MOI"

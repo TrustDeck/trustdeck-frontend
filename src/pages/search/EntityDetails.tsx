@@ -353,10 +353,8 @@ const EntityDetails: React.FC = () => {
           />
         </div>
 
-        <h1 className="absolute left-1/2 -translate-x-1/2 text-center">
-          {linkedPseudonym
-            ? t('search:pseudonymView')
-            : t('search:entityView')}
+        <h1 className="td-panel-title absolute left-1/2 !mb-0 -translate-x-1/2 text-center">
+          {linkedPseudonym ? t('search:pseudonymView') : t('search:entityView')}
         </h1>
 
         {!linkedPseudonym && (
@@ -394,9 +392,7 @@ const EntityDetails: React.FC = () => {
                 />
                 <PrimaryButton
                   label={
-                    <span className="hidden sm:inline">
-                      {t('search:save')}
-                    </span>
+                    <span className="hidden sm:inline">{t('search:save')}</span>
                   }
                   onClick={handleSave}
                   icon={<CheckIcon className="mr-1 h-5 w-5" />}
@@ -438,11 +434,7 @@ const EntityDetails: React.FC = () => {
             }}
             onDeleted={(domainName, pseudonymValue) => {
               updateEntityLinks(
-                removeLinkedPseudonym(
-                  entity.links,
-                  domainName,
-                  pseudonymValue
-                )
+                removeLinkedPseudonym(entity.links, domainName, pseudonymValue)
               )
               closeLinkedPseudonym()
             }}

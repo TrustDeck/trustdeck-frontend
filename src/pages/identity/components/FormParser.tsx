@@ -26,7 +26,7 @@ export const parseAttributes = ({
     const en = a.label_en
     const de = a.label_de
     const isGerman = language.startsWith('de')
-    return isGerman ? de ?? en : en ?? de
+    return isGerman ? (de ?? en) : (en ?? de)
   }
 
   const getDisplayLabel = (attr: Attribute) => {
@@ -74,7 +74,7 @@ export const parseAttributes = ({
       return (
         <div key={fullPath} className="mb-6">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-semibold">{displayLabel}</h3>
+            <h3 className="td-section-title">{displayLabel}</h3>
             <button
               type="button"
               className="text-sm text-primary"
@@ -147,8 +147,8 @@ export const parseAttributes = ({
               attr.attributes.length === 3
                 ? 'grid-cols-1 md:grid-cols-3'
                 : attr.attributes.length === 2
-                ? 'grid-cols-1 md:grid-cols-2'
-                : 'grid-cols-1'
+                  ? 'grid-cols-1 md:grid-cols-2'
+                  : 'grid-cols-1'
             }`
           : 'space-y-4'
 
@@ -180,7 +180,10 @@ export const parseAttributes = ({
         <div key={fullPath} className="mb-3">
           <CustomDropdown
             value={value}
-            options={enumValues.map((option) => ({ label: option, value: option }))}
+            options={enumValues.map((option) => ({
+              label: option,
+              value: option
+            }))}
             onChange={(e) => handleChange(fullPath, e.value)}
             placeholder={displayLabel}
             className="w-full"

@@ -22,7 +22,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN ./node_modules/.bin/vite build --debug vite:build
+RUN npm run build
 
 FROM nginx:1.29.1-alpine
 

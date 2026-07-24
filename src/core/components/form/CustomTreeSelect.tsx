@@ -34,7 +34,9 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   className = '',
   helpText,
   required,
+  disabledNodeTooltip,
   selectionMode = 'checkbox',
+  nodeTemplate: nodeTemplateProp,
   ...props
 }) => {
   const fieldLabel = (label || placeholder || '').trim()

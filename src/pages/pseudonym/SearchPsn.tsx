@@ -202,6 +202,20 @@ export default function SearchPsn() {
     viewedEntity
   ])
 
+  const groupOptions = useMemo(
+    () => markDisabledGroupsInTree(groups ?? [], occupiedGroups),
+    [groups, occupiedGroups]
+  )
+
+  const selectedGroupNames = useMemo(
+    () => getSelectedGroupNames(selectedGroup, groups),
+    [selectedGroup, groups]
+  )
+
+  const hasValidGroupSelection =
+    selectedGroupNames.length > 0 &&
+    selectedGroupNames.every((name) => !occupiedGroups.has(name))
+
   useEffect(() => {
     setStepperRef(localStepperRef)
     clearEntityResults()
@@ -312,9 +326,10 @@ export default function SearchPsn() {
 
     try {
       const responses = await Promise.all(
-        selectedGroupNames.map((groupName) =>
-          PseudonymService.createPseudonym(payload, groupName)
-        )
+        selectedGroupNamesForCreate.map((groupName) => {
+          console.log('Creating pseudonym for group:', groupName)
+          return PseudonymService.createPseudonym(payload, groupName)
+        })
       )
 
       const pseudonyms = responses

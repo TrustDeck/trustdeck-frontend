@@ -5,6 +5,7 @@ import LinksTable from './LinksTable'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomInputNumber from '@component/form/CustomInputNumber'
+import { ProgressSpinner } from 'primereact/progressspinner'
 import type { Attribute } from '../../../core/stores/ProjectStore'
 import type { Entity } from '../types/Entity'
 import { resolveAttributeLabel } from '../utils/entityDisplay'
@@ -94,6 +95,40 @@ export default function DynamicEntity({
   onLinkedPseudonymSelect
 }: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
+  const [links, setLinks] = useState<Link[]>([])
+  const [linksLoading, setLinksLoading] = useState(false)
+
+  const entityId = entity.trustdeckID || entity.id
+  const entityType = entity.entityTypeName || entity.type
+
+  useEffect(() => {
+    if (!entityId || !entityType) {
+      setLinks([])
+      return
+    }
+
+    let active = true
+    setLinksLoading(true)
+
+    EntityService.getEntityPseudonyms(entityType, entityId)
+      .then((fetchedLinks) => {
+        if (!active) return
+        setLinks(fetchedLinks)
+      })
+      .catch((error) => {
+        console.error('Failed to load entity pseudonyms', error)
+        if (!active) return
+        setLinks([])
+      })
+      .finally(() => {
+        if (!active) return
+        setLinksLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [entityId, entityType])
 
   const resolveLabel = (attr: any) => resolveAttributeLabel(attr, i18n.language)
 

@@ -1,24 +1,27 @@
 import { useTranslation } from 'react-i18next'
-import { useEffect, useState } from 'react'
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Panel from '../../../core/components/common/Panel'
-import Divider from '../../../core/components/common/Divider'
 import LinksTable from './LinksTable'
-import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomInputNumber from '@component/form/CustomInputNumber'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import type { Attribute } from '../../../core/stores/ProjectStore'
 import type { Entity } from '../types/Entity'
-import type { Link } from '../../../core/types/Link'
-import EntityService from '../services/EntityService'
+import { resolveAttributeLabel } from '../utils/entityDisplay'
 
-type Props = {
+export type DynamicEntityProps = {
   entity: any
   schemaAttributes: Attribute[]
   editMode: boolean
   formData: Record<string, any>
   onFieldChange: (path: Array<string | number>, value: any) => void
+  showIdentifierPanel?: boolean
+  plainAttributes?: boolean
+  onLinkedPseudonymSelect?: (
+    domainName: string,
+    pseudonym: string
+  ) => void | Promise<void>
 }
 
 function formatValue(value: unknown): string {
@@ -32,7 +35,8 @@ function formatValue(value: unknown): string {
   }
   if (typeof value === 'object') return JSON.stringify(value)
   const raw = String(value)
-  if (raw.includes('T') && /^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.split('T')[0]
+  if (raw.includes('T') && /^\d{4}-\d{2}-\d{2}T/.test(raw))
+    return raw.split('T')[0]
   return raw
 }
 
@@ -43,13 +47,53 @@ function parseDateValue(value: unknown): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
+function formatDateOnly(value: Date): string {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, '0')
+  const day = String(value.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isNamedDataGroup(attr: any): boolean {
+  return attr?.layout === 'group' && Boolean(attr?.name)
+}
+
+function resolveTrustDeckId(entity: any): string {
+  return String(
+    entity?.trustdeckID ??
+      entity?.trustdeckId ??
+      entity?.trustDeckId ??
+      entity?.data?.trustdeckID ??
+      entity?.data?.trustdeckId ??
+      ''
+  )
+}
+
+function FieldLabel({
+  label,
+  required = false
+}: {
+  label: string
+  required?: boolean
+}) {
+  return (
+    <span className="td-field-label mb-1 block">
+      {label}
+      {required && <span className="ml-1 text-red-600">*</span>}
+    </span>
+  )
+}
+
 export default function DynamicEntity({
   entity,
   schemaAttributes,
   editMode,
   formData,
-  onFieldChange
-}: Props) {
+  onFieldChange,
+  showIdentifierPanel = true,
+  plainAttributes = false,
+  onLinkedPseudonymSelect
+}: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
   const [links, setLinks] = useState<Link[]>([])
   const [linksLoading, setLinksLoading] = useState(false)
@@ -86,11 +130,162 @@ export default function DynamicEntity({
     }
   }, [entityId, entityType])
 
-  const resolveLabel = (attr: any) => {
-    const isGerman = i18n.language.startsWith('de')
-    return isGerman
-      ? attr.label_de || attr.labelDe || attr.label_en || attr.labelEn || attr.name
-      : attr.label_en || attr.labelEn || attr.label_de || attr.labelDe || attr.name
+  const resolveLabel = (attr: any) => resolveAttributeLabel(attr, i18n.language)
+
+  const isEmptyValue = (value: unknown) =>
+    value === undefined || value === null || String(value).trim() === ''
+
+  const toRepeatableValues = (value: unknown): any[] => {
+    if (Array.isArray(value)) return value.length > 0 ? value : ['']
+    if (isEmptyValue(value)) return ['']
+    return [value]
+  }
+
+  const renderScalarLeaf = (
+    attr: any,
+    rawValue: any,
+    key: string,
+    setValue: (value: any) => void,
+    showLabel = true
+  ) => {
+    const displayLabel = resolveLabel(attr)
+    const enumValues = attr.values ?? attr.enum ?? []
+
+    if (!editMode || !attr.name) {
+      return (
+        <div key={key} className="min-w-0">
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
+          <div className="min-h-[44px] break-words rounded-lg border border-color-light-gray bg-white px-3 py-2 text-xl text-gray-900 dark:bg-slate-950 dark:text-gray-100">
+            {formatValue(rawValue) || '—'}
+          </div>
+        </div>
+      )
+    }
+
+    if (attr.type === 'enum') {
+      return (
+        <label key={key} className="block min-w-0">
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
+          <CustomDropdown
+            id={key}
+            value={rawValue ?? ''}
+            options={enumValues.map((option: string) => ({
+              label: option,
+              value: option
+            }))}
+            onChange={(event) => setValue(event.value)}
+            className="w-full"
+            required={attr.required}
+          />
+        </label>
+      )
+    }
+
+    if (attr.type === 'date' || attr.type === 'datetime') {
+      return (
+        <label key={key} className="block min-w-0">
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
+          <CustomCalendar
+            id={key}
+            value={parseDateValue(rawValue)}
+            onChange={(event) => {
+              if (!event.value) {
+                setValue('')
+                return
+              }
+              setValue(
+                attr.type === 'date'
+                  ? formatDateOnly(event.value)
+                  : event.value.toISOString()
+              )
+            }}
+            required={attr.required}
+            showTime={attr.type === 'datetime'}
+            showSeconds={attr.type === 'datetime'}
+            dateFormat="dd.mm.yy"
+            hourFormat="24"
+          />
+        </label>
+      )
+    }
+
+    if (attr.type === 'integer' || attr.type === 'number') {
+      return (
+        <label key={key} className="block min-w-0">
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
+          <CustomInputNumber
+            id={key}
+            value={
+              typeof rawValue === 'number'
+                ? rawValue
+                : rawValue !== '' && rawValue !== undefined && rawValue !== null
+                  ? Number(rawValue)
+                  : null
+            }
+            onChange={(event) => setValue(event.value ?? '')}
+            placeholder=""
+            min={attr.minimum}
+            max={attr.maximum}
+            step={attr.type === 'integer' ? 1 : 0.01}
+            validate={(value) => {
+              if (attr.required && (value === null || value === undefined))
+                return false
+              if (value === null || value === undefined) return true
+              if (attr.type === 'integer' && !Number.isInteger(value))
+                return false
+              if (typeof attr.minimum === 'number' && value < attr.minimum)
+                return false
+              if (typeof attr.maximum === 'number' && value > attr.maximum)
+                return false
+              return true
+            }}
+            errorMessage={t('identity:crud.invalidField')}
+          />
+        </label>
+      )
+    }
+
+    if (attr.type === 'boolean') {
+      return (
+        <div key={key} className="min-w-0">
+          {showLabel && (
+            <FieldLabel label={displayLabel} required={attr.required} />
+          )}
+          <label className="flex min-h-[44px] items-center gap-3 rounded-lg border border-color-light-gray bg-white px-3 text-xl font-font-text text-gray-700 dark:bg-slate-950 dark:text-gray-200">
+            <input
+              type="checkbox"
+              checked={Boolean(rawValue)}
+              onChange={(event) => setValue(event.target.checked)}
+              className="h-5 w-5 rounded border-gray-300 text-color-blue focus:ring-color-blue"
+            />
+            <span>{rawValue ? t('common:yes') : t('common:no')}</span>
+          </label>
+        </div>
+      )
+    }
+
+    return (
+      <label key={key} className="block min-w-0">
+        {showLabel && (
+          <FieldLabel label={displayLabel} required={attr.required} />
+        )}
+        <input
+          id={key}
+          type="text"
+          value={formatValue(rawValue)}
+          onChange={(event) => setValue(event.target.value)}
+          className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+        />
+      </label>
+    )
   }
 
   const renderLeaf = (
@@ -99,56 +294,77 @@ export default function DynamicEntity({
     key: string,
     path: Array<string | number>
   ) => {
-    const rawValue = context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
-    const displayLabel = resolveLabel(attr)
-    const enumValues = attr.values ?? attr.enum ?? []
+    const rawValue =
+      context?.[attr.name] ?? entity.data?.[attr.name] ?? entity?.[attr.name]
 
-    if (editMode && attr.name && attr.type === 'enum') {
+    if (editMode && attr.name && attr.repeatable) {
+      const values = toRepeatableValues(rawValue)
+      const setRepeatableValue = (index: number, value: any) => {
+        const nextValues = [...values]
+        nextValues[index] = value
+        onFieldChange(path, nextValues)
+      }
+      const removeRepeatableValue = (index: number) => {
+        const nextValues = values.filter(
+          (_, currentIndex) => currentIndex !== index
+        )
+        onFieldChange(path, nextValues.length > 0 ? nextValues : [''])
+      }
+      const addRepeatableValue = () => onFieldChange(path, [...values, ''])
+
       return (
-        <CustomDropdown
+        <div
           key={key}
-          id={key}
-          value={rawValue ?? ''}
-          options={enumValues.map((option: string) => ({ label: option, value: option }))}
-          onChange={(e) => onFieldChange(path, e.value)}
-          placeholder={displayLabel}
-        />
+          className="space-y-2 rounded-lg border border-gray-200 p-3 dark:border-slate-700"
+        >
+          <FieldLabel label={resolveLabel(attr)} required={attr.required} />
+          {values.map((value, index) => (
+            <div
+              key={`${key}-value-${index}`}
+              className="flex items-center gap-2"
+            >
+              <div className="min-w-0 flex-1">
+                {renderScalarLeaf(
+                  {
+                    ...attr,
+                    repeatable: false,
+                    required: attr.required && index === 0
+                  },
+                  value,
+                  `${key}-input-${index}`,
+                  (nextValue) => setRepeatableValue(index, nextValue),
+                  false
+                )}
+              </div>
+              {index === values.length - 1 && (
+                <button
+                  type="button"
+                  title={t('identity:crud.addValue')}
+                  aria-label={t('identity:crud.addValue')}
+                  onClick={addRepeatableValue}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
+                >
+                  <PlusIcon className="h-5 w-5" />
+                </button>
+              )}
+              <button
+                type="button"
+                title={t('identity:crud.removeValue')}
+                aria-label={t('identity:crud.removeValue')}
+                onClick={() => removeRepeatableValue(index)}
+                disabled={values.length === 1 && attr.required}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-coral text-color-coral transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
+        </div>
       )
     }
 
-    if (editMode && attr.name && attr.type === 'date') {
-      return (
-        <CustomCalendar
-          key={key}
-          id={key}
-          value={parseDateValue(rawValue)}
-          onChange={(e) => onFieldChange(path, e.value ? e.value.toISOString() : '')}
-          placeholder={displayLabel}
-        />
-      )
-    }
-
-    if (editMode && attr.name && attr.type === 'integer') {
-      return (
-        <CustomInputNumber
-          key={key}
-          id={key}
-          value={typeof rawValue === 'number' ? rawValue : rawValue ? Number(rawValue) : null}
-          onChange={(e) => onFieldChange(path, e.value ?? '')}
-          placeholder={displayLabel}
-        />
-      )
-    }
-
-    return (
-      <CustomFloatLabel
-        key={key}
-        id={key}
-        readOnly={!editMode || !attr.name}
-        value={formatValue(rawValue)}
-        placeholder={displayLabel}
-        onChange={attr.name ? (e) => onFieldChange(path, e.target.value) : undefined}
-      />
+    return renderScalarLeaf(attr, rawValue, key, (value) =>
+      onFieldChange(path, value)
     )
   }
 
@@ -157,7 +373,7 @@ export default function DynamicEntity({
     context: Record<string, any>,
     keyPrefix: string,
     pathPrefix: Array<string | number>
-  ) =>
+  ): React.ReactNode[] =>
     attributes.map((attr, index) => {
       const key = `${keyPrefix}-${attr.name || attr.key || index}`
 
@@ -177,18 +393,20 @@ export default function DynamicEntity({
       }
 
       if (Array.isArray(attr.attributes)) {
-        const groupContext = attr.name ? context?.[attr.name] : context
+        const namedDataGroup = isNamedDataGroup(attr)
+        const groupContext =
+          namedDataGroup && attr.name ? context?.[attr.name] : context
         const entries = Array.isArray(groupContext)
           ? groupContext
-          : [groupContext ?? context]
+          : [groupContext ?? context ?? {}]
 
         return (
           <div key={key} className="space-y-3">
-            <h3 className="text-md font-medium">{resolveLabel(attr)}</h3>
+            <h3 className="td-section-title">{resolveLabel(attr)}</h3>
             {entries.map((entry, entryIndex) => (
               <div key={`${key}-entry-${entryIndex}`} className="space-y-3">
                 {entries.length > 1 && (
-                  <div className="text-sm text-gray-600">{`${resolveLabel(attr)} ${entryIndex + 1}`}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">{`${resolveLabel(attr)} ${entryIndex + 1}`}</div>
                 )}
                 {renderAttributes(
                   attr.attributes,
@@ -196,8 +414,10 @@ export default function DynamicEntity({
                   `${key}-nested-${entryIndex}`,
                   [
                     ...pathPrefix,
-                    ...(attr.name ? [attr.name] : []),
-                    ...(Array.isArray(groupContext) ? [entryIndex] : [])
+                    ...(namedDataGroup && attr.name ? [attr.name] : []),
+                    ...(namedDataGroup && Array.isArray(groupContext)
+                      ? [entryIndex]
+                      : [])
                   ]
                 )}
               </div>
@@ -209,91 +429,69 @@ export default function DynamicEntity({
       return renderLeaf(attr, context, key, [...pathPrefix, attr.name])
     })
 
-  const topLevelGroups =
-    schemaAttributes.filter(
-      (attr) => attr.layout === 'group' || attr.group === true || Array.isArray(attr.attributes)
-    ) || []
+  if (plainAttributes) {
+    return (
+      <div className="w-full space-y-4">
+        {renderAttributes(schemaAttributes, formData ?? {}, 'entity-root', [])}
+      </div>
+    )
+  }
 
-  const sections =
-    topLevelGroups.length > 0
-      ? topLevelGroups
-      : [
-          {
-            name: '__root__',
-            label_en: t('search:entity'),
-            label_de: t('search:entity'),
-            attributes: schemaAttributes
-          } as unknown as Attribute
-        ]
+  const detailPanelClass =
+    'w-full rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm dark:border-slate-700 dark:bg-slate-900'
 
   return (
-    <div className="w-full 2xl:w-4/5 2xl:mx-auto flex flex-col xl:flex-row gap-4">
-      <Panel className="w-full xl:w-3/5">
-        {sections.map((section, sectionIndex) => {
-          const sectionKey = section.name || section.key || `section-${sectionIndex}`
-          const isRootSection = section.name === '__root__'
-          const sectionContext = isRootSection
-            ? formData
-            : section.name
-              ? formData?.[section.name]
-              : formData
-          const sectionEntries = Array.isArray(sectionContext)
-            ? sectionContext
-            : [sectionContext ?? formData ?? {}]
-
-          return (
-            <div key={sectionKey} className="space-y-3">
-              <Divider text={resolveLabel(section)} />
-              {sectionEntries.map((entry, entryIndex) => (
-                <div key={`${sectionKey}-entry-${entryIndex}`} className="space-y-3">
-                  {renderAttributes(
-                    section.attributes ?? [section],
-                    entry ?? formData ?? {},
-                    `${sectionKey}-${entryIndex}`,
-                    [
-                      ...(!isRootSection && section.name ? [section.name] : []),
-                      ...(Array.isArray(sectionContext) ? [entryIndex] : [])
-                    ]
-                  )}
-                </div>
-              ))}
+    <div
+      className={
+        showIdentifierPanel
+          ? 'mx-auto grid w-full grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.85fr)]'
+          : 'mx-auto flex w-full justify-center'
+      }
+    >
+      <Panel
+        title={t('search:entityLabel')}
+        noBasePanel
+        noMaxWidth
+        className={detailPanelClass}
+      >
+        <div className="space-y-4">
+          {showIdentifierPanel && (
+            <div className="rounded-xl border border-color-light-gray bg-gray-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950">
+              <div className="td-field-label mb-1">
+                {t('search:trustDeckId')}
+              </div>
+              <div className="break-all font-mono text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {resolveTrustDeckId(entity) || '—'}
+              </div>
             </div>
-          )
-        })}
+          )}
+          {renderAttributes(
+            schemaAttributes,
+            formData ?? {},
+            'entity-root',
+            []
+          )}
+        </div>
       </Panel>
 
-      <div className="w-full xl:w-2/5 flex flex-col gap-4">
-        <Panel className="h-fit">
-          <Divider text={t('search:headers.identifiers')} />
-          <div className="flex flex-col gap-4">
-            <CustomFloatLabel
-              id="entity-identifier"
-              readOnly
-              value={entity.trustdeckID || entity.id || ''}
-              placeholder="trustdeckID"
-            />
-            {/* <CustomFloatLabel
-              id="entity-type"
-              readOnly
-              value={entity.type || entity.entityTypeName || ''}
-              placeholder={t('search:entity')}
-            /> */}
-          </div>
+      {showIdentifierPanel && (
+        <Panel
+          title={t('search:links')}
+          noBasePanel
+          noMaxWidth
+          className={`${detailPanelClass} h-fit`}
+        >
+          <LinksTable
+            entity={
+              {
+                id: resolveTrustDeckId(entity),
+                links: entity.links || []
+              } as Entity
+            }
+            onPseudonymSelect={onLinkedPseudonymSelect}
+          />
         </Panel>
-
-        <Panel className="h-fit">
-          <Divider text={t('search:headers.links')} />
-          {linksLoading ? (
-            <div className="flex justify-center py-4">
-              <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
-            </div>
-          ) : (
-            <LinksTable
-              entity={{ id: entityId, links } as Entity}
-            />
-          )}
-        </Panel>
-      </div>
+      )}
     </div>
   )
 }

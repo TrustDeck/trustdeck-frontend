@@ -1,29 +1,37 @@
 {
-  "modal": "Diese Seite zeigt alle Gruppen und Untergruppen in Ihrem Projekt an. Die erste Gruppe wurde bereits für Sie erstellt. Um eine Untergruppe dafür anzulegen, klicken Sie auf den Knopf „Neue Gruppe“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
+  "modal": "Diese Seite zeigt alle Pseudonym-Domänen und Unterdomänen in Ihrem Projekt an. Die erste Pseudonym-Domäne wurde bereits für Sie erstellt. Um eine Unterdomäne dafür anzulegen, klicken Sie auf den Knopf „Neue Pseudonym-Domäne“ und folgen Sie den Anweisungen im Inspektor auf der rechten Seite des Bildschirms",
   "headers": {
-    "title": "Gruppenverwaltung",
-    "left": "Gruppen",
-    "modalHeader": "Wie diese Seite zu verwenden ist:"
+    "title": "Pseudonym-Domänen",
+    "left": "Pseudonym-Domänen",
+    "modalHeader": "Wie diese Seite zu verwenden ist:",
+    "subtitle": "Erstellen und konfigurieren Sie Pseudonym-Domänen und organisieren Sie deren Vererbungshierarchie."
   },
   "buttons": {
-    "newGroup": "Neue Gruppe",
-    "createGroup": "Gruppe erstellen",
+    "newGroup": "Neue Pseudonym-Domäne",
+    "createGroup": "Pseudonym-Domäne erstellen",
     "edit": "Bearbeiten",
     "save": "Änderungen speichern",
     "discardChanges": "Änderungen verwerfen",
-    "delete": "Gruppe löschen",
+    "delete": "Pseudonym-Domäne löschen",
     "yesDelete": "Ja, löschen",
-    "noDelete": "Gruppe behalten",
-    "okay": "Verstanden!"
+    "noDelete": "Pseudonym-Domäne behalten",
+    "okay": "Verstanden!",
+    "view": "Anzeigen",
+    "refresh": "Aktualisieren",
+    "backToDetails": "Zurück zu den Details",
+    "addGroups": "Pseudonym-Domäne hinzufügen",
+    "cancel": "Abbrechen",
+    "closeEditView": "Bearbeitungsansicht schließen.",
+    "closeCreateView": "Erstellungsansicht schließen."
   },
   "default": {
-    "text": "Wählen Sie eine Entität oder Gruppe aus, um deren Einstellungen hier anzuzeigen."
+    "text": "Wählen Sie eine Entität oder Pseudonym-Domäne aus, um deren Einstellungen hier anzuzeigen."
   },
   "inputs": {
     "psnexample": "Das Pseudonym sieht so aus:",
     "groupname": {
-      "label": "Gruppenname",
-      "error": "Bitte geben Sie einen Gruppennamen ein"
+      "label": "Pseudonym-Domänenname",
+      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein"
     },
     "prefix": {
       "label": "Präfix",
@@ -35,11 +43,13 @@
     },
     "alphabet": {
       "label": "Alphabet",
-      "help": "Suchen Sie ein Alphabet für die Pseudonyme aus."
+      "help": "Suchen Sie ein Alphabet für die Pseudonyme aus.",
+      "fixedAlgorithmError": "Dieser Algorithmus erfordert sein vorgegebenes Alphabet; das Alphabet kann nicht geändert werden."
     },
     "customAlphabetChars": {
       "label": "Benutzerdefinierte Alphabetzeichen",
-      "placeholder": "Alle Zeichen eingeben (z. B. ABC123)"
+      "placeholder": "z. B. abcdefghijklmno1234,.-*+",
+      "help": "Geben Sie jedes Zeichen ein, das in generierten Pseudonymen vorkommen darf. Dies ist eine konkrete Zeichenliste und kein regulärer Ausdruck."
     },
     "startdate": {
       "label": "Startdatum"
@@ -48,7 +58,8 @@
       "label": "Enddatum"
     },
     "parentgroup": {
-      "label": "Übergeordnete Gruppe"
+      "label": "Übergeordnete Pseudonym-Domäne",
+      "none": "Keine übergeordnete Pseudonym-Domäne"
     },
     "description": {
       "label": "Beschreibung",
@@ -60,7 +71,7 @@
     "maxnumpsn": {
       "label": "Max. Anzahl an Pseudonymen",
       "error": "Bitte geben Sie eine Zahl ein",
-      "help": "Geben Sie 0 ein für eine unbegrentzte Zahl von Pseudonymen."
+      "help": "Geschätzte Obergrenze für die maximal benötigte Anzahl an Pseudonymen in dieser Pseudonym-Domäne. Dieser Wert wird zur Berechnung einer optimalen Pseudonymlänge verwendet."
     },
     "multiplepsn": {
       "label": "Mehrere Pseudonyme für denselben Wert zulassen?"
@@ -72,14 +83,138 @@
     "checkdigit": {
       "label": "Prüfziffer"
     },
-    "inheritFromParent": "Von Elterngruppe übernehmen"
+    "inheritFromParent": "Von der übergeordneten Pseudonym-Domäne übernehmen",
+    "psnexampleNew": "Das Pseudonym sieht so aus:",
+    "validityTime": {
+      "label": "Gültigkeitsdauer",
+      "placeholder": "z. B. 3days, 1 day, 50 day, 7w oder 5 y",
+      "help": "Optionale Gültigkeitsdauer zur Berechnung des Enddatums, wenn kein explizites Enddatum eingetragen ist. Beispiele: 3days, 1 day, 50 day, 7w oder 5 y. Unterstützte Einheiten sind Jahre, Monate, Wochen, Tage, Stunden, Minuten, Sekunden, Millisekunden und Nanosekunden. Wenn ein Enddatum angegeben ist, wird die Gültigkeitsdauer ignoriert."
+    },
+    "randomAlgorithmDesiredSuccessProbability": {
+      "label": "Gewünschte Erfolgswahrscheinlichkeit",
+      "help": "Zielwahrscheinlichkeit, mit der ein zufälliges Pseudonym ohne Kollision erzeugt werden kann. Verwenden Sie einen Wert zwischen 0 und 1, zum Beispiel 0,99999998."
+    },
+    "consecutiveValueCounter": {
+      "label": "Zähler für fortlaufende Nummerierung",
+      "help": "Startzähler, der nur beim Algorithmus für fortlaufende Nummern verwendet wird. Andere Algorithmen verwenden intern 1."
+    },
+    "saltLength": {
+      "label": "Salt-Länge",
+      "help": "Der Standardwert ist 32. Erhöhen Sie den Wert nur, wenn ein längerer generierter Salt benötigt wird."
+    },
+    "salt": {
+      "label": "Salt",
+      "help": "Optionaler expliziter Salt für die Pseudonymgenerierung. Lassen Sie das Feld leer, damit das Backend einen Salt generiert oder die Standardbehandlung nutzt."
+    },
+    "lengthIncludesCheckDigit": {
+      "label": "Länge enthält Prüfziffer"
+    },
+    "inheritedEditable": "Von der übergeordneten Pseudonym-Domäne übernommen; kann überschrieben werden.",
+    "inheritedReadonly": "Von der übergeordneten Pseudonym-Domäne übernommen.",
+    "enforceStartDateValidity": {
+      "label": "Gültigkeit ab Startdatum erzwingen"
+    },
+    "enforceEndDateValidity": {
+      "label": "Gültigkeit bis Enddatum erzwingen"
+    }
   },
-  "savingGroup": "Ihre Gruppe wird erstellt...",
-  "groupCreated": "Ihre Gruppe wurde erstellt.",
+  "savingGroup": "Ihre Pseudonym-Domäne wird erstellt...",
+  "groupCreated": "Ihre Pseudonym-Domäne wurde erstellt.",
   "messages": {
-    "deleteConfirmation": "Möchten Sie wirklich diese Gruppe löschen?",
-    "confirmDelete": "Löschen bestatigen",
+    "deleteConfirmation": "Möchten Sie wirklich diese Pseudonym-Domäne löschen?",
+    "confirmDelete": "Löschen bestätigen",
     "unsavedChangesHeader": "Ungespeicherte Änderungen",
-    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?"
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?",
+    "saveOtherChanges": "Es gibt weitere ungespeicherte Änderungen. Diese müssen ebenfalls gespeichert werden, bevor Sie fortfahren können.",
+    "saveOtherChangesHeader": "Weitere Änderungen speichern?",
+    "saveOtherChangesAction": "Ja, alle Änderungen speichern",
+    "invalidParentSummary": "Übergeordnete Pseudonym-Domäne konnte nicht geändert werden",
+    "invalidParentDetail": "Eine Pseudonym-Domäne kann weder sich selbst noch eine eigene Unterdomäne als übergeordnete Pseudonym-Domäne verwenden."
+  },
+  "crud": {
+    "loadFailedSummary": "Pseudonym-Domänen konnten nicht geladen werden",
+    "loadFailedDetail": "Die Pseudonym-Domänenliste konnte nicht geladen werden.",
+    "deleteSuccessSummary": "Pseudonym-Domäne gelöscht",
+    "deleteSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich gelöscht.",
+    "deleteFailedSummary": "Pseudonym-Domäne konnte nicht gelöscht werden",
+    "deleteFailedDetail": "Die Pseudonym-Domäne konnte nicht gelöscht werden.",
+    "assignedToCurrentProject": "Dem aktuellen Projekt zugeordnet",
+    "notAssignedToAnyProject": "Keinem Projekt zugeordnet",
+    "assignedElsewhere": "Einem anderen Projekt zugeordnet",
+    "scopeCurrentProject": "Aktuelles Projekt",
+    "scopeUnassigned": "Nicht zugeordnet",
+    "scopeOtherProject": "Anderes Projekt",
+    "noGroupsInSection": "Keine Pseudonym-Domänen in diesem Bereich.",
+    "selectGroupHint": "Wähle eine Pseudonym-Domäne aus der Liste oder Hierarchie aus, um Details zu sehen.",
+    "detailSubtitle": "Alle verfügbaren Pseudonym-Domänenattribute werden unten angezeigt. Nicht konfigurierte Werte werden als — dargestellt.",
+    "hierarchyTitle": "Pseudonym-Domänen-Hierarchie",
+    "hierarchySubtitle": "Die Hierarchieansicht bleibt erhalten, um über- und untergeordnete Pseudonym-Domänen nachvollziehen zu können.",
+    "createTitle": "Pseudonym-Domäne erstellen",
+    "editTitle": "Pseudonym-Domäne bearbeiten",
+    "table": {
+      "name": "Name",
+      "prefix": "Präfix",
+      "parent": "Übergeordnete Pseudonym-Domäne",
+      "assignment": "Zuordnung",
+      "actions": "Aktionen"
+    },
+    "createSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich erstellt.",
+    "createFailedDetail": "Die Pseudonym-Domäne konnte nicht erstellt werden.",
+    "updateSuccessDetail": "Die Pseudonym-Domänenänderungen wurden erfolgreich gespeichert.",
+    "updateFailedDetail": "Die Pseudonym-Domänenänderungen konnten nicht gespeichert werden.",
+    "createSubtitle": "Definieren Sie Hierarchie, Pseudonymregeln, Gültigkeit und optionale erweiterte Einstellungen.",
+    "editSubtitle": "Bearbeiten Sie die änderbare Konfiguration der ausgewählten Pseudonym-Domäne."
+  },
+  "details": {
+    "name": "Name",
+    "prefix": "Präfix",
+    "validFrom": "Gültig ab",
+    "validFromInherited": "Gültig ab geerbt",
+    "validTo": "Gültig bis",
+    "validToInherited": "Gültig bis geerbt",
+    "validityTime": "Gültigkeitsdauer",
+    "enforceStartDateValidity": "Startdatum-Gültigkeit erzwingen",
+    "enforceStartDateValidityInherited": "Startdatum-Gültigkeit geerbt",
+    "enforceEndDateValidity": "Enddatum-Gültigkeit erzwingen",
+    "enforceEndDateValidityInherited": "Enddatum-Gültigkeit geerbt",
+    "algorithm": "Algorithmus",
+    "algorithmInherited": "Algorithmus geerbt",
+    "alphabet": "Alphabet",
+    "alphabetInherited": "Alphabet geerbt",
+    "randomAlgorithmDesiredSize": "Gewünschte Pseudonym-Kapazität",
+    "randomAlgorithmDesiredSizeInherited": "Gewünschte Kapazität geerbt",
+    "randomAlgorithmDesiredSuccessProbability": "Gewünschte Erfolgswahrscheinlichkeit",
+    "randomAlgorithmDesiredSuccessProbabilityInherited": "Erfolgswahrscheinlichkeit geerbt",
+    "multiplePsnAllowed": "Mehrere Pseudonyme erlaubt",
+    "multiplePsnAllowedInherited": "Einstellung mehrere Pseudonyme geerbt",
+    "consecutiveValueCounter": "Zähler für fortlaufende Nummerierung",
+    "pseudonymLength": "Pseudonymlänge",
+    "pseudonymLengthInherited": "Pseudonymlänge geerbt",
+    "paddingCharacter": "Füllzeichen",
+    "paddingCharacterInherited": "Füllzeichen geerbt",
+    "addCheckDigit": "Prüfziffer hinzufügen",
+    "addCheckDigitInherited": "Prüfziffer-Einstellung geerbt",
+    "lengthIncludesCheckDigit": "Länge enthält Prüfziffer",
+    "lengthIncludesCheckDigitInherited": "Länge-enthält-Prüfziffer geerbt",
+    "salt": "Salt",
+    "saltLength": "Salt-Länge",
+    "description": "Beschreibung",
+    "superDomainID": "ID der übergeordneten Pseudonym-Domäne",
+    "superDomainName": "Übergeordnete Pseudonym-Domäne"
+  },
+  "status": {
+    "creating": "Die Pseudonym-Domäne wird erstellt...",
+    "updating": "Die Pseudonym-Domäne wird aktualisiert...",
+    "deleting": "Die Pseudonym-Domäne wird gelöscht..."
+  },
+  "form": {
+    "basicTitle": "Grundeinstellungen",
+    "basicSubtitle": "Legen Sie Pseudonym-Domänenname, Hierarchie, Präfix, Pseudonymlänge und Beschreibung fest.",
+    "validityTitle": "Gültigkeit",
+    "validitySubtitle": "Definieren Sie, wann erzeugte Pseudonyme gültig sind und wie das Enddatum berechnet wird.",
+    "generationTitle": "Pseudonymgenerierung",
+    "generationSubtitle": "Konfigurieren Sie Algorithmus, Alphabet, Kapazität und Kollisionswahrscheinlichkeit.",
+    "advancedTitle": "Erweiterte Optionen",
+    "advancedSubtitle": "Konfigurieren Sie Salt, Auffüllzeichen, Prüfziffern und die strikte Gültigkeitsprüfung."
   }
 }

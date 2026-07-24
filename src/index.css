@@ -1,6 +1,7 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
-@import 'primereact/resources/themes/lara-light-blue/theme.css' layer(primereact);
+@import 'primereact/resources/themes/lara-light-blue/theme.css'
+  layer(primereact);
 
 @layer tailwind-base {
   @tailwind base;
@@ -21,7 +22,7 @@
     @apply text-base font-font-text;
   }
   small {
-    @apply text-sm font-font-text;
+    @apply text-xs font-font-text;
   }
   html {
     @apply text-base font-font-text;
@@ -30,9 +31,8 @@
 
 @layer base {
   html {
-    @apply font-font-text
+    @apply font-font-text;
   }
-
 }
 
 @layer tailwind-utilities {
@@ -41,7 +41,7 @@
 }
 
 .basic-panel {
-  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full lg:w-4/5;
+  @apply px-6 py-4 bg-white shadow-lg rounded-lg border border-gray-100 items-center w-full;
 }
 
 @layer components {
@@ -49,19 +49,62 @@
     @apply grid grid-cols-2 gap-5;
   }
 
-  @media (min-width: 640px) { /* sm breakpoint */
+  @media (min-width: 640px) {
+    /* sm breakpoint */
     .sm\:form-grid {
       @apply grid-cols-3;
     }
   }
 }
 
-.p-overlaypanel:after, .p-overlaypanel:before{
-  display:none!important; 
+/* Shared bordered floating labels for all form controls. */
+.td-floating-label {
+  z-index: 2;
+  line-height: 1.1;
 }
 
-.p-tabview-panels{
-  padding: 0px;;
+.td-floating-label--active {
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  padding: 0.0625rem 0.4rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+.td-floating-label--active.td-floating-label--error {
+  border-color: #ef4444;
+}
+
+.td-prime-float-label--active > label,
+.td-prime-float-label:focus-within > label {
+  z-index: 2;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  padding: 0.0625rem 0.4rem;
+  line-height: 1.1;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+.dark .td-floating-label--active,
+.dark .td-prime-float-label--active > label,
+.dark .td-prime-float-label:focus-within > label {
+  border-color: #475569;
+  background-color: #0f172a;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+}
+
+.dark .td-floating-label--active.td-floating-label--error {
+  border-color: #f87171;
+}
+
+.p-overlaypanel:after,
+.p-overlaypanel:before {
+  display: none !important;
+}
+
+.p-tabview-panels {
+  padding: 0px;
 }
 
 .file-upload-button .p-button {
@@ -87,4 +130,421 @@
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box;
+}
+
+/* Lightweight application dark mode. This keeps PrimeReact's light theme but darkens the app chrome/cards. */
+.dark body,
+.dark #root {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.dark .bg-surface,
+.dark .bg-surface\/95 {
+  background-color: #0f172a !important;
+}
+
+.dark .bg-white,
+.dark .basic-panel,
+.dark .p-overlaypanel,
+.dark .p-dialog,
+.dark .p-dialog-content,
+.dark .p-dialog-header {
+  background-color: #1e293b !important;
+  color: #e5e7eb !important;
+}
+
+.dark .bg-sidebar {
+  background-color: #111827 !important;
+}
+
+.dark .text-black,
+.dark .text-gray-900,
+.dark .text-slate-950,
+.dark .text-gray-800,
+.dark .text-gray-700 {
+  color: #f8fafc !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .ring-slate-200 {
+  border-color: #334155 !important;
+  --tw-ring-color: #334155 !important;
+}
+
+.dark .bg-gray-50,
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+.dark input,
+.dark textarea,
+.dark .p-inputtext,
+.dark .p-dropdown,
+.dark .p-calendar,
+.dark .p-autocomplete-input {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+}
+
+.dark .reset-filter-button {
+  color: #93c5fd !important;
+}
+
+.dark .reset-filter-button:hover {
+  color: #bfdbfe !important;
+}
+
+.dark .search-toggle-unselected {
+  background-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.dark .search-toggle-unselected:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.dark .p-dialog-footer,
+.dark .p-confirm-dialog .p-dialog-footer,
+.dark .trustdeck-confirm-dialog .p-dialog-footer {
+  background-color: #1e293b !important;
+  color: #e5e7eb !important;
+  border-color: #334155 !important;
+}
+
+.dark .p-dialog .p-dialog-header-icons button,
+.dark .p-dialog .p-dialog-header-icon {
+  color: #e5e7eb !important;
+}
+
+.dark .p-dialog-mask .p-dialog {
+  background-color: #1e293b !important;
+}
+
+/* PrimeReact calendar title spacing: month and year should not touch (e.g. "June 2026"). */
+.p-datepicker .p-datepicker-title .p-datepicker-month {
+  margin-right: 0.35rem !important;
+}
+
+/* Entity Builder alignment and dropdown helper spacing. */
+.builder-page-shell {
+  display: flex;
+  justify-content: center;
+  padding-inline: clamp(1rem, 4vw, 4rem);
+}
+
+.builder-content-column {
+  width: min(100%, 96rem);
+}
+
+.td-custom-dropdown .p-dropdown,
+.td-dropdown-with-info .p-dropdown {
+  display: flex !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+.td-custom-dropdown .p-dropdown-label,
+.td-dropdown-with-info .p-dropdown-label {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.td-dropdown-with-info .p-dropdown-label,
+.td-custom-dropdown--with-help .p-dropdown-label {
+  padding-right: 4.5rem !important;
+}
+
+.td-custom-dropdown .p-dropdown-trigger,
+.td-dropdown-with-info .p-dropdown-trigger {
+  align-items: center !important;
+  display: inline-flex !important;
+  height: 100% !important;
+  justify-content: center !important;
+  margin-left: auto !important;
+  position: absolute !important;
+  right: 0.75rem !important;
+  top: 0 !important;
+  width: 1.75rem !important;
+}
+
+.td-dropdown-with-info .p-dropdown-trigger,
+.td-custom-dropdown--with-help .p-dropdown-trigger {
+  right: 2.5rem !important;
+}
+
+.td-custom-dropdown--inherited .p-dropdown-label {
+  padding-right: 6rem !important;
+}
+
+.td-dropdown-with-info__icon,
+.td-custom-dropdown__help {
+  right: 0.75rem;
+}
+
+/* Entities result detail: keep content centered independently of the action row. */
+.td-identity-entity-dialog .p-dialog-header,
+.td-identity-entity-dialog .p-dialog-content {
+  padding-left: clamp(1.25rem, 3vw, 2rem) !important;
+  padding-right: clamp(1.25rem, 3vw, 2rem) !important;
+}
+
+.linked-pseudonym-table .p-treetable-tbody > tr > td {
+  vertical-align: middle !important;
+}
+
+.linked-pseudonym-table .p-treetable-toggler {
+  vertical-align: middle !important;
+}
+
+/* Shared subsite workspace sizing and typography hierarchy. */
+.td-page-shell {
+  width: 100%;
+  max-width: 112rem;
+  margin-inline: auto;
+  padding-bottom: 4rem;
+}
+
+.td-page-header {
+  width: 100%;
+  margin-bottom: 1.75rem;
+}
+
+.td-page-title {
+  margin: 0;
+  text-align: center;
+  font-family: Arimo, serif;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .td-page-title {
+  color: rgb(243 244 246);
+}
+
+.td-page-subtitle {
+  max-width: 64rem;
+  margin: 0.5rem auto 0;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  color: rgb(75 85 99);
+}
+
+.dark .td-page-subtitle {
+  color: rgb(209 213 219);
+}
+
+.td-page-content {
+  width: 100%;
+  min-width: 0;
+}
+
+.td-panel-title {
+  margin: 0 0 1rem;
+  font-family: Arimo, serif;
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .td-panel-title {
+  color: rgb(243 244 246);
+}
+
+.td-section-title {
+  margin: 0;
+  font-family: Arimo, serif;
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+.dark .td-section-title {
+  color: rgb(243 244 246);
+}
+
+.td-section-subtitle {
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: rgb(75 85 99);
+}
+
+.dark .td-section-subtitle {
+  color: rgb(209 213 219);
+}
+
+.td-field-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  color: rgb(55 65 81);
+}
+
+.dark .td-field-label {
+  color: rgb(229 231 235);
+}
+
+.td-section-divider {
+  border-top: 1px solid rgb(209 213 219);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.dark .td-section-divider {
+  border-top-color: rgb(51 65 85);
+}
+
+/* Hover-only help text used by all form help icons. */
+.td-help-tooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(107 114 128);
+  cursor: help;
+  outline: none;
+}
+
+.td-help-tooltip:hover,
+.td-help-tooltip:focus-visible {
+  color: rgb(30 64 175);
+}
+
+.td-help-tooltip__content {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 100;
+  width: min(22rem, 70vw);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 0.5rem;
+  background: rgb(255 255 255);
+  color: rgb(31 41 55);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 10px 25px rgb(15 23 42 / 0.18);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(0.25rem);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease,
+    visibility 120ms ease;
+}
+
+.td-help-tooltip:hover .td-help-tooltip__content,
+.td-help-tooltip:focus-visible .td-help-tooltip__content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dark .td-help-tooltip__content {
+  border-color: rgb(71 85 105);
+  background: rgb(15 23 42);
+  color: rgb(226 232 240);
+}
+
+/* Keep the group hierarchy surface consistent in dark mode. */
+.td-group-hierarchy-tree,
+.td-group-hierarchy-tree .p-tree-container {
+  background: transparent !important;
+}
+
+.dark .td-group-hierarchy-tree {
+  border-color: rgb(51 65 85);
+  background-color: rgb(15 23 42) !important;
+  color: rgb(226 232 240);
+}
+
+.dark .td-group-hierarchy-tree .p-tree-container,
+.dark .td-group-hierarchy-tree .p-treenode-content,
+.dark .td-group-hierarchy-tree .p-treenode-children {
+  background-color: transparent !important;
+  color: inherit;
+}
+
+.dark .td-group-hierarchy-tree .p-treenode-content:hover {
+  background-color: rgb(30 41 59);
+}
+
+.dark .td-group-hierarchy-tree .p-tree-toggler {
+  color: rgb(203 213 225);
+}
+
+/* Group-management titles use one consistent hierarchy level. */
+.td-group-panel-title {
+  margin: 0;
+  font-family: Arimo, serif;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  color: rgb(17 24 39);
+}
+
+.dark .td-group-panel-title {
+  color: rgb(243 244 246);
+}
+
+/* Inherited values color the actual input control instead of adding a wrapper box. */
+.td-inherited-field .p-inputtext,
+.td-inherited-field .p-dropdown,
+.td-inherited-field .p-calendar,
+.td-inherited-field .td-rocker-toggle {
+  border-color: rgb(191 219 254) !important;
+  background-color: rgb(239 246 255) !important;
+}
+
+.td-inherited-field .p-calendar .p-inputtext {
+  background-color: transparent !important;
+  padding-right: 5.5rem !important;
+}
+
+.td-inherited-field .p-dropdown-label,
+.td-inherited-field .p-calendar input,
+.td-inherited-field .p-inputtext,
+.td-inherited-field .td-rocker-toggle label {
+  color: rgb(30 64 175) !important;
+}
+
+.dark .td-inherited-field .p-inputtext,
+.dark .td-inherited-field .p-dropdown,
+.dark .td-inherited-field .p-calendar,
+.dark .td-inherited-field .td-rocker-toggle {
+  border-color: rgb(30 64 175) !important;
+  background-color: rgb(23 37 84 / 0.45) !important;
+}
+
+.dark .td-inherited-field .p-dropdown-label,
+.dark .td-inherited-field .p-calendar input,
+.dark .td-inherited-field .p-inputtext,
+.dark .td-inherited-field .td-rocker-toggle label {
+  color: rgb(147 197 253) !important;
 }

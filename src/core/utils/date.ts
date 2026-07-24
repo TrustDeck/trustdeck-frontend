@@ -1,6 +1,4 @@
-import i18n from '../../core/configs/i18n'
-
-const getLocale = () => i18n?.language || navigator.language || 'en'
+const DISPLAY_LOCALE = 'de-DE'
 
 /** Format a Date as local YYYY-MM-DD (for date-only fields like birthdate). Avoids UTC shift. */
 export function dateToLocalYYYYMMDD(d: Date): string {
@@ -20,28 +18,45 @@ export function localYYYYMMDDToDate(s: string): Date | null {
   return date
 }
 
-export function formatDate(iso?: string | null, options?: Intl.DateTimeFormatOptions) {
+/**
+ * Format dates consistently in German day-month order, independently of the
+ * selected UI language.
+ */
+export function formatDate(
+  iso?: string | null,
+  options?: Intl.DateTimeFormatOptions
+) {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return new Intl.DateTimeFormat(getLocale(), {
+  return new Intl.DateTimeFormat(DISPLAY_LOCALE, {
     year: 'numeric',
-    month: 'short',
+    month: '2-digit',
     day: '2-digit',
     ...options
   }).format(d)
 }
 
-export function formatDateTime(iso?: string | null, options?: Intl.DateTimeFormatOptions) {
+/**
+ * Format date-times consistently as DD.MM.YYYY, HH:mm:ss using a 24-hour
+ * clock, independently of the selected UI language.
+ */
+export function formatDateTime(
+  iso?: string | null,
+  options?: Intl.DateTimeFormatOptions
+) {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
-  return new Intl.DateTimeFormat(getLocale(), {
+  return new Intl.DateTimeFormat(DISPLAY_LOCALE, {
     year: 'numeric',
-    month: 'short',
+    month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    ...options
+    second: '2-digit',
+    ...options,
+    hour12: false,
+    hourCycle: 'h23'
   }).format(d)
 }

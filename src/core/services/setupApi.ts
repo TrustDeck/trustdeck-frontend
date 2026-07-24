@@ -1,30 +1,50 @@
 import { useEffect } from 'react'
 import { useAuth } from 'react-oidc-context'
 import TrustDeck from '@service/TrustDeck'
+import useUserStore from '../stores/UserStore'
+import { hasValidOidcUser, isMarkedLoggedOut } from './authSession'
+import { clearPermissionCache } from './PermissionCache'
 
 export const useSyncApiToken = () => {
   const auth = useAuth()
+  const setFromAccessToken = useUserStore((state) => state.setFromAccessToken)
+  const clearUser = useUserStore((state) => state.clear)
 
-  // Sync token when user object changes (initial load, login)
   useEffect(() => {
-    if (auth.user?.access_token) {
-      TrustDeck.instance().setToken(auth.user.access_token)
+    if (isMarkedLoggedOut()) {
+      TrustDeck.instance().clearToken()
+      clearPermissionCache()
+      clearUser()
+      return
     }
-  }, [auth.user])
 
-  // Listen for token refresh events to ensure TrustDeck is updated when tokens are silently renewed
+    const accessToken = auth.user?.access_token
+    if (accessToken && hasValidOidcUser(auth.user)) {
+      TrustDeck.instance().setToken(accessToken)
+      clearPermissionCache()
+      setFromAccessToken(accessToken)
+      return
+    }
+
+    if (!auth.isLoading && (!auth.isAuthenticated || !hasValidOidcUser(auth.user))) {
+      TrustDeck.instance().clearToken()
+      clearPermissionCache()
+      clearUser()
+    }
+  }, [auth.user, auth.user?.access_token, auth.isLoading, auth.isAuthenticated, setFromAccessToken, clearUser])
+
   useEffect(() => {
-    const handleUserLoaded = () => {
-      if (auth.user?.access_token) {
-        TrustDeck.instance().setToken(auth.user.access_token)
+    const unsubscribe = auth.events.addUserLoaded((user) => {
+      if (isMarkedLoggedOut()) return
+      if (user.access_token && hasValidOidcUser(user)) {
+        TrustDeck.instance().setToken(user.access_token)
+        clearPermissionCache()
+        setFromAccessToken(user.access_token)
       }
-    }
-
-    // Listen for when user is loaded/refreshed (includes silent renew)
-    const unsubscribe = auth.events.addUserLoaded(handleUserLoaded)
+    })
 
     return () => {
       unsubscribe()
     }
-  }, [auth.user, auth.events])
+  }, [auth.events, setFromAccessToken])
 }

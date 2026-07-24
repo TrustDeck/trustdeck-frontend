@@ -1,4 +1,4 @@
-import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton.tsx'
+import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import { AttributeType, useEntityTypeStore } from '../stores/EntityTypeStore'
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
@@ -45,20 +45,19 @@ export default function Inspector() {
     <div className="p-3 sm:p-4">
       {selected ? (
         <>
-          <h3 className="text-lg font-semibold text-black break-words mb-1">
+          <h3 className="td-section-title mb-1 break-words">
             {(() => {
               const hasCustomLabel = !!(selected.labelEn || selected.labelDe)
               if (selected.group && !hasCustomLabel) {
                 return t('entityBuilder:enterGroupName', 'Enter section name')
               }
-              const label =
-                lang.startsWith('de')
-                  ? selected.labelDe ?? selected.labelEn
-                  : selected.labelEn ?? selected.labelDe
+              const label = lang.startsWith('de')
+                ? (selected.labelDe ?? selected.labelEn)
+                : (selected.labelEn ?? selected.labelDe)
               return label || selected.name || 'Custom field'
             })()}
           </h3>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="td-section-subtitle mb-4">
             {t('entityBuilder:configureField', 'Configure field properties.')}
           </p>
 
@@ -125,7 +124,7 @@ export default function Inspector() {
           {/* Dropdown options editor for enum fields (not for groups) */}
           {!selected.group && selected.type === 'enum' && (
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="td-field-label mb-1 block">
                 {t('entityBuilder:dropdownOptions', 'Dropdown options')}
               </label>
               <div className="space-y-2">
@@ -133,12 +132,18 @@ export default function Inspector() {
                   ? selected.values
                   : presetDropdownValues
                 ).map((opt, idx) => (
-                  <div key={`${selected.key}-opt-${idx}`} className="flex gap-2">
+                  <div
+                    key={`${selected.key}-opt-${idx}`}
+                    className="flex gap-2"
+                  >
                     <div className="flex-1">
                       <CustomFloatLabel
                         id={`${selected.key}-opt-${idx}`}
                         value={opt}
-                        placeholder={t('entityBuilder:optionLabel', `Option ${idx + 1}`)}
+                        placeholder={t(
+                          'entityBuilder:optionLabel',
+                          `Option ${idx + 1}`
+                        )}
                         onChange={(e) => {
                           const base =
                             selected.values && selected.values.length
@@ -174,10 +179,7 @@ export default function Inspector() {
                       selected.values && selected.values.length
                         ? selected.values
                         : presetDropdownValues
-                    updatePartialAttribute(selectedKey, 'values', [
-                      ...base,
-                      ''
-                    ])
+                    updatePartialAttribute(selectedKey, 'values', [...base, ''])
                   }}
                 >
                   + Add option
@@ -223,7 +225,10 @@ export default function Inspector() {
                       id={key}
                       value={String(raw)}
                       placeholder={t(`entityBuilder:field.${key}`, key)}
-                      disabled={isPredefined && (key === 'minLength' || key === 'maxLength')}
+                      disabled={
+                        isPredefined &&
+                        (key === 'minLength' || key === 'maxLength')
+                      }
                       onChange={(e) => {
                         const v = e.target.value
                         const num = v === '' ? undefined : Number(v)
@@ -238,11 +243,7 @@ export default function Inspector() {
                       }
                       placeholder={t(`entityBuilder:field.${key}`, key)}
                       onChange={(e) =>
-                        updatePartialAttribute(
-                          selectedKey,
-                          key,
-                          e.target.value
-                        )
+                        updatePartialAttribute(selectedKey, key, e.target.value)
                       }
                     />
                   )}

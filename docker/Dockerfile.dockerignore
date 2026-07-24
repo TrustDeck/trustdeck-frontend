@@ -1,0 +1,35 @@
+# Dependencies and build outputs
+node_modules
+dist
+dist-ssr
+coverage
+
+# Local/deployment env files; examples stay in the image context
+.env
+*.env
+!.env.example
+!*.env.example
+
+# Runtime-generated config
+env.js
+public/env.js
+
+# Local TLS material
+*.pem
+*.key
+*.crt
+
+# VCS and editor files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Logs and temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+TODO

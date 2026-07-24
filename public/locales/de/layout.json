@@ -1,26 +1,67 @@
 {
-    "menu": {
-        "logout": "Abmelden",
-        "dentityManagement": "Identitätsmanagement",
-        "pseudonymManagement": "Pseudonym Management",
-        "groupManagement": "Gruppenmanagement",
-        "projectSettings": "Projekteinstellungen",
-        "search": "Suche",
-        "entityBuilder": "Entitäten-Manager",
-        "searchResults": "Suchresultate",
-        "entityDetails": "Entitäten",
-        "pseudonymDetails": "Pseudonyme",
-        "registration": "Registrierung",
-        "duplicates": "Dubletten",
-        "resolveDuplicates": "Dubletten auflösen",
-        "projects": "Projekte",
-        "backToProjects": "Zurück zu Projekte"
-    },
-    "logOut": {
-        "loggingOut": "Sie werden abgemeldet",
-        "pleaseWait": "Bitte warten Sie einen Moment...",
-        "loggedOut": "Sie wurden abgemeldet",
-        "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
-        "button": "Zurück zur Login-Seite"
-    }
+  "menu": {
+    "logout": "Abmelden",
+    "pseudonymManagement": "Pseudonyme",
+    "groupManagement": "Pseudonym-Domänen",
+    "projectSettings": "Projekteinstellungen",
+    "search": "Suche",
+    "entityBuilder": "Entitäten-Manager",
+    "searchResults": "Suchresultate",
+    "entityDetails": "Entitäten",
+    "pseudonymDetails": "Pseudonyme",
+    "registration": "Registrierung",
+    "duplicates": "Dubletten",
+    "resolveDuplicates": "Dubletten auflösen",
+    "projects": "Projekte",
+    "backToProjects": "Zurück zu Projekten",
+    "newProject": "Neues Projekt",
+    "identityManagement": "Entitäten",
+    "entityManagement": "Entitätstypen",
+    "globalSettings": "Globale Einstellungen",
+    "userManagement": "Benutzerverwaltung",
+    "pseudonymDomains": "Pseudonym-Domänen",
+    "entityTypes": "Entitätstypen",
+    "entities": "Entitäten",
+    "pseudonyms": "Pseudonyme",
+    "permissions": "Berechtigungen"
+  },
+  "logOut": {
+    "loggingOut": "Sie werden abgemeldet",
+    "pleaseWait": "Bitte warten Sie einen Moment...",
+    "loggedOut": "Sie wurden abgemeldet",
+    "thankYou": "Vielen Dank für die Nutzung unserer Dienste.",
+    "button": "Zurück zur Login-Seite"
+  },
+  "userMenu": {
+    "open": "Benutzermenü öffnen",
+    "signedInUser": "Angemeldete Person",
+    "logoutIn": "Abmeldung in {{time}}",
+    "logoutTimer": "Zeit bis zur automatischen Abmeldung",
+    "darkMode": "Dunkelmodus",
+    "language": "Sprache",
+    "yourAccount": "Ihr Konto",
+    "english": "Englisch",
+    "german": "Deutsch"
+  },
+  "userManagement": {
+    "title": "Benutzerverwaltung",
+    "subtitle": "Prüfen Sie Ihr Konto, den Sitzungsstatus und Ihre Oberflächeneinstellungen.",
+    "username": "Benutzername",
+    "sessionRemaining": "Verbleibende Sitzungszeit",
+    "darkMode": "Dunkelmodus",
+    "language": "Sprache",
+    "account": "Kontoeinstellungen öffnen",
+    "logout": "Abmelden",
+    "enabled": "An",
+    "disabled": "Aus"
+  },
+  "sidebar": {
+    "open": "Seitenleiste öffnen",
+    "close": "Seitenleiste schließen",
+    "projectIconAlt": "Projektsymbol"
+  },
+  "sidebarGroups": {
+    "configuration": "Konfiguration",
+    "management": "Verwaltung"
+  }
 }

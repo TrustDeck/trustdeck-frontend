@@ -1,26 +1,67 @@
 {
-    "menu": {
-        "logout": "Log out",
-        "identityManagement": "Identity Management",
-        "pseudonymManagement": "Pseudonym Management",
-        "groupManagement": "Group Management",
-        "projectSettings": "Project Settings",
-        "search": "Search",
-        "entityManager": "Entity Manager",
-        "searchResults": "Search results",
-        "entityDetails": "Entities",
-        "pseudonymDetails": "Pseudonyms",
-        "registration": "Registration",
-        "duplicates": "Duplicates",
-        "resolveDuplicates": "Resolve duplicates",
-        "projects": "Projects",
-        "backToProjects": "Back to projects"
-    },
-    "logOut": {
-        "loggingOut": "Logging you out",
-        "pleaseWait": "Please wait...",
-        "loggedOut": "You have been logged out",
-        "thankYou": "Thank you for using our service.",
-        "button": "Go to login"
-    }
+  "menu": {
+    "logout": "Log out",
+    "identityManagement": "Entities",
+    "pseudonymManagement": "Pseudonyms",
+    "groupManagement": "Pseudonym domains",
+    "projectSettings": "Project Settings",
+    "search": "Search",
+    "searchResults": "Search results",
+    "entityDetails": "Entities",
+    "pseudonymDetails": "Pseudonyms",
+    "registration": "Registration",
+    "duplicates": "Duplicates",
+    "resolveDuplicates": "Resolve duplicates",
+    "projects": "Projects",
+    "backToProjects": "Back to projects",
+    "newProject": "New project",
+    "entityManagement": "Entity types",
+    "globalSettings": "Global Settings",
+    "userManagement": "User Management",
+    "entityBuilder": "Entity Builder",
+    "pseudonymDomains": "Pseudonym domains",
+    "entityTypes": "Entity types",
+    "entities": "Entities",
+    "pseudonyms": "Pseudonyms",
+    "permissions": "Permissions"
+  },
+  "logOut": {
+    "loggingOut": "Logging you out",
+    "pleaseWait": "Please wait...",
+    "loggedOut": "You have been logged out",
+    "thankYou": "Thank you for using our service.",
+    "button": "Go to login"
+  },
+  "userMenu": {
+    "open": "Open user menu",
+    "signedInUser": "Signed-in user",
+    "logoutIn": "Logout in {{time}}",
+    "logoutTimer": "Time until automatic logout",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "yourAccount": "Your account",
+    "english": "English",
+    "german": "German"
+  },
+  "userManagement": {
+    "title": "User Management",
+    "subtitle": "Review your account, session status, and interface preferences.",
+    "username": "Username",
+    "sessionRemaining": "Session remaining",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "account": "Open account settings",
+    "logout": "Log out",
+    "enabled": "On",
+    "disabled": "Off"
+  },
+  "sidebar": {
+    "open": "Open sidebar",
+    "close": "Close sidebar",
+    "projectIconAlt": "Project icon"
+  },
+  "sidebarGroups": {
+    "configuration": "Configuration",
+    "management": "Management"
+  }
 }

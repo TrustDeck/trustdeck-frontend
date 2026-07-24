@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import HelpTooltip from '../common/HelpTooltip'
 
 type CustomFloatLabelProps = {
   id: string
   value: string | number
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   placeholder: string
+  inputPlaceholder?: string
   helpText?: string
+  helpIconInside?: boolean
   errorMessage?: string
   onBlur?: () => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   validate?: (value: string) => boolean
   className?: string
   readOnly?: boolean
@@ -19,12 +20,22 @@ type CustomFloatLabelProps = {
   required?: boolean
 }
 
+/**
+ * Shared text field with a permanent small label above the control.
+ *
+ * The historic component name is retained to avoid touching every caller, but
+ * no floating-label behavior is rendered anymore.
+ */
 const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   id,
   value,
   onChange,
   placeholder,
+  inputPlaceholder,
   helpText,
+  helpIconInside = false,
+  onBlur,
+  onKeyDown,
   errorMessage = '',
   validate,
   className = '',
@@ -32,71 +43,58 @@ const CustomFloatLabel: React.FC<CustomFloatLabelProps> = ({
   disabled,
   required
 }) => {
-  const [visible, setVisible] = useState(false)
   const [isValid, setIsValid] = useState(true)
-  const [focused, setFocused] = useState(false)
-
-  const { t } = useTranslation()
 
   const handleBlur = () => {
-    setFocused(false)
     if (validate) {
       setIsValid(validate(String(value)))
     } else if (required) {
       setIsValid(String(value).trim().length > 0)
     }
+    onBlur?.()
   }
 
-  const handleFocus = () => {
-    setFocused(true)
-  }
-
-  const showFloating = focused || String(value).length > 0 || !isValid
+  const label = placeholder.trim()
 
   return (
-    <div className="relative w-full">
-      <InputText
-        id={id}
-        value={String(value)}
-        onChange={onChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        readOnly={readOnly}
-        disabled={disabled}
-        className={`w-full rounded-lg text-xl font-normal font-font-text px-3 h-[44px] ${className} ${
-          !isValid ? 'border border-red-500' : 'border border-color-light-gray'
-        } ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}`}
-      />
+    <div className="w-full">
+      {label && (
+        <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
+          <span>{label}</span>
+          {required && <span aria-hidden="true">*</span>}
+        </label>
+      )}
 
-      {/* Floating label or error inside input */}
-      <label
-        htmlFor={id}
-        className={`absolute left-3 px-1 transition-all font-font-text bg-white pointer-events-none
-          ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-          ${!isValid ? 'text-red-600 font-semibold' : 'text-gray-500'}
-        `}
-      >
-        {!isValid && errorMessage ? errorMessage : placeholder}
-        {required && <span className="ml-1">*</span>}
-      </label>
+      <div className="relative w-full">
+        <InputText
+          id={id}
+          value={String(value)}
+          onChange={onChange}
+          placeholder={!readOnly && !disabled ? inputPlaceholder : undefined}
+          onBlur={handleBlur}
+          onKeyDown={onKeyDown}
+          readOnly={readOnly}
+          disabled={disabled}
+          aria-invalid={!isValid}
+          className={`h-[44px] w-full rounded-lg px-3 font-font-text text-xl font-normal ${helpText && helpIconInside ? 'pr-10' : ''} ${className} ${
+            !isValid ? 'border border-red-500' : 'border border-color-light-gray'
+          } ${disabled ? 'cursor-not-allowed text-gray-400' : ''}`}
+        />
 
-      {helpText && (
-        <>
-          <QuestionMarkCircleIcon
-            id={`${id}-help`}
-            className="h-5 w-5 absolute -right-8 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer z-10"
-            onClick={() => setVisible(true)}
+        {helpText && (
+          <HelpTooltip
+            text={helpText}
+            className={`absolute top-1/2 z-30 -translate-y-1/2 ${
+              helpIconInside ? 'right-3' : '-right-8'
+            }`}
           />
-          <Dialog
-            header={t('common:help')}
-            visible={visible}
-            onHide={() => setVisible(false)}
-            dismissableMask
-            className="w-full md:w-3/4 xl:w-1/2"
-          >
-            <p>{helpText}</p>
-          </Dialog>
-        </>
+        )}
+      </div>
+
+      {!isValid && errorMessage && (
+        <p className="mt-1 text-sm font-semibold text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
       )}
     </div>
   )

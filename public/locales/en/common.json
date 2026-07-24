@@ -1,6 +1,39 @@
 {
-    "home": "Home",
-    "help": "Help",
-    "yes": "Yes",
-    "no": "No"
+  "home": "Home",
+  "help": "Help",
+  "yes": "Yes",
+  "no": "No",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "loading": "Loading...",
+  "success": "Success",
+  "error": "Error",
+  "warning": "Warning",
+  "login": {
+    "welcome": "Welcome to TrustDeck",
+    "subtitle": "Sign in with your account to continue.",
+    "opening": "Opening sign-in...",
+    "signIn": "Sign in",
+    "clearAndRetry": "Clear login state and retry",
+    "couldNotStart": "Could not start login",
+    "callbackFailed": "Login could not be completed",
+    "backToLogin": "Back to login",
+    "completing": "Completing login",
+    "preparingSession": "Preparing your TrustDeck session."
+  },
+  "projectRequired": {
+    "summary": "Select a project first",
+    "detail": "Please select a project before opening this section."
+  },
+  "back": "Back",
+  "routeError": {
+    "title": "This page could not be displayed",
+    "description": "Please reload the page. If the problem persists, check the browser console and backend permissions.",
+    "fallbackMessage": "The page could not be rendered."
+  },
+  "view": "View",
+  "actions": "Actions"
 }

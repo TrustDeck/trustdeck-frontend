@@ -9,7 +9,10 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import validation from '../../../core/utils/validation'
-import { dateToLocalYYYYMMDD, localYYYYMMDDToDate } from '../../../core/utils/date'
+import {
+  dateToLocalYYYYMMDD,
+  localYYYYMMDDToDate
+} from '../../../core/utils/date'
 import { countryOptions } from '../../identity/util/countries'
 import { useRelationshipOptions } from '../../../core/utils/relationshipOptions'
 import { PersonEntity } from '../types/PersonEntity'
@@ -74,14 +77,19 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
     { label: t('identity:entity.gender.nonBinary'), value: 'other' }
   ]
 
-  const countryLabel = countryOptions.find((c) => c.value === country)?.label || country
+  const countryLabel =
+    countryOptions.find((c) => c.value === country)?.label || country
   const relationshipOptions = useRelationshipOptions()
 
-  const genderLabel = genderDropdownOptions.find((o) => o.value === administrativeGender)?.label ?? administrativeGender
-  const relationshipLabel = relationshipOptions.find((o) => o.value === contactRelationship)?.label ?? contactRelationship
+  const genderLabel =
+    genderDropdownOptions.find((o) => o.value === administrativeGender)
+      ?.label ?? administrativeGender
+  const relationshipLabel =
+    relationshipOptions.find((o) => o.value === contactRelationship)?.label ??
+    contactRelationship
 
   return (
-    <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
+    <div className="w-full space-y-8 lg:flex lg:space-x-4 lg:space-y-0">
       <Panel
         title={t('search:headers.personalData')}
         className="flex-1"
@@ -122,7 +130,7 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             ) : (
               <CustomFloatLabel
                 id="birthdate"
-                value={entity.data.dateOfBirth.split('T')[0]}
+                value={(entity.data?.dateOfBirth ?? '').split('T')[0]}
                 placeholder={t('search:entity.person.birthdate.placeholder')}
                 readOnly
                 className="flex-1"
@@ -160,16 +168,16 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
             validate={validation.isValidRegistrationEmail}
           />
           <CustomFloatLabel
-              id="phone"
-              value={phoneNumber}
-              placeholder={t('search:entity.person.phone.placeholder')}
-              readOnly={!editMode}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              validate={validation.isValidRegistrationPhone}
-            />
+            id="phone"
+            value={phoneNumber}
+            placeholder={t('search:entity.person.phone.placeholder')}
+            readOnly={!editMode}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            validate={validation.isValidRegistrationPhone}
+          />
         </div>
 
-        <h2 className="mt-4">{t('search:headers.address')}</h2>
+        <h2 className="td-section-title mt-4">{t('search:headers.address')}</h2>
         <Divider />
         <div className="space-y-5">
           <div className="flex space-x-3">
@@ -231,7 +239,9 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           )}
         </div>
 
-        <h2 className="mt-4">{t('search:headers.emergencyContact')}</h2>
+        <h2 className="td-section-title mt-4">
+          {t('search:headers.emergencyContact')}
+        </h2>
         <Divider />
         <div className="space-y-5">
           <div className="flex space-x-3">
@@ -299,21 +309,23 @@ const Person: React.FC<PersonProps> = ({ entity, editMode = false }) => {
           <LinksTable entity={entity as unknown as Entity} />
         </div>
 
-        <h2 className="mt-8">{t('search:headers.identifiers')}</h2>
+        <h2 className="td-section-title mt-8">
+          {t('search:headers.identifiers')}
+        </h2>
         <Divider />
         <div className="space-y-5">
           <CustomFloatLabel
             id="id"
             value={id}
             // onChange={(e) => setId(e.target.value)}
-            placeholder="ID"
+            placeholder={t('search:genericId')}
             readOnly={!editMode}
           />
           {/* <CustomFloatLabel
             id="MOI"
             value={identifiers.MOI}
             onChange={(e) => setMOI(e.target.value)}
-            placeholder="Master Object Index"
+            placeholder={t('search:masterObjectIndex')}
             className="mb-8"
             readOnly={!editMode}
           /> */}

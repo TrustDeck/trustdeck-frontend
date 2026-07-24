@@ -23,7 +23,16 @@ const useLayoutStore = create<LayoutStore>((set) => ({
     set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   setSidebarOpen: (open) => set({ isSidebarOpen: open }),
   breadcrumbItems: [],
-  setBreadcrumbItems: (items) => set({ breadcrumbItems: items }),
+  setBreadcrumbItems: (items) =>
+    set((state) => {
+      const sameLength = state.breadcrumbItems.length === items.length
+      const sameItems =
+        sameLength &&
+        state.breadcrumbItems.every((item, index) =>
+          item.label === items[index]?.label && item.url === items[index]?.url
+        )
+      return sameItems ? state : { breadcrumbItems: items }
+    }),
   isTabActive: true,
   setTabActive: (isActive) => set({ isTabActive: isActive }),
   editMode: false,

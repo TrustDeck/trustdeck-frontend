@@ -3,8 +3,7 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { CakeIcon } from '@heroicons/react/24/outline'
-import { IdentificationIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, IdentificationIcon } from '@heroicons/react/24/outline'
 import { PencilIcon } from '@heroicons/react/24/solid'
 import { CheckIcon } from '@heroicons/react/24/outline'
 import { BeakerIcon } from '@heroicons/react/24/outline'
@@ -35,6 +34,41 @@ type BioProbeResult = {
 
 type SearchResult = PersonType | BioProbeResult | any
 
+function resolveTrustDeckId(result: SearchResult): string {
+  return String(
+    result?.trustdeckID ??
+      result?.trustdeckId ??
+      result?.trustDeckId ??
+      result?.data?.trustdeckID ??
+      result?.data?.trustdeckId ??
+      result?.data?.trustDeckId ??
+      result?.id ??
+      ''
+  )
+}
+
+function resolveEntityTypeName(
+  result: SearchResult,
+  fallback?: string
+): string {
+  return String(
+    result?.entityTypeName ??
+      result?.typeName ??
+      result?.type ??
+      result?.data?.entityTypeName ??
+      fallback ??
+      ''
+  )
+}
+
+function resolveDisplayName(result: SearchResult): string {
+  const data = result?.data ?? result ?? {}
+  const firstName = data.firstName ?? data.givenName ?? data.vorname
+  const lastName = data.lastName ?? data.familyName ?? data.nachname
+  const combined = [firstName, lastName].filter(Boolean).join(' ').trim()
+  return combined || resolveTrustDeckId(result)
+}
+
 interface SearchResultProps {
   result: SearchResult
   duplicate?: boolean
@@ -42,6 +76,7 @@ interface SearchResultProps {
   newPerson?: boolean
   recent?: boolean
   type?: 'person' | 'bioprobe'
+  onView?: (result: SearchResult) => void
 }
 
 const SearchResult: React.FC<SearchResultProps> = ({
@@ -50,7 +85,8 @@ const SearchResult: React.FC<SearchResultProps> = ({
   pseudonymization,
   newPerson,
   recent,
-  type
+  type,
+  onView
 }) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -58,6 +94,8 @@ const SearchResult: React.FC<SearchResultProps> = ({
   const { nextStep, stepperRef } = useStepperControlStore()
   const { setEditMode } = useLayoutStore()
   const { setSelectedEntityId } = useSelectedEntityStore()
+  const isPersonResult =
+    type === 'person' || Boolean(result?.data && 'firstName' in result.data)
 
   function handleNext() {
     nextStep()
@@ -67,17 +105,16 @@ const SearchResult: React.FC<SearchResultProps> = ({
     <Panel>
       <div className="sm:flex sm:justify-between sm:items-center my-3">
         {/* Person result */}
-        {type === 'person' || 'firstName' in result.data && (
+        {isPersonResult && (
           <>
             <div>
               <h3 className="flex">
                 {result.data.firstName} {result.data.lastName}
               </h3>
               <div className="flex space-x-8">
-                <p className="flex">
-                  <CakeIcon className="h-5 w-5 mr-1" />{' '}
-                  {result.data.dateOfBirth && result.data.dateOfBirth.split('T')[0]}
-                </p>
+                {result.data.dateOfBirth && (
+                  <p>{result.data.dateOfBirth.split('T')[0]}</p>
+                )}
                 {!newPerson && (
                   <p className="flex">
                     <IdentificationIcon className="h-5 w-5 mr-1" />
@@ -97,22 +134,30 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   }}
                 />
               )}
+              {pseudonymization && onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
+                />
+              )}
               {!newPerson && (
                 <PrimaryButton
-                label={t('search:select')}
-                icon={<CheckIcon className="h-5 w-5 mr-1" />}
-                onClick={() => {
-                  if ('firstName' in result.data) {
+                  label={t('search:select')}
+                  icon={<CheckIcon className="h-5 w-5 mr-1" />}
+                  onClick={() => {
+                    if ('firstName' in result.data) {
                       usePersonStore.getState().loadEntity(result)
                     }
                     if (duplicate) {
                       navigate(`/identity/duplicates/${result.trustdeckID}`)
                     } else if (pseudonymization) {
+                      const trustDeckId = resolveTrustDeckId(result)
                       setSelectedEntityId({
-                        identifier: result.data?.id ?? result.trustdeckID,
-                        identifierType: 'id',
-                        trustdeckID: result.trustdeckID,
-                        entityTypeName: result.entityTypeName ?? result.type
+                        identifier: trustDeckId,
+                        identifierType: 'TrustDeckID',
+                        entityTypeName: resolveEntityTypeName(result, 'person'),
+                        displayName: resolveDisplayName(result)
                       })
                       handleNext()
                     } else {
@@ -121,6 +166,41 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   }}
                 />
               )}
+            </div>
+          </>
+        )}
+        {!isPersonResult && type !== 'bioprobe' && (
+          <>
+            <div className="min-w-0">
+              <h3 className="break-all font-mono text-lg font-semibold">
+                {resolveTrustDeckId(result) || resolveDisplayName(result) || '—'}
+              </h3>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                {resolveEntityTypeName(result) || t('search:entity.entityType.title')}
+              </p>
+            </div>
+            <div className="mt-3 flex justify-around gap-3 sm:mt-0 sm:justify-normal">
+              {onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
+                />
+              )}
+              <PrimaryButton
+                label={t('search:select')}
+                icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                onClick={() => {
+                  const trustDeckId = resolveTrustDeckId(result)
+                  setSelectedEntityId({
+                    identifier: trustDeckId,
+                    identifierType: 'TrustDeckID',
+                    entityTypeName: resolveEntityTypeName(result),
+                    displayName: resolveDisplayName(result)
+                  })
+                  handleNext()
+                }}
+              />
             </div>
           </>
         )}
@@ -150,6 +230,13 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   }}
                 />
               )}
+              {pseudonymization && onView && (
+                <PrimaryOutlinedButton
+                  label={t('search:view')}
+                  icon={<EyeIcon className="mr-1 h-5 w-5" />}
+                  onClick={() => onView(result)}
+                />
+              )}
               <PrimaryButton
                 label={t('search:select')}
                 icon={<CheckIcon className="h-5 w-5 mr-1" />}
@@ -160,11 +247,12 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   if (duplicate) {
                     navigate(`/identity/duplicates/${result.id}`)
                   } else if (pseudonymization) {
+                    const trustDeckId = resolveTrustDeckId(result)
                     setSelectedEntityId({
-                      identifier: result.id ?? result.trustdeckID,
-                      identifierType: 'id',
-                      trustdeckID: result.trustdeckID ?? result.id,
-                      entityTypeName: result.entityTypeName ?? result.type
+                      identifier: trustDeckId,
+                      identifierType: 'TrustDeckID',
+                      entityTypeName: resolveEntityTypeName(result, 'bioprobe'),
+                      displayName: resolveDisplayName(result)
                     })
                     handleNext()
                   } else {

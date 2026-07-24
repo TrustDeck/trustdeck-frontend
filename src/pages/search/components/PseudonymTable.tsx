@@ -9,61 +9,90 @@ interface PseudonymTableProps {
   pseudonym: Pseudonym
 }
 
+function transformPseudonymToTree(current: Pseudonym): TreeNode[] {
+  return [
+    {
+      key: `${current.domainName}-${current.psn}`,
+      data: { group: current.domainName, pseudonym: current.psn },
+      children: current.children
+        ? current.children.flatMap((child) => transformPseudonymToTree(child))
+        : []
+    }
+  ]
+}
+
+function getAllKeys(
+  treeNodes: TreeNode[],
+  keys: { [key: string]: boolean } = {}
+): { [key: string]: boolean } {
+  treeNodes.forEach((node) => {
+    keys[node.key] = true
+    if (node.children && node.children.length > 0) {
+      getAllKeys(node.children, keys)
+    }
+  })
+  return keys
+}
+
 export default function PseudonymTable({ pseudonym }: PseudonymTableProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([])
   const [expandedKeys, setExpandedKeys] = useState<{ [key: string]: boolean }>({})
   const { t } = useTranslation()
 
   useEffect(() => {
-    if (pseudonym) {
-      const treeNodes = transformPseudonymToTree(pseudonym)
+    if (pseudonym?.children?.length) {
+      const treeNodes = pseudonym.children.flatMap((child) =>
+        transformPseudonymToTree(child)
+      )
       setNodes(treeNodes)
-
-      // Automatically expand all nodes
-      const allExpandedKeys = getAllKeys(treeNodes)
-      setExpandedKeys(allExpandedKeys)
+      setExpandedKeys(getAllKeys(treeNodes))
+    } else {
+      setNodes([])
+      setExpandedKeys({})
     }
   }, [pseudonym])
 
-  // Function to transform the pseudonym object into a tree
-  const transformPseudonymToTree = (pseudonym: Pseudonym): TreeNode[] => {
-    const currentNode: TreeNode = {
-      key: pseudonym.identifierItem.identifier,
-      data: { group: pseudonym.domainName, pseudonym: pseudonym.psn },
-      children: pseudonym.children
-        ? pseudonym.children.map((child) => transformPseudonymToTree(child)).flat()
-        : [],
-    }
+  const groupTemplate = (node: TreeNode) => (
+    <span
+      className="inline-flex min-h-[2.75rem] min-w-0 items-center truncate text-left text-xl text-gray-900 dark:text-gray-100"
+      title={node.data.group}
+    >
+      {node.data.group || '—'}
+    </span>
+  )
 
-    // If the pseudonym has a parent, make the parent the root and nest the pseudonym under it
-    if (pseudonym.domainName) {
-      return [
-        {
-          key: `parent-${pseudonym.domainName}`,
-          data: { group: pseudonym.domainName, pseudonym: "" },
-          children: [currentNode], // Nest current pseudonym under parent
-        },
-      ]
-    }
+  const pseudonymTemplate = (node: TreeNode) => (
+    <span className="inline-flex min-h-[2.75rem] items-center break-all font-mono text-xl text-gray-900 dark:text-gray-100">
+      {node.data.pseudonym || '—'}
+    </span>
+  )
 
-    return [currentNode]
-  }
-
-  // Function to get all keys recursively for expanding nodes
-  const getAllKeys = (nodes: TreeNode[], keys: { [key: string]: boolean } = {}): { [key: string]: boolean } => {
-    nodes.forEach((node) => {
-      keys[node.key] = true // Expand current node
-      if (node.children && node.children.length > 0) {
-        getAllKeys(node.children, keys) // Recursively expand children
-      }
-    })
-    return keys
+  if (nodes.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-300">
+        {t('search:pseudonym.noLinkedPseudonyms')}
+      </div>
+    )
   }
 
   return (
-    <TreeTable className="w-full" value={nodes} expandedKeys={expandedKeys} onToggle={(e) => setExpandedKeys(e.value)}>
-      <Column field="group" header={t('search:group.title')} expander />
-      <Column field="pseudonym" header={t('search:pseudonym.title')} />
+    <TreeTable
+      className="w-full linked-pseudonym-table"
+      value={nodes}
+      expandedKeys={expandedKeys}
+      onToggle={(event) => setExpandedKeys(event.value)}
+    >
+      <Column
+        field="group"
+        header={t('search:group.title')}
+        expander
+        body={groupTemplate}
+      />
+      <Column
+        field="pseudonym"
+        header={t('search:pseudonym.title')}
+        body={pseudonymTemplate}
+      />
     </TreeTable>
   )
 }

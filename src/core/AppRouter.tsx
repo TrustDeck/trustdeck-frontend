@@ -1,3 +1,20 @@
+/*
+ * Trust Deck Services
+ * Copyright 2024-2026 Armin Müller and Loic Khodarkovsky
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {
   Routes,
   Route,
@@ -7,68 +24,91 @@ import {
   matchPath
 } from 'react-router-dom'
 import Layout from './components/common/Layout'
-import { withAuthenticationRequired, useAuth } from 'react-oidc-context'
-import { FC, useEffect } from 'react'
+import { useAuth } from 'react-oidc-context'
+import { FC, useEffect, useRef } from 'react'
 import { routes } from './configs/routes'
-import useLayoutStore from './stores/LayoutStore' // Import useLayoutStore
-import useUserStore from './stores/UserStore.tsx' // Import the UserStore
-import useProjectStore from './stores/ProjectStore.tsx'
+import useLayoutStore from './stores/LayoutStore'
+import useUserStore from './stores/UserStore'
 import TrustDeck from '@service/TrustDeck'
-import logger from './Logger.ts'
-import { useSyncApiToken } from './services/setupApi.ts'
+import { useSyncApiToken } from './services/setupApi'
+import { refreshAccessTokenForNavigation } from './services/tokenRefresh'
 import RequireProject from './components/routing/RequireProject'
+import { hasValidOidcUser, isMarkedLoggedOut, isTimestampExpired, markLoggedOut } from './services/authSession'
 
-// Higher-Order Component to handle protected routes dynamically
+/** Defines the authentication state needed to render a route. */
 interface ProtectedRouteProps {
   checkAuth: boolean
   component: FC
   isProtected: boolean
 }
 
+/** Renders a route only when the current OIDC or persisted session is valid. */
 const ProtectedRoute: FC<ProtectedRouteProps> = ({
   checkAuth,
   component: Component,
   isProtected
 }) => {
   const auth = useAuth()
-  //TODO while this is logged it means the service self reloads somewehere but i dont know where
-  //TODO this causes the page to reload multiple times
-  logger.info('hitting protected route')
+  const location = useLocation()
+  const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
+  const locallyLoggedOut = isMarkedLoggedOut()
+  const hasValidStoredUser = checkAuth && !isTimestampExpired(tokenExpiresAt, 0)
+  const hasValidOidcSession = auth.isAuthenticated && hasValidOidcUser(auth.user)
+  const authenticated = !locallyLoggedOut && (hasValidStoredUser || hasValidOidcSession)
 
-  logger.info(isProtected ? 'Route is protected' : 'Route is public')
 
-  logger.info(checkAuth ? 'is authenticated' : 'is not authenticated')
-
-  if (isProtected && !checkAuth) {
-    auth.removeUser()
-    TrustDeck.instance().clearToken()
-    auth.clearStaleState()
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('selected-project')
-    }
+  if (auth.isLoading && isProtected && !authenticated && !locallyLoggedOut) {
+    return (
+      <div className="flex min-h-[60vh] w-full items-center justify-center text-gray-500">
+        Checking your session...
+      </div>
+    )
   }
 
-  const WrappedComponent = isProtected
-    ? withAuthenticationRequired(Component, {
-        signinRedirectArgs: {
-          redirect_uri:
-            window.location.origin +
-            window.location.pathname +
-            window.location.search +
-            window.location.hash
-        }
-      })
-    : Component
+  if (isProtected && !authenticated) {
+    TrustDeck.instance().clearToken()
+    useUserStore.getState().clear()
+    const returnTo = `${location.pathname}${location.search}${location.hash}`
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
+  }
 
-  return <WrappedComponent />
+  return <Component />
 }
 
+
+/** Refreshes the access token when the user changes between main application areas. */
+const TokenRefreshOnMainNavigation: React.FC = () => {
+  const auth = useAuth()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!auth.isAuthenticated || auth.isLoading || isMarkedLoggedOut()) return
+    const isMainRoute = routes.some(
+      (route) =>
+        route.isSidebar &&
+        Boolean(matchPath({ path: route.path, end: false }, location.pathname))
+    )
+    if (!isMainRoute) return
+    void refreshAccessTokenForNavigation(auth)
+  }, [auth, auth.isAuthenticated, auth.isLoading, location.pathname])
+
+  return null
+}
+
+/** Synchronizes token expiry and cross-tab authentication state with routing. */
 const AuthStateListener: React.FC = () => {
-  const navigate = useNavigate() // Initialize useNavigate
+  const navigate = useNavigate()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const isTabActive = useLayoutStore((state) => state.isTabActive) // Use isTabActive from LayoutStore
+  const isTabActive = useLayoutStore((state) => state.isTabActive)
   const location = useLocation()
   const auth = useAuth()
+  const hadLiveSessionRef = useRef(false)
+
+  useEffect(() => {
+    if (hasValidOidcUser(auth.user)) {
+      hadLiveSessionRef.current = true
+    }
+  }, [auth.user])
 
   useEffect(() => {
     let previousAuthState = isAuthenticated
@@ -77,8 +117,8 @@ const AuthStateListener: React.FC = () => {
       (state) => state.isAuthenticated,
       (currentAuthState) => {
         if (previousAuthState && !currentAuthState && !isTabActive) {
-          console.log('User is no longer authenticated')
-          navigate('/logged-out') // Use navigate instead of hard setting the location
+          markLoggedOut('timeout')
+          navigate('/logged-out')
         }
         previousAuthState = currentAuthState
       }
@@ -98,7 +138,6 @@ const AuthStateListener: React.FC = () => {
           if (url.searchParams.has('code') || url.searchParams.has('state')) {
             navigate(location.pathname, { replace: true })
           }
-          // debug package? log level
         }
         previousAuthState = currentAuthState
       }
@@ -107,94 +146,36 @@ const AuthStateListener: React.FC = () => {
     return () => unsubscribe()
   }, [isAuthenticated, isTabActive, location, navigate])
 
-  // Listen for token expiration warnings - automaticSilentRenew should handle refresh before this
+  // OIDC renews proactively; this listener registers the lifecycle event intentionally.
   useEffect(() => {
     const handleTokenExpiring = () => {
-      // Token is about to expire - automaticSilentRenew should refresh it
-      // This event helps ensure we're aware of refresh attempts
-      console.log('Access token expiring. Silent renew should trigger')
+      // `automaticSilentRenew` performs the refresh; registering keeps the event lifecycle explicit.
     }
 
     const unsubscribeExpiring = auth.events.addAccessTokenExpiring(handleTokenExpiring)
     return () => unsubscribeExpiring()
   }, [auth.events])
 
-  //this mavigates every tab as soon as the token is expired for any reason and then performs the logout in each tab. while the "real" logout itself only happens in the active tab
+  // Every tab routes to the logged-out view; only the active tab starts provider logout.
   useEffect(() => {
     // the `return` is important - addAccessTokenExpired() returns a cleanup function
     return auth.events.addAccessTokenExpired(() => {
-      navigate('/logged-out') // Use navigate instead of hard setting the location
+      TrustDeck.instance().clearToken()
+      useUserStore.getState().clear()
+
+      if (hadLiveSessionRef.current) {
+        markLoggedOut('timeout')
+        navigate('/logged-out')
+      } else {
+        navigate('/login', { replace: true })
+      }
     })
   }, [auth.events, navigate])
 
   return null
 }
 
-//this is updated on every page change
-const BreadcrumbUpdater: React.FC = () => {
-  const location = useLocation()
-  const setBreadcrumbItems = useLayoutStore((state) => state.setBreadcrumbItems)
-
-  useEffect(() => {
-    const pathname = location.pathname
-    
-    // Special handling for direct pseudonym search: /search/pseudonym/:pseudonymId
-    // Should only show: Search > Pseudonym Details (not entities > pseudonyms)
-    if (pathname.match(/^\/search\/pseudonym\/[^/]+$/)) {
-      const searchRoute = routes.find((r) => r.path === '/search')
-      const pseudonymRoute = routes.find((r) => r.path === '/search/pseudonym/:pseudonymId')
-      const breadcrumbList = [
-        { label: searchRoute?.titleKey || '/search', url: '/search' },
-        { label: pseudonymRoute?.titleKey || pathname, url: pathname }
-      ]
-      setBreadcrumbItems(breadcrumbList)
-      return
-    }
-
-    // Project overview: only show Home
-    if (pathname === '/projects') {
-      setBreadcrumbItems([])
-      return
-    }
-
-    // Default behavior for all other paths
-    const pathnames = pathname.split('/').filter((x) => x)
-    const breadcrumbList = pathnames
-      .map((_, index) => {
-        const path = `/${pathnames.slice(0, index + 1).join('/')}`
-        const route = routes.find((r) =>
-          matchPath({ path: r.path, end: true }, path)
-        )
-
-        // Skip intermediate synthetic segments like "/entity" when there is no route.
-        if (!route && index < pathnames.length - 1) return null
-
-        return { label: route ? route.titleKey : path, url: path }
-      })
-      .filter((item): item is { label: string; url: string } => item !== null)
-
-    setBreadcrumbItems(breadcrumbList)
-  }, [location, setBreadcrumbItems])
-
-  return null
-}
-
-const ProjectListener: React.FC = () => {
-  //TODO if no project is set navigate the use always to the first page
-  //TODO try to get the project from the current path
-
-  const currentProject = useProjectStore((state) => state.projectName)
-  const setProjectName = useProjectStore((state) => state.setProjectName)
-
-  useEffect(() => {
-    if (!currentProject) {
-      setProjectName('ProjectX') //TODO TODO TODO DO NOT HARDCODE
-    }
-  }, [currentProject, setProjectName])
-
-  return null
-}
-
+/** Mounts application routes and the authentication lifecycle listeners. */
 const AppRouter: FC = () => {
   useSyncApiToken()
   const isAuthenticated = useUserStore((state) => state.isAuthenticated)
@@ -202,8 +183,7 @@ const AppRouter: FC = () => {
   return (
     <>
       <AuthStateListener />
-      <ProjectListener />
-      <BreadcrumbUpdater />
+      <TokenRefreshOnMainNavigation />
       <Routes>
         <Route element={<Layout />}>
           {routes.map(({ path, component, isProtected }) => (

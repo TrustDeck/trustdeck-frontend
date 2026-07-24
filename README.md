@@ -1,114 +1,60 @@
-# trustdeck-frontend
+# TrustDeck Frontend
 
-## Installation
+React and TypeScript single-page application for the TrustDeck platform. Vite powers local development and builds; the production image serves the static bundle with Nginx and injects public runtime settings at container startup.
 
-Prerequisites:
-- Docker (Engine & Compose)
-- Node.js (LTS)
-- npm
-- make (optional, used by project Makefile)
+## Prerequisites
 
-Steps:
-1. Clone this repository
-2. Run `make install`
-3. Adjust environment variables in `docker-compose.yml` (or point to a `.env` file if used).
-4. Start the stack: `make compose` **Note: This uses Docker/Compose to build and run services.**
-5. The app should be available on http://localhost:9000
-6. Configure your proxy (nginx, Traefik, or other) to forward incoming requests to the container port (e.g., localhost:9000).
+- Node.js 22 or later and npm
+- Docker Engine with the Compose plugin for container deployment
 
-## Quick start (development)
-- Install dependencies: `npm install`
-- Start the frontend dev server (if applicable): `npm run dev`
+## Getting Started
 
-## Development
+Install dependencies, then start the Vite development server:
 
-### Routes — adding a new route
-To add a new page and route:
+```bash
+npm ci
+npm run dev
+```
 
-1. Create the React page component, e.g. `src/pages/IdentityManagementPage.tsx`:
+The application is available at `https://localhost:5173` when `local-key.pem` and `local-cert.pem` exist; otherwise it uses HTTP.
 
-   ```tsx
-   import React from 'react';
+For build and quality checks:
 
-   const IdentityManagementPage: React.FC = () => (
-     <div>
-       <h1>Identity Management</h1>
-       {/* Page content */}
-     </div>
-   );
+```bash
+npm run build
+npm run lint
+npm run pretty
+```
 
-   export default IdentityManagementPage;
-   ```
+`npm run pretty` formats source files in place.
 
-2. Import the component in the routes config: `src/core/configs/routes.ts`
+## Configuration
 
-   ```ts
-   import IdentityManagementPage from '../../pages/IdentityManagementPage';
-   ```
+Tooling configuration is in `config/`. The application receives its public API and OpenID Connect settings from the runtime-generated `env.js` file.
 
-3. Add a route entry to the routes array:
+## Docker Deployment
 
-   ```ts
-   {
-     path: '/identitaetsmanagement',
-     titleKey: 'layout:menu.identityManagement',
-     component: IdentityManagementPage,
-     Icon: IdentificationIcon,
-     isProtected: true,
-     isSidebar: true,
-     sidebarOrder: 1,
-   }
-   ```
+All container assets are in `docker/`. The Compose file uses the repository root as its build context, so run it with an explicit file path.
 
-Route attributes:
-- `path`: URL path for the route.
-- `titleKey`: i18n key used for the label (use the namespace prefix).
-- `component`: React component to render.
-- `Icon`: Sidebar icon component.
-- `isProtected`: true if authentication is required.
-- `isSidebar`: true to show the route in the sidebar.
-- `sidebarOrder`: numeric ordering for sidebar placement.
+1. Create the ignored deployment configuration.
 
-Files involved:
-- `src/core/configs/routes.ts`
-- `src/pages/IdentityManagementPage.tsx`
+```bash
+cp config/environment/trustdeck-frontend.env.example config/environment/trustdeck-frontend.env
+```
 
-### Translations — adding a new namespace
-To add a namespace for i18n:
+2. Set the public API and OIDC URLs in `config/environment/trustdeck-frontend.env`.
 
-1. Create a new JSON file in `public/locales/<lang>/`, e.g. `public/locales/en/identitymanagement.json`:
+3. Build and start the service.
 
-   ```json
-   {
-     "panel": {
-       "login": "Login",
-       "logout": "Logout"
-     }
-   }
-   ```
+```bash
+docker compose -f docker/compose.yml up --build --force-recreate -d
+```
 
-2. Register the namespace in your i18n config (e.g. `src/core/configs/i18n.ts`):
+The service binds to `127.0.0.1:8082` by default. Set `FRONTEND_BIND`, for example to `0.0.0.0:8082`, only when it should be exposed directly. For reverse-proxy deployments, route requests to `http://127.0.0.1:8082`.
 
-   ```ts
-   const namespaces = ['layout', 'common', 'search', 'identitymanagement'];
-   ```
+Useful commands:
 
-3. Use translations in code:
-
-   ```tsx
-   import { useTranslation } from 'react-i18next';
-
-   function LoginButton() {
-     const { t } = useTranslation();
-     return <button>{t('identitymanagement:panel.login')}</button>;
-   }
-   ```
-
-Files involved:
-- `public/locales/en/identitymanagement.json`
-- `src/core/configs/i18n.ts`
-- Components using `useTranslation` or `t`
-
----
-
-Following these steps will get the environment running and document how to add pages, routes and translations. Adjust the commands and ports to match your local configuration.
+```bash
+docker compose -f docker/compose.yml logs -f
+docker compose -f docker/compose.yml down
+```

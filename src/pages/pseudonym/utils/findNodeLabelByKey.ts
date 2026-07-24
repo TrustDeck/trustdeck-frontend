@@ -23,7 +23,7 @@ export const getSelectedGroupNames = (
   }
 
   return Object.entries(selectedGroup)
-    .filter(([_, value]) => value.checked)
+    .filter((entry) => entry[1].checked)
     .map(([key]) => findNodeLabelByKey(groups, key))
     .filter((label): label is string => Boolean(label))
 }

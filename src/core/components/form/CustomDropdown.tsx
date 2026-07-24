@@ -1,8 +1,5 @@
-import { useState } from 'react'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { Dialog } from 'primereact/dialog'
-import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
-import { useTranslation } from 'react-i18next'
+import HelpTooltip from '../common/HelpTooltip'
 
 interface DropdownOption {
   label: string
@@ -21,10 +18,15 @@ type CustomDropdownProps = {
   textColor?: 'text-gray-500' | 'text-gray-700'
   required?: boolean
   disabled?: boolean
+  invalid?: boolean
+  errorMessage?: string
+  filter?: boolean
+  filterPlaceholder?: string
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
   id,
+  label,
   value,
   options,
   onChange,
@@ -34,15 +36,23 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   textColor = 'text-gray-500',
   required,
   disabled,
+  invalid = false,
+  errorMessage,
+  filter = false,
+  filterPlaceholder,
   ...props
 }) => {
-  const [visible, setVisible] = useState(false)
-  const { t } = useTranslation()
-
-  const showFloating = value !== ''
+  const fieldLabel = (label || placeholder || '').trim()
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`td-custom-dropdown w-full ${className}`}>
+      {fieldLabel && (
+        <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
+          <span>{fieldLabel}</span>
+          {required && <span aria-hidden="true">*</span>}
+        </label>
+      )}
+
       <div className="relative w-full">
         <Dropdown
           id={id}
@@ -51,43 +61,34 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           onChange={onChange}
           placeholder=""
           disabled={disabled}
-          className="w-full rounded-lg border font-font-text font-normal border-color-light-gray text-xl h-[44px] flex items-center [&_.p-dropdown-label]:flex [&_.p-dropdown-label]:items-center [&_.p-dropdown-label]:h-full [&_.p-dropdown-label]:py-0 [&_.p-dropdown-label]:font-font-text [&_.p-dropdown-label]:font-normal"
+          filter={filter}
+          filterPlaceholder={filterPlaceholder}
+          className={`flex h-[44px] w-full items-center rounded-lg border font-font-text text-xl font-normal ${
+            invalid ? 'border-red-500' : 'border-color-light-gray'
+          } ${helpText ? 'pr-9' : ''}`}
           pt={{
-            input: { className: `px-3 h-[44px] flex items-center font-font-text font-normal ${textColor} text-xl` },
-            item: { className: 'font-font-text font-normal text-lg text-gray-500' }
+            input: {
+              className: `flex h-[44px] items-center px-3 font-font-text text-xl font-normal ${textColor}`
+            },
+            item: {
+              className: 'font-font-text text-lg font-normal text-gray-500'
+            }
           }}
           {...props}
         />
 
-        <label
-          htmlFor={id}
-          className={`absolute left-3 px-1 font-font-text transition-all bg-white pointer-events-none
-            ${showFloating ? '-top-2 text-sm' : 'top-1/2 -translate-y-1/2 text-xl'}
-            text-gray-500
-          `}
-        >
-          {placeholder}
-          {required && <span className="ml-1">*</span>}
-        </label>
+        {helpText && (
+          <HelpTooltip
+            text={helpText}
+            className="absolute right-10 top-1/2 z-30 -translate-y-1/2"
+          />
+        )}
       </div>
 
-      {helpText && (
-        <>
-          <QuestionMarkCircleIcon
-            id={`${id}-help`}
-            className="absolute -right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 cursor-pointer z-10"
-            onClick={() => setVisible(true)}
-          />
-          <Dialog
-            header={t('common:help')}
-            visible={visible}
-            onHide={() => setVisible(false)}
-            dismissableMask
-            className="w-full md:w-3/4 xl:w-1/2"
-          >
-            <p>{helpText}</p>
-          </Dialog>
-        </>
+      {invalid && errorMessage && (
+        <p className="mt-1 text-sm font-medium text-red-600 dark:text-red-400">
+          {errorMessage}
+        </p>
       )}
     </div>
   )

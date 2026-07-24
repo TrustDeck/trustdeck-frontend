@@ -3,6 +3,10 @@ import { ContactPerson } from "./ContactPerson"
 
 export interface PersonEntity {
   id: string
+  data?: {
+    dateOfBirth?: string
+    [key: string]: unknown
+  }
   type: 'person'
   firstname: string
   lastname: string

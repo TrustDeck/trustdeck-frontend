@@ -1,16 +1,86 @@
 {
   "headers": {
-    "title": "Pseudonym generieren",
+    "title": "Pseudonyme",
     "stepone": "Suchen Sie die Entität, die pseudonymisiert werden soll.",
     "steptwo": "Wählen Sie die Entität aus, die pseudonymisiert werden soll.",
-    "stepthree": "In welcher Gruppe soll das Pseudonym gespeichert werden?"
-  }, 
+    "stepthree": "In welcher Pseudonym-Domäne soll das Pseudonym gespeichert werden?",
+    "subtitle": "Suchen, prüfen, erstellen, bearbeiten und löschen Sie Pseudonyme innerhalb von Pseudonym-Domänen."
+  },
   "buttons": {
     "back": "Zurück",
     "forward": "Weiter",
-    "generate": "Generieren"
+    "generate": "Generieren",
+    "generateStandalone": "Pseudonym ohne Entität generieren"
   },
-  "infotext": "Wenn Sie ein Pseudonym für eine Untergruppe erstellen, generiert das System automatisch eine Kette von Pseudonymen für jede Elterngruppe.",
-  "selectGroup": "Gruppen auswählen",
-  "groupHasPseudonym": "Diese Gruppe hat bereits ein Pseudonym für die ausgewählte Entität."
+  "selectGroup": "Pseudonym-Domänen auswählen",
+  "standalone": {
+    "description": "Sie können auch ein Pseudonym erzeugen, das nicht mit einer bestehenden Entität verknüpft ist. TrustDeck erstellt dafür eine interne eigenständige Kennung.",
+    "selected": "Der Modus für ein eigenständiges Pseudonym ist aktiv. Wählen Sie die Pseudonym-Domäne aus, in der das Pseudonym gespeichert werden soll.",
+    "modalTitle": "Pseudonym ohne Entität generieren",
+    "modalDescription": "Wählen Sie die Pseudonym-Domäne aus und geben Sie die Kennungsdaten an. Weitere Pseudonymattribute sind unter den erweiterten Optionen verfügbar.",
+    "advanced": {
+      "show": "Erweiterte Optionen anzeigen",
+      "hide": "Erweiterte Optionen ausblenden"
+    },
+    "fields": {
+      "group": "Pseudonym-Domäne",
+      "groupSearch": "Pseudonym-Domänen suchen",
+      "identifier": "Kennung",
+      "idType": "ID-Typ",
+      "pseudonym": "Pseudonym",
+      "validFrom": "Gültig ab",
+      "validTo": "Gültig bis",
+      "validityTime": "Gültigkeitsdauer",
+      "validityTimeHelp": "Beispiele: 3days, 1 day, 50 day, 7w oder 5 y. Wenn ein Gültig-bis-Datum angegeben ist, wird die Gültigkeitsdauer ignoriert.",
+      "omitPrefix": "Präfix der Pseudonym-Domäne weglassen"
+    },
+    "validation": {
+      "required": "Bitte wählen Sie eine Pseudonym-Domäne aus und geben Sie Kennung und ID-Typ an.",
+      "createFailed": "Das Pseudonym konnte nicht erstellt werden."
+    }
+  },
+  "selectedEntity": {
+    "title": "Ausgewählte Entitätskennung",
+    "identifierType": "Kennungstyp",
+    "identifier": "Kennung",
+    "trustDeckIdHint": "Entitätsbezogene Pseudonyme verwenden die TrustDeckID der Entität mit dem Kennungstyp TrustDeckID, damit das Pseudonym später als Verknüpfung der Entität angezeigt werden kann."
+  },
+  "management": {
+    "searchTitle": "Suche",
+    "searchDescription": "Suchen Sie Pseudonyme in der ausgewählten Pseudonym-Domäne und verwalten Sie die Ergebnisse.",
+    "generateTitle": "Pseudonym generieren",
+    "generateDescription": "Erstellen Sie ein Pseudonym für eine bestehende Entität oder aus Identifikatordaten.",
+    "entityTitle": "Für eine vorhandene Entität",
+    "entityDescription": "Suchen und wählen Sie eine Entität aus und bestimmen Sie anschließend die Pseudonym-Domäne.",
+    "entityAction": "Entitätsbasierte Generierung starten",
+    "standaloneTitle": "Ohne vorhandene Entität",
+    "standaloneDescription": "Geben Sie Kennung und ID-Typ direkt an und wählen Sie anschließend Pseudonym-Domäne und optionale Gültigkeitseinstellungen.",
+    "standaloneAction": "Ohne Entität generieren",
+    "addPseudonym": "Pseudonym hinzufügen"
+  },
+  "entityFlow": {
+    "modalTitle": "Pseudonym für eine Entität generieren",
+    "modalDescription": "Suchen Sie die Entität, wählen Sie den richtigen Treffer aus und bestimmen Sie die ZielPseudonym-Domäne.",
+    "searchStep": "Entität suchen",
+    "selectStep": "Entität auswählen",
+    "groupStep": "Pseudonym-Domäne auswählen",
+    "validation": {
+      "groupRequired": "Bitte wählen Sie eine Pseudonym-Domäne aus.",
+      "entityRequired": "Bitte wählen Sie zuerst eine Entität aus.",
+      "createFailed": "Das Pseudonym konnte nicht generiert werden."
+    },
+    "entityDetailsTitle": "Entitätsdetails",
+    "entityDetailsDescription": "Prüfen Sie alle verfügbaren Werte der ausgewählten Entität, bevor Sie diese für die Pseudonymerzeugung verwenden."
+  },
+  "domainContext": {
+    "title": "Suchkontext für Pseudonym-Domänen",
+    "description": "Suchen und wählen Sie die Pseudonym-Domäne aus, in der Pseudonyme gefunden oder erstellt werden sollen. Übergeordnete Domänen werden als Hierarchiepfad angezeigt.",
+    "searchLabel": "Pseudonym-Domänen suchen",
+    "searchPlaceholder": "Mindestens zwei Zeichen eingeben",
+    "loading": "Pseudonym-Domänen werden gesucht...",
+    "searchFailed": "Die Pseudonym-Domänen konnten nicht durchsucht werden.",
+    "enterMoreCharacters": "Geben Sie mindestens zwei Zeichen für die Suche ein.",
+    "noResults": "Keine passenden Pseudonym-Domänen gefunden.",
+    "clearSelection": "Ausgewählte Pseudonym-Domäne entfernen"
+  }
 }

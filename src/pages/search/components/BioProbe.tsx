@@ -40,7 +40,7 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
   }, [editMode, entity, loadEntity])
 
   return (
-    <div className="space-y-8 lg:space-y-0 lg:w-full lg:flex lg:space-x-4 2xl:w-4/5 2xl:mx-auto">
+    <div className="w-full space-y-8 lg:flex lg:space-x-4 lg:space-y-0">
       <Panel title={t('search:headers.data')} className="flex-1">
         <Divider />
         <div className="space-y-5">
@@ -93,7 +93,9 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
             <CustomFloatLabel
               id="id"
               value={sampleNumber}
-              placeholder={t('search:entity.biosample.sampleNumber.placeholder')}
+              placeholder={t(
+                'search:entity.biosample.sampleNumber.placeholder'
+              )}
               readOnly={!editMode}
               onChange={(e) => setSampleNumber(e.target.value)}
               validate={validation.isValidRegistrationLocation}
@@ -108,12 +110,14 @@ const BioSample: React.FC<BioSampleProps> = ({ entity, editMode = false }) => {
           <LinksTable entity={entity as unknown as Entity} />
         </div>
 
-        <h2 className="mt-8">{t('search:headers.identifiers')}</h2>
+        <h2 className="td-section-title mt-8">
+          {t('search:headers.identifiers')}
+        </h2>
         <Divider />
         <CustomFloatLabel
           id="MOI"
           value={moi}
-          placeholder="Master Object Index"
+          placeholder={t('search:masterObjectIndex')}
           readOnly={!editMode}
           onChange={(e) => setMoi(e.target.value)}
           className="my-8"

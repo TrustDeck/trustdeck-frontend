@@ -12,12 +12,12 @@ import BioSampleService from '../services/BioSampleService'
  * `BioprobeForm` is a React component for registering or editing bioprobe data.
  * It provides a form with four fields—location, date, contents, and sample number—
  * and manages its internal state using a Zustand store (`useInputStore`).
- * 
+ *
  * The form uses custom and PrimeReact UI components for consistent styling
  * and supports internationalization via `react-i18next`.
  *
  * The "Register" button is disabled until all fields are filled.
- * 
+ *
  * @component
  * @returns {JSX.Element} The rendered bioprobe form UI.
  */
@@ -25,7 +25,7 @@ import BioSampleService from '../services/BioSampleService'
 export default function BioprobeForm() {
   const { t } = useTranslation()
   const {
-    location, 
+    location,
     setLocation,
     date,
     setDate,
@@ -37,7 +37,7 @@ export default function BioprobeForm() {
 
   async function handleRegister() {
     const payload = {
-      location, 
+      location,
       date,
       contents,
       identifiers: {
@@ -46,8 +46,7 @@ export default function BioprobeForm() {
     }
 
     try {
-      const createdSample = await BioSampleService.create(payload)
-      console.log(createdSample)
+      await BioSampleService.create(payload)
     } catch (error) {
       console.error('Failed to register Biosample' + error)
     }
@@ -57,7 +56,7 @@ export default function BioprobeForm() {
 
   return (
     <Panel>
-      <h2>{t('identity:headers.data')}</h2>
+      <h2 className="td-section-title">{t('identity:headers.data')}</h2>
       <Divider />
       <div className="sm:form-grid sm:space-y-0 space-y-3 my-3">
         <CustomFloatLabel
@@ -73,7 +72,7 @@ export default function BioprobeForm() {
           value={date as Date | null}
           onChange={(e) => setDate(e.value ?? null)}
           placeholder={t('search:entity.biosample.date.placeholder')}
-          className='w-full'
+          className="w-full"
         />
         <CustomFloatLabel
           id="contents"
@@ -92,7 +91,7 @@ export default function BioprobeForm() {
           validate={validation.isValidRegistrationLocation}
         />
       </div>
-      <div className='flex justify-end my-4'>
+      <div className="flex justify-end my-4">
         <SecondaryButton
           label={t('identity:buttons.register')}
           disabled={!isFormValid}

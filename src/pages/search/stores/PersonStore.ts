@@ -83,17 +83,14 @@ const usePersonStore = create<EntityState>((set) => ({
   setCountry: (country) => set({ country }),
   setPostalCode: (postalCode) => set({ postalCode }),
   setTrustdeckID: (trustdeckID) => set({ trustdeckID }),
-  setContactFirstName: (contactFirstName) => ({ contactFirstName }),
-  setContactLastName: (contactLastName) => ({ contactLastName }),
-  setContactEmail: (contactEmail) => ({ contactEmail }),
-  setContactPhone: (contactPhone) => ({ contactPhone }),
-  setContactRelationship: (contactRelationship) => ({ contactRelationship }),
+  setContactFirstName: (contactFirstName) => set({ contactFirstName }),
+  setContactLastName: (contactLastName) => set({ contactLastName }),
+  setContactEmail: (contactEmail) => set({ contactEmail }),
+  setContactPhone: (contactPhone) => set({ contactPhone }),
+  setContactRelationship: (contactRelationship) => set({ contactRelationship }),
 
   // main function: map API person object
   loadEntity: (result: any) => {
-    const id = result.data.identifiers?.find((i: any) => i.identifierType === 'SAP-ID')?.identifier ?? ''
-    const MOI = result.data.identifiers?.find((i: any) => i.identifierType === 'masterObjectIdentifier')?.identifier ?? ''
-
     set({
       id: result.data.id ?? '',
       lastName: result.data.lastName ?? '',

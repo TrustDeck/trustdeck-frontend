@@ -7,16 +7,16 @@ React and TypeScript single-page application for the TrustDeck platform. Vite po
 - Node.js 22 or later and npm
 - Docker Engine with the Compose plugin for container deployment
 
-## Local Development
+## Getting Started
 
-Install dependencies and start the Vite development server:
+Install dependencies, then start the Vite development server:
 
 ```bash
 npm ci
 npm run dev
 ```
 
-The application is available at `https://localhost:5173` when `local-key.pem` and `local-cert.pem` exist; otherwise it uses HTTP. Create local certificates with `make gen-cert` if HTTPS is required.
+The application is available at `https://localhost:5173` when `local-key.pem` and `local-cert.pem` exist; otherwise it uses HTTP.
 
 For build and quality checks:
 
@@ -57,18 +57,4 @@ Useful commands:
 ```bash
 docker compose -f docker/compose.yml logs -f
 docker compose -f docker/compose.yml down
-make build
-make compose
 ```
-
-`make build` creates a local image; `make compose` rebuilds and replaces the Compose service.
-
-## Project Layout
-
-| Path | Purpose |
-| --- | --- |
-| `src/` | Application code, organized into shared `core/` modules and feature pages. |
-| `public/locales/` | Translation resources. |
-| `config/` | Vite, TypeScript, linting, styling, and environment templates. |
-| `docker/` | Container image, Compose, Nginx, and startup assets. |
-| `docs/` | Product and workflow documentation. |

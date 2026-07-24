@@ -23,7 +23,7 @@ dist-ssr/
 env.js
 public/env.js
 
-# Local development TLS certificates/keys. Generate locally with `make ssl` when needed.
+# Local development TLS certificates/keys. Generate locally with `make gen-cert` when needed.
 *.pem
 *.key
 *.crt

@@ -4,8 +4,8 @@ services:
     image: trustdeck-frontend:latest
     restart: unless-stopped
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       args:
         http_proxy: ${http_proxy:-}
         https_proxy: ${https_proxy:-}
@@ -14,7 +14,7 @@ services:
         HTTPS_PROXY: ${HTTPS_PROXY:-}
         NO_PROXY: ${NO_PROXY:-}
     env_file:
-      - ${FRONTEND_ENV_FILE:-./trustdeck-frontend.env}
+      - ${FRONTEND_ENV_FILE:-../config/environment/trustdeck-frontend.env}
     ports:
       - "${FRONTEND_BIND:-127.0.0.1:8082}:8080"
     volumes:

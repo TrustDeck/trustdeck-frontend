@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react'
 import fs from 'fs'
 import path from 'path'
 
-const localKeyPath = path.resolve(__dirname, 'local-key.pem')
-const localCertPath = path.resolve(__dirname, 'local-cert.pem')
+const projectRoot = path.resolve(__dirname, '..')
+const localKeyPath = path.resolve(projectRoot, 'local-key.pem')
+const localCertPath = path.resolve(projectRoot, 'local-cert.pem')
 const hasLocalHttpsCerts = fs.existsSync(localKeyPath) && fs.existsSync(localCertPath)
 
 // https://vite.dev/config/
@@ -12,8 +13,8 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   resolve: {
     alias: {
-      '@component': path.resolve(__dirname, 'src/core/components'),
-      '@service': path.resolve(__dirname, 'src/core/services')
+      '@component': path.resolve(projectRoot, 'src/core/components'),
+      '@service': path.resolve(projectRoot, 'src/core/services')
     }
   },
   server: {
@@ -26,5 +27,8 @@ export default defineConfig(({ command }) => ({
         : undefined,
     host: 'localhost',
     port: 5173
+  },
+  css: {
+    postcss: path.resolve(__dirname)
   }
 }))

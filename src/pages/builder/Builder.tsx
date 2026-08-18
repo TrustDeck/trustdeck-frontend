@@ -1005,41 +1005,6 @@ export default function Builder({
   }, [attributes, pendingScrollAttributeKey])
 
   useEffect(() => {
-    setEntityType('')
-    setLinkedDomain('')
-    setAttributes([])
-    setSelectedKey('')
-    setEntityNameConfirmed(false)
-    setDomainConfirmed(false)
-  }, [setAttributes, setEntityType, setLinkedDomain, setSelectedKey])
-
-  useEffect(() => {
-    if (!entityNameConfirmed) return
-    let active = true
-    GroupService.getGroups()
-      .then((data) => {
-        if (!active) return
-        const options = flattenGroupOptions(data ?? [])
-        setDomainOptions(options)
-        const currentDomain = useEntityTypeStore.getState().linkedDomain
-        if (!currentDomain && options.length > 0) {
-          const defaultDomain =
-            options.find((o) => o.value === selectedProject?.abbreviation)
-              ?.value ?? options[0].value
-          setLinkedDomain(defaultDomain)
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to load domains', error)
-        if (!active) return
-        setDomainOptions([])
-      })
-    return () => {
-      active = false
-    }
-  }, [entityNameConfirmed, selectedProject?.abbreviation, setLinkedDomain])
-
-  useEffect(() => {
     let active = true
     async function loadBaseTypes() {
       try {

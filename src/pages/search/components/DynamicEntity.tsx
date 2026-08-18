@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Panel from '../../../core/components/common/Panel'
@@ -5,9 +6,10 @@ import LinksTable from './LinksTable'
 import CustomDropdown from '@component/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import CustomInputNumber from '@component/form/CustomInputNumber'
-import { ProgressSpinner } from 'primereact/progressspinner'
 import type { Attribute } from '../../../core/stores/ProjectStore'
+import type { Link } from '../../../core/types/Link'
 import type { Entity } from '../types/Entity'
+import EntityService from '../services/EntityService'
 import { resolveAttributeLabel } from '../utils/entityDisplay'
 
 export type DynamicEntityProps = {
@@ -96,7 +98,6 @@ export default function DynamicEntity({
 }: DynamicEntityProps) {
   const { t, i18n } = useTranslation()
   const [links, setLinks] = useState<Link[]>([])
-  const [linksLoading, setLinksLoading] = useState(false)
 
   const entityId = entity.trustdeckID || entity.id
   const entityType = entity.entityTypeName || entity.type
@@ -108,8 +109,6 @@ export default function DynamicEntity({
     }
 
     let active = true
-    setLinksLoading(true)
-
     EntityService.getEntityPseudonyms(entityType, entityId)
       .then((fetchedLinks) => {
         if (!active) return
@@ -119,10 +118,6 @@ export default function DynamicEntity({
         console.error('Failed to load entity pseudonyms', error)
         if (!active) return
         setLinks([])
-      })
-      .finally(() => {
-        if (!active) return
-        setLinksLoading(false)
       })
 
     return () => {
@@ -485,7 +480,7 @@ export default function DynamicEntity({
             entity={
               {
                 id: resolveTrustDeckId(entity),
-                links: entity.links || []
+                links
               } as Entity
             }
             onPseudonymSelect={onLinkedPseudonymSelect}

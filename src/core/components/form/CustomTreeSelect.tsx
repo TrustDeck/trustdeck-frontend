@@ -22,6 +22,7 @@ interface CustomTreeSelectProps {
   selectionMode?: 'single' | 'multiple' | 'checkbox'
   filter?: boolean
   filterPlaceholder?: string
+  nodeTemplate?: (node: any) => React.ReactNode
 }
 
 const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
@@ -34,9 +35,8 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
   className = '',
   helpText,
   required,
-  disabledNodeTooltip,
   selectionMode = 'checkbox',
-  nodeTemplate: nodeTemplateProp,
+  nodeTemplate,
   ...props
 }) => {
   const fieldLabel = (label || placeholder || '').trim()
@@ -60,8 +60,9 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = ({
           selectionMode={selectionMode}
           className="w-full rounded-lg border border-color-light-gray font-font-text text-xl"
           panelStyle={{ maxHeight: '300px', overflowY: 'auto' }}
-          display="chip"
-          {...props}
+           display="chip"
+           nodeTemplate={nodeTemplate}
+           {...props}
         />
 
         {helpText && <HelpTooltip text={helpText} className="mt-3 shrink-0" />}

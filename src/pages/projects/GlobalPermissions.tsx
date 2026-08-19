@@ -272,42 +272,57 @@ function PermissionRows({
           : permissionIsGranted(grantedPermissions, permission)
 
         return (
-          <label
+          <div
             key={key}
-            className={`flex min-h-24 flex-col rounded-xl border px-3 py-2.5 transition ${
+            className={`flex min-h-16 flex-col justify-center rounded-xl border px-3 py-2 transition ${
               editable
                 ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus-within:ring-2 focus-within:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
                 : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950'
             }`}
           >
-            <input
-              type="checkbox"
-              checked={checked}
-              disabled={!editable}
-              onChange={(event) => onChange?.(key, event.target.checked)}
-              className="sr-only"
-            />
-
             <span className="flex min-w-0 items-start justify-between gap-3">
               <span className="min-w-0 text-base font-semibold text-gray-900 dark:text-gray-100">
                 {formatPermissionAction(permission.action)}
               </span>
-              <span
-                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  checked
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
-                    : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
-                }`}
-              >
-                {checked ? (
-                  <CheckCircleIcon className="h-4 w-4 shrink-0" />
-                ) : (
-                  <XCircleIcon className="h-4 w-4 shrink-0" />
-                )}
-                {checked ? t('status.granted') : t('status.notGranted')}
-              </span>
+              {editable ? (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={checked}
+                  aria-label={`${formatPermissionAction(permission.action)}: ${
+                    checked ? t('status.granted') : t('status.notGranted')
+                  }`}
+                  onClick={() => onChange?.(key, !checked)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+                    checked
+                      ? 'bg-emerald-600'
+                      : 'bg-gray-300 dark:bg-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                      checked ? 'translate-x-5' : 'translate-x-0.5'
+                    }`}
+                  />
+                </button>
+              ) : (
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    checked
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
+                      : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
+                  }`}
+                >
+                  {checked ? (
+                    <CheckCircleIcon className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <XCircleIcon className="h-4 w-4 shrink-0" />
+                  )}
+                  {checked ? t('status.granted') : t('status.notGranted')}
+                </span>
+              )}
             </span>
-          </label>
+          </div>
         )
       })}
     </div>
@@ -367,7 +382,19 @@ function GrantedPermissionList({
 }) {
   const { t } = useTranslation('permission')
   const [openScopes, setOpenScopes] = useState<Record<string, boolean>>({})
+  const [query, setQuery] = useState('')
   const groupSignature = groups.map((group) => group.key).join('|')
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      rows: group.rows.filter(
+        (permission) =>
+          !query.trim() ||
+          group.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
+          permission.action.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
+      )
+    }))
+    .filter((group) => group.rows.length > 0)
 
   useEffect(() => {
     setOpenScopes({})
@@ -383,7 +410,14 @@ function GrantedPermissionList({
 
   return (
     <div className="space-y-3">
-      {groups.map((group) => {
+      <input
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t('scope.searchPlaceholder')}
+        className="h-[40px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+      />
+      {visibleGroups.map((group) => {
         const isOpen = Boolean(openScopes[group.key])
         const subgroups = buildGrantedPermissionSubgroups(group, t)
         const grantedCount = group.rows.filter((permission) =>
@@ -1310,15 +1344,6 @@ export default function GlobalPermissions({
                   </span>{' '}
                   <span>{selectedPerson.name}</span>
                 </div>
-                <span
-                  className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
-                    isEditing
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200'
-                      : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200'
-                  }`}
-                >
-                  {isEditing ? t('mode.edit') : t('mode.view')}
-                </span>
               </div>
 
               {scopeMode === 'project-domain' && (

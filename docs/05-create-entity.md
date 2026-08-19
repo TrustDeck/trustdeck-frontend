@@ -2,12 +2,12 @@
 
 ### Overview
 
-The entity pages follow a standard CRUD interaction pattern for project-scoped entity instances:
+The entity pages follow a standard CRUD interaction pattern for project-scoped entities:
 
-- **Create** a new entity instance from the search page by selecting an entity type and clicking **Create entity**.
-- **Read** existing entity instances by searching and opening a result.
-- **Update** an existing entity instance from the entity details page by clicking **Edit**, changing the fields, and clicking **Save**.
-- **Delete** an existing entity instance from the entity details page by clicking **Delete** and confirming the deletion.
+- **Create** a new entity from the search page by selecting an entity type and clicking **Create entity**.
+- **Read** existing entities by searching and opening a result.
+- **Update** an entity from the entity details page by clicking **Edit**, changing the fields, and clicking **Save**.
+- **Delete** an entity from the entity details page by clicking **Delete** and confirming the deletion.
 
 Entities represent structured data objects within a project, for example a person, biosample, visit, or other project-specific object.
 
@@ -21,7 +21,7 @@ The search and create forms first ask for the entity type. The available types a
 
 ### Creating a new entity
 
-To create a new entity instance:
+To create a new entity:
 
 1. Open the entity search page.
 2. Select the entity type.

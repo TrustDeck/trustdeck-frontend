@@ -25,7 +25,7 @@ export const PROJECT_SUBGROUP_LABELS: Record<ProjectSubgroup, string> = {
   project: 'Project',
   image: 'Image',
   type: 'Type',
-  instance: 'Instance'
+  instance: 'Entities'
 }
 
 /** Orders domain permissions for display. */

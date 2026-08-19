@@ -33,7 +33,6 @@ import {
 } from '@heroicons/react/24/outline'
 
 import Panel from '@component/common/Panel'
-import CustomDropdown from '@component/form/CustomDropdown'
 import PageHeader from '@component/common/PageHeader'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
@@ -265,7 +264,7 @@ function PermissionRows({
   }
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {rows.map((permission) => {
         const key = permissionKey(permission)
         const checked = editable
@@ -275,7 +274,7 @@ function PermissionRows({
         return (
           <label
             key={key}
-            className={`flex min-h-36 flex-col rounded-xl border p-4 transition ${
+            className={`flex min-h-24 flex-col rounded-xl border px-3 py-2.5 transition ${
               editable
                 ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus-within:ring-2 focus-within:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
                 : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950'
@@ -289,40 +288,12 @@ function PermissionRows({
               className="sr-only"
             />
 
-            <span className="min-w-0 flex-1">
-              <span className="block text-base font-semibold text-gray-900 dark:text-gray-100">
+            <span className="flex min-w-0 items-start justify-between gap-3">
+              <span className="min-w-0 text-base font-semibold text-gray-900 dark:text-gray-100">
                 {formatPermissionAction(permission.action)}
               </span>
-              <span className="mt-1 block break-all font-mono text-xs text-gray-500 dark:text-gray-400">
-                {permission.action}
-              </span>
-            </span>
-
-            {editable ? (
               <span
-                className={`mt-4 flex min-h-12 items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
-                  checked
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100'
-                    : 'border-gray-300 bg-white text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-200'
-                }`}
-              >
-                <span className="flex items-center gap-2 font-semibold">
-                  {checked ? (
-                    <CheckCircleIcon className="h-5 w-5 shrink-0" />
-                  ) : (
-                    <XCircleIcon className="h-5 w-5 shrink-0" />
-                  )}
-                  {checked ? t('status.granted') : t('status.notGranted')}
-                </span>
-                <span className="text-right text-xs font-semibold">
-                  {checked
-                    ? t('actions.clickToRevoke')
-                    : t('actions.clickToGrant')}
-                </span>
-              </span>
-            ) : (
-              <span
-                className={`mt-4 inline-flex w-fit items-center gap-2 self-start rounded-full px-3 py-1.5 text-sm font-semibold ${
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
                   checked
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-200'
                     : 'bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300'
@@ -335,7 +306,7 @@ function PermissionRows({
                 )}
                 {checked ? t('status.granted') : t('status.notGranted')}
               </span>
-            )}
+            </span>
           </label>
         )
       })}
@@ -423,11 +394,17 @@ function GrantedPermissionList({
         return (
           <section
             key={group.key}
-            className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900"
+            className={`overflow-hidden rounded-xl border ${
+              group.rows[0]?.resourceType === 'DOMAIN'
+                ? 'border-violet-200 bg-violet-50/70 dark:border-violet-900 dark:bg-violet-950/20'
+                : group.rows[0]?.resourceType === 'PROJECT'
+                  ? 'border-sky-200 bg-sky-50/70 dark:border-sky-900 dark:bg-sky-950/20'
+                  : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-900'
+            }`}
           >
             <button
               type="button"
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
+              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/50 dark:hover:bg-slate-900/30"
               onClick={() =>
                 setOpenScopes((current) => ({
                   ...current,
@@ -514,6 +491,8 @@ export default function GlobalPermissions({
   const [personSuggestions, setPersonSuggestions] = useState<PersonSuggestion[]>([])
   const [selectedPerson, setSelectedPerson] = useState<PersonSuggestion | null>(null)
   const [selectedScopeKey, setSelectedScopeKey] = useState('')
+  const [scopeQuery, setScopeQuery] = useState('')
+  const [scopePage, setScopePage] = useState(0)
 
   const currentUserLabel =
     currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
@@ -883,19 +862,38 @@ export default function GlobalPermissions({
     [scopeOptions, selectedScopeKey]
   )
 
-  const scopeDropdownOptions = useMemo(
-    () =>
-      scopeOptions.map((option) => ({
-        label: option.label,
-        value: option.key
-      })),
-    [scopeOptions]
+  const scopeSearchResults = useMemo(() => {
+    const project = scopeOptions.find((option) => option.resourceType === 'PROJECT')
+    const domains = scopeOptions
+      .filter((option) => option.resourceType === 'DOMAIN')
+      .sort((a, b) => a.label.localeCompare(b.label))
+    const query = scopeQuery.trim().toLocaleLowerCase()
+
+    if (!query) return [...(project ? [project] : []), ...domains]
+    return [...(project ? [project] : []), ...domains].filter((option) =>
+      option.label.toLocaleLowerCase().includes(query)
+    )
+  }, [scopeOptions, scopeQuery])
+
+  const scopePageSize = 5
+  const scopePageCount = Math.max(1, Math.ceil(scopeSearchResults.length / scopePageSize))
+  const visibleScopeResults = scopeSearchResults.slice(
+    scopePage * scopePageSize,
+    (scopePage + 1) * scopePageSize
   )
 
   const selectScope = useCallback((scopeKey: string) => {
     setSelectedScopeKey(scopeKey)
     setIsEditing(false)
   }, [])
+
+  useEffect(() => {
+    setScopePage(0)
+  }, [scopeQuery])
+
+  useEffect(() => {
+    setScopePage((page) => Math.min(page, scopePageCount - 1))
+  }, [scopePageCount])
 
   const loadTargetPermissions = useCallback(async () => {
     const userId = selectedPerson?.userId
@@ -1334,17 +1332,74 @@ export default function GlobalPermissions({
                     </p>
                   </div>
 
-                  {scopeDropdownOptions.length > 0 ? (
-                    <CustomDropdown
-                      id="permission-scope"
-                      value={selectedScopeKey}
-                      options={scopeDropdownOptions}
-                      onChange={(event) =>
-                        selectScope(String(event.value ?? ''))
-                      }
-                      filter
-                      filterPlaceholder={t('scope.searchPlaceholder')}
-                    />
+                  {scopeOptions.length > 0 ? (
+                    <div className="space-y-3">
+                      <input
+                        id="permission-scope-search"
+                        type="search"
+                        value={scopeQuery}
+                        onChange={(event) => setScopeQuery(event.target.value)}
+                        placeholder={t('scope.searchPlaceholder')}
+                        className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+                      />
+                      {visibleScopeResults.length > 0 ? (
+                        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
+                          {visibleScopeResults.map((option) => (
+                            <button
+                              key={option.key}
+                              type="button"
+                              onClick={() => selectScope(option.key)}
+                              className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-slate-800 ${
+                                option.key === selectedScopeKey
+                                  ? 'bg-blue-50 text-color-blue dark:bg-blue-950/30 dark:text-blue-100'
+                                  : 'bg-white text-gray-800 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800'
+                              }`}
+                            >
+                              <span className="min-w-0 truncate text-base font-semibold">
+                                {option.label}
+                              </span>
+                              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                                {option.resourceType === 'PROJECT'
+                                  ? t('scope.project')
+                                  : t('scope.domain')}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+                          {t('empty.noProjectOrGroupRows')}
+                        </p>
+                      )}
+                      {scopeSearchResults.length > scopePageSize && (
+                        <div className="flex items-center justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setScopePage((page) => Math.max(0, page - 1))}
+                            disabled={scopePage === 0}
+                            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                          >
+                            {t('search:pagination.previous')}
+                          </button>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                            {t('search:pagination.pageOf', {
+                              page: scopePage + 1,
+                              pages: scopePageCount
+                            })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setScopePage((page) => Math.min(scopePageCount - 1, page + 1))
+                            }
+                            disabled={scopePage >= scopePageCount - 1}
+                            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                          >
+                            {t('search:pagination.next')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
                       {t('empty.noProjectOrGroupRows')}

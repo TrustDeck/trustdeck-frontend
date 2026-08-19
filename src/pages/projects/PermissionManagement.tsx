@@ -676,18 +676,16 @@ export default function PermissionManagement({
           )
         }
 
-        try {
-          const readableDomains =
-            await TrustDeck.instance().searchReadableDomains('*')
-          readableDomains.forEach((domain) => {
-            const domainName = String(domain?.name ?? '').trim()
-            if (domainName && !assignedWithAncestors.has(domainName)) {
-              resolved.add(domainName)
-            }
-          })
-        } catch (error) {
-          console.warn('Could not load unassigned pseudonym domains', error)
-        }
+      }
+
+      try {
+        const readableDomains = await TrustDeck.instance().searchReadableDomains('*')
+        readableDomains.forEach((domain) => {
+          const domainName = String(domain?.name ?? '').trim()
+          if (domainName) resolved.add(domainName)
+        })
+      } catch (error) {
+        console.warn('Could not load readable pseudonym domains', error)
       }
 
       if (active) setPermissionDomainNames(resolved)

@@ -437,44 +437,14 @@ const PseudonymDetails: React.FC = () => {
 
       {!loading && currentPseudonym && (
         <div className="flex w-full justify-center px-4">
-          <div className="flex w-full max-w-[1040px] flex-col items-start justify-center gap-6 xl:flex-row">
+          <div className="w-full max-w-[1040px]">
+            <div className="flex flex-col items-start justify-center gap-6 xl:flex-row">
             <section className="w-full max-w-[560px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="td-panel-title !mb-0">
                     {t('search:pseudonym.data')}
                   </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {!editMode ? (
-                      <>
-                        <PrimaryButton
-                          label={t('common:edit')}
-                          onClick={() => setEditMode(true)}
-                          icon={<PencilIcon className="h-5 w-5 mr-1" />}
-                        />
-                        <SecondaryButton
-                          label={t('common:delete')}
-                          onClick={() => setDeleteConfirmOpen(true)}
-                          icon={<TrashIcon className="h-5 w-5 mr-1" />}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <PrimaryButton
-                          label={t('common:save')}
-                          onClick={handleSave}
-                          loading={saving}
-                          icon={<CheckIcon className="h-5 w-5 mr-1" />}
-                        />
-                        <SecondaryOutlinedButton
-                          label={t('common:cancel')}
-                          onClick={resetEditState}
-                          disabled={saving}
-                          icon={<XMarkIcon className="h-5 w-5 mr-1" />}
-                        />
-                      </>
-                    )}
-                  </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {renderField(
@@ -500,12 +470,51 @@ const PseudonymDetails: React.FC = () => {
               </div>
             </section>
 
-            <section className="h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+            <section className="h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg xl:mt-[4.5rem] dark:border-slate-700 dark:bg-slate-800">
               <h2 className="td-panel-title !mb-0">
                 {t('search:pseudonym.linkedPseudonyms')}
               </h2>
               <PseudonymTable pseudonym={currentPseudonym} />
             </section>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <div className="flex w-full max-w-[440px] flex-wrap justify-end gap-2">
+                {!editMode ? (
+                  <>
+                    <PrimaryButton
+                      label={t('common:edit')}
+                      onClick={() => setEditMode(true)}
+                      icon={<PencilIcon className="mr-1 h-5 w-5" />}
+                    />
+                    <SecondaryButton
+                      label={t('common:delete')}
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      icon={<TrashIcon className="mr-1 h-5 w-5" />}
+                    />
+                    <PrimaryOutlinedButton
+                      label={t('common:close')}
+                      onClick={handleBack}
+                      icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <PrimaryButton
+                      label={t('common:save')}
+                      onClick={handleSave}
+                      loading={saving}
+                      icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                    />
+                    <SecondaryOutlinedButton
+                      label={t('common:cancel')}
+                      onClick={resetEditState}
+                      disabled={saving}
+                      icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

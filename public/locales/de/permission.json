@@ -113,7 +113,8 @@
   "globalBoxTitle": "Globale Berechtigungen",
   "globalBoxSubtitle": "Prüfen und verwalten Sie globale Rechte, die in TrustDeck projektübergreifend gelten.",
   "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
-  "projectDomainSearchHelp": "Suchen Sie nach einem Benutzer, wählen Sie ein Projekt oder eine Pseudonym-Domäne und vergeben oder entziehen Sie nur eigene Rechte.",
+  "projectDomainSearchHelp": "Wählen Sie oben ein Projekt oder eine Pseudonym-Domäne und suchen Sie anschließend nach einem Benutzer, um eigene Rechte zu vergeben oder zu entziehen.",
+  "userSearchPlaceholder": "Nach Name, E-Mail oder Benutzer-ID suchen",
   "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden.",
   "selectedUserPrefix": "Ausgewählter Benutzer:",
   "mode": {

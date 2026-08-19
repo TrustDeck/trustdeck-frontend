@@ -1282,7 +1282,7 @@ export default function PermissionManagement({
                 {t('empty.noProjectOrGroupRows')}
               </p>
             )}
-            {scopeSearchResults.length > scopePageSize && (
+            {scopeQuery.trim() && scopeSearchResults.length > scopePageSize && (
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
@@ -1401,7 +1401,7 @@ export default function PermissionManagement({
                 field="name"
                 itemTemplate={personTemplate}
                 forceSelection={false}
-                placeholder={t('search:searchFor')}
+                placeholder={t('userSearchPlaceholder')}
                 className="min-w-0 flex-1 !w-full"
                 inputClassName="w-full min-w-0 text-base"
               />

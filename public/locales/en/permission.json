@@ -113,7 +113,8 @@
   "globalBoxTitle": "Global permissions",
   "globalBoxSubtitle": "Inspect and manage global rights that apply across TrustDeck.",
   "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
-  "projectDomainSearchHelp": "Search for a user, select one project or pseudonym domain, and grant or revoke rights that you already hold yourself.",
+  "projectDomainSearchHelp": "Select a project or pseudonym domain above, then search for a user to grant or revoke rights that you already hold yourself.",
+  "userSearchPlaceholder": "Search by name, email, or user ID",
   "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly.",
   "selectedUserPrefix": "Selected user:",
   "mode": {

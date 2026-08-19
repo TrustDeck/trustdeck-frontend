@@ -394,46 +394,13 @@ export default function InlinePseudonymDetail({
               'validToInherited'
             )}
           </div>
-          {tableDetail && (
-            <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 dark:border-slate-700">
-              {!editMode ? (
-                <>
-                  <PrimaryButton
-                    label={t('common:edit')}
-                    onClick={() => setEditMode(true)}
-                    icon={<PencilIcon className="mr-1 h-5 w-5" />}
-                  />
-                  <PrimaryOutlinedButton
-                    label={t('common:close')}
-                    onClick={onClose}
-                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-                  />
-                </>
-              ) : (
-                <>
-                  <PrimaryButton
-                    label={t('common:save')}
-                    onClick={save}
-                    loading={saving}
-                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
-                  />
-                  <SecondaryOutlinedButton
-                    label={t('common:cancel')}
-                    onClick={cancel}
-                    disabled={saving}
-                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-                  />
-                </>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
       <section
         className={
           embedded
-            ? 'h-fit w-full rounded-xl bg-gray-50/70 p-5 dark:bg-slate-800/60'
+            ? 'h-fit w-full rounded-xl bg-gray-50/70 p-5 xl:mt-[4.5rem] dark:bg-slate-800/60'
             : 'h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
         }
       >
@@ -442,6 +409,39 @@ export default function InlinePseudonymDetail({
         </h2>
         <PseudonymTable pseudonym={pseudonym} />
       </section>
+      {tableDetail && (
+        <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 xl:col-start-2 dark:border-slate-700">
+          {!editMode ? (
+            <>
+              <PrimaryButton
+                label={t('common:edit')}
+                onClick={() => setEditMode(true)}
+                icon={<PencilIcon className="mr-1 h-5 w-5" />}
+              />
+              <PrimaryOutlinedButton
+                label={t('common:close')}
+                onClick={onClose}
+                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+              />
+            </>
+          ) : (
+            <>
+              <PrimaryButton
+                label={t('common:save')}
+                onClick={save}
+                loading={saving}
+                icon={<CheckIcon className="mr-1 h-5 w-5" />}
+              />
+              <SecondaryOutlinedButton
+                label={t('common:cancel')}
+                onClick={cancel}
+                disabled={saving}
+                icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+              />
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 

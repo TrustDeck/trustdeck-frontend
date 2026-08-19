@@ -400,17 +400,19 @@ export default function InlinePseudonymDetail({
       <section
         className={
           embedded
-            ? 'h-fit w-full rounded-xl bg-gray-50/70 p-5 xl:mt-[4.5rem] dark:bg-slate-800/60'
+            ? 'h-fit w-full rounded-xl bg-gray-50/70 p-5 dark:bg-slate-800/60'
             : 'h-fit w-full max-w-[440px] shrink-0 rounded-lg border border-gray-100 bg-white px-6 py-4 shadow-lg dark:border-slate-700 dark:bg-slate-800'
         }
       >
         <h2 className="td-panel-title !mb-0">
           {t('search:pseudonym.linkedPseudonyms')}
         </h2>
-        <PseudonymTable pseudonym={pseudonym} />
+        <div className="mt-4">
+          <PseudonymTable pseudonym={pseudonym} />
+        </div>
       </section>
       {tableDetail && (
-        <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 xl:col-start-2 dark:border-slate-700">
+        <div className="flex flex-wrap justify-end gap-2 xl:col-start-2">
           {!editMode ? (
             <>
               <PrimaryButton

@@ -67,7 +67,7 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
             step={step}
             suffix={suffix}
             prefix={prefix}
-            inputClassName={`h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-xl font-normal text-gray-900 dark:bg-slate-950 dark:text-gray-100 ${!isValid ? 'p-invalid' : ''}`}
+            inputClassName={`h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 !font-font-text !text-xl !font-normal text-gray-900 dark:bg-slate-950 dark:text-gray-100 ${!isValid ? 'p-invalid' : ''}`}
             className={`w-full ${className ?? ''}`}
           />
         </div>

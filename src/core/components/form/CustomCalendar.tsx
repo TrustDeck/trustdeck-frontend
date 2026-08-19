@@ -70,7 +70,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
             !isValid ? 'border border-red-500' : 'border border-color-light-gray'
           }`}
           panelClassName="z-[9999]"
-          inputClassName={`m-0 h-full w-full border-none bg-transparent px-3 font-font-text text-xl font-normal text-gray-900 focus:ring-0 dark:text-gray-100 ${helpText ? 'pr-16' : 'pr-10'}`}
+          inputClassName={`m-0 h-full w-full border-none bg-transparent px-3 !font-font-text !text-xl !font-normal text-gray-900 focus:ring-0 dark:text-gray-100 ${helpText ? 'pr-16' : 'pr-10'}`}
           dateFormat={dateFormat}
           showTime={showTime}
           showSeconds={showSeconds}

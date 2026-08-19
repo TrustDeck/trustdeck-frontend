@@ -8,6 +8,46 @@
   --font-family: Arimo, sans-serif;
 }
 
+/* Keep application action colors independent of PrimeReact's theme palette. */
+.p-button.td-button--primary {
+  background-color: #004d9b !important;
+  border-color: #004d9b !important;
+  color: #ffffff !important;
+}
+
+.p-button.td-button--primary:not(:disabled):hover {
+  background-color: #002552 !important;
+  border-color: #002552 !important;
+}
+
+.p-button.td-button--danger {
+  background-color: #ea5451 !important;
+  border-color: #ea5451 !important;
+  color: #ffffff !important;
+}
+
+.p-button.td-button--danger:not(:disabled):hover {
+  background-color: #c9403d !important;
+  border-color: #c9403d !important;
+}
+
+.p-button.td-button--primary-outlined {
+  background-color: #ffffff !important;
+  border-color: #004d9b !important;
+  color: #004d9b !important;
+}
+
+.p-button.td-button--cancel {
+  background-color: #ffffff !important;
+  border-color: #ea5451 !important;
+  color: #ea5451 !important;
+}
+
+.p-button.td-button--primary-outlined:not(:disabled):hover,
+.p-button.td-button--cancel:not(:disabled):hover {
+  background-color: #f3f4f6 !important;
+}
+
 @layer base {
   h1 {
     @apply text-4xl font-font-headline font-bold;
@@ -150,6 +190,23 @@
 .dark .p-dialog-header {
   background-color: #1e293b !important;
   color: #e5e7eb !important;
+}
+
+.dark .p-button.td-button--primary-outlined {
+  background-color: #1e293b !important;
+  border-color: #004d9b !important;
+  color: #93c5fd !important;
+}
+
+.dark .p-button.td-button--cancel {
+  background-color: #1e293b !important;
+  border-color: #ea5451 !important;
+  color: #fca5a5 !important;
+}
+
+.dark .p-button.td-button--primary-outlined:not(:disabled):hover,
+.dark .p-button.td-button--cancel:not(:disabled):hover {
+  background-color: #334155 !important;
 }
 
 /* Dark surfaces retain the gray edge that separates cards from the page. */

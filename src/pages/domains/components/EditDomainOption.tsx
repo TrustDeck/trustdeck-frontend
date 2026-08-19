@@ -3,7 +3,7 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import Divider from '@component/common/Divider'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
-import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import DomainForm from './DomainForm'
@@ -199,6 +199,7 @@ export default function EditDomainOption({
             label={t('groups:buttons.yesDelete')}
             onHide={() => setShowDeleteDialog(false)}
             onAccept={() => deleteNodes()}
+            destructive
           />
           <ConfirmDialog
             visible={showSaveAllDialog}
@@ -220,11 +221,11 @@ export default function EditDomainOption({
               label={t('groups:buttons.save')}
               onClick={() => handleSave()}
             />
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('groups:buttons.cancel')}
               onClick={() => onCancel?.()}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('groups:buttons.delete')}
               onClick={handleDelete}
             />

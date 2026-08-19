@@ -152,6 +152,7 @@ export default function RegistrationDomainOption({
             label={t('groups:buttons.yesDelete')}
             onHide={() => setShowDeleteDialog(false)}
             onAccept={() => deleteNodes()}
+            destructive
           />
           <ConfirmDialog
             visible={showSaveAllDialog}

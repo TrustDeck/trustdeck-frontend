@@ -13,7 +13,7 @@ import DynamicEntity from './DynamicEntity'
 import InlinePseudonymDetail from './InlinePseudonymDetail'
 import PseudonymService from '../services/PseudonymService'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
 import useProjectStore from '../../../core/stores/ProjectStore'
@@ -334,7 +334,7 @@ export default function InlineEntityDetail({
                   onClick={() => setEditMode(true)}
                   icon={<PencilIcon className="mr-1 h-5 w-5" />}
                 />
-                <SecondaryOutlinedButton
+                <SecondaryButton
                   label={t('delete')}
                   onClick={() => setDeleteConfirmOpen(true)}
                   icon={<TrashIcon className="mr-1 h-5 w-5" />}
@@ -348,7 +348,7 @@ export default function InlineEntityDetail({
                   loading={saving}
                   icon={<CheckIcon className="mr-1 h-5 w-5" />}
                 />
-                <PrimaryOutlinedButton
+                <SecondaryOutlinedButton
                   label={t('cancel')}
                   onClick={resetForm}
                   disabled={saving}
@@ -424,12 +424,12 @@ export default function InlineEntityDetail({
         <div className="space-y-4">
           <p>{t('confirmDeleteEntity')}</p>
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('cancel')}
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleting}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('delete')}
               onClick={remove}
               loading={deleting}

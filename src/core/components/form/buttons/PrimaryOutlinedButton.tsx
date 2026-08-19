@@ -6,7 +6,7 @@ const PrimaryOutlinedButton: React.FC<ButtonProps> = (props) => {
   return (
     <CustomButton
       {...props}
-      colorClass="border-2 border-color-blue bg-white text-color-blue hover:bg-gray-100"
+      colorClass="td-button--primary-outlined"
     />
   )
 }

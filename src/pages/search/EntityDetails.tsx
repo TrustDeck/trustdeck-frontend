@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import useSearchResultsStore from './stores/SearchResultsStore'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -368,7 +369,7 @@ const EntityDetails: React.FC = () => {
                   onClick={() => setEditMode(true)}
                   icon={<PencilIcon className="mr-1 h-5 w-5" />}
                 />
-                <SecondaryOutlinedButton
+                <SecondaryButton
                   label={
                     <span className="hidden sm:inline">
                       {t('search:delete')}
@@ -381,7 +382,7 @@ const EntityDetails: React.FC = () => {
               </>
             ) : (
               <>
-                <PrimaryOutlinedButton
+                <SecondaryOutlinedButton
                   label={
                     <span className="hidden sm:inline">
                       {t('search:cancel')}
@@ -462,12 +463,12 @@ const EntityDetails: React.FC = () => {
         <div className="flex flex-col gap-4">
           <p>{t('search:confirmDeleteEntity')}</p>
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('search:cancel')}
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleting}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('search:delete')}
               onClick={handleDelete}
               loading={deleting}

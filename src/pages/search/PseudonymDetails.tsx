@@ -14,6 +14,7 @@ import PseudonymService from './services/PseudonymService'
 import usePseudonymStore from './stores/PseudonymSearchResults'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import PseudonymTable from './components/PseudonymTable'
 import TrustDeck, {
@@ -451,7 +452,7 @@ const PseudonymDetails: React.FC = () => {
                           onClick={() => setEditMode(true)}
                           icon={<PencilIcon className="h-5 w-5 mr-1" />}
                         />
-                        <SecondaryOutlinedButton
+                        <SecondaryButton
                           label={t('common:delete')}
                           onClick={() => setDeleteConfirmOpen(true)}
                           icon={<TrashIcon className="h-5 w-5 mr-1" />}
@@ -465,7 +466,7 @@ const PseudonymDetails: React.FC = () => {
                           loading={saving}
                           icon={<CheckIcon className="h-5 w-5 mr-1" />}
                         />
-                        <PrimaryOutlinedButton
+                        <SecondaryOutlinedButton
                           label={t('common:cancel')}
                           onClick={resetEditState}
                           disabled={saving}
@@ -520,12 +521,12 @@ const PseudonymDetails: React.FC = () => {
         <div className="flex flex-col gap-4">
           <p>{t('search:pseudonym.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('common:cancel')}
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleting}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('common:delete')}
               onClick={handleDelete}
               loading={deleting}

@@ -8,7 +8,7 @@ const PrimaryButton: React.FC<ButtonProps> = ({ className, ...props }) => {
       {...props}
       className={className}
       //add border to have the same width as primary outlined button
-      colorClass="bg-color-blue hover:bg-color-blue/80 text-white border-2 border-color-blue "
+      colorClass="td-button--primary"
     />
   )
 }

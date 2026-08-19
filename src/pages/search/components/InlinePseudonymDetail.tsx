@@ -15,6 +15,7 @@ import TrustDeck, {
 } from '../../../core/services/TrustDeck'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import InheritanceIndicator from '../../../core/components/common/InheritanceIndicator'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -340,7 +341,7 @@ export default function InlinePseudonymDetail({
                     onClick={() => setEditMode(true)}
                     icon={<PencilIcon className="mr-1 h-5 w-5" />}
                   />
-                  <SecondaryOutlinedButton
+                  <SecondaryButton
                     label={t('common:delete')}
                     onClick={() => setDeleteConfirmOpen(true)}
                     icon={<TrashIcon className="mr-1 h-5 w-5" />}
@@ -354,7 +355,7 @@ export default function InlinePseudonymDetail({
                     loading={saving}
                     icon={<CheckIcon className="mr-1 h-5 w-5" />}
                   />
-                  <PrimaryOutlinedButton
+                  <SecondaryOutlinedButton
                     label={t('common:cancel')}
                     onClick={cancel}
                     disabled={saving}
@@ -446,12 +447,12 @@ export default function InlinePseudonymDetail({
         <div className="flex flex-col gap-4">
           <p>{t('search:pseudonym.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('common:cancel')}
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleting}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('common:delete')}
               onClick={remove}
               loading={deleting}

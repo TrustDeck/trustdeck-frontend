@@ -849,6 +849,7 @@ export default function DomainManager() {
         rejectLabel={t('groups:buttons.noDelete')}
         onHide={() => setShowDeleteDialog(false)}
         onAccept={() => deleteSelectedGroup()}
+        destructive
       />
 
       <div className="td-page-shell">

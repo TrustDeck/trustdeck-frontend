@@ -1,5 +1,6 @@
 import { Dialog } from 'primereact/dialog'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
+import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   message: string
   label: string
   header: string
+  destructive?: boolean
 }
 
 export default function ConfirmDialog({
@@ -21,7 +23,8 @@ export default function ConfirmDialog({
   rejectLabel,
   label,
   message,
-  header
+  header,
+  destructive = false
 }: Props) {
   return (
     <Dialog
@@ -30,8 +33,15 @@ export default function ConfirmDialog({
       header={header}
       footer={
         <div className="flex justify-end gap-2">
-          <SecondaryOutlinedButton label={label} onClick={onAccept} />
-          <PrimaryButton label={rejectLabel ?? 'Cancel'} onClick={onReject ?? onHide} />
+          {destructive ? (
+            <SecondaryButton label={label} onClick={onAccept} />
+          ) : (
+            <PrimaryButton label={label} onClick={onAccept} />
+          )}
+          <SecondaryOutlinedButton
+            label={rejectLabel ?? 'Cancel'}
+            onClick={onReject ?? onHide}
+          />
         </div>
       }
       style={{ width: '32rem' }}

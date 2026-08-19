@@ -19,6 +19,7 @@ import CustomFloatLabel from '@component/form/CustomFloatLabel'
 import CustomTreeSelect from '@component/form/CustomTreeSelect'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
+import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import EntityMask from '../search/components/EntityMask'
 import PseudonymMask from '../search/components/PseudonymMask'
 import SearchPseudonymService from '../search/services/PseudonymService'
@@ -478,7 +479,7 @@ export default function SearchPsn() {
                   </p>
                 </button>
                 <div className="lg:col-span-2">
-                  <PrimaryOutlinedButton
+                  <SecondaryOutlinedButton
                     label={t('common:cancel')}
                     onClick={cancelGeneration}
                   />
@@ -500,7 +501,7 @@ export default function SearchPsn() {
                   <StepperPanel header={t('pseudonyms:entityFlow.searchStep')}>
                     <div className="space-y-5 pt-4">
                       <EntityMask psn />
-                      <PrimaryOutlinedButton
+                      <SecondaryOutlinedButton
                         label={t('common:cancel')}
                         onClick={cancelGeneration}
                       />
@@ -527,7 +528,7 @@ export default function SearchPsn() {
                           icon={<ArrowLeftIcon className="h-5 w-5" />}
                           onClick={() => previousStep()}
                         />
-                        <PrimaryOutlinedButton
+                          <SecondaryOutlinedButton
                           label={t('common:cancel')}
                           onClick={cancelGeneration}
                         />
@@ -597,7 +598,7 @@ export default function SearchPsn() {
                           onClick={() => previousStep()}
                           disabled={entityCreating}
                         />
-                        <PrimaryOutlinedButton
+                          <SecondaryOutlinedButton
                           label={t('common:cancel')}
                           onClick={cancelGeneration}
                           disabled={entityCreating}
@@ -768,7 +769,7 @@ export default function SearchPsn() {
                     loading={standaloneCreating}
                     disabled={standaloneCreating}
                   />
-                  <PrimaryOutlinedButton
+                  <SecondaryOutlinedButton
                     label={t('common:cancel')}
                     onClick={cancelGeneration}
                     disabled={standaloneCreating}

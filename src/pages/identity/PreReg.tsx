@@ -15,6 +15,7 @@ import {
 import Panel from '../../core/components/common/Panel'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import useProjectStore from '../../core/stores/ProjectStore'
 import useToastStore from '../../core/stores/ToastStore'
@@ -1962,24 +1963,25 @@ export default function PreReg() {
                                           }
                                         />
                                       )}
-                                      <PrimaryOutlinedButton
-                                        label={
-                                          modalMode === 'view'
-                                            ? t('identity:crud.close')
-                                            : t('identity:crud.cancel')
-                                        }
-                                        onClick={
-                                          modalMode === 'edit' &&
-                                          selectedInstance
-                                            ? () =>
-                                                openViewModal(selectedInstance)
-                                            : closeModal
-                                        }
-                                        icon={
-                                          <XMarkIcon className="mr-1 h-5 w-5" />
-                                        }
-                                        disabled={saving}
-                                      />
+                                       {modalMode === 'edit' ? (
+                                         <SecondaryOutlinedButton
+                                           label={t('identity:crud.cancel')}
+                                           onClick={
+                                             selectedInstance
+                                               ? () => openViewModal(selectedInstance)
+                                               : closeModal
+                                           }
+                                           icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                                           disabled={saving}
+                                         />
+                                       ) : (
+                                         <PrimaryOutlinedButton
+                                           label={t('identity:crud.close')}
+                                           onClick={closeModal}
+                                           icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                                           disabled={saving}
+                                         />
+                                       )}
                                        </div>
                                      )}
                                   </div>
@@ -2071,7 +2073,7 @@ export default function PreReg() {
                       }
                       icon={<CheckIcon className="mr-1 h-5 w-5" />}
                     />
-                    <PrimaryOutlinedButton
+                    <SecondaryOutlinedButton
                       label={t('identity:crud.cancel')}
                       onClick={closeModal}
                       icon={<XMarkIcon className="mr-1 h-5 w-5" />}
@@ -2097,12 +2099,12 @@ export default function PreReg() {
         <div className="flex flex-col gap-4">
           <p>{t('identity:crud.confirmDeleteText')}</p>
           <div className="flex justify-end gap-2">
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('identity:crud.cancel')}
               onClick={() => setDeleteConfirmOpen(false)}
               disabled={deleting}
             />
-            <SecondaryOutlinedButton
+            <SecondaryButton
               label={t('identity:crud.delete')}
               onClick={handleDelete}
               loading={deleting}

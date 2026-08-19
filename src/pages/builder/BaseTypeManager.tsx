@@ -9,7 +9,7 @@ import {
 import Panel from '../../core/components/common/Panel'
 import TrustDeck from '../../core/services/TrustDeck'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
-import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
+import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../core/components/form/buttons/SecondaryOutlinedButton'
 import useToastStore from '../../core/stores/ToastStore'
 import Builder, { type EntityTypePayload } from './Builder'
@@ -348,11 +348,11 @@ export default function BaseTypeManager() {
               })}
             </p>
             <div className="mt-6 flex justify-end gap-2">
-              <PrimaryOutlinedButton
+              <SecondaryOutlinedButton
                 label={t('common:cancel')}
                 onClick={() => setDeleteTarget(null)}
               />
-              <SecondaryOutlinedButton
+              <SecondaryButton
                 label={t('common:delete')}
                 loading={deleting}
                 onClick={deleteBaseEntity}

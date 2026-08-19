@@ -14,6 +14,7 @@ import CustomDropdown from '../../core/components/form/CustomDropdown'
 import InheritanceIndicator from '../../core/components/common/InheritanceIndicator'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
+import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../core/services/TrustDeck'
 import useToastStore from '../../core/stores/ToastStore'
 import useProjectStore from '../../core/stores/ProjectStore'
@@ -2252,7 +2253,7 @@ export default function Builder({
       {!readOnly && (
         <div className="flex w-full flex-wrap justify-center gap-2">
           {embedded && onCancel && (
-            <PrimaryOutlinedButton
+            <SecondaryOutlinedButton
               label={t('common:cancel')}
               onClick={onCancel}
             />

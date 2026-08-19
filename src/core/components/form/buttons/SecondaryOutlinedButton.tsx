@@ -6,7 +6,7 @@ const SecondaryOutlinedButton: React.FC<ButtonProps> = (props) => {
   return (
     <CustomButton
       {...props}
-      colorClass="border-2 border-color-coral bg-white text-color-coral hover:bg-gray-100"
+      colorClass="td-button--cancel"
     />
   )
 }

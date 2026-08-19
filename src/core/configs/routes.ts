@@ -26,7 +26,7 @@ import DuplicateResults from '../../pages/identity/DuplicateResults'
 import Duplicate from '../../pages/identity/Duplicate'
 import ProjectOverview from '../../pages/projects/ProjectOverview'
 import NewProjectSimplified from '../../pages/projects/NewProjectSimplified'
-import GlobalPermissions from '../../pages/projects/GlobalPermissions'
+import PermissionManagement from '../../pages/projects/PermissionManagement'
 import Builder from '../../pages/builder/Builder'
 import EntityManager from '../../pages/builder/EntityManager'
 import BaseTypeManager from '../../pages/builder/BaseTypeManager'
@@ -93,7 +93,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/permissions',
     titleKey: 'layout:menu.permissions',
-    component: GlobalPermissions,
+    component: PermissionManagement,
     Icon: ShieldCheckIcon,
     isProtected: true,
     isSidebar: true,

@@ -374,26 +374,28 @@ function buildGrantedPermissionSubgroups(
 function GrantedPermissionList({
   groups,
   grantedPermissions,
-  emptyText
+  emptyText,
+  searchable = true
 }: {
   groups: CurrentPermissionGroup[]
   grantedPermissions: EffectivePermission[]
   emptyText: string
+  searchable?: boolean
 }) {
   const { t } = useTranslation('permission')
   const [openScopes, setOpenScopes] = useState<Record<string, boolean>>({})
   const [query, setQuery] = useState('')
   const groupSignature = groups.map((group) => group.key).join('|')
-  const visibleGroups = groups
-    .map((group) => ({
-      ...group,
-      rows: group.rows.filter(
-        (permission) =>
-          !query.trim() ||
-          group.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
-          permission.action.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
-      )
-    }))
+  const visibleGroups = groups.map((group) => ({
+    ...group,
+    rows: group.rows.filter(
+      (permission) =>
+        !searchable ||
+        !query.trim() ||
+        group.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()) ||
+        permission.action.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())
+    )
+  }))
     .filter((group) => group.rows.length > 0)
 
   useEffect(() => {
@@ -410,13 +412,15 @@ function GrantedPermissionList({
 
   return (
     <div className="space-y-3">
-      <input
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t('scope.searchPlaceholder')}
-        className="h-[40px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
-      />
+      {searchable && (
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('scope.searchPlaceholder')}
+          className="h-[40px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+        />
+      )}
       {visibleGroups.map((group) => {
         const isOpen = Boolean(openScopes[group.key])
         const subgroups = buildGrantedPermissionSubgroups(group, t)
@@ -494,7 +498,7 @@ function GrantedPermissionList({
 }
 
 /** Displays and updates permission grants for the selected scope and operator. */
-export default function GlobalPermissions({
+export default function PermissionManagement({
   scopeMode = 'project-domain',
   embedded = false
 }: ScopedPermissionsProps) {
@@ -1252,6 +1256,7 @@ export default function GlobalPermissions({
           groups={groupedCurrentRows}
           grantedPermissions={scopedCurrentPermissions}
           emptyText={t('empty.noRightsInScope')}
+          searchable={scopeMode === 'project-domain'}
         />
       )}
     </div>

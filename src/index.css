@@ -4,6 +4,10 @@
 
 @config '../config/tailwind.config.js';
 
+:root {
+  --font-family: Arimo, sans-serif;
+}
+
 @layer base {
   h1 {
     @apply text-4xl font-font-headline font-bold;
@@ -146,6 +150,13 @@
 .dark .p-dialog-header {
   background-color: #1e293b !important;
   color: #e5e7eb !important;
+}
+
+/* Dark surfaces retain the gray edge that separates cards from the page. */
+.dark .basic-panel,
+.dark .p-overlaypanel,
+.dark .p-dialog {
+  border-color: #7e898f !important;
 }
 
 .dark .bg-sidebar {

@@ -21,7 +21,6 @@ const CustomButton: React.FC<AbstractButtonProps> = ({
         className={`inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-bold rounded-lg ${colorClass} w-auto ${className}`}
         onClick={onClick}
         label={label}
-        outlined={true}
         loading={loading}
         icon={icon}
         iconPos={iconPos as any}

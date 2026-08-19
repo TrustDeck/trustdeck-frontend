@@ -21,8 +21,8 @@ export default {
         surface: '#E9E9E9'
       },
       fontFamily: {
-        'font-headline': ['Arimo', 'serif'],
-        'font-text': ['Arimo', 'serif']
+        'font-headline': ['Arimo', 'sans-serif'],
+        'font-text': ['Arimo', 'sans-serif']
       },
       fontSize: {
         xs: '11px',

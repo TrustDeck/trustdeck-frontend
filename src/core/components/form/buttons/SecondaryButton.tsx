@@ -6,7 +6,7 @@ const SecondaryButton: React.FC<ButtonProps> = (props) => {
   return (
     <CustomButton
       {...props}
-      colorClass="bg-color-coral hover:bg-color-coral/80 text-white border-2 border-bg-color-coral"
+      colorClass="bg-color-coral hover:bg-color-coral/80 text-white border-2 border-color-coral"
     />
   )
 }

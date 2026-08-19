@@ -7,6 +7,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
+import IconActionButton from '../../core/components/common/IconActionButton'
 import TrustDeck from '../../core/services/TrustDeck'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
@@ -17,37 +18,6 @@ import PageHeader from '../../core/components/common/PageHeader'
 import GlobalPermissions from '../projects/GlobalPermissions'
 
 type DetailMode = 'view' | 'edit' | 'create' | null
-
-function IconActionButton({
-  title,
-  onClick,
-  danger = false,
-  children
-}: {
-  title: string
-  onClick: () => void
-  danger?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={(event) => {
-        event.stopPropagation()
-        onClick()
-      }}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border transition ${
-        danger
-          ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30'
-          : 'border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50 hover:text-color-blue dark:border-slate-700 dark:text-gray-200 dark:hover:border-blue-700 dark:hover:bg-blue-950/30 dark:hover:text-blue-200'
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
 
 export default function BaseTypeManager() {
   const { t } = useTranslation(['entityBuilder', 'common'])
@@ -247,19 +217,22 @@ export default function BaseTypeManager() {
                           <div className="flex justify-end gap-2">
                             <IconActionButton
                               title={t('common:view')}
+                              stopPropagation
                               onClick={() => openBaseEntity(definition, 'view')}
                             >
                               <EyeIcon className="h-5 w-5" />
                             </IconActionButton>
                             <IconActionButton
                               title={t('common:edit')}
+                              stopPropagation
                               onClick={() => openBaseEntity(definition, 'edit')}
                             >
                               <PencilSquareIcon className="h-5 w-5" />
                             </IconActionButton>
                             <IconActionButton
                               title={t('common:delete')}
-                              danger
+                              variant="danger"
+                              stopPropagation
                               onClick={() => setDeleteTarget(definition)}
                             >
                               <TrashIcon className="h-5 w-5" />

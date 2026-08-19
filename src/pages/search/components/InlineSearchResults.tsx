@@ -10,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import Panel from '../../../core/components/common/Panel'
+import IconActionButton from '../../../core/components/common/IconActionButton'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
@@ -27,36 +28,6 @@ import InlineEntityDetail from './InlineEntityDetail'
 import InlinePseudonymDetail from './InlinePseudonymDetail'
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
-
-type ActionButtonProps = {
-  title: string
-  onClick: () => void
-  children: React.ReactNode
-  danger?: boolean
-}
-
-function ActionButton({
-  title,
-  onClick,
-  children,
-  danger = false
-}: ActionButtonProps) {
-  return (
-    <button
-      type="button"
-      title={title}
-      aria-label={title}
-      onClick={onClick}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition dark:bg-slate-950 ${
-        danger
-          ? 'border-color-coral text-color-coral hover:bg-red-50 dark:hover:bg-red-950/40'
-          : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
 
 function resolveTrustDeckId(result: any): string {
   return String(
@@ -356,25 +327,25 @@ export function InlineEntityResults({
                     )}
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
-                        <ActionButton
+                        <IconActionButton
                           title={t('view')}
                           onClick={() => openResult(result, false)}
                         >
                           <EyeIcon className="h-5 w-5" />
-                        </ActionButton>
-                        <ActionButton
+                        </IconActionButton>
+                        <IconActionButton
                           title={t('edit')}
                           onClick={() => openResult(result, true)}
                         >
                           <PencilSquareIcon className="h-5 w-5" />
-                        </ActionButton>
-                        <ActionButton
+                        </IconActionButton>
+                        <IconActionButton
                           title={t('delete')}
-                          danger
+                          variant="danger"
                           onClick={() => setPendingDelete(result)}
                         >
                           <TrashIcon className="h-5 w-5" />
-                        </ActionButton>
+                        </IconActionButton>
                       </div>
                     </td>
                   </tr>
@@ -619,25 +590,25 @@ export function InlinePseudonymResults({
                     <td className="px-5 py-4 text-base">{domain || '—'}</td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
-                        <ActionButton
+                        <IconActionButton
                           title={t('view')}
                           onClick={() => openResult(result, false)}
                         >
                           <EyeIcon className="h-5 w-5" />
-                        </ActionButton>
-                        <ActionButton
+                        </IconActionButton>
+                        <IconActionButton
                           title={t('edit')}
                           onClick={() => openResult(result, true)}
                         >
                           <PencilSquareIcon className="h-5 w-5" />
-                        </ActionButton>
-                        <ActionButton
+                        </IconActionButton>
+                        <IconActionButton
                           title={t('delete')}
-                          danger
+                          variant="danger"
                           onClick={() => setPendingDelete(result)}
                         >
                           <TrashIcon className="h-5 w-5" />
-                        </ActionButton>
+                        </IconActionButton>
                       </div>
                     </td>
                   </tr>

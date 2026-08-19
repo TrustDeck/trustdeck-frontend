@@ -1,9 +1,10 @@
 import { Tree } from 'primereact/tree'
 import { TreeNode } from 'primereact/treenode'
 import { ProgressSpinner } from 'primereact/progressspinner'
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
+import IconActionButton from '../../core/components/common/IconActionButton'
 import {
   EyeIcon,
   PencilSquareIcon,
@@ -136,42 +137,6 @@ const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
 
 type ViewMode = 'details' | 'edit' | 'create'
 type GroupScope = 'currentProject' | 'unassigned' | 'otherProject'
-type IconActionButtonProps = {
-  title: string
-  onClick: () => void
-  children: ReactNode
-  variant?: 'primary' | 'danger'
-  disabled?: boolean
-}
-
-function IconActionButton({
-  title,
-  onClick,
-  children,
-  variant = 'primary',
-  disabled = false
-}: IconActionButtonProps) {
-  const colorClasses =
-    variant === 'danger'
-      ? 'border-color-coral text-color-coral hover:bg-red-50 dark:hover:bg-red-950'
-      : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
-
-  return (
-    <button
-      type="button"
-      aria-label={title}
-      title={title}
-      onClick={(event) => {
-        event.stopPropagation()
-        onClick()
-      }}
-      disabled={disabled}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-950 ${colorClasses}`}
-    >
-      {children}
-    </button>
-  )
-}
 
 function findPathToLabel(
   nodes: CustomTreeNode[],
@@ -702,6 +667,7 @@ export default function DomainManager() {
           <div className="flex justify-end gap-2">
             <IconActionButton
               title={t('groups:buttons.view')}
+              stopPropagation
               onClick={() => selectGroup(group.name, 'details')}
             >
               <EyeIcon className="h-5 w-5" />
@@ -709,6 +675,7 @@ export default function DomainManager() {
             {canEditGroup(group.name) && (
               <IconActionButton
                 title={t('groups:buttons.edit')}
+                stopPropagation
                 onClick={() => handleEdit(group.name)}
               >
                 <PencilSquareIcon className="h-5 w-5" />
@@ -717,6 +684,7 @@ export default function DomainManager() {
             {canDeleteGroup(group.name) && (
               <IconActionButton
                 title={t('groups:buttons.delete')}
+                stopPropagation
                 onClick={() => handleDelete(group.name)}
                 variant="danger"
               >

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
+import IconActionButton from '../../../core/components/common/IconActionButton'
 import Panel from '../../../core/components/common/Panel'
 import LinksTable from './LinksTable'
 import CustomDropdown from '@component/form/CustomDropdown'
@@ -332,26 +333,21 @@ export default function DynamicEntity({
                 )}
               </div>
               {index === values.length - 1 && (
-                <button
-                  type="button"
+                <IconActionButton
                   title={t('identity:crud.addValue')}
-                  aria-label={t('identity:crud.addValue')}
                   onClick={addRepeatableValue}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 dark:hover:bg-slate-800"
                 >
                   <PlusIcon className="h-5 w-5" />
-                </button>
+                </IconActionButton>
               )}
-              <button
-                type="button"
+              <IconActionButton
                 title={t('identity:crud.removeValue')}
-                aria-label={t('identity:crud.removeValue')}
                 onClick={() => removeRepeatableValue(index)}
                 disabled={values.length === 1 && attr.required}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-color-coral text-color-coral transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950"
+                variant="danger"
               >
                 <TrashIcon className="h-5 w-5" />
-              </button>
+              </IconActionButton>
             </div>
           ))}
         </div>

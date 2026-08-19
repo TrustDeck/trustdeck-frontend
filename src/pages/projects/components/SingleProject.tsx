@@ -1,5 +1,5 @@
-import type React from 'react'
 import Panel from '@component/common/Panel'
+import IconActionButton from '@component/common/IconActionButton'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ProjectType } from '../types/ProjectType'
 import { formatDate } from '../../../core/utils/date'
@@ -32,41 +32,6 @@ interface SingleProjectProps {
   ) => void
   onModeChange?: (mode: ExpandedMode) => void
   projectImage?: string
-}
-
-function ProjectActionButton({
-  label,
-  disabled,
-  title,
-  onClick,
-  children
-}: {
-  label: string
-  disabled: boolean
-  title: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <span title={title} className="inline-flex">
-      <button
-        type="button"
-        aria-label={label}
-        disabled={disabled}
-        onClick={(event) => {
-          event.stopPropagation()
-          if (!disabled) onClick()
-        }}
-        className={`rounded-full border p-2 transition ${
-          disabled
-            ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-500'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-color-blue hover:text-color-blue hover:shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200'
-        }`}
-      >
-        {children}
-      </button>
-    </span>
-  )
 }
 
 export default function SingleProject({
@@ -185,30 +150,31 @@ export default function SingleProject({
             </div>
           </div>
           <div className="flex shrink-0 gap-2 pt-2">
-            <ProjectActionButton
-              label={t('projects:actions.viewProject')}
+            <IconActionButton
               disabled={false}
               title={viewTooltip}
+              stopPropagation
               onClick={() => onView?.(project)}
             >
               <EyeIcon className="h-5 w-5" />
-            </ProjectActionButton>
-            <ProjectActionButton
-              label={t('projects:actions.updateProject')}
+            </IconActionButton>
+            <IconActionButton
               disabled={!permissionsReady || !canUpdate}
               title={updateTooltip}
+              stopPropagation
               onClick={() => onEdit?.(project)}
             >
               <PencilSquareIcon className="h-5 w-5" />
-            </ProjectActionButton>
-            <ProjectActionButton
-              label={t('projects:actions.deleteProject')}
+            </IconActionButton>
+            <IconActionButton
               disabled={!permissionsReady || !canDelete}
               title={deleteTooltip}
+              variant="danger"
+              stopPropagation
               onClick={() => onDelete?.(project)}
             >
               <TrashIcon className="h-5 w-5" />
-            </ProjectActionButton>
+            </IconActionButton>
           </div>
         </div>
         <div className="my-3 flex flex-wrap gap-5">

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Fragment, type ReactNode } from 'react'
+import { Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from 'primereact/dialog'
 import { useTranslation } from 'react-i18next'
@@ -13,6 +13,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
+import IconActionButton from '../../core/components/common/IconActionButton'
 import PrimaryButton from '../../core/components/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '../../core/components/form/buttons/PrimaryOutlinedButton'
 import SecondaryButton from '../../core/components/form/buttons/SecondaryButton'
@@ -41,40 +42,6 @@ import {
 type ModalMode = 'view' | 'create' | 'edit'
 
 type EntityInstance = Record<string, any>
-
-type IconActionButtonProps = {
-  title: string
-  onClick: () => void
-  disabled?: boolean
-  children: ReactNode
-  variant?: 'primary' | 'danger'
-}
-
-function IconActionButton({
-  title,
-  onClick,
-  disabled = false,
-  children,
-  variant = 'primary'
-}: IconActionButtonProps) {
-  const colorClasses =
-    variant === 'danger'
-      ? 'border-color-coral text-color-coral hover:bg-red-50 dark:hover:bg-red-950'
-      : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
-
-  return (
-    <button
-      type="button"
-      aria-label={title}
-      title={title}
-      onClick={onClick}
-      disabled={disabled}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 ${colorClasses}`}
-    >
-      {children}
-    </button>
-  )
-}
 
 function parseTypeDefinition(typeDefinition: unknown): any {
   if (typeof typeDefinition !== 'string')

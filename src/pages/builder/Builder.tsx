@@ -10,6 +10,7 @@ import {
   TrashIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
+import IconActionButton from '../../core/components/common/IconActionButton'
 import CustomDropdown from '../../core/components/form/CustomDropdown'
 import InheritanceIndicator from '../../core/components/common/InheritanceIndicator'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
@@ -1907,15 +1908,13 @@ export default function Builder({
                 </span>
               )}
               {!readOnly && !inheritedFromBase && (
-                <button
-                  type="button"
+                <IconActionButton
                   title={t('common:delete')}
-                  aria-label={t('common:delete')}
                   onClick={() => removeAttribute(attribute.key)}
-                  className="rounded-lg p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
+                  variant="danger"
                 >
                   <TrashIcon className="h-5 w-5" />
-                </button>
+                </IconActionButton>
               )}
             </div>
           </div>

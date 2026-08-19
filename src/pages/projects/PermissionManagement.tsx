@@ -1234,6 +1234,91 @@ export default function PermissionManagement({
     </div>
   )
 
+  const projectScopeSelector =
+    scopeMode === 'project-domain' ? (
+      <section className="space-y-4 border-t border-gray-200 pt-5 dark:border-slate-700">
+        <div>
+          <h3 className="td-section-title">{t('scope.selectScope')}</h3>
+          <p className="td-section-subtitle mt-1">
+            {t('scope.selectDescription')}
+          </p>
+        </div>
+        {scopeOptions.length > 0 ? (
+          <div className="space-y-3">
+            <input
+              id="permission-scope-search"
+              type="search"
+              value={scopeQuery}
+              onChange={(event) => setScopeQuery(event.target.value)}
+              placeholder={t('scope.searchPlaceholder')}
+              className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
+            />
+            {visibleScopeResults.length > 0 ? (
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
+                {visibleScopeResults.map((option) => (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => selectScope(option.key)}
+                    className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-slate-800 ${
+                      option.key === selectedScopeKey
+                        ? 'bg-blue-50 text-color-blue dark:bg-blue-950/30 dark:text-blue-100'
+                        : 'bg-white text-gray-800 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <span className="min-w-0 truncate text-base font-semibold">
+                      {option.label}
+                    </span>
+                    <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      {option.resourceType === 'PROJECT'
+                        ? t('scope.project')
+                        : t('scope.domain')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+                {t('empty.noProjectOrGroupRows')}
+              </p>
+            )}
+            {scopeSearchResults.length > scopePageSize && (
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setScopePage((page) => Math.max(0, page - 1))}
+                  disabled={scopePage === 0}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                >
+                  {t('search:pagination.previous')}
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {t('search:pagination.pageOf', {
+                    page: scopePage + 1,
+                    pages: scopePageCount
+                  })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setScopePage((page) => Math.min(scopePageCount - 1, page + 1))
+                  }
+                  disabled={scopePage >= scopePageCount - 1}
+                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                >
+                  {t('search:pagination.next')}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
+            {t('empty.noProjectOrGroupRows')}
+          </p>
+        )}
+      </section>
+    ) : null
+
   const currentRightsContent = (
     <div className="space-y-5">
       <div className="text-base text-gray-600 dark:text-gray-300">
@@ -1242,6 +1327,7 @@ export default function PermissionManagement({
         </div>
         {currentUserEmail && <div>{currentUserEmail}</div>}
       </div>
+      {projectScopeSelector}
 
       {currentAccessState === 'loading' || currentAccessState === 'idle' ? (
         <p className="text-base text-gray-500 dark:text-gray-300">
@@ -1354,93 +1440,6 @@ export default function PermissionManagement({
                   <span>{selectedPerson.name}</span>
                 </div>
               </div>
-
-              {scopeMode === 'project-domain' && (
-                <section className="space-y-4 border-t border-gray-200 pt-5 dark:border-slate-700">
-                  <div>
-                    <h3 className="td-section-title">
-                      {t('scope.selectScope')}
-                    </h3>
-                    <p className="td-section-subtitle mt-1">
-                      {t('scope.selectDescription')}
-                    </p>
-                  </div>
-
-                  {scopeOptions.length > 0 ? (
-                    <div className="space-y-3">
-                      <input
-                        id="permission-scope-search"
-                        type="search"
-                        value={scopeQuery}
-                        onChange={(event) => setScopeQuery(event.target.value)}
-                        placeholder={t('scope.searchPlaceholder')}
-                        className="h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 font-font-text text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-950 dark:text-gray-100"
-                      />
-                      {visibleScopeResults.length > 0 ? (
-                        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
-                          {visibleScopeResults.map((option) => (
-                            <button
-                              key={option.key}
-                              type="button"
-                              onClick={() => selectScope(option.key)}
-                              className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-slate-800 ${
-                                option.key === selectedScopeKey
-                                  ? 'bg-blue-50 text-color-blue dark:bg-blue-950/30 dark:text-blue-100'
-                                  : 'bg-white text-gray-800 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800'
-                              }`}
-                            >
-                              <span className="min-w-0 truncate text-base font-semibold">
-                                {option.label}
-                              </span>
-                              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                {option.resourceType === 'PROJECT'
-                                  ? t('scope.project')
-                                  : t('scope.domain')}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-                          {t('empty.noProjectOrGroupRows')}
-                        </p>
-                      )}
-                      {scopeSearchResults.length > scopePageSize && (
-                        <div className="flex items-center justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setScopePage((page) => Math.max(0, page - 1))}
-                            disabled={scopePage === 0}
-                            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
-                          >
-                            {t('search:pagination.previous')}
-                          </button>
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
-                            {t('search:pagination.pageOf', {
-                              page: scopePage + 1,
-                              pages: scopePageCount
-                            })}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setScopePage((page) => Math.min(scopePageCount - 1, page + 1))
-                            }
-                            disabled={scopePage >= scopePageCount - 1}
-                            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
-                          >
-                            {t('search:pagination.next')}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">
-                      {t('empty.noProjectOrGroupRows')}
-                    </p>
-                  )}
-                </section>
-              )}
 
               <section className="border-t border-gray-200 pt-5 dark:border-slate-700">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">

@@ -1253,10 +1253,14 @@ export default function PermissionManagement({
         </p>
       ) : (
         <GrantedPermissionList
-          groups={groupedCurrentRows}
+          groups={
+            scopeMode === 'project-domain'
+              ? groupedCurrentRows.filter((group) => group.key === selectedScopeKey)
+              : groupedCurrentRows
+          }
           grantedPermissions={scopedCurrentPermissions}
           emptyText={t('empty.noRightsInScope')}
-          searchable={scopeMode === 'project-domain'}
+          searchable={false}
         />
       )}
     </div>

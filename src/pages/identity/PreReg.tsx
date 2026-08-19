@@ -7,7 +7,8 @@ import { useAuth } from 'react-oidc-context'
 import {
   CheckIcon,
   EyeIcon,
-  PencilIcon,
+  MagnifyingGlassIcon,
+  PencilSquareIcon,
   PlusIcon,
   TrashIcon,
   XMarkIcon
@@ -1633,6 +1634,7 @@ export default function PreReg() {
                   <PrimaryButton
                     label={t('identity:crud.search')}
                     onClick={handleSearchClick}
+                    icon={<MagnifyingGlassIcon className="mr-1 h-5 w-5" />}
                     loading={loadingInstances}
                     disabled={permissionLoadingOrDenied}
                     tooltip={
@@ -1745,7 +1747,7 @@ export default function PreReg() {
                                     onClick={() => openEditModal(instance)}
                                     disabled={!canUpdateInstances}
                                   >
-                                    <PencilIcon className="h-5 w-5" />
+                                    <PencilSquareIcon className="h-5 w-5" />
                                   </IconActionButton>
                                   <IconActionButton
                                     title={
@@ -1910,7 +1912,7 @@ export default function PreReg() {
                                                 : undefined
                                             }
                                             icon={
-                                              <PencilIcon className="mr-1 h-5 w-5" />
+                                              <PencilSquareIcon className="mr-1 h-5 w-5" />
                                             }
                                           />
                                         )}

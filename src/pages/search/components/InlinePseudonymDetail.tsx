@@ -79,6 +79,7 @@ type Props = {
   onDeleted: (domainName: string, pseudonym: string) => void
   backLabel?: string
   embedded?: boolean
+  tableDetail?: boolean
 }
 
 export default function InlinePseudonymDetail({
@@ -89,7 +90,8 @@ export default function InlinePseudonymDetail({
   onUpdated,
   onDeleted,
   backLabel,
-  embedded = false
+  embedded = false,
+  tableDetail = false
 }: Props) {
   const { t } = useTranslation(['search', 'common'])
   const showToast = useToastStore((state) => state.show)
@@ -333,7 +335,7 @@ export default function InlinePseudonymDetail({
             <h2 className="td-panel-title !mb-0">
               {t('search:pseudonym.data')}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            {!tableDetail && <div className="flex flex-wrap gap-2">
               {!editMode ? (
                 <>
                   <PrimaryButton
@@ -363,7 +365,7 @@ export default function InlinePseudonymDetail({
                   />
                 </>
               )}
-            </div>
+            </div>}
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {renderField(
@@ -392,6 +394,39 @@ export default function InlinePseudonymDetail({
               'validToInherited'
             )}
           </div>
+          {tableDetail && (
+            <div className="flex flex-wrap justify-end gap-2 border-t border-gray-200 pt-5 dark:border-slate-700">
+              {!editMode ? (
+                <>
+                  <PrimaryButton
+                    label={t('common:edit')}
+                    onClick={() => setEditMode(true)}
+                    icon={<PencilIcon className="mr-1 h-5 w-5" />}
+                  />
+                  <PrimaryOutlinedButton
+                    label={t('common:close')}
+                    onClick={onClose}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                  />
+                </>
+              ) : (
+                <>
+                  <PrimaryButton
+                    label={t('common:save')}
+                    onClick={save}
+                    loading={saving}
+                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
+                  />
+                  <SecondaryOutlinedButton
+                    label={t('common:cancel')}
+                    onClick={cancel}
+                    disabled={saving}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                  />
+                </>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

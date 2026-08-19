@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Dialog } from 'primereact/dialog'
 import {
   ChevronLeftIcon,
@@ -454,42 +454,6 @@ export function InlinePseudonymResults({
 
   if (!hasSearched) return null
 
-  if (selectedPseudonym) {
-    return (
-      <InlinePseudonymDetail
-        pseudonym={selectedPseudonym}
-        fallbackDomain={fallbackDomain}
-        initialEditMode={Boolean(selectedResult?.editMode)}
-        onClose={clearSelectedResult}
-        onUpdated={(previousDomain, previousPseudonym, updated) => {
-          const normalized = {
-            ...updated,
-            domainName: updated.domainName || previousDomain
-          }
-          setResults(
-            results.map((result) => {
-              const domain = result.domainName || fallbackDomain
-              return domain === previousDomain &&
-                result.psn === previousPseudonym
-                ? normalized
-                : result
-            })
-          )
-          setPseudonymValue(normalized)
-          selectResult(
-            normalized.domainName || previousDomain,
-            normalized.psn,
-            false
-          )
-        }}
-        onDeleted={(domain, pseudonym) => {
-          removeResult(domain, pseudonym)
-          clearSelectedResult()
-        }}
-      />
-    )
-  }
-
   const openResult = (result: Pseudonym, edit: boolean) => {
     setPseudonymValue(result)
     selectResult(result.domainName || fallbackDomain, result.psn, edit)
@@ -566,11 +530,14 @@ export function InlinePseudonymResults({
             <tbody>
               {pageResults.map((result, resultIndex) => {
                 const domain = result.domainName || fallbackDomain
+                const expanded = selectedPseudonym === result
                 return (
-                  <tr
-                    key={`${domain}:${result.psn}`}
+                  <Fragment key={`${domain}:${result.psn}`}>
+                    <tr
                     className={`border-t border-gray-200 align-middle transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
-                      resultIndex % 2 === 0
+                      expanded
+                        ? 'bg-blue-50/70 dark:bg-blue-950/20'
+                        : resultIndex % 2 === 0
                         ? 'bg-white dark:bg-slate-900'
                         : 'bg-gray-50/80 dark:bg-slate-800/45'
                     }`}
@@ -611,7 +578,54 @@ export function InlinePseudonymResults({
                         </IconActionButton>
                       </div>
                     </td>
-                  </tr>
+                    </tr>
+                    {expanded && (
+                      <tr className="border-t border-blue-100 bg-blue-50/30 dark:border-blue-950 dark:bg-slate-900/80">
+                        <td colSpan={6} className="p-0">
+                          <div className="px-5 py-6">
+                            <InlinePseudonymDetail
+                              embedded
+                              tableDetail
+                              pseudonym={result}
+                              fallbackDomain={fallbackDomain}
+                              initialEditMode={Boolean(selectedResult?.editMode)}
+                              onClose={clearSelectedResult}
+                              onUpdated={(
+                                previousDomain,
+                                previousPseudonym,
+                                updated
+                              ) => {
+                                const normalized = {
+                                  ...updated,
+                                  domainName: updated.domainName || previousDomain
+                                }
+                                setResults(
+                                  results.map((entry) => {
+                                    const entryDomain =
+                                      entry.domainName || fallbackDomain
+                                    return entryDomain === previousDomain &&
+                                      entry.psn === previousPseudonym
+                                      ? normalized
+                                      : entry
+                                  })
+                                )
+                                setPseudonymValue(normalized)
+                                selectResult(
+                                  normalized.domainName || previousDomain,
+                                  normalized.psn,
+                                  false
+                                )
+                              }}
+                              onDeleted={(deletedDomain, pseudonym) => {
+                                removeResult(deletedDomain, pseudonym)
+                                clearSelectedResult()
+                              }}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 )
               })}
               {Array.from({ length: pseudonymFillerRows }, (_, fillerIndex) => (

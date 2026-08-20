@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { FormEvent, useEffect, useRef, useState } from 'react'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 
@@ -44,6 +44,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
   const { nextStep, stepperRef } = useStepperControlStore()
   const { quick, setQuick } = useSearchStore()
   const { setResults } = useSearchResultsStore()
+  const defaultResultKey = useRef('')
 
   const normalizeEntityResult = (result: any) => {
     const trustdeckID = String(
@@ -130,7 +131,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     }
   }, [entities, selectedType])
 
-  const runEntitySearch = async (query: string) => {
+  const runEntitySearch = async (query: string, resultLimit?: number) => {
     const normalizedQuery = query.trim()
     if (!normalizedQuery) {
       setQueryError(t('queryRequired'))
@@ -168,7 +169,13 @@ const EntityMask: React.FC<EntityMaskProps> = ({
           )
         : []
 
-      setResults(normalizedResults, selectedType)
+      const sortedResults = normalizedResults.sort((left, right) =>
+        String(left.trustdeckID ?? '').localeCompare(String(right.trustdeckID ?? ''))
+      )
+      setResults(
+        resultLimit === undefined ? sortedResults : sortedResults.slice(0, resultLimit),
+        selectedType
+      )
       if (psn && normalizedResults.length > 0) {
         nextStep()
         stepperRef.current?.nextCallback()
@@ -185,6 +192,14 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     event.preventDefault()
     await runEntitySearch(quick)
   }
+
+  useEffect(() => {
+    if (!inlineResults || psn || !selectedType || !selectedProject?.abbreviation) return
+    const key = `${selectedProject.abbreviation}:${selectedType}`
+    if (defaultResultKey.current === key) return
+    defaultResultKey.current = key
+    void runEntitySearch('*', 5)
+  }, [inlineResults, psn, selectedProject?.abbreviation, selectedType])
 
   const entityDropdownOptions = entities.map((entity) => ({
     label: entity,

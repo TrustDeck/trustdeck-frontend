@@ -74,7 +74,13 @@ export default function ProjectOverview() {
             data.map((project) => [project.abbreviation, project])
           ).values()
         )
-        if (isMounted) setProjects(uniqueProjects)
+        if (isMounted) {
+          setProjects(
+            uniqueProjects.sort((left, right) =>
+              left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
+            )
+          )
+        }
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e)
         if (!message.includes('No access token available')) {
@@ -181,9 +187,13 @@ export default function ProjectOverview() {
     updatedImage?: string
   ) => {
     setProjects((current) =>
-      current.map((project) =>
-        project.abbreviation === originalAbbreviation ? updatedProject : project
-      )
+      current
+        .map((project) =>
+          project.abbreviation === originalAbbreviation ? updatedProject : project
+        )
+        .sort((left, right) =>
+          left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
+        )
     )
     setProjectImages((current) => {
       const next = { ...current }

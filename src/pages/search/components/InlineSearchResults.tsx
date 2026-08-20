@@ -27,7 +27,7 @@ import {
 import InlineEntityDetail from './InlineEntityDetail'
 import InlinePseudonymDetail from './InlinePseudonymDetail'
 
-const PAGE_SIZE_OPTIONS = [5, 10, 20, 50, 100] as const
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const
 
 function resolveTrustDeckId(result: any): string {
   return String(
@@ -140,7 +140,7 @@ export function InlineEntityResults({
   const [pendingDelete, setPendingDelete] = useState<any | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
-  const [pageSize, setPageSize] = useState(5)
+  const [pageSize, setPageSize] = useState(10)
   const [selectedIdentifier, setSelectedIdentifier] = useState('')
   const [selectedEditMode, setSelectedEditMode] = useState(false)
 
@@ -164,6 +164,14 @@ export function InlineEntityResults({
         (result) => resolveTrustDeckId(result) === selectedIdentifier
       ),
     [results, selectedIdentifier]
+  )
+
+  const sortedResults = useMemo(
+    () =>
+      [...results].sort((left, right) =>
+        resolveTrustDeckId(left).localeCompare(resolveTrustDeckId(right))
+      ),
+    [results]
   )
 
   useEffect(() => {
@@ -243,13 +251,6 @@ export function InlineEntityResults({
     }
   }
 
-  const sortedResults = useMemo(
-    () =>
-      [...results].sort((left, right) =>
-        resolveTrustDeckId(left).localeCompare(resolveTrustDeckId(right))
-      ),
-    [results]
-  )
   const pageStart = page * pageSize
   const pageResults = sortedResults.slice(pageStart, pageStart + pageSize)
   const entityPageCount = Math.ceil(results.length / pageSize)
@@ -441,7 +442,7 @@ export function InlinePseudonymResults({
   const [pendingDelete, setPendingDelete] = useState<Pseudonym | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
-  const [pageSize, setPageSize] = useState(5)
+  const [pageSize, setPageSize] = useState(10)
   const selectedPseudonym = useMemo(
     () =>
       results.find(

@@ -34,6 +34,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
   const [queryError, setQueryError] = useState('')
   const [groups, setGroups] = useState<any[]>([])
   const initialDomainSet = useRef(false)
+  const defaultResultKey = useRef('')
 
   const { selectedProject } = useProjectStore()
   const { pseudonym, setPseudonym, group, setGroup } = useSearchStore()
@@ -105,6 +106,28 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
       ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
       : 'border-color-light-gray focus:border-color-blue focus:ring-color-blue'
   }`
+
+  useEffect(() => {
+    const domain = group || (showDomainSelector ? selectedProject?.abbreviation || '' : '')
+    if (!inlineResults || !domain) return
+    const key = `${domain}:default`
+    if (defaultResultKey.current === key) return
+    defaultResultKey.current = key
+
+    PseudonymService.searchPseudonyms(domain, '*')
+      .then((results) => {
+        const initialResults = results
+          .map((entry) => ({ ...entry, domainName: entry.domainName || domain }))
+          .sort((left, right) => String(left.psn ?? '').localeCompare(String(right.psn ?? '')))
+          .slice(0, 5)
+        clearSelectedResult()
+        setResults(initialResults)
+      })
+      .catch((error) => {
+        console.error('Error during initial pseudonym search:', error)
+        setResults([])
+      })
+  }, [clearSelectedResult, group, inlineResults, selectedProject?.abbreviation, setResults, showDomainSelector])
 
   return (
     <div className="w-full">

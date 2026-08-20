@@ -10,6 +10,7 @@
     "back": "Zurück",
     "forward": "Weiter",
     "generate": "Generieren",
+    "create": "Erstellen",
     "generateStandalone": "Pseudonym ohne Entität generieren"
   },
   "selectGroup": "Pseudonym-Domänen auswählen",
@@ -56,6 +57,9 @@
     "standaloneTitle": "Ohne vorhandene Entität",
     "standaloneDescription": "Geben Sie Kennung und ID-Typ direkt an und wählen Sie anschließend Pseudonym-Domäne und optionale Gültigkeitseinstellungen.",
     "standaloneAction": "Ohne Entität generieren",
+    "secondaryTitle": "Sekundärpseudonym erstellen",
+    "secondaryDescription": "Verwenden Sie ein bestehendes Pseudonym als Kennung für ein neues Pseudonym.",
+    "secondaryFormDescription": "Das Quellpseudonym wird als feste Kennung für dieses Sekundärpseudonym verwendet.",
     "addPseudonym": "Pseudonym hinzufügen"
   },
   "entityFlow": {

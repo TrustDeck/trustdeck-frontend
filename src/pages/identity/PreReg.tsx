@@ -7,6 +7,7 @@ import { useAuth } from 'react-oidc-context'
 import {
   CheckIcon,
   EyeIcon,
+  FingerPrintIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -1099,6 +1100,21 @@ export default function PreReg() {
     setManagementTab('search')
   }
 
+  const generatePseudonymForEntity = (instance: Entity) => {
+    const identifier = entityId(instance)
+    if (!identifier) return
+    navigate('/pseudonym-management', {
+      state: {
+        entity: {
+          identifier,
+          identifierType: 'TrustDeckID',
+          entityTypeName: selectedTypeName,
+          displayName: identifier
+        }
+      }
+    })
+  }
+
   const handleFieldChange = (path: Array<string | number>, value: any) => {
     setFormData((prev) => setValueAtPath(prev, path, value))
     if (modalMode === 'create' && linkageCandidates.length > 0) {
@@ -1776,6 +1792,13 @@ export default function PreReg() {
                                     disabled={!canUpdateInstances}
                                   >
                                     <PencilSquareIcon className="h-5 w-5" />
+                                  </IconActionButton>
+                                  <IconActionButton
+                                    title={t('identity:crud.generatePseudonym')}
+                                    onClick={() => generatePseudonymForEntity(instance)}
+                                    disabled={Array.isArray(instance.links) && instance.links.length > 0}
+                                  >
+                                    <FingerPrintIcon className="h-5 w-5" />
                                   </IconActionButton>
                                   <IconActionButton
                                     title={

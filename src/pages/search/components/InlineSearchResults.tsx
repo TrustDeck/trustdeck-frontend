@@ -4,10 +4,12 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   EyeIcon,
+  FingerPrintIcon,
   PencilSquareIcon,
   TrashIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
 import Panel from '../../../core/components/common/Panel'
 import IconActionButton from '../../../core/components/common/IconActionButton'
@@ -133,6 +135,7 @@ export function InlineEntityResults({
 }) {
   const { t, i18n } = useTranslation('search')
   const showToast = useToastStore((state) => state.show)
+  const navigate = useNavigate()
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const entityAttributes = useProjectStore((state) => state.entityAttributes)
   const { results, hasSearched, setResults, removeResult } =
@@ -217,6 +220,21 @@ export function InlineEntityResults({
     if (!identifier) return
     setSelectedEditMode(edit)
     setSelectedIdentifier(identifier)
+  }
+
+  const generatePseudonymForEntity = (result: any) => {
+    const identifier = resolveTrustDeckId(result)
+    if (!identifier) return
+    navigate('/pseudonym-management', {
+      state: {
+        entity: {
+          identifier,
+          identifierType: 'TrustDeckID',
+          entityTypeName,
+          displayName: identifier
+        }
+      }
+    })
   }
 
   const deleteResult = async () => {
@@ -348,6 +366,16 @@ export function InlineEntityResults({
                           <PencilSquareIcon className="h-5 w-5" />
                         </IconActionButton>
                         <IconActionButton
+                          title={t('identity:crud.generatePseudonym')}
+                          onClick={() => generatePseudonymForEntity(result)}
+                          disabled={
+                            Array.isArray(result?.links) &&
+                            result.links.length > 0
+                          }
+                        >
+                          <FingerPrintIcon className="h-5 w-5" />
+                        </IconActionButton>
+                        <IconActionButton
                           title={t('delete')}
                           variant="danger"
                           onClick={() => setPendingDelete(result)}
@@ -428,6 +456,7 @@ export function InlinePseudonymResults({
   fallbackDomain: string
 }) {
   const { t } = useTranslation('search')
+  const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const {
     results,
@@ -479,6 +508,17 @@ export function InlinePseudonymResults({
   const openResult = (result: Pseudonym, edit: boolean) => {
     setPseudonymValue(result)
     selectResult(result.domainName || fallbackDomain, result.psn, edit)
+  }
+
+  const generateSecondaryPseudonym = (result: Pseudonym) => {
+    navigate('/pseudonym-management', {
+      state: {
+        secondaryPseudonym: {
+          domainName: result.domainName || fallbackDomain,
+          psn: result.psn
+        }
+      }
+    })
   }
 
   const deleteResult = async () => {
@@ -590,6 +630,12 @@ export function InlinePseudonymResults({
                           onClick={() => openResult(result, true)}
                         >
                           <PencilSquareIcon className="h-5 w-5" />
+                        </IconActionButton>
+                        <IconActionButton
+                          title={t('pseudonyms:management.secondaryTitle')}
+                          onClick={() => generateSecondaryPseudonym(result)}
+                        >
+                          <FingerPrintIcon className="h-5 w-5" />
                         </IconActionButton>
                         <IconActionButton
                           title={t('delete')}

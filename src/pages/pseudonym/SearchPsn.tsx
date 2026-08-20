@@ -5,10 +5,14 @@ import { Stepper } from 'primereact/stepper'
 import { StepperPanel } from 'primereact/stepperpanel'
 import {
   ArrowLeftIcon,
+  CheckIcon,
+  FingerPrintIcon,
   IdentificationIcon,
-  UserIcon
+  UserIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import Panel from '../../core/components/common/Panel'
 import PageHeader from '../../core/components/common/PageHeader'
@@ -50,7 +54,7 @@ type StandalonePseudonymForm = {
   omitPrefix: boolean
 }
 
-type GenerationMode = 'choice' | 'entity' | 'standalone' | null
+type GenerationMode = 'choice' | 'entity' | 'standalone' | 'secondary' | null
 type ManagementTab = 'search' | 'add'
 
 function findGroupKeyByName(nodes: any[] | null, groupName: string): string {
@@ -142,6 +146,8 @@ export default function SearchPsn() {
   const { groups, selectedGroup, setGroups, setSelectedGroup } = useDomainStore()
   const { selectedEntityId, setSelectedEntityId } = useSelectedEntityStore()
   const { t, i18n } = useTranslation()
+  const location = useLocation()
+  const navigate = useNavigate()
   const entityDefinitions = useProjectStore((state) => state.entityAttributes)
   const {
     group: pseudonymDomain,
@@ -226,6 +232,44 @@ export default function SearchPsn() {
     setPseudonymQuery
   ])
 
+  useEffect(() => {
+    const request = location.state as {
+      entity?: {
+        identifier: string
+        identifierType: string
+        entityTypeName?: string
+        displayName?: string
+      }
+      secondaryPseudonym?: { domainName: string; psn: string }
+    } | null
+    const entity = request?.entity
+    const secondaryPseudonym = request?.secondaryPseudonym
+
+    if (secondaryPseudonym?.psn) {
+      setStandaloneForm({
+        ...createStandaloneForm(),
+        group: findGroupKeyByName(groups, secondaryPseudonym.domainName),
+        identifier: secondaryPseudonym.psn,
+        idType: `${secondaryPseudonym.domainName}_PSN`
+      })
+      setStandaloneAdvancedOpen(false)
+      setStandaloneError('')
+      setGenerationMode('secondary')
+      setManagementTab('add')
+      navigate(location.pathname, { replace: true, state: null })
+      return
+    }
+    if (!entity?.identifier) return
+
+    setSelectedEntityId(entity)
+    setGenerationMode('entity')
+    setManagementTab('add')
+    navigate(location.pathname, { replace: true, state: null })
+    window.requestAnimationFrame(() => {
+      localStepperRef.current?.setActiveStep?.(2)
+    })
+  }, [groups, location.pathname, location.state, navigate, setSelectedEntityId])
+
   const resetEntityWorkflow = () => {
     clearEntityResults()
     setSelectedGroup('')
@@ -250,6 +294,13 @@ export default function SearchPsn() {
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
     setGenerationMode('standalone')
+  }
+
+  const startSecondaryPseudonymWorkflow = () => {
+    setStandaloneForm(createStandaloneForm())
+    setStandaloneAdvancedOpen(false)
+    setStandaloneError('')
+    setGenerationMode('secondary')
   }
 
   const cancelGeneration = () => {
@@ -470,7 +521,7 @@ export default function SearchPsn() {
             </div>
 
             {generationMode === 'choice' && (
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-3">
                 <button
                   type="button"
                   onClick={startEntityWorkflow}
@@ -487,8 +538,22 @@ export default function SearchPsn() {
 
                 <button
                   type="button"
-                  onClick={startStandaloneWorkflow}
+                  onClick={startSecondaryPseudonymWorkflow}
                   className="group flex min-h-44 flex-col rounded-2xl border-2 border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+                >
+                  <FingerPrintIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
+                  <h3 className="td-section-title mt-4">
+                    {t('pseudonyms:management.secondaryTitle')}
+                  </h3>
+                  <p className="td-section-subtitle mt-2 flex-1">
+                    {t('pseudonyms:management.secondaryDescription')}
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={startStandaloneWorkflow}
+                  className="group order-3 flex min-h-40 flex-col rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
                 >
                   <IdentificationIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
                   <h3 className="td-section-title mt-4">
@@ -498,10 +563,11 @@ export default function SearchPsn() {
                     {t('pseudonyms:management.standaloneDescription')}
                   </p>
                 </button>
-                <div className="lg:col-span-2">
+                <div className="flex justify-center lg:col-span-3">
                   <SecondaryOutlinedButton
                     label={t('common:cancel')}
                     onClick={cancelGeneration}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                   />
                 </div>
               </div>
@@ -524,6 +590,7 @@ export default function SearchPsn() {
                       <SecondaryOutlinedButton
                         label={t('common:cancel')}
                         onClick={cancelGeneration}
+                        icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                       />
                     </div>
                   </StepperPanel>
@@ -551,6 +618,7 @@ export default function SearchPsn() {
                           <SecondaryOutlinedButton
                           label={t('common:cancel')}
                           onClick={cancelGeneration}
+                          icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                         />
                       </div>
                     </div>
@@ -607,10 +675,11 @@ export default function SearchPsn() {
 
                       <div className="flex flex-wrap gap-3 pt-2">
                         <PrimaryButton
-                          label={t('pseudonyms:buttons.generate')}
+                          label={t('pseudonyms:buttons.create')}
                           onClick={handleEntityPseudonymCreate}
                           loading={entityCreating}
                           disabled={entityCreating}
+                          icon={<CheckIcon className="mr-1 h-5 w-5" />}
                         />
                         <PrimaryOutlinedButton
                           label={t('identity:buttons.back')}
@@ -622,6 +691,7 @@ export default function SearchPsn() {
                           label={t('common:cancel')}
                           onClick={cancelGeneration}
                           disabled={entityCreating}
+                          icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                         />
                       </div>
                     </div>
@@ -630,10 +700,12 @@ export default function SearchPsn() {
               </div>
             )}
 
-            {generationMode === 'standalone' && (
+            {(generationMode === 'standalone' || generationMode === 'secondary') && (
               <div className="space-y-6 rounded-2xl border border-gray-200 p-5 dark:border-slate-700">
                 <p className="text-base text-gray-600 dark:text-gray-300">
-                  {t('pseudonyms:standalone.modalDescription')}
+                  {generationMode === 'secondary'
+                    ? t('pseudonyms:management.secondaryFormDescription')
+                    : t('pseudonyms:standalone.modalDescription')}
                 </p>
 
                 <CustomTreeSelect
@@ -641,7 +713,7 @@ export default function SearchPsn() {
                   placeholder={t('pseudonyms:standalone.fields.group')}
                   value={standaloneForm.group || null}
                   options={groups || []}
-                  onChange={(event) =>
+                      onChange={(event) =>
                     setStandaloneForm((current) => ({
                       ...current,
                       group: String(event.value ?? '')
@@ -665,20 +737,22 @@ export default function SearchPsn() {
                         ...current,
                         identifier: event.target.value
                       }))
-                    }
-                    required
+                      }
+                      readOnly={generationMode === 'secondary'}
+                      required
                   />
                   <CustomFloatLabel
                     id="standalone-id-type"
                     placeholder={t('pseudonyms:standalone.fields.idType')}
                     value={standaloneForm.idType}
-                    onChange={(event) =>
+                      onChange={(event) =>
                       setStandaloneForm((current) => ({
                         ...current,
                         idType: event.target.value
                       }))
-                    }
-                    required
+                      }
+                      readOnly={generationMode === 'secondary'}
+                      required
                   />
                 </div>
 
@@ -784,15 +858,17 @@ export default function SearchPsn() {
 
                 <div className="flex flex-wrap gap-3 pt-2">
                   <PrimaryButton
-                    label={t('pseudonyms:buttons.generate')}
+                    label={t('pseudonyms:buttons.create')}
                     onClick={handleStandaloneCreate}
                     loading={standaloneCreating}
                     disabled={standaloneCreating}
+                    icon={<CheckIcon className="mr-1 h-5 w-5" />}
                   />
                   <SecondaryOutlinedButton
                     label={t('common:cancel')}
                     onClick={cancelGeneration}
                     disabled={standaloneCreating}
+                    icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                   />
                 </div>
               </div>

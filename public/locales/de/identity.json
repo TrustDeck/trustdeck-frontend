@@ -84,6 +84,7 @@
     "identifier": "Kennung",
     "summary": "Zusammenfassung",
     "actions": "Aktionen",
+    "generatePseudonym": "Pseudonym erzeugen",
     "view": "Anzeigen",
     "edit": "Bearbeiten",
     "delete": "Löschen",

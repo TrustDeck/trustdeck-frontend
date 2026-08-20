@@ -87,5 +87,9 @@
     "enterMoreCharacters": "Geben Sie mindestens zwei Zeichen für die Suche ein.",
     "noResults": "Keine passenden Pseudonym-Domänen gefunden.",
     "clearSelection": "Ausgewählte Pseudonym-Domäne entfernen"
+  },
+  "creationExpired": {
+    "title": "Pseudonym konnte nicht erstellt werden",
+    "detail": "Das ausgewählte Projekt oder die Pseudonym-Domäne liegt nicht mehr im Gültigkeitszeitraum."
   }
 }

@@ -30,6 +30,8 @@ import usePseudonymStore from '../search/stores/PseudonymSearchResults'
 import useSearchResultsStore from '../search/stores/SearchResultsStore'
 import useSearchStore from '../search/stores/SearchStore'
 import useProjectStore from '../../core/stores/ProjectStore'
+import useToastStore from '../../core/stores/ToastStore'
+import { TrustDeckHttpError } from '../../core/services/TrustDeck'
 import {
   collectDisplayAttributes,
   formatDisplayValue,
@@ -149,6 +151,7 @@ export default function SearchPsn() {
   const location = useLocation()
   const navigate = useNavigate()
   const entityDefinitions = useProjectStore((state) => state.entityAttributes)
+  const showToast = useToastStore((state) => state.show)
   const {
     group: pseudonymDomain,
     setPseudonym: setPseudonymQuery,
@@ -357,6 +360,16 @@ export default function SearchPsn() {
     })
   }
 
+  const showPseudonymCreationError = (error: unknown) => {
+    if (!(error instanceof TrustDeckHttpError) || error.status !== 410) return
+    showToast({
+      severity: 'warn',
+      summary: t('pseudonyms:creationExpired.title'),
+      detail: t('pseudonyms:creationExpired.detail'),
+      life: 5000
+    })
+  }
+
   async function handleEntityPseudonymCreate() {
     const selectedGroupNames = getSelectedGroupNames(selectedGroup, groups)
     if (selectedGroupNames.length === 0) {
@@ -400,6 +413,7 @@ export default function SearchPsn() {
       }
     } catch (error) {
       console.error('Error creating pseudonym for entity:', error)
+      showPseudonymCreationError(error)
       setEntityError(t('pseudonyms:entityFlow.validation.createFailed'))
     } finally {
       setEntityCreating(false)
@@ -454,6 +468,7 @@ export default function SearchPsn() {
       }
     } catch (error) {
       console.error('Error creating standalone pseudonym:', error)
+      showPseudonymCreationError(error)
       setStandaloneError(
         error instanceof Error
           ? error.message

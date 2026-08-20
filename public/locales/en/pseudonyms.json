@@ -87,5 +87,9 @@
     "enterMoreCharacters": "Enter at least two characters to search.",
     "noResults": "No matching pseudonym domains were found.",
     "clearSelection": "Clear selected pseudonym domain"
+  },
+  "creationExpired": {
+    "title": "Pseudonym could not be created",
+    "detail": "The selected project or pseudonym domain is no longer within its validity period."
   }
 }

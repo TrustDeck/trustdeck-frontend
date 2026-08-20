@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-  CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 
@@ -97,7 +95,6 @@ export default function DomainSearchSelect({
   const { t } = useTranslation('pseudonyms')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DomainSearchResult[]>([])
-  const [selectedHierarchy, setSelectedHierarchy] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [page, setPage] = useState(0)
@@ -116,8 +113,7 @@ export default function DomainSearchSelect({
         const defaultDomains = [...domains].sort((left, right) =>
           left.name.localeCompare(right.name)
         )
-        const firstDomain = defaultDomains[0]
-        if (!firstDomain) return
+        if (defaultDomains.length === 0) return
         defaultDomains.slice(0, 5).forEach((domain) =>
           domainCache.current.set(domain.name, domain)
         )
@@ -132,7 +128,7 @@ export default function DomainSearchSelect({
       .catch((searchError) => {
         console.error('Failed to load the default pseudonym domain', searchError)
       })
-  }, [onChange, value])
+  }, [value])
 
   useEffect(() => {
     setPage(0)
@@ -142,32 +138,6 @@ export default function DomainSearchSelect({
     const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
     if (page > maxPage) setPage(maxPage)
   }, [page, pageSize, results.length])
-
-  useEffect(() => {
-    if (!value) {
-      setSelectedHierarchy([])
-      return
-    }
-
-    let active = true
-    const loadSelectedDomain = async () => {
-      try {
-        let domain = domainCache.current.get(value)
-        if (!domain) {
-          domain = await TrustDeck.instance().getDomain(value)
-          domainCache.current.set(value, domain)
-        }
-        const hierarchy = await resolveHierarchy(domain, domainCache.current)
-        if (active) setSelectedHierarchy(hierarchy)
-      } catch {
-        if (active) setSelectedHierarchy([value])
-      }
-    }
-    void loadSelectedDomain()
-    return () => {
-      active = false
-    }
-  }, [value])
 
   useEffect(() => {
     const normalized = query.trim()
@@ -210,11 +180,6 @@ export default function DomainSearchSelect({
     return () => window.clearTimeout(timer)
   }, [query, t])
 
-  const selectedPath = useMemo(
-    () =>
-      selectedHierarchy.length > 0 ? selectedHierarchy : value ? [value] : [],
-    [selectedHierarchy, value]
-  )
   const pageCount = Math.max(1, Math.ceil(results.length / pageSize))
   const pageResults = results.slice(page * pageSize, (page + 1) * pageSize)
 
@@ -235,24 +200,6 @@ export default function DomainSearchSelect({
           />
         </div>
       </label>
-
-      {value && (
-        <div className="flex items-start justify-between gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-900 dark:bg-blue-950/35">
-          <div className="flex min-w-0 items-start gap-2">
-            <CheckCircleIcon className="mt-2 h-5 w-5 shrink-0 text-color-blue" />
-            <DomainHierarchyTree hierarchy={selectedPath} compact />
-          </div>
-          <button
-            type="button"
-            title={t('domainContext.clearSelection')}
-            aria-label={t('domainContext.clearSelection')}
-            onClick={() => onChange('')}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-gray-500 transition hover:bg-white hover:text-gray-900 dark:hover:bg-slate-800 dark:hover:text-gray-100"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-        </div>
-      )}
 
       {loading && (
         <p className="text-sm text-gray-500 dark:text-gray-300">
@@ -286,7 +233,6 @@ export default function DomainSearchSelect({
                 type="button"
                 onClick={() => {
                   onChange(domain.name)
-                  setSelectedHierarchy(hierarchy)
                 }}
                 className={`block w-full border-t border-gray-200 px-4 py-4 text-left transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
                   selected

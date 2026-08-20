@@ -98,6 +98,8 @@ export default function DomainSearchSelect({
   const [selectedHierarchy, setSelectedHierarchy] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(5)
   const requestId = useRef(0)
   const domainCache = useRef(new Map<string, Domain>())
   const defaultDomainRequested = useRef(false)
@@ -118,18 +120,26 @@ export default function DomainSearchSelect({
           domainCache.current.set(domain.name, domain)
         )
         const initialResults = await Promise.all(
-          defaultDomains.slice(0, 5).map(async (domain) => ({
+          defaultDomains.map(async (domain) => ({
             domain,
             hierarchy: await resolveHierarchy(domain, domainCache.current)
           }))
         )
         setResults(initialResults)
-        onChange(firstDomain.name)
       })
       .catch((searchError) => {
         console.error('Failed to load the default pseudonym domain', searchError)
       })
   }, [onChange, value])
+
+  useEffect(() => {
+    setPage(0)
+  }, [query])
+
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
+    if (page > maxPage) setPage(maxPage)
+  }, [page, pageSize, results.length])
 
   useEffect(() => {
     if (!value) {
@@ -203,6 +213,8 @@ export default function DomainSearchSelect({
       selectedHierarchy.length > 0 ? selectedHierarchy : value ? [value] : [],
     [selectedHierarchy, value]
   )
+  const pageCount = Math.max(1, Math.ceil(results.length / pageSize))
+  const pageResults = results.slice(page * pageSize, (page + 1) * pageSize)
 
   return (
     <div className="space-y-4">
@@ -259,8 +271,9 @@ export default function DomainSearchSelect({
         )}
 
       {results.length > 0 && (
-        <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-700">
-          {results.map(({ domain, hierarchy }) => {
+        <div className="space-y-3">
+          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
+          {pageResults.map(({ domain, hierarchy }) => {
             const selected = domain.name === value
             return (
               <button
@@ -269,8 +282,6 @@ export default function DomainSearchSelect({
                 onClick={() => {
                   onChange(domain.name)
                   setSelectedHierarchy(hierarchy)
-                  setQuery('')
-                  setResults([])
                 }}
                 className={`block w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-blue-50 dark:border-slate-800 dark:hover:bg-slate-800 ${
                   selected
@@ -282,6 +293,46 @@ export default function DomainSearchSelect({
               </button>
             )
           })}
+          </div>
+          {results.length > pageSize && (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <span>{t('search:pagination.resultsPerPage')}</span>
+                <select
+                  value={pageSize}
+                  onChange={(event) => setPageSize(Number(event.target.value))}
+                  className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                >
+                  {[5, 10, 20, 50, 100].map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(0, current - 1))}
+                  disabled={page === 0}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                >
+                  {t('search:pagination.previous')}
+                </button>
+                <span className="text-sm text-gray-600 dark:text-gray-300">
+                  {t('search:pagination.pageOf', { page: page + 1, pages: pageCount })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                  disabled={page >= pageCount - 1}
+                  className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
+                >
+                  {t('search:pagination.next')}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

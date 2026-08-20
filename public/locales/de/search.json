@@ -22,7 +22,7 @@
   "entity": {
     "title": "Entität",
     "entityType": {
-      "title": "Entität",
+      "title": "Entitätstyp",
       "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."
     },
     "person": {

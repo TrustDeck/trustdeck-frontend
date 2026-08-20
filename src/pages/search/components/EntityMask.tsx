@@ -17,6 +17,8 @@ import type { Link } from '../../../core/types/Link'
 interface EntityMaskProps {
   psn?: boolean
   inlineResults?: boolean
+  initialEntityType?: string
+  initialQuery?: string
 }
 
 function pseudonymsToLinks(pseudonyms: any[] = []): Link[] {
@@ -33,7 +35,9 @@ function pseudonymsToLinks(pseudonyms: any[] = []): Link[] {
 
 const EntityMask: React.FC<EntityMaskProps> = ({
   psn = false,
-  inlineResults = false
+  inlineResults = false,
+  initialEntityType,
+  initialQuery
 }) => {
   const { t } = useTranslation('search')
   const [loading, setLoading] = useState(false)
@@ -130,6 +134,16 @@ const EntityMask: React.FC<EntityMaskProps> = ({
       setSelectedType(entities[0])
     }
   }, [entities, selectedType])
+
+  useEffect(() => {
+    if (initialEntityType && entities.includes(initialEntityType)) {
+      setSelectedType(initialEntityType)
+    }
+  }, [entities, initialEntityType])
+
+  useEffect(() => {
+    if (initialQuery) setQuick(initialQuery)
+  }, [initialQuery, setQuick])
 
   const runEntitySearch = async (query: string, resultLimit?: number) => {
     const normalizedQuery = query.trim()

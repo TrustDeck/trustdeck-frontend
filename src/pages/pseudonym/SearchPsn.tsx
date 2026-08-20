@@ -163,6 +163,10 @@ export default function SearchPsn() {
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>(null)
   const [managementTab, setManagementTab] = useState<ManagementTab>('search')
+  const [entitySearchPrefill, setEntitySearchPrefill] = useState<{
+    query: string
+    entityType: string
+  } | null>(null)
   const [viewedEntity, setViewedEntity] = useState<any | null>(null)
   const [entityCreating, setEntityCreating] = useState(false)
   const [entityError, setEntityError] = useState('')
@@ -261,14 +265,14 @@ export default function SearchPsn() {
     }
     if (!entity?.identifier) return
 
-    setSelectedEntityId(entity)
+    setEntitySearchPrefill({
+      query: entity.identifier,
+      entityType: entity.entityTypeName ?? ''
+    })
     setGenerationMode('entity')
     setManagementTab('add')
     navigate(location.pathname, { replace: true, state: null })
-    window.requestAnimationFrame(() => {
-      localStepperRef.current?.setActiveStep?.(2)
-    })
-  }, [groups, location.pathname, location.state, navigate, setSelectedEntityId])
+  }, [groups, location.pathname, location.state, navigate])
 
   const resetEntityWorkflow = () => {
     clearEntityResults()
@@ -280,6 +284,7 @@ export default function SearchPsn() {
 
   const startEntityWorkflow = () => {
     resetEntityWorkflow()
+    setEntitySearchPrefill(null)
     const selectedDomainKey = findGroupKeyByName(groups, pseudonymDomain)
     if (selectedDomainKey) setSelectedGroup(selectedDomainKey)
     setGenerationMode('entity')
@@ -308,8 +313,18 @@ export default function SearchPsn() {
     setStandaloneForm(createStandaloneForm())
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
+    setEntitySearchPrefill(null)
     setGenerationMode(null)
     setManagementTab('search')
+  }
+
+  const cancelCreationPath = () => {
+    resetEntityWorkflow()
+    setStandaloneForm(createStandaloneForm())
+    setStandaloneAdvancedOpen(false)
+    setStandaloneError('')
+    setEntitySearchPrefill(null)
+    setGenerationMode('choice')
   }
 
   const showCreatedPseudonym = async (
@@ -553,7 +568,7 @@ export default function SearchPsn() {
                 <button
                   type="button"
                   onClick={startStandaloneWorkflow}
-                  className="group order-3 flex min-h-40 flex-col rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+                  className="group flex min-h-40 flex-col rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
                 >
                   <IdentificationIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
                   <h3 className="td-section-title mt-4">
@@ -586,12 +601,18 @@ export default function SearchPsn() {
                 >
                   <StepperPanel header={t('pseudonyms:entityFlow.searchStep')}>
                     <div className="space-y-5 pt-4">
-                      <EntityMask psn />
-                      <SecondaryOutlinedButton
-                        label={t('common:cancel')}
-                        onClick={cancelGeneration}
-                        icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                      <EntityMask
+                        psn
+                        initialQuery={entitySearchPrefill?.query}
+                        initialEntityType={entitySearchPrefill?.entityType}
                       />
+                      <div className="flex justify-center">
+                        <SecondaryOutlinedButton
+                          label={t('common:cancel')}
+                          onClick={cancelCreationPath}
+                          icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+                        />
+                      </div>
                     </div>
                   </StepperPanel>
 
@@ -609,7 +630,7 @@ export default function SearchPsn() {
                           />
                         ))}
                       </div>
-                      <div className="flex flex-wrap gap-3">
+                      <div className="flex flex-wrap justify-center gap-3">
                         <PrimaryOutlinedButton
                           label={t('identity:buttons.back')}
                           icon={<ArrowLeftIcon className="h-5 w-5" />}
@@ -617,7 +638,7 @@ export default function SearchPsn() {
                         />
                           <SecondaryOutlinedButton
                           label={t('common:cancel')}
-                          onClick={cancelGeneration}
+                          onClick={cancelCreationPath}
                           icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                         />
                       </div>
@@ -689,7 +710,7 @@ export default function SearchPsn() {
                         />
                           <SecondaryOutlinedButton
                           label={t('common:cancel')}
-                          onClick={cancelGeneration}
+                          onClick={cancelCreationPath}
                           disabled={entityCreating}
                           icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                         />
@@ -870,7 +891,7 @@ export default function SearchPsn() {
                   />
                   <SecondaryOutlinedButton
                     label={t('common:cancel')}
-                    onClick={cancelGeneration}
+                    onClick={cancelCreationPath}
                     disabled={standaloneCreating}
                     icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                   />

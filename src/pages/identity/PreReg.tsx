@@ -1796,7 +1796,6 @@ export default function PreReg() {
                                   <IconActionButton
                                     title={t('identity:crud.generatePseudonym')}
                                     onClick={() => generatePseudonymForEntity(instance)}
-                                    disabled={Array.isArray(instance.links) && instance.links.length > 0}
                                   >
                                     <FingerPrintIcon className="h-5 w-5" />
                                   </IconActionButton>

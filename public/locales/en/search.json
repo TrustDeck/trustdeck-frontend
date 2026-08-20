@@ -21,7 +21,7 @@
   "entity": {
     "title": "Entity",
     "entityType": {
-      "title": "Entity",
+      "title": "Entity type",
       "help": "Choose what you want to search."
     },
     "person": {

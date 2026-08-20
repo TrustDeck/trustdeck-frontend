@@ -100,6 +100,26 @@ export default function DomainSearchSelect({
   const [error, setError] = useState('')
   const requestId = useRef(0)
   const domainCache = useRef(new Map<string, Domain>())
+  const defaultDomainRequested = useRef(false)
+
+  useEffect(() => {
+    if (value || defaultDomainRequested.current) return
+    defaultDomainRequested.current = true
+
+    TrustDeck.instance()
+      .searchReadableDomains('*')
+      .then((domains) => {
+        const firstDomain = [...domains].sort((left, right) =>
+          left.name.localeCompare(right.name)
+        )[0]
+        if (!firstDomain) return
+        domainCache.current.set(firstDomain.name, firstDomain)
+        onChange(firstDomain.name)
+      })
+      .catch((searchError) => {
+        console.error('Failed to load the default pseudonym domain', searchError)
+      })
+  }, [onChange, value])
 
   useEffect(() => {
     if (!value) {

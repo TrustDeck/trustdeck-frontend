@@ -455,6 +455,20 @@ export function InlinePseudonymResults({
     [fallbackDomain, results, selectedResult]
   )
 
+  const sortedResults = useMemo(
+    () =>
+      [...results].sort((left, right) => {
+        const pseudonymOrder = String(left.psn ?? '').localeCompare(
+          String(right.psn ?? '')
+        )
+        if (pseudonymOrder !== 0) return pseudonymOrder
+        return String(left.domainName || fallbackDomain).localeCompare(
+          String(right.domainName || fallbackDomain)
+        )
+      }),
+    [fallbackDomain, results]
+  )
+
   useEffect(() => {
     const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
     if (page > maxPage) setPage(maxPage)
@@ -497,19 +511,6 @@ export function InlinePseudonymResults({
     }
   }
 
-  const sortedResults = useMemo(
-    () =>
-      [...results].sort((left, right) => {
-        const pseudonymOrder = String(left.psn ?? '').localeCompare(
-          String(right.psn ?? '')
-        )
-        if (pseudonymOrder !== 0) return pseudonymOrder
-        return String(left.domainName || fallbackDomain).localeCompare(
-          String(right.domainName || fallbackDomain)
-        )
-      }),
-    [fallbackDomain, results]
-  )
   const pageStart = page * pageSize
   const pageResults = sortedResults.slice(pageStart, pageStart + pageSize)
   const pseudonymPageCount = Math.ceil(results.length / pageSize)

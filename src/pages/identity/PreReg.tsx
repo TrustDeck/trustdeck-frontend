@@ -1560,13 +1560,20 @@ export default function PreReg() {
                 />
               </label>
 
-              <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200 dark:border-slate-700">
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
                 {filteredTypeDefinitions.length === 0 ? (
                   <p className="px-4 py-8 text-center text-gray-600 dark:text-gray-300">
                     {t('identity:crud.noEntityTypesMatch')}
                   </p>
                 ) : (
-                  visibleTypeDefinitions.map((type) => {
+                  <>
+                    <div className="grid bg-gray-50 px-4 py-3 text-base font-semibold text-gray-900 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] dark:bg-slate-800/70 dark:text-gray-100">
+                      <span>{t('identity:crud.entityTypeSearchLabel')}</span>
+                      <span className="md:text-right">
+                        {t('identity:crud.associatedGroup')}
+                      </span>
+                    </div>
+                    {visibleTypeDefinitions.map((type, typeIndex) => {
                     const selected = type.name === selectedTypeName
                     return (
                       <button
@@ -1574,22 +1581,24 @@ export default function PreReg() {
                         type="button"
                         aria-pressed={selected}
                         onClick={() => setSelectedTypeName(type.name)}
-                        className={`grid w-full gap-1 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center dark:border-slate-800 ${
+                        className={`grid w-full gap-1 border-t border-gray-200 px-4 py-4 text-left transition hover:bg-blue-50/70 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center dark:border-slate-700 dark:hover:bg-slate-700/60 ${
                           selected
                             ? 'bg-blue-50 dark:bg-slate-800'
-                            : 'bg-white hover:bg-gray-50 dark:bg-slate-900 dark:hover:bg-slate-800'
+                            : typeIndex % 2 === 0
+                              ? 'bg-white dark:bg-slate-900'
+                              : 'bg-gray-50/80 dark:bg-slate-800/45'
                         }`}
                       >
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
                           {type.name}
                         </span>
-                        <span className="text-sm text-gray-600 md:text-right dark:text-gray-300">
-                          {t('identity:crud.associatedGroup')}:{' '}
+                        <span className="text-base text-gray-600 md:text-right dark:text-gray-300">
                           {type.associatedDomainName || '—'}
                         </span>
                       </button>
                     )
-                  })
+                    })}
+                  </>
                 )}
               </div>
             </div>

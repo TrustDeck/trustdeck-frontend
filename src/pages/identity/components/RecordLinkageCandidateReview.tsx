@@ -36,7 +36,7 @@ type LeafDescriptor = {
 type MergeChoice = 'candidate' | 'original' | 'both'
 
 function entityId(candidate: RecordLinkageCandidate | undefined): string {
-  const entity = candidate?.entityInstance
+  const entity = candidate?.entity
   return String(
     entity?.trustdeckID ??
       entity?.trustdeckId ??
@@ -169,7 +169,7 @@ export default function RecordLinkageCandidateReview({
   const candidate = candidates[candidateIndex]
   const candidateData = useMemo(
     () =>
-      (candidate?.entityInstance?.data ?? {}) as Record<string, any>,
+      (candidate?.entity?.data ?? {}) as Record<string, any>,
     [candidate]
   )
   const deletedCandidate = candidate
@@ -340,7 +340,7 @@ export default function RecordLinkageCandidateReview({
           </h3>
           <DynamicEntity
             entity={{
-              ...candidate.entityInstance,
+              ...candidate.entity,
               data: mergedData
             }}
             schemaAttributes={schemaAttributes}

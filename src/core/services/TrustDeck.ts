@@ -87,8 +87,8 @@ export type EntityTypePayload = {
   projectName?: string
 }
 
-/** Defines an entity instance payload sent to the API. */
-export type EntityInstancePayload = {
+/** Defines an entity payload sent to the API. */
+export type EntityPayload = {
   data: unknown
 }
 
@@ -101,7 +101,7 @@ export type EntityCreationResult<T = Record<string, any>> = {
 export type RecordLinkageCreationResolution = 'CREATE_ORIGINAL'
 
 export type RecordLinkageCandidate = {
-  entityInstance: Record<string, any>
+  entity: Record<string, any>
   score: number
   normalizedScore: number
   matchedOn?: string[]

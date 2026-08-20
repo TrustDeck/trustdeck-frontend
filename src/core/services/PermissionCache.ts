@@ -227,7 +227,7 @@ function hasPrivilegedRole(roles: string[]) {
 
 const ACTION_SCOPES = [
   'base-type',
-  'instance',
+  'entity',
   'project',
   'pseudonym',
   'domain',

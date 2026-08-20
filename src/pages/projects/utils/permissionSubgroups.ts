@@ -16,7 +16,7 @@
  */
 
 /** Orders project permissions for display. */
-export const PROJECT_SUBGROUP_ORDER = ['project', 'image', 'type', 'instance'] as const
+export const PROJECT_SUBGROUP_ORDER = ['project', 'image', 'type', 'entity'] as const
 /** Represents a project permission display subgroup. */
 export type ProjectSubgroup = (typeof PROJECT_SUBGROUP_ORDER)[number]
 
@@ -25,7 +25,7 @@ export const PROJECT_SUBGROUP_LABELS: Record<ProjectSubgroup, string> = {
   project: 'Project',
   image: 'Image',
   type: 'Type',
-  instance: 'Entities'
+  entity: 'Entities'
 }
 
 /** Orders domain permissions for display. */
@@ -46,7 +46,7 @@ export function projectPermissionSubgroup(action: string): ProjectSubgroup {
   const firstSeg = a.split(/[:-]/)[0] ?? ''
   if (firstSeg === 'image' || a.startsWith('image')) return 'image'
   if (firstSeg === 'type' || a.startsWith('type')) return 'type'
-  if (firstSeg === 'instance' || a.startsWith('instance')) return 'instance'
+  if (firstSeg === 'entity' || a.startsWith('entity')) return 'entity'
   if (firstSeg === 'project' || a.startsWith('project')) return 'project'
   return 'project'
 }

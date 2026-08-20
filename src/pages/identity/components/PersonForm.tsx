@@ -108,7 +108,7 @@ export default function PersonForm() {
             setNewEntry(payload.data as any)
             setDuplicates(
               candidates.map((candidate) => {
-                const instance = candidate.entityInstance ?? {}
+                const instance = candidate.entity ?? {}
                 const trustdeckID =
                   instance.trustdeckID ??
                   instance.trustdeckId ??

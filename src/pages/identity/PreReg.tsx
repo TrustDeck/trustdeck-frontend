@@ -42,7 +42,7 @@ import {
 
 type ModalMode = 'view' | 'create' | 'edit'
 
-type EntityInstance = Record<string, any>
+type Entity = Record<string, any>
 
 function parseTypeDefinition(typeDefinition: unknown): any {
   if (typeof typeDefinition !== 'string')
@@ -71,7 +71,7 @@ function asTypeDefinition(
   }
 }
 
-function entityId(entity: EntityInstance | null | undefined) {
+function entityId(entity: Entity | null | undefined) {
   if (!entity) return ''
   return String(
     entity.trustdeckID ??
@@ -89,7 +89,7 @@ function parseRecordLinkageCandidates(body: string): RecordLinkageCandidate[] {
     const parsed = JSON.parse(body)
     return Array.isArray(parsed)
       ? parsed.filter((candidate): candidate is RecordLinkageCandidate =>
-          Boolean(candidate?.entityInstance)
+          Boolean(candidate?.entity)
         )
       : []
   } catch {
@@ -107,7 +107,7 @@ function permissionActionValue(permission: Record<string, any>) {
   ).toLowerCase()
 }
 
-function hasInstancePermissionEvidence(
+function hasEntityPermissionEvidence(
   access: CachedUserAccess | null | undefined
 ) {
   if (!access) return false
@@ -115,7 +115,7 @@ function hasInstancePermissionEvidence(
   const hasRelevantRole = (access.roles ?? []).some((role) => {
     const normalized = String(role).toLowerCase()
     return (
-      normalized.includes('instance') ||
+      normalized.includes('entity') ||
       normalized.includes('trustdeck-admin') ||
       normalized.includes('project-admin') ||
       normalized === 'admin' ||
@@ -137,7 +137,7 @@ function hasInstancePermissionEvidence(
         ''
     ).toLowerCase()
     return (
-      action.includes('instance') ||
+      action.includes('entity') ||
       action === '*' ||
       action === 'all' ||
       action.includes('crud') ||
@@ -642,7 +642,7 @@ export default function PreReg() {
   const [typeSearchQuery, setTypeSearchQuery] = useState('')
   const [loadingTypes, setLoadingTypes] = useState(true)
   const [loadingInstances, setLoadingInstances] = useState(false)
-  const [instances, setInstances] = useState<EntityInstance[]>([])
+  const [instances, setInstances] = useState<Entity[]>([])
   const [hasSearchedInstances, setHasSearchedInstances] = useState(false)
   const [query, setQuery] = useState('')
   const [resultLimit, setResultLimit] = useState(10)
@@ -657,7 +657,7 @@ export default function PreReg() {
   const [modalMode, setModalMode] = useState<ModalMode>('view')
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedInstance, setSelectedInstance] =
-    useState<EntityInstance | null>(null)
+    useState<Entity | null>(null)
   const [linkedPseudonym, setLinkedPseudonym] = useState<Pseudonym | null>(
     null
   )
@@ -777,53 +777,53 @@ export default function PreReg() {
     [backendDeniedActions]
   )
 
-  const permissionEvidenceAvailable = hasInstancePermissionEvidence(
+  const permissionEvidenceAvailable = hasEntityPermissionEvidence(
     effectivePermissionAccess
   )
   const canSearchByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
-    'instance:search'
+    'entity:search'
   )
   const canSearchInstances =
     permissionsReady &&
-    !isBackendDenied('instance:search') &&
+    !isBackendDenied('entity:search') &&
     (canSearchByPermission || !permissionEvidenceAvailable)
   const canCreateByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
-    'instance:create'
+    'entity:create'
   )
   const canCreateInstances =
     permissionsReady &&
-    !isBackendDenied('instance:create') &&
+    !isBackendDenied('entity:create') &&
     (canCreateByPermission || !permissionEvidenceAvailable)
   const canReadByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
-    'instance:read'
+    'entity:read'
   )
   const canReadInstances =
     permissionsReady &&
-    !isBackendDenied('instance:read') &&
+    !isBackendDenied('entity:read') &&
     (canReadByPermission || canSearchInstances || !permissionEvidenceAvailable)
   const canUpdateByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
-    'instance:update'
+    'entity:update'
   )
   const canUpdateInstances =
     permissionsReady &&
-    !isBackendDenied('instance:update') &&
+    !isBackendDenied('entity:update') &&
     (canUpdateByPermission || !permissionEvidenceAvailable)
   const canDeleteByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
-    'instance:delete'
+    'entity:delete'
   )
   const canDeleteInstances =
     permissionsReady &&
-    !isBackendDenied('instance:delete') &&
+    !isBackendDenied('entity:delete') &&
     (canDeleteByPermission || !permissionEvidenceAvailable)
   const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
 
@@ -888,7 +888,7 @@ export default function PreReg() {
   ])
 
   const normalizeInstance = useCallback(
-    (entry: any): EntityInstance => {
+    (entry: any): Entity => {
       const data =
         entry?.data && typeof entry.data === 'object'
           ? entry.data
@@ -904,7 +904,7 @@ export default function PreReg() {
   )
 
   const attachPseudonymLinks = useCallback(
-    async (instance: EntityInstance) => {
+    async (instance: Entity) => {
       const identifier = entityId(instance)
       if (!selectedTypeName || !identifier) return instance
 
@@ -957,7 +957,7 @@ export default function PreReg() {
         setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
       } catch (error) {
         if (error instanceof TrustDeckHttpError && error.status === 403) {
-          markBackendDenied('instance:search')
+          markBackendDenied('entity:search')
           setInstances([])
           showToast({
             severity: 'warn',
@@ -1040,7 +1040,7 @@ export default function PreReg() {
     })
   }
 
-  const openViewModal = async (instance: EntityInstance) => {
+  const openViewModal = async (instance: Entity) => {
     if (!canReadInstances) {
       showToast({
         severity: 'warn',
@@ -1061,7 +1061,7 @@ export default function PreReg() {
     setSelectedInstance(enrichedInstance)
   }
 
-  const openEditModal = async (instance: EntityInstance) => {
+  const openEditModal = async (instance: Entity) => {
     if (!canUpdateInstances) {
       showToast({
         severity: 'warn',
@@ -1172,7 +1172,7 @@ export default function PreReg() {
   }
 
   const showResolvedEntity = async (
-    rawEntity: EntityInstance,
+    rawEntity: Entity,
     fallbackData: Record<string, any>,
     successMessage: string
   ) => {
@@ -1204,12 +1204,12 @@ export default function PreReg() {
   const handleUseLinkageCandidate = async (
     candidate: RecordLinkageCandidate
   ) => {
-    if (!candidate?.entityInstance) return
+    if (!candidate?.entity) return
     setSaving(true)
     try {
       await showResolvedEntity(
-        candidate.entityInstance,
-        candidate.entityInstance.data ?? {},
+        candidate.entity,
+        candidate.entity.data ?? {},
         t('identity:crud.candidateSelectedSuccess')
       )
     } finally {
@@ -1247,7 +1247,7 @@ export default function PreReg() {
         return
       }
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        markBackendDenied('instance:create')
+        markBackendDenied('entity:create')
       }
       console.error('Failed to create the original entity after linkage review', error)
       showToast({
@@ -1269,7 +1269,7 @@ export default function PreReg() {
     mergedData: Record<string, any>
   ) => {
     if (!selectedTypeName || !canUpdateInstances) return
-    const identifier = entityId(candidate.entityInstance)
+    const identifier = entityId(candidate.entity)
     if (!identifier) return
     const dataToSave = prepareEntityData(mergedData)
     if (!dataToSave) return
@@ -1282,7 +1282,7 @@ export default function PreReg() {
         identifier
       )
       const updated = {
-        ...candidate.entityInstance,
+        ...candidate.entity,
         ...(response && typeof response === 'object' ? response : {}),
         data: (response as any)?.data ?? dataToSave
       }
@@ -1293,7 +1293,7 @@ export default function PreReg() {
       )
     } catch (error) {
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        markBackendDenied('instance:update')
+        markBackendDenied('entity:update')
         showToast({
           severity: 'warn',
           summary: t('identity:crud.update'),
@@ -1404,7 +1404,7 @@ export default function PreReg() {
 
       if (error instanceof TrustDeckHttpError && error.status === 403) {
         markBackendDenied(
-          modalMode === 'create' ? 'instance:create' : 'instance:update'
+          modalMode === 'create' ? 'entity:create' : 'entity:update'
         )
         showToast({
           severity: 'warn',
@@ -1464,7 +1464,7 @@ export default function PreReg() {
       })
     } catch (error) {
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        markBackendDenied('instance:delete')
+        markBackendDenied('entity:delete')
         showToast({
           severity: 'warn',
           summary: t('identity:crud.delete'),

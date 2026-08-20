@@ -182,6 +182,9 @@ function privilegedRole(roles: string[]) {
 function formatPermissionAction(action: string) {
   return action
     .replace(/[_:.-]+/g, ' ')
+    .replace(/\binstances?\b/gi, (term) =>
+      term.toLowerCase() === 'instances' ? 'entities' : 'entity'
+    )
     .replace(/\b\w/g, (character) => character.toUpperCase())
 }
 

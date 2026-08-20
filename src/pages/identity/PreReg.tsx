@@ -690,6 +690,14 @@ export default function PreReg() {
     )
   }, [typeDefinitions, typeSearchQuery])
 
+  const visibleTypeDefinitions = useMemo(
+    () =>
+      typeSearchQuery.trim()
+        ? filteredTypeDefinitions
+        : filteredTypeDefinitions.slice(0, 5),
+    [filteredTypeDefinitions, typeSearchQuery]
+  )
+
   const selectedSchemaAttributes = useMemo(() => {
     const definition = parseTypeDefinition(selectedType?.typeDefinition)
     return Array.isArray(definition?.attributes) ? definition.attributes : []
@@ -1558,7 +1566,7 @@ export default function PreReg() {
                     {t('identity:crud.noEntityTypesMatch')}
                   </p>
                 ) : (
-                  filteredTypeDefinitions.map((type) => {
+                  visibleTypeDefinitions.map((type) => {
                     const selected = type.name === selectedTypeName
                     return (
                       <button

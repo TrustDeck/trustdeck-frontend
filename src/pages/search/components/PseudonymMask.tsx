@@ -119,7 +119,6 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
         const initialResults = results
           .map((entry) => ({ ...entry, domainName: entry.domainName || domain }))
           .sort((left, right) => String(left.psn ?? '').localeCompare(String(right.psn ?? '')))
-          .slice(0, 5)
         clearSelectedResult()
         setResults(initialResults)
       })

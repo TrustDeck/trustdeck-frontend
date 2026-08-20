@@ -198,7 +198,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     const key = `${selectedProject.abbreviation}:${selectedType}`
     if (defaultResultKey.current === key) return
     defaultResultKey.current = key
-    void runEntitySearch('*', 5)
+    void runEntitySearch('*')
   }, [inlineResults, psn, selectedProject?.abbreviation, selectedType])
 
   const entityDropdownOptions = entities.map((entity) => ({

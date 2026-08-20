@@ -108,12 +108,22 @@ export default function DomainSearchSelect({
 
     TrustDeck.instance()
       .searchReadableDomains('*')
-      .then((domains) => {
-        const firstDomain = [...domains].sort((left, right) =>
+      .then(async (domains) => {
+        const defaultDomains = [...domains].sort((left, right) =>
           left.name.localeCompare(right.name)
-        )[0]
+        )
+        const firstDomain = defaultDomains[0]
         if (!firstDomain) return
-        domainCache.current.set(firstDomain.name, firstDomain)
+        defaultDomains.slice(0, 5).forEach((domain) =>
+          domainCache.current.set(domain.name, domain)
+        )
+        const initialResults = await Promise.all(
+          defaultDomains.slice(0, 5).map(async (domain) => ({
+            domain,
+            hierarchy: await resolveHierarchy(domain, domainCache.current)
+          }))
+        )
+        setResults(initialResults)
         onChange(firstDomain.name)
       })
       .catch((searchError) => {

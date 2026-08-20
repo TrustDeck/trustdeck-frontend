@@ -6,7 +6,6 @@ import { StepperPanel } from 'primereact/stepperpanel'
 import {
   ArrowLeftIcon,
   IdentificationIcon,
-  PlusIcon,
   UserIcon
 } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
@@ -52,6 +51,7 @@ type StandalonePseudonymForm = {
 }
 
 type GenerationMode = 'choice' | 'entity' | 'standalone' | null
+type ManagementTab = 'search' | 'add'
 
 function findGroupKeyByName(nodes: any[] | null, groupName: string): string {
   if (!nodes || !groupName) return ''
@@ -156,6 +156,7 @@ export default function SearchPsn() {
   } = usePseudonymStore()
 
   const [generationMode, setGenerationMode] = useState<GenerationMode>(null)
+  const [managementTab, setManagementTab] = useState<ManagementTab>('search')
   const [viewedEntity, setViewedEntity] = useState<any | null>(null)
   const [entityCreating, setEntityCreating] = useState(false)
   const [entityError, setEntityError] = useState('')
@@ -257,6 +258,7 @@ export default function SearchPsn() {
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
     setGenerationMode(null)
+    setManagementTab('search')
   }
 
   const showCreatedPseudonym = async (
@@ -419,27 +421,45 @@ export default function SearchPsn() {
 
         <div ref={searchPanelRef}>
           <Panel noMaxWidth className="mx-auto w-full">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="td-panel-title !mb-0">
-                  {t('pseudonyms:management.searchTitle')}
-                </h2>
-                <p className="td-section-subtitle mt-1">
+            <div className="mb-5 flex flex-wrap items-center gap-2 text-lg font-medium text-gray-700 dark:text-gray-200">
+              <button
+                type="button"
+                onClick={() => setManagementTab('search')}
+                className={`rounded-md px-3 py-1 transition-colors ${
+                  managementTab === 'search'
+                    ? 'bg-color-blue font-bold text-white shadow-sm'
+                    : 'search-toggle-unselected bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {t('pseudonyms:management.searchTitle')}
+              </button>
+              <span>/</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setGenerationMode('choice')
+                  setManagementTab('add')
+                }}
+                className={`rounded-md px-3 py-1 transition-colors ${
+                  managementTab === 'add'
+                    ? 'bg-color-blue font-bold text-white shadow-sm'
+                    : 'search-toggle-unselected bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {t('pseudonyms:management.addPseudonym')}
+              </button>
+            </div>
+            {managementTab === 'search' && (
+              <>
+                <p className="td-section-subtitle mb-5">
                   {t('pseudonyms:management.searchDescription')}
                 </p>
-              </div>
-              <PrimaryButton
-                label={t('pseudonyms:management.addPseudonym')}
-                icon={<PlusIcon className="mr-1 h-5 w-5" />}
-                onClick={() => setGenerationMode('choice')}
-              />
-            </div>
-            <PseudonymMask inlineResults showDomainSelector={false} />
-          </Panel>
-        </div>
+                <PseudonymMask inlineResults showDomainSelector={false} />
+              </>
+            )}
 
-        {generationMode && (
-          <Panel noMaxWidth className="mx-auto w-full">
+            {managementTab === 'add' && generationMode && (
+          <div>
             <div className="mb-5">
               <h2 className="td-panel-title !mb-0">
                 {t('pseudonyms:management.addPseudonym')}
@@ -777,8 +797,10 @@ export default function SearchPsn() {
                 </div>
               </div>
             )}
+          </div>
+            )}
           </Panel>
-        )}
+        </div>
       </div>
 
       <Dialog

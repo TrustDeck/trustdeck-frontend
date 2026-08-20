@@ -9,7 +9,6 @@ import {
   EyeIcon,
   MagnifyingGlassIcon,
   PencilSquareIcon,
-  PlusIcon,
   TrashIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline'
@@ -655,6 +654,7 @@ export default function PreReg() {
   const [backendDeniedActions, setBackendDeniedActions] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<ModalMode>('view')
+  const [managementTab, setManagementTab] = useState<'search' | 'add'>('search')
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [selectedInstance, setSelectedInstance] =
     useState<Entity | null>(null)
@@ -1012,6 +1012,7 @@ export default function PreReg() {
     setLinkageCandidates([])
     setLinkageOriginalData({})
     setModalOpen(false)
+    setManagementTab('search')
     setQuery('')
   }, [selectedTypeName])
 
@@ -1032,6 +1033,7 @@ export default function PreReg() {
     setLinkageOriginalData({})
     setFormData(buildInitialEntityData(selectedSchemaAttributes))
     setModalOpen(true)
+    setManagementTab('add')
     window.requestAnimationFrame(() => {
       createPanelRef.current?.scrollIntoView({
         behavior: 'smooth',
@@ -1094,6 +1096,7 @@ export default function PreReg() {
     setLinkedPseudonymDomain('')
     setLinkageCandidates([])
     setLinkageOriginalData({})
+    setManagementTab('search')
   }
 
   const handleFieldChange = (path: Array<string | number>, value: any) => {
@@ -1607,30 +1610,38 @@ export default function PreReg() {
 
         {selectedType && (
           <Panel noMaxWidth className="mx-auto w-full">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="td-panel-title !mb-0">
-                  {t('identity:crud.searchTitle')}
-                </h2>
-                <p className="td-section-subtitle mt-1">
-                  {t('identity:crud.searchDescription', {
-                    type: selectedType.name
-                  })}
-                </p>
-              </div>
-              <PrimaryButton
-                label={t('identity:crud.addEntity')}
+            <div className="mb-5 flex flex-wrap items-center gap-2 text-lg font-medium text-gray-700 dark:text-gray-200">
+              <button
+                type="button"
+                onClick={() => setManagementTab('search')}
+                className={`rounded-md px-3 py-1 transition-colors ${
+                  managementTab === 'search'
+                    ? 'bg-color-blue font-bold text-white shadow-sm'
+                    : 'search-toggle-unselected bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {t('identity:crud.searchTitle')}
+              </button>
+              <span>/</span>
+              <button
+                type="button"
                 onClick={openCreateModal}
-                icon={<PlusIcon className="mr-1 h-5 w-5" />}
                 disabled={!canCreateInstances}
-                tooltip={
+                title={
                   !canCreateInstances
                     ? t('identity:crud.noCreatePermission')
                     : undefined
                 }
-              />
+                className={`rounded-md px-3 py-1 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                  managementTab === 'add'
+                    ? 'bg-color-blue font-bold text-white shadow-sm'
+                    : 'search-toggle-unselected bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {t('identity:crud.addEntity')}
+              </button>
             </div>
-            <div className="flex flex-col gap-4">
+            {managementTab === 'search' && <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
                 <input
                   id="identity-entity-instance-search"
@@ -2002,11 +2013,9 @@ export default function PreReg() {
                   </label>
                 </div>
               )}
-            </div>
-          </Panel>
-        )}
+            </div>}
 
-        {modalOpen && modalMode === 'create' && (
+        {managementTab === 'add' && modalOpen && modalMode === 'create' && (
           <div ref={createPanelRef}>
             <Panel noMaxWidth className="mx-auto w-full" title={modalTitle}>
               <div className="flex flex-col gap-4">
@@ -2070,6 +2079,8 @@ export default function PreReg() {
               </div>
             </Panel>
           </div>
+        )}
+          </Panel>
         )}
       </div>
 

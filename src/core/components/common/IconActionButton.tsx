@@ -34,7 +34,7 @@ export default function IconActionButton({
       title={title}
       onClick={handleClick}
       disabled={disabled}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-950 ${colorClasses}`}
+      className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-2 bg-white transition disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-950 ${colorClasses}`}
     >
       {children}
     </button>

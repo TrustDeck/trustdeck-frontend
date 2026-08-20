@@ -60,6 +60,7 @@
     "secondaryTitle": "Sekundärpseudonym erstellen",
     "secondaryDescription": "Verwenden Sie ein bestehendes Pseudonym als Kennung für ein neues Pseudonym.",
     "secondaryFormDescription": "Das Quellpseudonym wird als feste Kennung für dieses Sekundärpseudonym verwendet.",
+    "secondaryIdTypeHint": "Verwenden Sie nach Möglichkeit <Quell-Domäne>_PSN als ID-Typ.",
     "addPseudonym": "Pseudonym hinzufügen"
   },
   "entityFlow": {

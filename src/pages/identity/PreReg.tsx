@@ -1728,7 +1728,7 @@ export default function PreReg() {
                             {resolveLabel(attr, i18n.language)}
                           </th>
                         ))}
-                        <th className="w-36 px-4 py-3 text-right font-semibold">
+                        <th className="w-56 px-4 py-3 text-right font-semibold">
                           {t('identity:crud.actions')}
                         </th>
                       </tr>

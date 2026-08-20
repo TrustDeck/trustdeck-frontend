@@ -314,7 +314,7 @@ export function InlineEntityResults({
                     {t('entitySummary')}
                   </th>
                 )}
-                <th className="w-40 px-5 py-3 text-right text-base font-semibold">
+                <th className="w-60 px-5 py-3 text-right text-base font-semibold">
                   {t('actions')}
                 </th>
               </tr>
@@ -584,7 +584,7 @@ export function InlinePseudonymResults({
                 <th className="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.group')}
                 </th>
-                <th className="w-40 whitespace-nowrap px-5 py-3 text-right text-base font-semibold">
+                <th className="w-60 whitespace-nowrap px-5 py-3 text-right text-base font-semibold">
                   {t('actions')}
                 </th>
               </tr>

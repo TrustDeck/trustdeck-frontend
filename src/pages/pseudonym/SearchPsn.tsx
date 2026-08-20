@@ -673,7 +673,7 @@ export default function SearchPsn() {
                         </p>
                       )}
 
-                      <div className="flex flex-wrap gap-3 pt-2">
+                      <div className="flex flex-wrap justify-center gap-3 pt-2">
                         <PrimaryButton
                           label={t('pseudonyms:buttons.create')}
                           onClick={handleEntityPseudonymCreate}
@@ -738,7 +738,6 @@ export default function SearchPsn() {
                         identifier: event.target.value
                       }))
                       }
-                      readOnly={generationMode === 'secondary'}
                       required
                   />
                   <CustomFloatLabel
@@ -751,7 +750,12 @@ export default function SearchPsn() {
                         idType: event.target.value
                       }))
                       }
-                      readOnly={generationMode === 'secondary'}
+                      helpText={
+                        generationMode === 'secondary'
+                          ? t('pseudonyms:management.secondaryIdTypeHint')
+                          : undefined
+                      }
+                      helpIconInside={generationMode === 'secondary'}
                       required
                   />
                 </div>
@@ -856,7 +860,7 @@ export default function SearchPsn() {
                   </p>
                 )}
 
-                <div className="flex flex-wrap gap-3 pt-2">
+                <div className="flex flex-wrap justify-center gap-3 pt-2">
                   <PrimaryButton
                     label={t('pseudonyms:buttons.create')}
                     onClick={handleStandaloneCreate}

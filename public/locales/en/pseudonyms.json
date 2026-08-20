@@ -60,6 +60,7 @@
     "secondaryTitle": "Create secondary pseudonym",
     "secondaryDescription": "Use an existing pseudonym as the identifier for a new pseudonym.",
     "secondaryFormDescription": "The source pseudonym is used as the fixed identifier for this secondary pseudonym.",
+    "secondaryIdTypeHint": "Use <source-domain>_PSN as the ID Type whenever possible.",
     "addPseudonym": "Add pseudonym"
   },
   "entityFlow": {

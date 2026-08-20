@@ -157,7 +157,7 @@ export default function SearchPsn() {
   const {
     setPseudonymValue,
     setResults: setPseudonymResults,
-    selectResult: selectPseudonymResult,
+    clearSelectedResult,
     clearResults: clearPseudonymResults
   } = usePseudonymStore()
 
@@ -345,8 +345,9 @@ export default function SearchPsn() {
     setPseudonymGroup(normalized.domainName)
     setPseudonymValue(normalized)
     setPseudonymResults([normalized])
-    selectPseudonymResult(normalized.domainName, normalized.psn, false)
+    clearSelectedResult()
     setGenerationMode(null)
+    setManagementTab('search')
 
     window.requestAnimationFrame(() => {
       searchPanelRef.current?.scrollIntoView({

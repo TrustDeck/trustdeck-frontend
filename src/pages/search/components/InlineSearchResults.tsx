@@ -332,10 +332,10 @@ export function InlineEntityResults({
                         : 'bg-gray-50/80 dark:bg-slate-800/45'
                     }`}
                   >
-                    <td className="px-4 py-4 text-center text-base font-semibold text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-4 text-center text-base text-gray-600 dark:text-gray-300">
                       {pageStart + resultIndex + 1}
                     </td>
-                    <td className="break-all px-5 py-4 font-mono text-lg font-semibold">
+                    <td className="break-all px-5 py-4 font-mono text-base">
                       {identifier || '—'}
                     </td>
                     {summaryAttributes.map((attribute) => (
@@ -600,10 +600,10 @@ export function InlinePseudonymResults({
                         : 'bg-gray-50/80 dark:bg-slate-800/45'
                     }`}
                   >
-                    <td className="px-4 py-4 text-center text-base font-semibold text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-4 text-center text-base text-gray-600 dark:text-gray-300">
                       {pageStart + resultIndex + 1}
                     </td>
-                    <td className="break-all px-5 py-4 font-mono text-lg font-normal">
+                    <td className="break-all px-5 py-4 font-mono text-base">
                       {result.psn || '—'}
                     </td>
                     <td className="break-all px-5 py-4 text-base">

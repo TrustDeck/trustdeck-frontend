@@ -527,14 +527,24 @@ function removeBaseAttributes(
 }
 
 function flattenDomainsForOptions(
-  domains: any[]
+  domains: any[],
+  projectAbbreviation?: string
 ): { label: string; value: string }[] {
   const seen = new Set<string>()
   const out: { label: string; value: string }[] = []
   const visit = (node: any) => {
     const domain = node?.domain ?? node
     const name = domain?.name ?? node?.name ?? node?.label
-    if (typeof name === 'string' && name.trim() && !seen.has(name)) {
+    const belongsToProject =
+      !projectAbbreviation ||
+      String(domain?.projectAbbreviation ?? '').toLowerCase() ===
+        projectAbbreviation.toLowerCase()
+    if (
+      belongsToProject &&
+      typeof name === 'string' &&
+      name.trim() &&
+      !seen.has(name)
+    ) {
       seen.add(name)
       out.push({ label: name, value: name })
     }
@@ -559,20 +569,21 @@ function mergeOptionLists(
 }
 
 async function loadAllGroupOptions(
+  projectAbbreviation?: string,
   fallback: { label: string; value: string }[] = []
 ): Promise<{ label: string; value: string }[]> {
   const loaded: Array<{ label: string; value: string }[]> = []
 
   try {
     const domains = await TrustDeck.instance().searchReadableDomains('*')
-    loaded.push(flattenDomainsForOptions(domains ?? []))
+    loaded.push(flattenDomainsForOptions(domains ?? [], projectAbbreviation))
   } catch {
     // Search access may be restricted. Fall back to hierarchy and existing options.
   }
 
   try {
     const hierarchy = await TrustDeck.instance().getDomainsHierarchy()
-    loaded.push(flattenDomainsForOptions(hierarchy ?? []))
+    loaded.push(flattenDomainsForOptions(hierarchy ?? [], projectAbbreviation))
   } catch {
     // Hierarchy access may be restricted as well. Existing options are still useful.
   }
@@ -889,6 +900,7 @@ export default function Builder({
   const navigate = useNavigate()
   const showToast = useToastStore((state) => state.show)
   const setProjectEntities = useProjectStore((state) => state.setEntities)
+  const selectedProject = useProjectStore((state) => state.selectedProject)
   const typeOptions = useMemo(
     () =>
       typeOptionDefinitions.map((option) => ({
@@ -1053,7 +1065,7 @@ export default function Builder({
 
     let active = true
     setGroupSearchLoading(true)
-    loadAllGroupOptions()
+    loadAllGroupOptions(selectedProject?.abbreviation)
       .then((options) => {
         if (!active) return
         setAllGroupOptions(options)
@@ -1071,7 +1083,7 @@ export default function Builder({
     return () => {
       active = false
     }
-  }, [saveTarget])
+  }, [saveTarget, selectedProject?.abbreviation])
 
   useEffect(() => {
     if (saveTarget !== 'project') return
@@ -1086,7 +1098,10 @@ export default function Builder({
       try {
         const query = associatedGroupName.trim() || '*'
         const domains = await TrustDeck.instance().searchReadableDomains(query)
-        const backendMatches = flattenDomainsForOptions(domains ?? [])
+        const backendMatches = flattenDomainsForOptions(
+          domains ?? [],
+          selectedProject?.abbreviation
+        )
         if (active) {
           setGroupOptions(mergeOptionLists(backendMatches, localMatches))
         }
@@ -1101,7 +1116,12 @@ export default function Builder({
       active = false
       window.clearTimeout(handle)
     }
-  }, [allGroupOptions, associatedGroupName, saveTarget])
+  }, [
+    allGroupOptions,
+    associatedGroupName,
+    saveTarget,
+    selectedProject?.abbreviation
+  ])
 
   useEffect(() => {
     let active = true

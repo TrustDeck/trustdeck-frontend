@@ -610,6 +610,7 @@ export default function PermissionManagement({
 
       const currentProjectAssigned = new Set<string>()
       const allAssigned = new Set<string>()
+      const readableProjectDomains = new Set<string>()
 
       try {
         const entityTypes = await TrustDeck.instance().getProjectEntities(
@@ -685,13 +686,19 @@ export default function PermissionManagement({
         const readableDomains = await TrustDeck.instance().searchReadableDomains('*')
         readableDomains.forEach((domain) => {
           const domainName = String(domain?.name ?? '').trim()
-          if (domainName) resolved.add(domainName)
+          const belongsToProject =
+            String(domain?.projectAbbreviation ?? '').toLowerCase() ===
+            selectedProject.abbreviation.toLowerCase()
+          if (domainName && belongsToProject) {
+            resolved.add(domainName)
+            readableProjectDomains.add(domainName)
+          }
         })
       } catch (error) {
         console.warn('Could not load readable pseudonym domains', error)
       }
 
-      if (active) setPermissionDomainNames(resolved)
+      if (active) setPermissionDomainNames(readableProjectDomains)
     }
 
     void loadPermissionDomains()

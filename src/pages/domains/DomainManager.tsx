@@ -531,7 +531,7 @@ export default function DomainManager() {
     if (items.length === 0) {
       return (
         <tr>
-          <td className="px-5 py-4 text-base text-gray-500" colSpan={5}>
+          <td className="px-5 py-4 text-base text-gray-500" colSpan={4}>
             {t('groups:crud.noGroupsInSection')}
           </td>
         </tr>
@@ -561,7 +561,6 @@ export default function DomainManager() {
         </td>
         <td className="px-5 py-4">{group.prefix ?? '-'}</td>
         <td className="px-5 py-4">{group.superDomainName ?? '-'}</td>
-        <td className="px-5 py-4">{group.projectAbbreviation ?? '-'}</td>
         <td className="px-5 py-4">
           <div className="flex justify-end gap-2">
             <IconActionButton
@@ -754,9 +753,6 @@ export default function DomainManager() {
                         </th>
                         <th className="px-5 py-4">
                           {t('groups:crud.table.parent')}
-                        </th>
-                        <th className="px-5 py-4">
-                          {t('groups:crud.table.project')}
                         </th>
                         <th className="px-5 py-4 text-right">
                           {t('groups:crud.table.actions')}

@@ -188,65 +188,6 @@ function formatPermissionAction(action: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase())
 }
 
-function nodeDomainName(node: any): string {
-  return String(
-    node?.domain?.name ??
-      node?.name ??
-      node?.label ??
-      node?.data?.name ??
-      node?.data?.raw?.name ??
-      ''
-  ).trim()
-}
-
-function collectProjectDomainNames(
-  nodes: any[],
-  projectAbbreviation: string,
-  output: Set<string>
-) {
-  const project = projectAbbreviation.toLowerCase()
-  nodes.forEach((node) => {
-    const domain = node?.domain ?? node?.data?.raw ?? node
-    const name = String(domain?.name ?? node?.label ?? '').trim()
-    if (
-      name &&
-      String(domain?.projectAbbreviation ?? '').toLowerCase() === project
-    ) {
-      output.add(name)
-    }
-    if (Array.isArray(node?.children)) {
-      collectProjectDomainNames(node.children, projectAbbreviation, output)
-    }
-  })
-}
-
-function collectAssignedDomainHierarchy(
-  nodes: any[],
-  assigned: Set<string>,
-  output: Set<string>,
-  ancestors: string[] = []
-): boolean {
-  let containsAssigned = false
-
-  nodes.forEach((node) => {
-    const name = nodeDomainName(node)
-    const path = name ? [...ancestors, name] : ancestors
-    const childContains = collectAssignedDomainHierarchy(
-      Array.isArray(node?.children) ? node.children : [],
-      assigned,
-      output,
-      path
-    )
-    const selected = Boolean(name && assigned.has(name))
-    if (selected || childContains) {
-      path.forEach((entry) => output.add(entry))
-      containsAssigned = true
-    }
-  })
-
-  return containsAssigned
-}
-
 function scopeKey(permission: EffectivePermission) {
   return `${permission.resourceType}:${permission.resourceName ?? '*'}`
 }
@@ -630,102 +571,18 @@ export default function PermissionManagement({
         return
       }
 
-      const currentProjectAssigned = new Set<string>()
-      const allAssigned = new Set<string>()
-      const readableProjectDomains = new Set<string>()
-
       try {
-        const entityTypes = await TrustDeck.instance().getProjectEntities(
-          '*',
+        const domains = await TrustDeck.instance().getProjectDomains(
           selectedProject.abbreviation
         )
-        entityTypes.forEach((entityType: any) => {
-          const domain = String(entityType?.associatedDomainName ?? '').trim()
-          if (!domain) return
-          currentProjectAssigned.add(domain)
-          allAssigned.add(domain)
-        })
+        const names = new Set(
+          domains.map((domain) => domain.name.trim()).filter(Boolean)
+        )
+        if (active) setPermissionDomainNames(names)
       } catch (error) {
         console.warn('Could not load project pseudonym domains', error)
+        if (active) setPermissionDomainNames(new Set<string>())
       }
-
-      const resolved = new Set(currentProjectAssigned)
-      let domainHierarchy: any[] = []
-      try {
-        domainHierarchy = await TrustDeck.instance().getDomainsHierarchy()
-        collectProjectDomainNames(
-          domainHierarchy,
-          selectedProject.abbreviation,
-          readableProjectDomains
-        )
-        if (currentProjectAssigned.size > 0) {
-          collectAssignedDomainHierarchy(
-            domainHierarchy,
-            currentProjectAssigned,
-            resolved
-          )
-        }
-      } catch (error) {
-        console.warn('Could not load the pseudonym-domain hierarchy', error)
-      }
-
-      let assignmentLookupComplete = false
-      try {
-        const projects = await TrustDeck.instance().getProjects()
-        const results = await Promise.allSettled(
-          projects.map(async (project: any) => {
-            const abbreviation = String(project?.abbreviation ?? '').trim()
-            if (!abbreviation) return []
-            return TrustDeck.instance().getProjectEntities('*', abbreviation)
-          })
-        )
-
-        results.forEach((result) => {
-          if (result.status !== 'fulfilled') return
-          result.value.forEach((entityType: any) => {
-            const domain = String(entityType?.associatedDomainName ?? '').trim()
-            if (domain) allAssigned.add(domain)
-          })
-        })
-        assignmentLookupComplete = results.every(
-          (result) => result.status === 'fulfilled'
-        )
-      } catch (error) {
-        console.warn(
-          'Could not determine domain assignments across projects',
-          error
-        )
-      }
-
-      if (assignmentLookupComplete) {
-        const assignedWithAncestors = new Set(allAssigned)
-        if (domainHierarchy.length > 0 && allAssigned.size > 0) {
-          collectAssignedDomainHierarchy(
-            domainHierarchy,
-            allAssigned,
-            assignedWithAncestors
-          )
-        }
-
-      }
-
-      try {
-        const readableDomains = await TrustDeck.instance().searchReadableDomains('*')
-        readableDomains.forEach((domain) => {
-          const domainName = String(domain?.name ?? '').trim()
-          const belongsToProject =
-            String(domain?.projectAbbreviation ?? '').toLowerCase() ===
-            selectedProject.abbreviation.toLowerCase()
-          if (domainName && belongsToProject) {
-            resolved.add(domainName)
-            readableProjectDomains.add(domainName)
-          }
-        })
-      } catch (error) {
-        console.warn('Could not load readable pseudonym domains', error)
-      }
-
-      if (active) setPermissionDomainNames(readableProjectDomains)
     }
 
     void loadPermissionDomains()

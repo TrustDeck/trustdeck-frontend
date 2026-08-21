@@ -108,6 +108,12 @@ export type RecordLinkageCandidate = {
   candidateStatus?: 'ACTIVE' | 'DELETED' | string
 }
 
+export type ProjectDomain = {
+  name: string
+  projectAbbreviation: string
+  superDomainName?: string
+}
+
 export type PermissionGrant = {
   subjectId: string
   resourceType: 'DOMAIN' | 'PROJECT' | 'GLOBAL' | string
@@ -473,6 +479,14 @@ class TrustDeck {
   public async getDomainsHierarchy() {
     const response = await this.request<unknown>('GET', '/domains/hierarchy')
     return this.asArray<unknown>(response)
+  }
+
+  public async getProjectDomains(projectAbbreviation: string) {
+    const response = await this.request<unknown>(
+      'GET',
+      `/projects/${encodeURIComponent(projectAbbreviation)}/domains`
+    )
+    return this.asArray<ProjectDomain>(response)
   }
 
   public async searchReadableDomains(query = '*') {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from 'react-oidc-context'
 import {
   ArrowLeftIcon,
   ChevronDownIcon,
@@ -909,6 +910,7 @@ export default function Builder({
 }: BuilderProps = {}) {
   const { t, i18n } = useTranslation(['entityBuilder', 'common'])
   const navigate = useNavigate()
+  const auth = useAuth()
   const showToast = useToastStore((state) => state.show)
   const setProjectEntities = useProjectStore((state) => state.setEntities)
   const selectedProject = useProjectStore((state) => state.selectedProject)
@@ -1075,6 +1077,9 @@ export default function Builder({
     }
 
     let active = true
+    if (auth.user?.access_token) {
+      TrustDeck.instance().setToken(auth.user.access_token)
+    }
     setGroupSearchLoading(true)
     loadAllGroupOptions(selectedProject?.abbreviation)
       .then((options) => {
@@ -1094,13 +1099,16 @@ export default function Builder({
     return () => {
       active = false
     }
-  }, [saveTarget, selectedProject?.abbreviation])
+  }, [auth.user?.access_token, saveTarget, selectedProject?.abbreviation])
 
   useEffect(() => {
     if (saveTarget !== 'project') return
 
     let active = true
     const handle = window.setTimeout(async () => {
+      if (auth.user?.access_token) {
+        TrustDeck.instance().setToken(auth.user.access_token)
+      }
       setGroupSearchLoading(true)
       const localMatches = filterGroupOptions(
         allGroupOptions,
@@ -1134,6 +1142,7 @@ export default function Builder({
   }, [
     allGroupOptions,
     associatedGroupName,
+    auth.user?.access_token,
     saveTarget,
     selectedProject?.abbreviation
   ])

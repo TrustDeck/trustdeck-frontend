@@ -363,6 +363,9 @@ export default function DomainManager() {
   )
 
   const fetchGroups = useCallback(async () => {
+    if (auth.user?.access_token) {
+      TrustDeck.instance().setToken(auth.user.access_token)
+    }
     setIsLoading(true)
     try {
       const groupTree = await DomainService.getGroups(
@@ -387,7 +390,13 @@ export default function DomainManager() {
     } finally {
       setIsLoading(false)
     }
-  }, [selectedProject?.abbreviation, setTree, showToast, t])
+  }, [
+    auth.user?.access_token,
+    selectedProject?.abbreviation,
+    setTree,
+    showToast,
+    t
+  ])
 
   useEffect(() => {
     fetchGroups()

@@ -566,12 +566,17 @@ export default function PermissionManagement({
     let active = true
 
     async function loadPermissionDomains() {
-      if (scopeMode !== 'project-domain' || !selectedProject?.abbreviation) {
+      if (
+        scopeMode !== 'project-domain' ||
+        !selectedProject?.abbreviation ||
+        !auth.user?.access_token
+      ) {
         if (active) setPermissionDomainNames(new Set<string>())
         return
       }
 
       try {
+        TrustDeck.instance().setToken(auth.user.access_token)
         const domains = await TrustDeck.instance().getProjectDomains(
           selectedProject.abbreviation
         )
@@ -589,7 +594,7 @@ export default function PermissionManagement({
     return () => {
       active = false
     }
-  }, [scopeMode, selectedProject?.abbreviation])
+  }, [scopeMode, selectedProject?.abbreviation, auth.user?.access_token])
 
   useEffect(() => {
     let active = true

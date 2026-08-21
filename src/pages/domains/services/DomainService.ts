@@ -617,6 +617,21 @@ const filterDomainTreesByProject = (
   return trees.flatMap(filterTree)
 }
 
+const buildProjectDomainTrees = (domains: Domain[]): DomainTreeDto[] => {
+  const nodes = new Map<string, DomainTreeDto>()
+  domains.forEach((domain) => nodes.set(domain.name, { domain, children: [] }))
+
+  const roots: DomainTreeDto[] = []
+  nodes.forEach((node) => {
+    const parent = node.domain?.superDomainName
+      ? nodes.get(node.domain.superDomainName)
+      : undefined
+    if (parent) parent.children?.push(node)
+    else roots.push(node)
+  })
+  return roots
+}
+
 /** Provides domain-group operations and request/response mapping. */
 const DomainService = {
   normalizeGroup: (group: Domain, superDomainName?: string | null) =>
@@ -629,6 +644,18 @@ const DomainService = {
   ): CustomTreeNode[] => hydrateDomainInTree(trees, lookupName, group),
 
   getGroups: async (projectAbbreviation?: string): Promise<CustomTreeNode[]> => {
+    if (projectAbbreviation) {
+      try {
+        const projectDomains = await TrustDeck.instance().getProjectDomains(
+          projectAbbreviation
+        )
+        return buildProjectDomainTrees(projectDomains)
+          .map((item, index) => mapTree(item, String(index), null))
+          .filter(Boolean) as CustomTreeNode[]
+      } catch {
+        // Fall back to the generic hierarchy endpoint for older backends.
+      }
+    }
     try {
       const remoteTrees = await TrustDeck.instance().getDomainsHierarchy()
       const treeItems = filterDomainTreesByProject(
@@ -657,6 +684,13 @@ const DomainService = {
   },
 
   getReadableGroups: async (projectAbbreviation?: string): Promise<Domain[]> => {
+    if (projectAbbreviation) {
+      try {
+        return await TrustDeck.instance().getProjectDomains(projectAbbreviation)
+      } catch {
+        // Fall back to the hierarchy and readable-domain endpoints.
+      }
+    }
     try {
       const tree = await DomainService.getGroups(projectAbbreviation)
       const treeDomains = flattenTree(tree)

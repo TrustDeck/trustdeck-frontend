@@ -736,12 +736,6 @@ export default function DomainManager() {
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
                   <table className="w-full table-fixed text-base">
-                    <colgroup>
-                      <col className="w-[30%]" />
-                      <col className="w-[20%]" />
-                      <col className="w-[25%]" />
-                      <col className="w-[25%]" />
-                    </colgroup>
                     <thead className="bg-gray-50 text-left text-base font-semibold text-gray-700 dark:bg-slate-800 dark:text-gray-200">
                       <tr>
                         <th className="px-5 py-4">

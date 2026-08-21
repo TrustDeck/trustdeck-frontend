@@ -574,6 +574,17 @@ async function loadAllGroupOptions(
 ): Promise<{ label: string; value: string }[]> {
   const loaded: Array<{ label: string; value: string }[]> = []
 
+  if (projectAbbreviation) {
+    try {
+      const domains = await TrustDeck.instance().getProjectDomains(
+        projectAbbreviation
+      )
+      return mergeOptionLists(flattenDomainsForOptions(domains), fallback)
+    } catch {
+      // Fall back to generic domain sources for older backends.
+    }
+  }
+
   try {
     const domains = await TrustDeck.instance().searchReadableDomains('*')
     loaded.push(flattenDomainsForOptions(domains ?? [], projectAbbreviation))
@@ -1097,10 +1108,14 @@ export default function Builder({
       )
       try {
         const query = associatedGroupName.trim() || '*'
-        const domains = await TrustDeck.instance().searchReadableDomains(query)
-        const backendMatches = flattenDomainsForOptions(
-          domains ?? [],
-          selectedProject?.abbreviation
+        const domains = selectedProject?.abbreviation
+          ? await TrustDeck.instance().getProjectDomains(
+              selectedProject.abbreviation
+            )
+          : await TrustDeck.instance().searchReadableDomains(query)
+        const backendMatches = filterGroupOptions(
+          flattenDomainsForOptions(domains ?? [], selectedProject?.abbreviation),
+          query
         )
         if (active) {
           setGroupOptions(mergeOptionLists(backendMatches, localMatches))

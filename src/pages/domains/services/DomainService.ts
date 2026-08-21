@@ -306,7 +306,8 @@ const assignIfChanged = (
 
 /** Creates the complete request body for POST /domains/complete. */
 const mapCreateDomain = (
-  payload: GroupStoredAttributes
+  payload: GroupStoredAttributes,
+  projectAbbreviation: string
 ): Record<string, unknown> => {
   const hasParent = Boolean(
     payload.parentgroup && payload.parentgroup !== 'ROOT'
@@ -316,6 +317,7 @@ const mapCreateDomain = (
   const output: Record<string, unknown> = {
     name: payload.label,
     prefix: payload.prefix,
+    projectAbbreviation,
     ...(hasParent ? { superDomainName: payload.parentgroup } : {}),
     ...(payload.description !== undefined
       ? { description: payload.description }
@@ -357,10 +359,12 @@ const mapCreateDomain = (
 
 /** Uses the backend's documented complete-create minimum when a richer payload is rejected. */
 const mapMinimalCompleteCreateDomain = (
-  payload: GroupStoredAttributes
+  payload: GroupStoredAttributes,
+  projectAbbreviation: string
 ): Record<string, unknown> => ({
   name: payload.label,
   prefix: payload.prefix,
+  projectAbbreviation,
   ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
     ? { superDomainName: payload.parentgroup }
     : {}),
@@ -369,11 +373,13 @@ const mapMinimalCompleteCreateDomain = (
 
 /** Creates the reduced request body accepted by POST /domains. */
 const mapStandardCreateDomain = (
-  payload: GroupStoredAttributes
+  payload: GroupStoredAttributes,
+  projectAbbreviation: string
 ): Record<string, unknown> => {
   const output: Record<string, unknown> = {
     name: payload.label,
     prefix: payload.prefix,
+    projectAbbreviation,
     ...(payload.parentgroup && payload.parentgroup !== 'ROOT'
       ? { superDomainName: payload.parentgroup }
       : {}),
@@ -591,6 +597,19 @@ const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
   return output
 }
 
+/** Keeps only complete domain trees belonging to the selected project. */
+const filterDomainTreesByProject = (
+  trees: DomainTreeDto[],
+  projectAbbreviation?: string
+): DomainTreeDto[] => {
+  if (!projectAbbreviation) return trees
+  return trees.filter(
+    (tree) =>
+      tree.domain?.projectAbbreviation?.toLowerCase() ===
+      projectAbbreviation.toLowerCase()
+  )
+}
+
 /** Provides domain-group operations and request/response mapping. */
 const DomainService = {
   normalizeGroup: (group: Domain, superDomainName?: string | null) =>
@@ -602,10 +621,13 @@ const DomainService = {
     group: Domain
   ): CustomTreeNode[] => hydrateDomainInTree(trees, lookupName, group),
 
-  getGroups: async (): Promise<CustomTreeNode[]> => {
+  getGroups: async (projectAbbreviation?: string): Promise<CustomTreeNode[]> => {
     try {
       const remoteTrees = await TrustDeck.instance().getDomainsHierarchy()
-      const treeItems = Array.isArray(remoteTrees) ? remoteTrees : [remoteTrees]
+      const treeItems = filterDomainTreesByProject(
+        (Array.isArray(remoteTrees) ? remoteTrees : [remoteTrees]) as DomainTreeDto[],
+        projectAbbreviation
+      )
       const mapped = treeItems
         .map((item, index) =>
           mapTree(item as DomainTreeDto, String(index), null)
@@ -616,21 +638,31 @@ const DomainService = {
       // Fall back to the domain search endpoint when hierarchy access is unavailable.
     }
 
-    const domains = await TrustDeck.instance().searchReadableDomains('*')
+    const domains = (await TrustDeck.instance().searchReadableDomains('*')).filter(
+      (domain) =>
+        !projectAbbreviation ||
+        domain.projectAbbreviation?.toLowerCase() ===
+          projectAbbreviation.toLowerCase()
+    )
     return domains.map((domain, index) =>
       mapFlatDomainToNode(domain, String(index))
     )
   },
 
-  getReadableGroups: async (): Promise<Domain[]> => {
+  getReadableGroups: async (projectAbbreviation?: string): Promise<Domain[]> => {
     try {
-      const tree = await DomainService.getGroups()
+      const tree = await DomainService.getGroups(projectAbbreviation)
       const treeDomains = flattenTree(tree)
       if (treeDomains.length > 0) return treeDomains
     } catch {
       // Fall through to the search endpoint.
     }
-    return TrustDeck.instance().searchReadableDomains('*')
+    return (await TrustDeck.instance().searchReadableDomains('*')).filter(
+      (domain) =>
+        !projectAbbreviation ||
+        domain.projectAbbreviation?.toLowerCase() ===
+          projectAbbreviation.toLowerCase()
+    )
   },
 
   getGroup: async (groupName: string): Promise<Domain> =>
@@ -638,13 +670,14 @@ const DomainService = {
 
   createGroup: async (
     payload: GroupStoredAttributes,
+    projectAbbreviation: string,
     complete = true
   ): Promise<Domain> => {
     let created: any
     if (complete) {
       try {
         created = await TrustDeck.instance().createGroupComplete(
-          mapCreateDomain(payload)
+          mapCreateDomain(payload, projectAbbreviation)
         )
       } catch (error) {
         // Some deployed backend versions reject the rich DTO during binding.
@@ -654,12 +687,12 @@ const DomainService = {
           throw error
         }
         created = await TrustDeck.instance().createGroupComplete(
-          mapMinimalCompleteCreateDomain(payload)
+          mapMinimalCompleteCreateDomain(payload, projectAbbreviation)
         )
       }
     } else {
       created = await TrustDeck.instance().createGroup(
-        mapStandardCreateDomain(payload)
+        mapStandardCreateDomain(payload, projectAbbreviation)
       )
     }
     if (created && typeof created === 'object' && created.name) {

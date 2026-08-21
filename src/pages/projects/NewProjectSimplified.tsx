@@ -82,7 +82,8 @@ export default function NewProjectSimplified() {
 
     const defaultGroup: Record<string, unknown> = {
       name: encodeUriName(trimmedAbbreviation),
-      prefix: `${encodeUriName(trimmedAbbreviation)}-`
+      prefix: `${encodeUriName(trimmedAbbreviation)}-`,
+      projectAbbreviation: trimmedAbbreviation
     }
     if (startDate) defaultGroup.validFrom = startDate.toISOString()
     if (endDate) defaultGroup.validTo = endDate.toISOString()

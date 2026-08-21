@@ -12,6 +12,7 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 import DomainService from '../services/DomainService'
 import TrustDeck from '../../../core/services/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
+import useProjectStore from '../../../core/stores/ProjectStore'
 import type { Domain } from '../../../core/types/Domain'
 
 type EditGroupOptionProps = {
@@ -39,6 +40,7 @@ export default function EditDomainOption({
   const [isDeleting, setIsDeleting] = useState(false)
   const [showSaveAllDialog, setShowSaveAllDialog] = useState(false)
   const showToast = useToastStore((state) => state.show)
+  const selectedProject = useProjectStore((state) => state.selectedProject)
   const { t } = useTranslation(['groups', 'common'])
 
   async function handleSave() {
@@ -132,7 +134,9 @@ export default function EditDomainOption({
 
       let refreshedTree = useTreeStateStore.getState().tree
       try {
-        refreshedTree = await DomainService.getGroups()
+        refreshedTree = await DomainService.getGroups(
+          selectedProject?.abbreviation
+        )
       } catch {
         // Keep the local tree if hierarchy reloading is unavailable.
       }

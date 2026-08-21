@@ -155,7 +155,8 @@
       "name": "Name",
       "prefix": "Prefix",
       "parent": "Parent pseudonym domain",
-      "assignment": "Assignment",
+        "assignment": "Assignment",
+        "project": "Project",
       "actions": "Actions"
     },
     "createSuccessDetail": "The pseudonym domain was created successfully.",
@@ -168,6 +169,7 @@
   "details": {
     "name": "Name",
     "prefix": "Prefix",
+    "projectAbbreviation": "Project",
     "validFrom": "Valid from",
     "validFromInherited": "Valid from inherited",
     "validTo": "Valid to",

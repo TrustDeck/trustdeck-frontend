@@ -1,7 +1,7 @@
 import { Tree } from 'primereact/tree'
 import { TreeNode } from 'primereact/treenode'
 import { ProgressSpinner } from 'primereact/progressspinner'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import IconActionButton from '../../core/components/common/IconActionButton'
@@ -50,6 +50,10 @@ const algorithmInherited = (domain: Domain) =>
 const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
   { key: 'name', getValue: domainValue('name') },
   { key: 'prefix', getValue: domainValue('prefix') },
+  {
+    key: 'projectAbbreviation',
+    getValue: domainValue('projectAbbreviation')
+  },
   { key: 'superDomainName', getValue: domainValue('superDomainName') },
   { key: 'description', getValue: domainValue('description') },
   {
@@ -136,8 +140,6 @@ const DOMAIN_DETAIL_FIELDS: DomainDetailField[] = [
 ]
 
 type ViewMode = 'details' | 'edit' | 'create'
-type GroupScope = 'currentProject' | 'unassigned' | 'otherProject'
-
 function findPathToLabel(
   nodes: CustomTreeNode[],
   label: string,
@@ -242,12 +244,6 @@ export default function DomainManager() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
-  const [currentProjectGroupNames, setCurrentProjectGroupNames] = useState<
-    Set<string>
-  >(new Set())
-  const [allAssignedGroupNames, setAllAssignedGroupNames] = useState<
-    Set<string>
-  >(new Set())
 
   useEffect(() => {
     let active = true
@@ -366,68 +362,20 @@ export default function DomainManager() {
     [selectedNodeKey]
   )
 
-  const fetchAssignmentInfo = useCallback(async () => {
-    const currentProject = selectedProject?.abbreviation
-    const currentProjectGroups = new Set<string>()
-    const allProjectGroups = new Set<string>()
-
-    try {
-      if (currentProject) {
-        const projectTypes = await TrustDeck.instance().getProjectEntities(
-          '*',
-          currentProject
-        )
-        projectTypes.forEach((type) => {
-          if (type.associatedDomainName) {
-            currentProjectGroups.add(type.associatedDomainName)
-            allProjectGroups.add(type.associatedDomainName)
-          }
-        })
-      }
-    } catch (error) {
-      console.warn('Could not load project-assigned groups.', error)
-    }
-
-    try {
-      const projects = await TrustDeck.instance().getProjects()
-      await Promise.all(
-        projects.map(async (project) => {
-          const projectName = project.abbreviation
-          if (!projectName) return
-          try {
-            const projectTypes = await TrustDeck.instance().getProjectEntities(
-              '*',
-              projectName
-            )
-            projectTypes.forEach((type) => {
-              if (type.associatedDomainName) {
-                allProjectGroups.add(type.associatedDomainName)
-              }
-            })
-          } catch {
-            // Project-specific entity-type access may be restricted.
-          }
-        })
-      )
-    } catch {
-      // Project listing may be restricted.
-    }
-
-    setCurrentProjectGroupNames(currentProjectGroups)
-    setAllAssignedGroupNames(allProjectGroups)
-  }, [selectedProject?.abbreviation])
-
   const fetchGroups = useCallback(async () => {
     setIsLoading(true)
     try {
-      const groupTree = await DomainService.getGroups()
+      const groupTree = await DomainService.getGroups(
+        selectedProject?.abbreviation
+      )
       setTree(groupTree as CustomTreeNode[])
       const treeDomains = flattenTree(groupTree).flatMap((node) =>
         node.data?.raw ? [node.data.raw] : []
       )
-      const readableGroups = await DomainService.getReadableGroups()
+      const readableGroups = await DomainService.getReadableGroups(
+        selectedProject?.abbreviation
+      )
       setGroups(mergeDomains(readableGroups, treeDomains))
-      await fetchAssignmentInfo()
     } catch (error) {
       console.error('Failed to load groups.', error)
       showToast({
@@ -439,7 +387,7 @@ export default function DomainManager() {
     } finally {
       setIsLoading(false)
     }
-  }, [fetchAssignmentInfo, setTree, showToast, t])
+  }, [selectedProject?.abbreviation, setTree, showToast, t])
 
   useEffect(() => {
     fetchGroups()
@@ -579,55 +527,6 @@ export default function DomainManager() {
     }
   }
 
-  const getGroupScope = useCallback(
-    (groupName?: string): GroupScope => {
-      if (!groupName) return 'unassigned'
-      if (currentProjectGroupNames.has(groupName)) return 'currentProject'
-      if (!allAssignedGroupNames.has(groupName)) return 'unassigned'
-      return 'otherProject'
-    },
-    [allAssignedGroupNames, currentProjectGroupNames]
-  )
-
-  const groupedDomains = useMemo(() => {
-    const currentProject: Domain[] = []
-    const unassigned: Domain[] = []
-    const otherProject: Domain[] = []
-
-    groups.forEach((group) => {
-      const scope = getGroupScope(group.name)
-      if (scope === 'currentProject') currentProject.push(group)
-      else if (scope === 'unassigned') unassigned.push(group)
-      else otherProject.push(group)
-    })
-
-    return { currentProject, unassigned, otherProject }
-  }, [getGroupScope, groups])
-
-  const renderScopeBadge = (group: Domain) => {
-    const scope = getGroupScope(group.name)
-    const label =
-      scope === 'currentProject'
-        ? t('groups:crud.scopeCurrentProject')
-        : scope === 'unassigned'
-          ? t('groups:crud.scopeUnassigned')
-          : t('groups:crud.scopeOtherProject')
-    const className =
-      scope === 'currentProject'
-        ? 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-200'
-        : scope === 'unassigned'
-          ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200'
-          : 'bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-gray-200'
-
-    return (
-      <span
-        className={`rounded-full px-3 py-1 text-sm font-semibold ${className}`}
-      >
-        {label}
-      </span>
-    )
-  }
-
   const renderGroupRows = (items: Domain[]) => {
     if (items.length === 0) {
       return (
@@ -662,7 +561,7 @@ export default function DomainManager() {
         </td>
         <td className="px-5 py-4">{group.prefix ?? '-'}</td>
         <td className="px-5 py-4">{group.superDomainName ?? '-'}</td>
-        <td className="px-5 py-4">{renderScopeBadge(group)}</td>
+        <td className="px-5 py-4">{group.projectAbbreviation ?? '-'}</td>
         <td className="px-5 py-4">
           <div className="flex justify-end gap-2">
             <IconActionButton
@@ -696,20 +595,6 @@ export default function DomainManager() {
       </tr>
     ))
   }
-
-  const renderScopeSection = (title: string, items: Domain[]) => (
-    <>
-      <tr className="border-t border-gray-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
-        <th
-          colSpan={5}
-          className="px-5 py-3 text-left text-base font-bold text-blue-900 dark:text-blue-200"
-        >
-          {title}
-        </th>
-      </tr>
-      {renderGroupRows(items)}
-    </>
-  )
 
   const formatValue = (key: string, value: unknown): string => {
     if (value === null || value === undefined || value === '') return '—'
@@ -759,7 +644,9 @@ export default function DomainManager() {
               {t('groups:crud.detailSubtitle')}
             </p>
           </div>
-          {renderScopeBadge(selectedGroup)}
+          <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
+            {selectedGroup.projectAbbreviation ?? '-'}
+          </span>
         </div>
         <Divider />
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">
@@ -869,7 +756,7 @@ export default function DomainManager() {
                           {t('groups:crud.table.parent')}
                         </th>
                         <th className="px-5 py-4">
-                          {t('groups:crud.table.assignment')}
+                          {t('groups:crud.table.project')}
                         </th>
                         <th className="px-5 py-4 text-right">
                           {t('groups:crud.table.actions')}
@@ -877,19 +764,7 @@ export default function DomainManager() {
                       </tr>
                     </thead>
                     <tbody>
-                      {renderScopeSection(
-                        t('groups:crud.assignedToCurrentProject'),
-                        groupedDomains.currentProject
-                      )}
-                      {renderScopeSection(
-                        t('groups:crud.notAssignedToAnyProject'),
-                        groupedDomains.unassigned
-                      )}
-                      {groupedDomains.otherProject.length > 0 &&
-                        renderScopeSection(
-                          t('groups:crud.assignedElsewhere'),
-                          groupedDomains.otherProject
-                        )}
+                      {renderGroupRows(groups)}
                     </tbody>
                   </table>
                 </div>

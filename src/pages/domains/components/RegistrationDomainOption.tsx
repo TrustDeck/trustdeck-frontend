@@ -9,6 +9,7 @@ import DomainForm from './DomainForm'
 import { useTreeStateStore } from '../stores/TreeStateStore'
 import ConfirmDialog from '../../../core/components/common/ConfirmDialog'
 import useToastStore from '../../../core/stores/ToastStore'
+import useProjectStore from '../../../core/stores/ProjectStore'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
@@ -23,6 +24,7 @@ export default function RegistrationDomainOption({
   const { t } = useTranslation(['groups', 'common'])
   const [isCreating, setIsCreating] = useState(false)
   const showToast = useToastStore((state) => state.show)
+  const selectedProject = useProjectStore((state) => state.selectedProject)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const {
     tree,
@@ -81,10 +83,14 @@ export default function RegistrationDomainOption({
       if (!currentDataNode || !createPayload || !createdName) {
         throw new Error('The new domain could not be resolved from the tree.')
       }
+      if (!selectedProject?.abbreviation) {
+        throw new Error('Select a project before creating a pseudonym domain.')
+      }
 
       await DomainService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
       let createdDomain = await DomainService.createGroup(
         createPayload,
+        selectedProject.abbreviation,
         useCompleteEndpoint
       )
 
@@ -101,7 +107,7 @@ export default function RegistrationDomainOption({
       )
       try {
         refreshedTree = DomainService.hydrateGroupTree(
-          await DomainService.getGroups(),
+          await DomainService.getGroups(selectedProject.abbreviation),
           createdName,
           createdDomain
         )

@@ -156,6 +156,7 @@
       "prefix": "Präfix",
       "parent": "Übergeordnete Pseudonym-Domäne",
       "assignment": "Zuordnung",
+      "project": "Projekt",
       "actions": "Aktionen"
     },
     "createSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich erstellt.",
@@ -168,6 +169,7 @@
   "details": {
     "name": "Name",
     "prefix": "Präfix",
+    "projectAbbreviation": "Projekt",
     "validFrom": "Gültig ab",
     "validFromInherited": "Gültig ab geerbt",
     "validTo": "Gültig bis",

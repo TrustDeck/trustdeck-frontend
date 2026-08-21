@@ -32,4 +32,5 @@ export type Domain = {
   description?: string
   superDomainID?: number
   superDomainName?: string
+  projectAbbreviation?: string
 }

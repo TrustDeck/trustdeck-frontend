@@ -190,12 +190,34 @@ function formatPermissionAction(action: string) {
 
 function nodeDomainName(node: any): string {
   return String(
-    node?.name ??
+    node?.domain?.name ??
+      node?.name ??
       node?.label ??
       node?.data?.name ??
       node?.data?.raw?.name ??
       ''
   ).trim()
+}
+
+function collectProjectDomainNames(
+  nodes: any[],
+  projectAbbreviation: string,
+  output: Set<string>
+) {
+  const project = projectAbbreviation.toLowerCase()
+  nodes.forEach((node) => {
+    const domain = node?.domain ?? node?.data?.raw ?? node
+    const name = String(domain?.name ?? node?.label ?? '').trim()
+    if (
+      name &&
+      String(domain?.projectAbbreviation ?? '').toLowerCase() === project
+    ) {
+      output.add(name)
+    }
+    if (Array.isArray(node?.children)) {
+      collectProjectDomainNames(node.children, projectAbbreviation, output)
+    }
+  })
 }
 
 function collectAssignedDomainHierarchy(
@@ -631,6 +653,11 @@ export default function PermissionManagement({
       let domainHierarchy: any[] = []
       try {
         domainHierarchy = await TrustDeck.instance().getDomainsHierarchy()
+        collectProjectDomainNames(
+          domainHierarchy,
+          selectedProject.abbreviation,
+          readableProjectDomains
+        )
         if (currentProjectAssigned.size > 0) {
           collectAssignedDomainHierarchy(
             domainHierarchy,

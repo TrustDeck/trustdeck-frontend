@@ -597,17 +597,24 @@ const flattenTree = (nodes: CustomTreeNode[]): Domain[] => {
   return output
 }
 
-/** Keeps only complete domain trees belonging to the selected project. */
+/** Keeps project domains at every hierarchy depth, promoting matching descendants. */
 const filterDomainTreesByProject = (
   trees: DomainTreeDto[],
   projectAbbreviation?: string
 ): DomainTreeDto[] => {
   if (!projectAbbreviation) return trees
-  return trees.filter(
-    (tree) =>
-      tree.domain?.projectAbbreviation?.toLowerCase() ===
-      projectAbbreviation.toLowerCase()
-  )
+  const project = projectAbbreviation.toLowerCase()
+
+  const filterTree = (tree: DomainTreeDto): DomainTreeDto[] => {
+    const children = (tree.children ?? []).flatMap(filterTree)
+    const belongsToProject =
+      tree.domain?.projectAbbreviation?.toLowerCase() === project
+
+    if (belongsToProject) return [{ ...tree, children }]
+    return children
+  }
+
+  return trees.flatMap(filterTree)
 }
 
 /** Provides domain-group operations and request/response mapping. */

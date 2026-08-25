@@ -17,6 +17,7 @@ export type RecordLinkageCandidateReviewProps = {
   originalData: Record<string, any>
   schemaAttributes: Attribute[]
   canUpdateCandidates: boolean
+  canCreateOriginal: boolean
   resolving?: boolean
   onUseCandidate: (candidate: RecordLinkageCandidate) => void | Promise<void>
   onCreateOriginal: () => void | Promise<void>
@@ -148,6 +149,7 @@ export default function RecordLinkageCandidateReview({
   originalData,
   schemaAttributes,
   canUpdateCandidates,
+  canCreateOriginal,
   resolving = false,
   onUseCandidate,
   onCreateOriginal,
@@ -506,7 +508,7 @@ export default function RecordLinkageCandidateReview({
         <button
           type="button"
           onClick={onCreateOriginal}
-          disabled={resolving}
+          disabled={resolving || !canCreateOriginal}
           className="inline-flex min-h-12 items-center justify-center rounded-lg bg-color-blue px-4 py-3 font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <CheckIcon className="mr-2 h-5 w-5" />

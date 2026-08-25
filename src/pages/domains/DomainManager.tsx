@@ -267,7 +267,7 @@ export default function DomainManager() {
     return () => {
       active = false
     }
-  }, [auth.user?.access_token])
+  }, [auth.user?.access_token, justCreated])
 
   const canCreateCompleteGroups = canUseDomainAction(
     permissionAccess,
@@ -378,7 +378,9 @@ export default function DomainManager() {
       const readableGroups = await DomainService.getReadableGroups(
         selectedProject?.abbreviation
       )
-      setGroups(mergeDomains(readableGroups, treeDomains))
+      const refreshedGroups = mergeDomains(readableGroups, treeDomains)
+      setGroups(refreshedGroups)
+      return refreshedGroups
     } catch (error) {
       console.error('Failed to load groups.', error)
       showToast({
@@ -399,9 +401,35 @@ export default function DomainManager() {
   ])
 
   useEffect(() => {
-    fetchGroups()
-    if (justCreated) setJustCreated(false)
-  }, [fetchGroups, justCreated, setJustCreated])
+    let active = true
+    const createdName = justCreated
+      ? findNodeByKey(useTreeStateStore.getState().tree, selectedNodeKey)?.label
+      : ''
+
+    void fetchGroups().then((refreshedGroups) => {
+      if (!active || !justCreated || !createdName) return
+      const createdDomain = refreshedGroups?.find(
+        (domain) => domain.name === createdName
+      )
+      if (createdDomain) {
+        setSelectedGroup(createdDomain)
+        setSelectedGroupName(createdDomain.name)
+        setViewMode('details')
+        setGroupOption('default')
+      }
+      setJustCreated(false)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [
+    fetchGroups,
+    justCreated,
+    selectedNodeKey,
+    setGroupOption,
+    setJustCreated
+  ])
 
   const revealGroupInHierarchy = useCallback(
     (groupName: string) => {

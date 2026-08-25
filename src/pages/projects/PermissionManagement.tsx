@@ -180,12 +180,22 @@ function privilegedRole(roles: string[]) {
 }
 
 function formatPermissionAction(action: string) {
-  return action
+  const formatted = action
     .replace(/[_:.-]+/g, ' ')
     .replace(/\binstances?\b/gi, (term) =>
       term.toLowerCase() === 'instances' ? 'entities' : 'entity'
     )
     .replace(/\b\w/g, (character) => character.toUpperCase())
+
+  const words = formatted.split(' ').filter(Boolean)
+  if (words.includes('Manage')) {
+    const resource = words.filter(
+      (word) => word !== 'Manage' && word !== 'Permission' && word !== 'Permissions'
+    )
+    return `Manage ${resource.join(' ')} Permission`
+  }
+
+  return formatted
 }
 
 function scopeKey(permission: EffectivePermission) {

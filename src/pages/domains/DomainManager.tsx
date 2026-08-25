@@ -371,7 +371,17 @@ export default function DomainManager() {
       const groupTree = await DomainService.getGroups(
         selectedProject?.abbreviation
       )
-      setTree(groupTree as CustomTreeNode[])
+      const pendingNodes = useTreeStateStore
+        .getState()
+        .tree.filter((node) => {
+          const stored = node.data?.stored
+          return (
+            String(node.key).startsWith('temporal') &&
+            (!stored ||
+              (typeof stored === 'object' && Object.keys(stored).length === 0))
+          )
+        })
+      setTree([...(groupTree as CustomTreeNode[]), ...pendingNodes])
       const treeDomains = flattenTree(groupTree).flatMap((node) =>
         node.data?.raw ? [node.data.raw] : []
       )

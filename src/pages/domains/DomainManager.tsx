@@ -527,6 +527,11 @@ export default function DomainManager() {
 
   const handleDelete = (groupName: string) => {
     if (!canDeleteGroup(groupName)) return
+    if (viewMode === 'create') {
+      deleteNode(selectedNodeKey)
+      setGroupOption('default')
+      setViewMode('details')
+    }
     setSelectedGroupName(groupName)
     setShowDeleteDialog(true)
   }

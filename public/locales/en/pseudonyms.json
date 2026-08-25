@@ -81,6 +81,7 @@
     "title": "Pseudonym domain search context",
     "description": "Search for and select the pseudonym domain in which pseudonyms should be found or created. Parent domains are shown as a hierarchy path.",
     "searchLabel": "Search pseudonym domains",
+    "resultsTitle": "Available pseudonym domains in this project",
     "searchPlaceholder": "Enter at least two characters",
     "loading": "Searching pseudonym domains...",
     "searchFailed": "The pseudonym domains could not be searched.",

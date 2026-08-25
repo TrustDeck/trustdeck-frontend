@@ -31,7 +31,8 @@
     "psnexample": "Das Pseudonym sieht so aus:",
     "groupname": {
       "label": "Pseudonym-Domänenname",
-      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein"
+      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein",
+      "duplicate": "Dieser Domänenname wird bereits von einer anderen Domäne verwendet."
     },
     "prefix": {
       "label": "Präfix",

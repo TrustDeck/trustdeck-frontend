@@ -165,6 +165,25 @@ export default function DomainForm() {
 
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
+  const domainNameInUse = (() => {
+    const candidate = String(node?.label ?? '').trim().toLowerCase()
+    if (!candidate) return false
+
+    const containsDuplicate = (nodes: typeof tree): boolean =>
+      nodes.some((item) => {
+        if (
+          item.key !== selectedNodeKey &&
+          String(item.label ?? '').trim().toLowerCase() === candidate
+        ) {
+          return true
+        }
+        return Array.isArray(item.children)
+          ? containsDuplicate(item.children as typeof tree)
+          : false
+      })
+
+    return containsDuplicate(tree)
+  })()
   const normalizedAlgorithm = String(temporal.algorithm ?? '').toUpperCase()
   const fixedRandomAlphabet =
     FIXED_RANDOM_ALGORITHMS.has(normalizedAlgorithm) ||
@@ -421,17 +440,27 @@ export default function DomainForm() {
         description={t('groups:form.basicSubtitle')}
       >
         <div className="grid gap-5 md:grid-cols-2">
-          <CustomFloatLabel
-            id="name"
-            value={node?.label ?? ''}
-            onChange={(event) =>
-              updateNodeAttribute(selectedNodeKey, 'label', event.target.value)
-            }
-            placeholder={t('groups:inputs.groupname.label')}
-            errorMessage={t('groups:inputs.groupname.error')}
-            validate={validation.isValidRegistrationGroupName}
-            required
-          />
+          <div>
+            <CustomFloatLabel
+              id="name"
+              value={node?.label ?? ''}
+              onChange={(event) =>
+                updateNodeAttribute(selectedNodeKey, 'label', event.target.value)
+              }
+              placeholder={t('groups:inputs.groupname.label')}
+              errorMessage={t('groups:inputs.groupname.error')}
+              validate={(value) =>
+                validation.isValidRegistrationGroupName(value) &&
+                !domainNameInUse
+              }
+              required
+            />
+            {domainNameInUse && (
+              <p className="mt-1 text-sm font-medium text-red-600">
+                {t('groups:inputs.groupname.duplicate')}
+              </p>
+            )}
+          </div>
           <CustomDropdown
             id="parentgroup"
             placeholder={t('groups:inputs.parentgroup.label')}
@@ -527,6 +556,9 @@ export default function DomainForm() {
                   'validTo',
                   formatDate(event.value)
                 )
+                if (event.value) {
+                  updateNodeAttribute(selectedNodeKey, 'validityTime', '')
+                }
                 markFieldOverridden('validToInherited')
               }}
               placeholder={t('groups:inputs.enddate.label')}
@@ -544,13 +576,17 @@ export default function DomainForm() {
               helpText={t('groups:inputs.validityTime.help')}
               helpIconInside
               value={temporal.validityTime ?? ''}
-              onChange={(event) =>
+              onChange={(event) => {
                 updateNodeAttribute(
                   selectedNodeKey,
                   'validityTime',
                   event.target.value
                 )
-              }
+                if (event.target.value.trim()) {
+                  updateNodeAttribute(selectedNodeKey, 'validTo', '')
+                  markFieldOverridden('validToInherited')
+                }
+              }}
             />
           </div>
         </div>

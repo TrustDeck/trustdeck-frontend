@@ -12,6 +12,25 @@ import useToastStore from '../../../core/stores/ToastStore'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
+function domainNameExists(
+  nodes: any[],
+  selectedNodeKey: string,
+  name: string
+): boolean {
+  const normalizedName = name.trim().toLowerCase()
+  return nodes.some((node) => {
+    if (
+      String(node.key) !== String(selectedNodeKey) &&
+      String(node.label ?? '').trim().toLowerCase() === normalizedName
+    ) {
+      return true
+    }
+    return Array.isArray(node.children)
+      ? domainNameExists(node.children, selectedNodeKey, name)
+      : false
+  })
+}
+
 // Helper: findet rekursiv einen Knoten im Baum nach id und gibt dessen label zurück (oder undefined)
 
 export default function RegistrationDomainOption({
@@ -25,6 +44,7 @@ export default function RegistrationDomainOption({
   const [isCreating, setIsCreating] = useState(false)
   const showToast = useToastStore((state) => state.show)
   const selectedProject = useProjectStore((state) => state.selectedProject)
+  const setJustCreated = useProjectStore((state) => state.setJustCreated)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const {
     tree,
@@ -86,6 +106,20 @@ export default function RegistrationDomainOption({
       if (!selectedProject?.abbreviation) {
         throw new Error('Select a project before creating a pseudonym domain.')
       }
+      if (domainNameExists(tree, String(selectedNodeKey), createdName)) {
+        throw new Error('A domain with this name already exists.')
+      }
+      try {
+        await DomainService.getGroup(createdName)
+        throw new Error('A domain with this name already exists.')
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.message === 'A domain with this name already exists.'
+        ) {
+          throw error
+        }
+      }
 
       await DomainService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
       let createdDomain = await DomainService.createGroup(
@@ -120,6 +154,7 @@ export default function RegistrationDomainOption({
       if (createdNode) setSelectedNodeKey(createdNode.key)
       else storeNodeChanges()
       setGroupOption('edit')
+      setJustCreated(true)
 
       showToast({
         severity: 'success',

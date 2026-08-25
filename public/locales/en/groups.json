@@ -32,7 +32,8 @@
     "psnexampleNew": "The pseudonym will look like this:",
     "groupname": {
       "label": "Pseudonym domain name",
-      "error": "Please enter a pseudonym domain name"
+      "error": "Please enter a pseudonym domain name",
+      "duplicate": "This domain name is already in use by another domain."
     },
     "prefix": {
       "label": "Prefix",

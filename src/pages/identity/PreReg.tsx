@@ -1211,6 +1211,7 @@ export default function PreReg() {
     setLinkageCandidates([])
     setLinkageOriginalData({})
     setModalMode('view')
+    setManagementTab('search')
     setFormData(normalized.data ?? fallbackData)
     showToast({
       severity: 'success',

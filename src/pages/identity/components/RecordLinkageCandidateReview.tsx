@@ -175,20 +175,6 @@ export default function RecordLinkageCandidateReview({
   const deletedCandidate = candidate
     ? candidateStatus(candidate) === 'DELETED'
     : false
-  const localizedMatchedOn = useMemo(() => {
-    const labels = new Map<string, string>()
-    descriptors.forEach((descriptor) => {
-      const label = resolveAttributeLabel(descriptor.attribute, i18n.language)
-      labels.set(descriptor.key.toLowerCase(), label)
-      labels.set(descriptor.path.join('.').toLowerCase(), label)
-      const name = descriptor.attribute.name
-      if (name) labels.set(String(name).toLowerCase(), label)
-    })
-    return (candidate?.matchedOn ?? []).map((entry) =>
-      labels.get(String(entry).toLowerCase()) ?? String(entry)
-    )
-  }, [candidate?.matchedOn, descriptors, i18n.language])
-
   useEffect(() => {
     if (candidateIndex >= candidates.length) setCandidateIndex(0)
   }, [candidateIndex, candidates.length])
@@ -450,15 +436,6 @@ export default function RecordLinkageCandidateReview({
             )}
             %
           </span>
-          <span
-            className={`rounded-full px-3 py-1 font-semibold ${
-              deletedCandidate
-                ? 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-gray-200'
-                : 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200'
-            }`}
-          >
-            {candidate.candidateStatus ?? 'ACTIVE'}
-          </span>
         </div>
       </div>
 
@@ -509,13 +486,6 @@ export default function RecordLinkageCandidateReview({
           </tbody>
         </table>
       </div>
-
-      {localizedMatchedOn.length > 0 && (
-        <div className="text-sm text-gray-700 dark:text-gray-200">
-          <span className="font-semibold">{t('crud.linkageMatchedOn')}:</span>{' '}
-          {localizedMatchedOn.join(', ')}
-        </div>
-      )}
 
       {deletedCandidate && (
         <p className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200">

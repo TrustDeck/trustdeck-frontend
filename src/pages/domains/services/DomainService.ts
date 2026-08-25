@@ -234,7 +234,8 @@ const resolveAlphabet = (
 const buildAlgorithm = (
   payload: GroupStoredAttributes,
   fallback?: Algorithm | null,
-  stored?: GroupStoredAttributes
+  stored?: GroupStoredAttributes,
+  includeSalt = true
 ): Algorithm => {
   const base = fallback ?? DEFAULT_ALGORITHM
   const name = String(payload.algorithm ?? base.name).trim() || base.name
@@ -276,7 +277,7 @@ const buildAlgorithm = (
       payload.lengthIncludesCheckDigit ??
       base.lengthIncludesCheckDigit ??
       DEFAULT_ALGORITHM.lengthIncludesCheckDigit,
-    salt,
+    ...(includeSalt ? { salt } : {}),
     saltLength:
       toNumberOrNull(payload.saltLength) ??
       base.saltLength ??
@@ -312,8 +313,6 @@ const mapCreateDomain = (
   const hasParent = Boolean(
     payload.parentgroup && payload.parentgroup !== 'ROOT'
   )
-  const inheritAlgorithm = hasParent && Boolean(payload.algorithmInherited)
-
   const output: Record<string, unknown> = {
     name: payload.label,
     prefix: payload.prefix,
@@ -347,7 +346,9 @@ const mapCreateDomain = (
     ...(payload.multiplePsnAllowedInherited
       ? {}
       : { multiplePsnAllowed: Boolean(payload.multiplepsn) }),
-    ...(inheritAlgorithm ? {} : { algorithm: buildAlgorithm(payload) })
+    // A child gets a new algorithm record so its salt is never shared with
+    // the parent, while the form-provided settings retain parent defaults.
+    algorithm: buildAlgorithm(payload, undefined, undefined, !hasParent)
   }
 
   Object.keys(output).forEach((key) => {

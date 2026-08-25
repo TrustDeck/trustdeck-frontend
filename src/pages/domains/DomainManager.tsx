@@ -416,13 +416,34 @@ export default function DomainManager() {
       ? findNodeByKey(useTreeStateStore.getState().tree, selectedNodeKey)?.label
       : ''
 
-    void fetchGroups().then((refreshedGroups) => {
+    void fetchGroups().then(async (refreshedGroups) => {
       if (!active || !justCreated || !createdName) return
       const createdDomain = refreshedGroups?.find(
         (domain) => domain.name === createdName
       )
       if (createdDomain) {
-        setSelectedGroup(createdDomain)
+        let detailedDomain = createdDomain
+        try {
+          const complete = await DomainService.getGroup(createdName)
+          detailedDomain = {
+            ...createdDomain,
+            ...complete,
+            algorithm: complete.algorithm ?? createdDomain.algorithm,
+            algorithmInherited:
+              complete.algorithmInherited ?? createdDomain.algorithmInherited
+          }
+          if (!active) return
+          setTree(
+            hydrateGroupNode(
+              useTreeStateStore.getState().tree,
+              createdName,
+              detailedDomain
+            )
+          )
+        } catch {
+          // The refreshed list remains usable when detailed access is unavailable.
+        }
+        setSelectedGroup(detailedDomain)
         setSelectedGroupName(createdDomain.name)
         setViewMode('details')
         setGroupOption('default')
@@ -438,7 +459,8 @@ export default function DomainManager() {
     justCreated,
     selectedNodeKey,
     setGroupOption,
-    setJustCreated
+    setJustCreated,
+    setTree
   ])
 
   const revealGroupInHierarchy = useCallback(

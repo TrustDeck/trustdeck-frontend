@@ -63,7 +63,6 @@ const INHERITABLE_VALUE_FIELDS: Array<keyof GroupStoredAttributes> = [
   'maxnumpsn',
   'randomAlgorithmDesiredSuccessProbability',
   'consecutiveValueCounter',
-  'salt',
   'saltLength',
   'multiplepsn',
   'paddingchar',
@@ -242,10 +241,12 @@ export default function DomainForm() {
       'validToInherited',
       hasValue(parent.validTo)
     )
-    const inheritsAlgorithm = hasValue(parent.algorithm)
     ALGORITHM_INHERITED_FLAGS.forEach((flag) =>
-      updateNodeAttribute(selectedNodeKey, flag, inheritsAlgorithm)
+      updateNodeAttribute(selectedNodeKey, flag, false)
     )
+    // Each domain needs its own salt even when its other algorithm settings
+    // are initialized from the parent.
+    updateNodeAttribute(selectedNodeKey, 'salt', '')
     updateNodeAttribute(
       selectedNodeKey,
       'multiplePsnAllowedInherited',

@@ -180,12 +180,22 @@ function privilegedRole(roles: string[]) {
 }
 
 function formatPermissionAction(action: string) {
-  return action
+  const formatted = action
     .replace(/[_:.-]+/g, ' ')
     .replace(/\binstances?\b/gi, (term) =>
       term.toLowerCase() === 'instances' ? 'entities' : 'entity'
     )
     .replace(/\b\w/g, (character) => character.toUpperCase())
+
+  const words = formatted.split(' ').filter(Boolean)
+  if (words.includes('Manage')) {
+    const resource = words.filter(
+      (word) => word !== 'Manage' && word !== 'Permission' && word !== 'Permissions'
+    )
+    return `Manage ${resource.join(' ')} Permission`
+  }
+
+  return formatted
 }
 
 function scopeKey(permission: EffectivePermission) {
@@ -240,9 +250,32 @@ function PermissionRows({
         return (
           <div
             key={key}
+            role={editable ? 'switch' : undefined}
+            tabIndex={editable ? 0 : undefined}
+            aria-checked={editable ? checked : undefined}
+            aria-label={
+              editable
+                ? `${formatPermissionAction(permission.action)}: ${
+                    checked ? t('status.granted') : t('status.notGranted')
+                  }`
+                : undefined
+            }
+            onClick={
+              editable ? () => onChange?.(key, !checked) : undefined
+            }
+            onKeyDown={
+              editable
+                ? (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onChange?.(key, !checked)
+                    }
+                  }
+                : undefined
+            }
             className={`flex min-h-16 flex-col justify-center rounded-xl border px-3 py-2 transition ${
               editable
-                ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus-within:ring-2 focus-within:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
+                ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus:ring-2 focus:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
                 : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950'
             }`}
           >
@@ -258,7 +291,10 @@ function PermissionRows({
                   aria-label={`${formatPermissionAction(permission.action)}: ${
                     checked ? t('status.granted') : t('status.notGranted')
                   }`}
-                  onClick={() => onChange?.(key, !checked)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onChange?.(key, !checked)
+                  }}
                   className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
                     checked
                       ? 'bg-emerald-600'
@@ -1360,6 +1396,33 @@ export default function PermissionManagement({
                         targetAccessState === 'forbidden' ||
                         targetAccessState === 'error'
                       }
+                    />
+                  )}
+                  {isEditing && (
+                    <SecondaryOutlinedButton
+                      label={
+                        selectedScopeRows.every(
+                          (permission) =>
+                            Boolean(permissionState[permissionKey(permission)])
+                        )
+                          ? t('actions.revokeAll')
+                          : t('actions.grantAll')
+                      }
+                      onClick={() => {
+                        const grantAll = !selectedScopeRows.every(
+                          (permission) =>
+                            Boolean(permissionState[permissionKey(permission)])
+                        )
+                        setPermissionState(
+                          Object.fromEntries(
+                            selectedScopeRows.map((permission) => [
+                              permissionKey(permission),
+                              grantAll
+                            ])
+                          )
+                        )
+                      }}
+                      disabled={saving || !selectedScopeRows.length}
                     />
                   )}
                 </div>

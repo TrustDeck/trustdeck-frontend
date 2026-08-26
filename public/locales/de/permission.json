@@ -73,6 +73,8 @@
     "useUserId": "Benutzer-ID verwenden",
     "editPermissions": "Berechtigungen bearbeiten",
     "cancelEditing": "Abbrechen",
+    "grantAll": "Alle Berechtigungen erteilen",
+    "revokeAll": "Alle Berechtigungen entziehen",
     "clickToGrant": "Zum Vergeben auswählen",
     "clickToRevoke": "Zum Entziehen auswählen"
   },

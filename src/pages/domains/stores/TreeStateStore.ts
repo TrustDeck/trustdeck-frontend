@@ -312,8 +312,25 @@ export const useTreeStateStore = create<TreeState>((set) => ({
         }, [])
       })(nodes)
 
-      const label = 'NewGroup'
-      const prefix = 'NG-'
+      const existingNames = new Set<string>()
+      const collectNames = (items: CustomTreeNode[]) => {
+        items.forEach((item) => {
+          const name = String(item.label ?? '').trim().toLowerCase()
+          if (name) existingNames.add(name)
+          if (Array.isArray(item.children)) {
+            collectNames(item.children as CustomTreeNode[])
+          }
+        })
+      }
+      collectNames(filteredNodes)
+
+      let counter = 1
+      let label = 'New_Domain'
+      while (existingNames.has(label.toLowerCase())) {
+        counter += 1
+        label = `New_Domain${counter}`
+      }
+      const prefix = counter === 1 ? 'ND-' : `ND${counter}-`
       const psnlength = '16'
 
       const formatLocalDateTime = (date: Date) => {
@@ -374,9 +391,9 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             paddingCharacterInherited: false,
             addCheckDigitInherited: false,
             lengthIncludesCheckDigitInherited: false,
-            enforceStartDateValidity: false,
+            enforceStartDateValidity: true,
             enforceStartDateValidityInherited: false,
-            enforceEndDateValidity: false,
+            enforceEndDateValidity: true,
             enforceEndDateValidityInherited: false
           }
         },

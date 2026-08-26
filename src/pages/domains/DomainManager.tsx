@@ -267,7 +267,7 @@ export default function DomainManager() {
     return () => {
       active = false
     }
-  }, [auth.user?.access_token])
+  }, [auth.user?.access_token, justCreated])
 
   const canCreateCompleteGroups = canUseDomainAction(
     permissionAccess,
@@ -371,14 +371,26 @@ export default function DomainManager() {
       const groupTree = await DomainService.getGroups(
         selectedProject?.abbreviation
       )
-      setTree(groupTree as CustomTreeNode[])
+      const pendingNodes = useTreeStateStore
+        .getState()
+        .tree.filter((node) => {
+          const stored = node.data?.stored
+          return (
+            String(node.key).startsWith('temporal') &&
+            (!stored ||
+              (typeof stored === 'object' && Object.keys(stored).length === 0))
+          )
+        })
+      setTree([...(groupTree as CustomTreeNode[]), ...pendingNodes])
       const treeDomains = flattenTree(groupTree).flatMap((node) =>
         node.data?.raw ? [node.data.raw] : []
       )
       const readableGroups = await DomainService.getReadableGroups(
         selectedProject?.abbreviation
       )
-      setGroups(mergeDomains(readableGroups, treeDomains))
+      const refreshedGroups = mergeDomains(readableGroups, treeDomains)
+      setGroups(refreshedGroups)
+      return refreshedGroups
     } catch (error) {
       console.error('Failed to load groups.', error)
       showToast({
@@ -399,9 +411,57 @@ export default function DomainManager() {
   ])
 
   useEffect(() => {
-    fetchGroups()
-    if (justCreated) setJustCreated(false)
-  }, [fetchGroups, justCreated, setJustCreated])
+    let active = true
+    const createdName = justCreated
+      ? findNodeByKey(useTreeStateStore.getState().tree, selectedNodeKey)?.label
+      : ''
+
+    void fetchGroups().then(async (refreshedGroups) => {
+      if (!active || !justCreated || !createdName) return
+      const createdDomain = refreshedGroups?.find(
+        (domain) => domain.name === createdName
+      )
+      if (createdDomain) {
+        let detailedDomain = createdDomain
+        try {
+          const complete = await DomainService.getGroup(createdName)
+          detailedDomain = {
+            ...createdDomain,
+            ...complete,
+            algorithm: complete.algorithm ?? createdDomain.algorithm,
+            algorithmInherited:
+              complete.algorithmInherited ?? createdDomain.algorithmInherited
+          }
+          if (!active) return
+          setTree(
+            hydrateGroupNode(
+              useTreeStateStore.getState().tree,
+              createdName,
+              detailedDomain
+            )
+          )
+        } catch {
+          // The refreshed list remains usable when detailed access is unavailable.
+        }
+        setSelectedGroup(detailedDomain)
+        setSelectedGroupName(createdDomain.name)
+        setViewMode('details')
+        setGroupOption('default')
+      }
+      setJustCreated(false)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [
+    fetchGroups,
+    justCreated,
+    selectedNodeKey,
+    setGroupOption,
+    setJustCreated,
+    setTree
+  ])
 
   const revealGroupInHierarchy = useCallback(
     (groupName: string) => {
@@ -489,6 +549,11 @@ export default function DomainManager() {
 
   const handleDelete = (groupName: string) => {
     if (!canDeleteGroup(groupName)) return
+    if (viewMode === 'create') {
+      deleteNode(selectedNodeKey)
+      setGroupOption('default')
+      setViewMode('details')
+    }
     setSelectedGroupName(groupName)
     setShowDeleteDialog(true)
   }

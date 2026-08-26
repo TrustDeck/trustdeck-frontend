@@ -110,6 +110,7 @@ export type RecordLinkageCandidate = {
 
 export type ProjectDomain = {
   name: string
+  prefix?: string
   projectAbbreviation: string
   superDomainName?: string
 }

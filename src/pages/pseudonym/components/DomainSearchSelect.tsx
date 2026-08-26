@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -7,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import TrustDeck from '../../../core/services/TrustDeck'
+import useProjectStore from '../../../core/stores/ProjectStore'
 import type { Domain } from '../../../core/types/Domain'
 
 type DomainSearchResult = {
@@ -93,6 +94,7 @@ export default function DomainSearchSelect({
   onChange
 }: DomainSearchSelectProps) {
   const { t } = useTranslation('pseudonyms')
+  const selectedProject = useProjectStore((state) => state.selectedProject)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DomainSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -103,12 +105,47 @@ export default function DomainSearchSelect({
   const domainCache = useRef(new Map<string, Domain>())
   const defaultDomainRequested = useRef(false)
 
+  const getProjectDomains = useCallback(
+    async (searchQuery: string) => {
+      const query = searchQuery.trim().toLowerCase()
+      let domains: Domain[]
+      try {
+        domains = selectedProject?.abbreviation
+          ? await TrustDeck.instance().getProjectDomains(
+              selectedProject.abbreviation
+            )
+          : await TrustDeck.instance().searchReadableDomains('*')
+      } catch {
+        domains = await TrustDeck.instance().searchReadableDomains('*')
+        if (selectedProject?.abbreviation) {
+          domains = domains.filter(
+            (domain) =>
+              domain.projectAbbreviation?.toLowerCase() ===
+              selectedProject.abbreviation.toLowerCase()
+          )
+        }
+      }
+
+      return domains.filter(
+        (domain) =>
+          !query ||
+          query === '*' ||
+          domain.name.toLowerCase().includes(query)
+      )
+    },
+    [selectedProject?.abbreviation]
+  )
+
+  useEffect(() => {
+    defaultDomainRequested.current = false
+    setResults([])
+  }, [selectedProject?.abbreviation])
+
   useEffect(() => {
     if (value || defaultDomainRequested.current) return
     defaultDomainRequested.current = true
 
-    TrustDeck.instance()
-      .searchReadableDomains('*')
+    getProjectDomains('*')
       .then(async (domains) => {
         const defaultDomains = [...domains].sort((left, right) =>
           left.name.localeCompare(right.name)
@@ -128,7 +165,7 @@ export default function DomainSearchSelect({
       .catch((searchError) => {
         console.error('Failed to load the default pseudonym domain', searchError)
       })
-  }, [value])
+  }, [getProjectDomains, value])
 
   useEffect(() => {
     setPage(0)
@@ -153,8 +190,7 @@ export default function DomainSearchSelect({
       setLoading(true)
       setError('')
       try {
-        const domains =
-          await TrustDeck.instance().searchReadableDomains(normalized)
+        const domains = await getProjectDomains(normalized)
         const limited = domains.slice(0, 30)
         limited.forEach((domain) =>
           domainCache.current.set(domain.name, domain)
@@ -178,7 +214,7 @@ export default function DomainSearchSelect({
     }, 300)
 
     return () => window.clearTimeout(timer)
-  }, [query, t])
+  }, [getProjectDomains, query, t])
 
   const pageCount = Math.max(1, Math.ceil(results.length / pageSize))
   const pageResults = results.slice(page * pageSize, (page + 1) * pageSize)
@@ -223,7 +259,7 @@ export default function DomainSearchSelect({
         <div className="space-y-3">
           <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
           <div className="bg-gray-50 px-4 py-3 text-base font-semibold text-gray-900 dark:bg-slate-800/70 dark:text-gray-100">
-            {t('domainContext.searchLabel')}
+            {t('domainContext.resultsTitle')}
           </div>
           {pageResults.map(({ domain, hierarchy }, resultIndex) => {
             const selected = domain.name === value

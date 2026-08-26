@@ -73,6 +73,8 @@
     "useUserId": "Use user ID",
     "editPermissions": "Edit permissions",
     "cancelEditing": "Cancel",
+    "grantAll": "Grant all permissions",
+    "revokeAll": "Revoke all permissions",
     "clickToGrant": "Select to grant",
     "clickToRevoke": "Select to revoke"
   },

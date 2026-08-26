@@ -168,20 +168,6 @@ function permissionIsGranted(
   )
 }
 
-function privilegedRole(roles: string[]) {
-  return roles.some((role) => {
-    const normalized = normalize(role)
-    return (
-      normalized === 'admin' ||
-      normalized === 'administrator' ||
-      normalized === 'realm-admin' ||
-      normalized === 'trustdeck-admin' ||
-      normalized === 'trustdeck_admin' ||
-      normalized === 'backend-admin'
-    )
-  })
-}
-
 function formatPermissionAction(action: string) {
   const formatted = action
     .replace(/[_:.-]+/g, ' ')
@@ -330,6 +316,48 @@ function PermissionRows({
           </div>
         )
       })}
+    </div>
+  )
+}
+
+function GroupedPermissionRows({
+  rows,
+  grantedPermissions,
+  editable,
+  permissionState,
+  onChange,
+  emptyText
+}: {
+  rows: EffectivePermission[]
+  grantedPermissions: EffectivePermission[]
+  editable: boolean
+  permissionState?: Record<string, boolean>
+  onChange?: (key: string, checked: boolean) => void
+  emptyText: string
+}) {
+  const { t } = useTranslation('permission')
+  const groups = buildGrantedPermissionSubgroups(
+    { key: 'editor', label: '', rows },
+    t
+  )
+
+  return (
+    <div className="space-y-5">
+      {groups.map((group) => (
+        <section key={group.key}>
+          <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            {group.label}
+          </h4>
+          <PermissionRows
+            rows={group.rows}
+            grantedPermissions={grantedPermissions}
+            editable={editable}
+            permissionState={permissionState}
+            onChange={onChange}
+            emptyText={emptyText}
+          />
+        </section>
+      ))}
     </div>
   )
 }
@@ -513,7 +541,6 @@ export default function PermissionManagement({
   const currentUserId = useUserStore((state) => state.username)
   const currentUserEmail = useUserStore((state) => state.email)
   const currentUserFullname = useUserStore((state) => state.fullname)
-  const currentUserRoles = useUserStore((state) => state.roles)
   const selectedProject = useProjectStore((state) => state.selectedProject)
 
   const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
@@ -784,16 +811,9 @@ export default function PermissionManagement({
     })
   }, [currentEffectivePermissions, permissionDomainNames, scopeMode, selectedProject?.abbreviation])
 
-  const canManageAll = privilegedRole(currentUserRoles ?? [])
   const manageableRows = useMemo(() => {
-    const availableRows = uniquePermissions([
-      ...scopeRows,
-      ...scopedCurrentPermissions
-    ])
-    return availableRows.filter(
-      (row) => canManageAll || permissionIsGranted(scopedCurrentPermissions, row)
-    )
-  }, [canManageAll, scopeRows, scopedCurrentPermissions])
+    return uniquePermissions([...scopeRows, ...scopedCurrentPermissions])
+  }, [scopeRows, scopedCurrentPermissions])
 
   const scopeOptions = useMemo<ScopeOption[]>(() => {
     const options = new Map<string, ScopeOption>()
@@ -1440,7 +1460,7 @@ export default function PermissionManagement({
                     {t('errors.selectedUserPermissions')}
                   </p>
                 ) : (
-                  <PermissionRows
+                  <GroupedPermissionRows
                     rows={selectedScopeRows}
                     grantedPermissions={selectedPersonPermissions}
                     editable={isEditing}

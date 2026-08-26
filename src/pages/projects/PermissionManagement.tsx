@@ -140,6 +140,12 @@ function actionAllows(grantedAction: string, requestedAction: string) {
   if (granted === requested || granted === '*' || granted === 'all') return true
 
   const [scope] = requested.split(':')
+  if (
+    requested === 'entity:resolve:linkage' &&
+    granted === 'entity:crud'
+  )
+    return false
+
   return (
     granted === `${scope}:*` ||
     granted === `${scope}:all` ||

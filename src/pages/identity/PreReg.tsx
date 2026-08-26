@@ -645,7 +645,7 @@ export default function PreReg() {
   const [instances, setInstances] = useState<Entity[]>([])
   const [hasSearchedInstances, setHasSearchedInstances] = useState(false)
   const [query, setQuery] = useState('')
-  const [resultLimit, setResultLimit] = useState(10)
+  const [resultLimit, setResultLimit] = useState(5)
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
   const [directProjectPermissions, setDirectProjectPermissions] = useState<
@@ -829,11 +829,14 @@ export default function PreReg() {
   const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
 
   const visibleInstances = useMemo(
-    () => instances.slice(0, resultLimit),
+    () =>
+      [...instances]
+        .sort((left, right) => entityId(left).localeCompare(entityId(right)))
+        .slice(0, resultLimit),
     [instances, resultLimit]
   )
 
-  const resultLimitOptions = [10, 20, 50, 100]
+  const resultLimitOptions = [5, 10, 20, 50, 100]
 
   const fetchTypes = useCallback(async () => {
     if (!selectedProject?.abbreviation) {
@@ -933,7 +936,7 @@ export default function PreReg() {
   )
 
   const searchInstances = useCallback(
-    async (typeName = selectedTypeName, searchQuery = query) => {
+    async (typeName = selectedTypeName, searchQuery = '') => {
       if (!typeName) return
       if (!canSearchInstances) {
         if (permissionsReady) {
@@ -993,7 +996,6 @@ export default function PreReg() {
       markBackendDenied,
       normalizeInstance,
       permissionsReady,
-      query,
       selectedTypeName,
       showToast,
       t
@@ -1016,6 +1018,11 @@ export default function PreReg() {
     setManagementTab('search')
     setQuery('')
   }, [selectedTypeName])
+
+  useEffect(() => {
+    if (!selectedTypeName || !canSearchInstances) return
+    void searchInstances(selectedTypeName)
+  }, [canSearchInstances, searchInstances, selectedTypeName])
 
   const openCreateModal = () => {
     if (!selectedType) return

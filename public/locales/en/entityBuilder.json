@@ -211,7 +211,7 @@
     "phonetic": "Uses a phonetic encoding as the blocking key.",
     "year": "Uses the year part as a blocking key.",
     "yearMonth": "Uses year and month as a blocking key.",
-    "domainExact": "Uses a group-specific exact blocking key.",
+    "domainExact": "Uses the normalized attribute value together with its pseudonym domain as a blocking key. Candidates are compared only when both the domain and value match.",
     "bloomBands": "Uses bands of the entity-level Bloom filter as protected blocking keys."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
@@ -296,7 +296,7 @@
     "phonetic": "Phonetic value",
     "year": "Year",
     "yearMonth": "Year and month",
-    "domainExact": "Group-specific exact value",
+    "domainExact": "Domain-specific exact value",
     "bloomBands": "Bloom-filter bands"
   },
   "systemAttributeIdentifierPlaceholder": "e.g. familyName",

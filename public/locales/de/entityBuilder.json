@@ -211,7 +211,7 @@
     "phonetic": "Verwendet eine phonetische Kodierung als Blocking-Schlüssel.",
     "year": "Verwendet den Jahresanteil als Blocking-Schlüssel.",
     "yearMonth": "Verwendet Jahr und Monat als Blocking-Schlüssel.",
-    "domainExact": "Verwendet einen gruppenspezifischen exakten Blocking-Schlüssel.",
+    "domainExact": "Verwendet den normalisierten Attributwert zusammen mit seiner Pseudonym-Domäne als Blocking-Schlüssel. Kandidaten werden nur verglichen, wenn sowohl Domäne als auch Wert übereinstimmen.",
     "bloomBands": "Verwendet Bänder des entitätsweiten Bloom-Filters als geschützte Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
@@ -296,7 +296,7 @@
     "phonetic": "Phonetischer Wert",
     "year": "Jahr",
     "yearMonth": "Jahr und Monat",
-    "domainExact": "Gruppenspezifischer exakter Wert",
+    "domainExact": "Domänenspezifischer exakter Wert",
     "bloomBands": "Bloom-Filter-Bänder"
   },
   "systemAttributeIdentifierPlaceholder": "z. B. familyName",

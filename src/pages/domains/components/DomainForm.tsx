@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 
 import CustomFloatLabel from '@component/form/CustomFloatLabel'
+import CustomInputNumber from '@component/form/CustomInputNumber'
 import CustomDropdown from '../../../core/components/form/CustomDropdown'
 import CustomCalendar from '@component/form/CustomCalendar'
 import { RockerToggle } from '../../../core/components/common/RockerToggle'
@@ -23,7 +24,6 @@ import {
   isHashAlgorithm,
   isRandomnessAlgorithm
 } from '../utils/algorithmOutputLength'
-import { psnLengthOptions } from '../utils/psnLengthOptions'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
@@ -485,15 +485,26 @@ export default function DomainForm() {
             title={inheritedTitle}
             iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
-            <CustomDropdown
+            <CustomInputNumber
               id="psnlength"
               placeholder={t('groups:inputs.psnlength.label')}
-              value={temporal.psnlength ?? ''}
+              value={
+                temporal.psnlength === undefined || temporal.psnlength === ''
+                  ? null
+                  : Number(temporal.psnlength)
+              }
               onChange={(event) => {
-                updateNodeAttribute(selectedNodeKey, 'psnlength', event.value)
+                updateNodeAttribute(
+                  selectedNodeKey,
+                  'psnlength',
+                  event.value === null ? '' : String(event.value)
+                )
                 markAlgorithmOverridden()
               }}
-              options={psnLengthOptions}
+              min={2}
+              max={256}
+              step={1}
+              showButtons
             />
           </InheritedField>
           <div className="md:col-span-2">

@@ -27,7 +27,7 @@
     "closeCreateView": "Erstellungsansicht schließen."
   },
   "default": {
-    "text": "Wählen Sie eine Entität oder Pseudonym-Domäne aus, um deren Einstellungen hier anzuzeigen."
+    "text": "Wählen Sie eine Pseudonym-Domäne aus, um deren Einstellungen hier anzuzeigen."
   },
   "inputs": {
     "psnexample": "Das Pseudonym sieht so aus:",

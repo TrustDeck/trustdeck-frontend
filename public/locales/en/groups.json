@@ -27,7 +27,7 @@
     "closeCreateView": "Close create-view."
   },
   "default": {
-    "text": "Select an entity or a pseudonym domain to see its settings here."
+    "text": "Select a pseudonym domain to see its settings here."
   },
   "inputs": {
     "psnexample": "The pseudonym looks like this:",

@@ -799,15 +799,6 @@ export default function PreReg() {
     permissionsReady &&
     !isBackendDenied('entity:create') &&
     (canCreateByPermission || !permissionEvidenceAvailable)
-  const canResolveLinkageByPermission = canUseProjectAction(
-    effectivePermissionAccess,
-    selectedProjectAbbreviation,
-    'entity:resolve-linkage'
-  )
-  const canResolveLinkage =
-    permissionsReady &&
-    !isBackendDenied('entity:resolve-linkage') &&
-    (canResolveLinkageByPermission || !permissionEvidenceAvailable)
   const canReadByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
@@ -1247,7 +1238,7 @@ export default function PreReg() {
   }
 
   const handleCreateOriginalAfterReview = async () => {
-    if (!selectedTypeName || !canCreateInstances || !canResolveLinkage) return
+    if (!selectedTypeName || !canCreateInstances) return
     const dataToSave = prepareEntityData(linkageOriginalData)
     if (!dataToSave) return
 
@@ -1276,7 +1267,7 @@ export default function PreReg() {
         return
       }
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        markBackendDenied('entity:resolve-linkage')
+        markBackendDenied('entity:create')
       }
       console.error('Failed to create the original entity after linkage review', error)
       showToast({
@@ -1598,7 +1589,7 @@ export default function PreReg() {
                   <>
                     <div className="grid bg-gray-50 px-4 py-3 text-base font-semibold text-gray-900 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] dark:bg-slate-800/70 dark:text-gray-100">
                       <span>{t('identity:crud.entityTypeSearchLabel')}</span>
-                      <span className="md:text-right">
+                      <span>
                         {t('identity:crud.associatedGroup')}
                       </span>
                     </div>
@@ -1621,7 +1612,7 @@ export default function PreReg() {
                         <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
                           {type.name}
                         </span>
-                        <span className="text-base text-gray-600 md:text-right dark:text-gray-300">
+                        <span className="text-base text-gray-600 dark:text-gray-300">
                           {type.associatedDomainName || '—'}
                         </span>
                       </button>
@@ -2057,7 +2048,7 @@ export default function PreReg() {
                     originalData={linkageOriginalData}
                     schemaAttributes={selectedSchemaAttributes}
                     canUpdateCandidates={canUpdateInstances}
-                    canCreateOriginal={canResolveLinkage}
+                    canCreateOriginal={canCreateInstances}
                     resolving={saving}
                     onUseCandidate={handleUseLinkageCandidate}
                     onCreateOriginal={handleCreateOriginalAfterReview}

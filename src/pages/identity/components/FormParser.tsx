@@ -215,15 +215,15 @@ export const parseAttributes = ({
     ========================== */
     if (attr.type === 'date') {
       return (
-        <CustomCalendar
-          key={fullPath}
-          id={fullPath}
-          value={value}
-          onChange={(e) => handleChange(fullPath, e.value)}
-          placeholder={displayLabel}
-          className="w-full"
-          required={showRequired ? attr.required : false}
-        />
+        <div key={fullPath} className="max-w-xs">
+          <CustomCalendar
+            id={fullPath}
+            value={value}
+            onChange={(e) => handleChange(fullPath, e.value)}
+            placeholder={displayLabel}
+            required={showRequired ? attr.required : false}
+          />
+        </div>
       )
     }
 

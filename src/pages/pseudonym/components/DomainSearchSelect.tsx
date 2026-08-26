@@ -103,7 +103,6 @@ export default function DomainSearchSelect({
   const [pageSize, setPageSize] = useState(5)
   const requestId = useRef(0)
   const domainCache = useRef(new Map<string, Domain>())
-  const defaultDomainRequested = useRef(false)
 
   const getProjectDomains = useCallback(
     async (searchQuery: string) => {
@@ -126,46 +125,22 @@ export default function DomainSearchSelect({
         }
       }
 
-      return domains.filter(
-        (domain) =>
-          !query ||
-          query === '*' ||
-          domain.name.toLowerCase().includes(query)
-      )
+      return domains
+        .filter(
+          (domain) =>
+            !query ||
+            query === '*' ||
+            domain.name.toLowerCase().includes(query)
+        )
+        .sort((left, right) => left.name.localeCompare(right.name))
     },
     [selectedProject?.abbreviation]
   )
 
   useEffect(() => {
-    defaultDomainRequested.current = false
     setResults([])
+    domainCache.current.clear()
   }, [selectedProject?.abbreviation])
-
-  useEffect(() => {
-    if (value || defaultDomainRequested.current) return
-    defaultDomainRequested.current = true
-
-    getProjectDomains('*')
-      .then(async (domains) => {
-        const defaultDomains = [...domains].sort((left, right) =>
-          left.name.localeCompare(right.name)
-        )
-        if (defaultDomains.length === 0) return
-        defaultDomains.slice(0, 5).forEach((domain) =>
-          domainCache.current.set(domain.name, domain)
-        )
-        const initialResults = await Promise.all(
-          defaultDomains.map(async (domain) => ({
-            domain,
-            hierarchy: await resolveHierarchy(domain, domainCache.current)
-          }))
-        )
-        setResults(initialResults)
-      })
-      .catch((searchError) => {
-        console.error('Failed to load the default pseudonym domain', searchError)
-      })
-  }, [getProjectDomains, value])
 
   useEffect(() => {
     setPage(0)
@@ -178,25 +153,17 @@ export default function DomainSearchSelect({
 
   useEffect(() => {
     const normalized = query.trim()
-    if (normalized.length < 2 && normalized !== '*') {
-      setResults([])
-      setLoading(false)
-      setError('')
-      return
-    }
-
     const currentRequest = ++requestId.current
     const timer = window.setTimeout(async () => {
       setLoading(true)
       setError('')
       try {
         const domains = await getProjectDomains(normalized)
-        const limited = domains.slice(0, 30)
-        limited.forEach((domain) =>
+        domains.forEach((domain) =>
           domainCache.current.set(domain.name, domain)
         )
         const enriched = await Promise.all(
-          limited.map(async (domain) => ({
+          domains.map(async (domain) => ({
             domain,
             hierarchy: await resolveHierarchy(domain, domainCache.current)
           }))
@@ -245,13 +212,10 @@ export default function DomainSearchSelect({
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       {!loading &&
-        query.trim().length > 0 &&
         results.length === 0 &&
         !error && (
           <p className="rounded-xl border border-dashed border-gray-300 px-4 py-5 text-center text-sm text-gray-600 dark:border-slate-700 dark:text-gray-300">
-            {query.trim().length < 2 && query.trim() !== '*'
-              ? t('domainContext.enterMoreCharacters')
-              : t('domainContext.noResults')}
+            {t('domainContext.noResults')}
           </p>
         )}
 
@@ -315,7 +279,10 @@ export default function DomainSearchSelect({
               <span>{t('search:pagination.resultsPerPage')}</span>
               <select
                 value={pageSize}
-                onChange={(event) => setPageSize(Number(event.target.value))}
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value))
+                  setPage(0)
+                }}
                 className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
               >
                 {[5, 10, 20, 50, 100].map((size) => (

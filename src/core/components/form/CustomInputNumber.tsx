@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   InputNumber,
   InputNumberValueChangeEvent
@@ -43,9 +43,19 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
   prefix
 }) => {
   const [isValid, setIsValid] = useState(true)
+  const latestValue = useRef(value)
+
+  useEffect(() => {
+    latestValue.current = value
+  }, [value])
+
+  const handleValueChange = (event: InputNumberValueChangeEvent) => {
+    latestValue.current = event.value ?? null
+    onChange(event)
+  }
 
   const handleBlur = () => {
-    if (validate) setIsValid(validate(value))
+    if (validate) setIsValid(validate(latestValue.current))
     onBlur?.()
   }
 
@@ -56,7 +66,7 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
           <InputNumber
             id={id}
             value={value}
-            onValueChange={onChange}
+            onValueChange={handleValueChange}
             placeholder={placeholder}
             onBlur={handleBlur}
             useGrouping={false}

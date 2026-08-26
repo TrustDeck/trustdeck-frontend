@@ -82,7 +82,7 @@
     "description": "Suchen und wählen Sie die Pseudonym-Domäne aus, in der Pseudonyme gefunden oder erstellt werden sollen. Übergeordnete Domänen werden als Hierarchiepfad angezeigt.",
     "searchLabel": "Pseudonym-Domänen suchen",
     "resultsTitle": "Verfügbare Pseudonym-Domänen in diesem Projekt",
-    "searchPlaceholder": "Mindestens zwei Zeichen eingeben",
+    "searchPlaceholder": "Pseudonym-Domänen durchsuchen",
     "loading": "Pseudonym-Domänen werden gesucht...",
     "searchFailed": "Die Pseudonym-Domänen konnten nicht durchsucht werden.",
     "enterMoreCharacters": "Geben Sie mindestens zwei Zeichen für die Suche ein.",

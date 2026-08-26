@@ -799,6 +799,15 @@ export default function PreReg() {
     permissionsReady &&
     !isBackendDenied('entity:create') &&
     (canCreateByPermission || !permissionEvidenceAvailable)
+  const canResolveLinkageByPermission = canUseProjectAction(
+    effectivePermissionAccess,
+    selectedProjectAbbreviation,
+    'entity:resolve-linkage'
+  )
+  const canResolveLinkage =
+    permissionsReady &&
+    !isBackendDenied('entity:resolve-linkage') &&
+    (canResolveLinkageByPermission || !permissionEvidenceAvailable)
   const canReadByPermission = canUseProjectAction(
     effectivePermissionAccess,
     selectedProjectAbbreviation,
@@ -1211,6 +1220,7 @@ export default function PreReg() {
     setLinkageCandidates([])
     setLinkageOriginalData({})
     setModalMode('view')
+    setManagementTab('search')
     setFormData(normalized.data ?? fallbackData)
     showToast({
       severity: 'success',
@@ -1237,7 +1247,7 @@ export default function PreReg() {
   }
 
   const handleCreateOriginalAfterReview = async () => {
-    if (!selectedTypeName || !canCreateInstances) return
+    if (!selectedTypeName || !canCreateInstances || !canResolveLinkage) return
     const dataToSave = prepareEntityData(linkageOriginalData)
     if (!dataToSave) return
 
@@ -1266,7 +1276,7 @@ export default function PreReg() {
         return
       }
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        markBackendDenied('entity:create')
+        markBackendDenied('entity:resolve-linkage')
       }
       console.error('Failed to create the original entity after linkage review', error)
       showToast({
@@ -2047,6 +2057,7 @@ export default function PreReg() {
                     originalData={linkageOriginalData}
                     schemaAttributes={selectedSchemaAttributes}
                     canUpdateCandidates={canUpdateInstances}
+                    canCreateOriginal={canResolveLinkage}
                     resolving={saving}
                     onUseCandidate={handleUseLinkageCandidate}
                     onCreateOriginal={handleCreateOriginalAfterReview}

@@ -416,7 +416,7 @@ export default function DomainManager() {
       ? findNodeByKey(useTreeStateStore.getState().tree, selectedNodeKey)?.label
       : ''
 
-    void fetchGroups().then(async (refreshedGroups) => {
+    void fetchGroups().then((refreshedGroups) => {
       if (!active || !justCreated || !createdName) return
       const createdDomain = refreshedGroups?.find(
         (domain) => domain.name === createdName

@@ -150,14 +150,15 @@ const normalizeDomain = (
   }
 }
 
-/** Converts supported date input formats to a valid local ISO date-time. */
-const toLocalDateTime = (input?: string | null): string | null => {
+/** Converts a locally entered date-time to an unambiguous UTC instant. */
+const toUtcDateTime = (input?: string | null): string | null => {
   if (!input) return null
   const raw = input.trim()
 
   if (/^\d{4}-\d{2}-\d{2}(?:T|\s)/.test(raw)) {
     const normalized = raw.replace(' ', 'T')
-    return Number.isNaN(new Date(normalized).getTime()) ? null : normalized
+    const date = new Date(normalized)
+    return Number.isNaN(date.getTime()) ? null : date.toISOString()
   }
 
   const match = raw.match(
@@ -180,8 +181,8 @@ const toLocalDateTime = (input?: string | null): string | null => {
   const minute = minuteRaw.padStart(2, '0')
   const second = secondRaw.padStart(2, '0')
 
-  const candidate = `${year}-${month}-${day}T${hour}:${minute}:${second}`
-  return Number.isNaN(new Date(candidate).getTime()) ? null : candidate
+  const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
 }
 
 /** Parses locale-formatted numbers used by the domain form. */
@@ -323,11 +324,11 @@ const mapCreateDomain = (
       : {}),
     ...(payload.validFromInherited
       ? {}
-      : { validFrom: toLocalDateTime(payload.validFrom) }),
+      : { validFrom: toUtcDateTime(payload.validFrom) }),
     ...(payload.validToInherited
       ? {}
       : payload.validTo
-        ? { validTo: toLocalDateTime(payload.validTo) }
+        ? { validTo: toUtcDateTime(payload.validTo) }
         : payload.validityTime
           ? { validityTime: payload.validityTime }
           : {}),
@@ -385,9 +386,9 @@ const mapStandardCreateDomain = (
       ? { superDomainName: payload.parentgroup }
       : {}),
     description: payload.description,
-    validFrom: toLocalDateTime(payload.validFrom),
+    validFrom: toUtcDateTime(payload.validFrom),
     ...(payload.validTo
-      ? { validTo: toLocalDateTime(payload.validTo) }
+      ? { validTo: toUtcDateTime(payload.validTo) }
       : payload.validityTime
         ? { validityTime: payload.validityTime }
         : {})
@@ -415,14 +416,14 @@ const mapUpdateDomain = (node: CustomTreeNode): Record<string, unknown> => {
     'validFrom',
     stored.validFrom,
     temporal.validFrom,
-    (value) => toLocalDateTime(String(value ?? ''))
+    (value) => toUtcDateTime(String(value ?? ''))
   )
   assignIfChanged(
     output,
     'validTo',
     stored.validTo,
     temporal.validTo,
-    (value) => toLocalDateTime(String(value ?? ''))
+    (value) => toUtcDateTime(String(value ?? ''))
   )
   assignIfChanged(
     output,
@@ -486,14 +487,14 @@ const mapStandardUpdateDomain = (
     'validFrom',
     stored.validFrom,
     temporal.validFrom,
-    (value) => toLocalDateTime(String(value ?? ''))
+    (value) => toUtcDateTime(String(value ?? ''))
   )
   assignIfChanged(
     output,
     'validTo',
     stored.validTo,
     temporal.validTo,
-    (value) => toLocalDateTime(String(value ?? ''))
+    (value) => toUtcDateTime(String(value ?? ''))
   )
   assignIfChanged(
     output,

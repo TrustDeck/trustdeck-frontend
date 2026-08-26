@@ -344,7 +344,6 @@ export const useTreeStateStore = create<TreeState>((set) => ({
       }
 
       const currentDate = new Date()
-      const validFrom = formatLocalDateTime(currentDate)
 
       const date30Year = new Date(currentDate)
       date30Year.setFullYear(date30Year.getFullYear() + 30)
@@ -363,7 +362,8 @@ export const useTreeStateStore = create<TreeState>((set) => ({
             type: 'domain',
             label: label,
             parentgroup: 'ROOT',
-            validFrom: validFrom,
+            // Let the server assign its current time when no start time is chosen.
+            validFrom: '',
             validTo: validTo,
             prefix: prefix,
             psnlength: psnlength,

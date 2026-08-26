@@ -6,6 +6,9 @@ import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import IconActionButton from '../../core/components/common/IconActionButton'
 import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
   EyeIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -242,6 +245,9 @@ export default function DomainManager() {
   const [selectedGroupName, setSelectedGroupName] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('details')
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [groupSearchQuery, setGroupSearchQuery] = useState('')
+  const [groupPage, setGroupPage] = useState(0)
+  const [groupPageSize, setGroupPageSize] = useState(5)
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
 
@@ -309,6 +315,31 @@ export default function DomainManager() {
       ),
     [permissionAccess]
   )
+
+  const normalizedGroupSearchQuery = groupSearchQuery.trim().toLowerCase()
+  const filteredGroups = groups.filter((group) =>
+    [group.name, group.prefix, group.superDomainName]
+      .filter(Boolean)
+      .some((value) =>
+        String(value).toLowerCase().includes(normalizedGroupSearchQuery)
+      )
+  )
+  const groupPageCount = Math.max(
+    1,
+    Math.ceil(filteredGroups.length / groupPageSize)
+  )
+  const visibleGroups = filteredGroups.slice(
+    groupPage * groupPageSize,
+    (groupPage + 1) * groupPageSize
+  )
+
+  useEffect(() => {
+    setGroupPage(0)
+  }, [groupPageSize, groupSearchQuery])
+
+  useEffect(() => {
+    if (groupPage >= groupPageCount) setGroupPage(groupPageCount - 1)
+  }, [groupPage, groupPageCount])
 
   const nodeTemplate = useCallback(
     (node: TreeNode) => {
@@ -803,6 +834,21 @@ export default function DomainManager() {
                 )}
               </div>
               <Divider />
+              <label className="mb-4 block">
+                <span className="td-field-label mb-1 block">
+                  {t('groups:crud.searchLabel')}
+                </span>
+                <div className="relative">
+                  <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={groupSearchQuery}
+                    onChange={(event) => setGroupSearchQuery(event.target.value)}
+                    placeholder={t('groups:crud.searchPlaceholder')}
+                    className="h-11 w-full rounded-lg border border-color-light-gray bg-white pl-10 pr-3 text-base text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
+                  />
+                </div>
+              </label>
               {isLoading ? (
                 <div className="flex justify-center py-10">
                   <ProgressSpinner style={{ width: '60px', height: '60px' }} />
@@ -827,9 +873,65 @@ export default function DomainManager() {
                       </tr>
                     </thead>
                     <tbody>
-                      {renderGroupRows(groups)}
+                      {renderGroupRows(visibleGroups)}
                     </tbody>
                   </table>
+                </div>
+              )}
+              {!isLoading && filteredGroups.length > 0 && (
+                <div className="grid grid-cols-1 items-center gap-4 px-5 py-4 sm:grid-cols-[1fr_auto_1fr]">
+                  {groupPageCount > 1 && (
+                    <div className="flex items-center justify-self-center gap-3 sm:col-start-2">
+                      <button
+                        type="button"
+                        title={t('search:pagination.previous')}
+                        aria-label={t('search:pagination.previous')}
+                        onClick={() =>
+                          setGroupPage((page) => Math.max(0, page - 1))
+                        }
+                        disabled={groupPage === 0}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+                      >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                      </button>
+                      <span className="text-base font-medium text-gray-700 dark:text-gray-200">
+                        {t('search:pagination.pageOf', {
+                          page: groupPage + 1,
+                          pages: groupPageCount
+                        })}
+                      </span>
+                      <button
+                        type="button"
+                        title={t('search:pagination.next')}
+                        aria-label={t('search:pagination.next')}
+                        onClick={() =>
+                          setGroupPage((page) =>
+                            Math.min(groupPageCount - 1, page + 1)
+                          )
+                        }
+                        disabled={groupPage >= groupPageCount - 1}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+                      >
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                  <label className="flex items-center justify-self-end gap-2 text-base font-medium text-gray-700 dark:text-gray-200 sm:col-start-3">
+                    <span>{t('search:pagination.resultsPerPage')}</span>
+                    <select
+                      value={groupPageSize}
+                      onChange={(event) =>
+                        setGroupPageSize(Number(event.target.value))
+                      }
+                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+                    >
+                      {[5, 10, 20, 50, 100].map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
               )}
             </Panel>

@@ -1288,7 +1288,7 @@ export default function PreReg() {
     candidate: RecordLinkageCandidate,
     mergedData: Record<string, any>
   ) => {
-    if (!selectedTypeName || !canUpdateInstances) return
+    if (!selectedTypeName) return
     const identifier = entityId(candidate.entity)
     if (!identifier) return
     const dataToSave = prepareEntityData(mergedData)
@@ -2047,7 +2047,6 @@ export default function PreReg() {
                     candidates={linkageCandidates}
                     originalData={linkageOriginalData}
                     schemaAttributes={selectedSchemaAttributes}
-                    canUpdateCandidates={canUpdateInstances}
                     canCreateOriginal={canCreateInstances}
                     resolving={saving}
                     onUseCandidate={handleUseLinkageCandidate}

@@ -16,7 +16,6 @@ export type RecordLinkageCandidateReviewProps = {
   candidates: RecordLinkageCandidate[]
   originalData: Record<string, any>
   schemaAttributes: Attribute[]
-  canUpdateCandidates: boolean
   canCreateOriginal: boolean
   resolving?: boolean
   onUseCandidate: (candidate: RecordLinkageCandidate) => void | Promise<void>
@@ -148,7 +147,6 @@ export default function RecordLinkageCandidateReview({
   candidates,
   originalData,
   schemaAttributes,
-  canUpdateCandidates,
   canCreateOriginal,
   resolving = false,
   onUseCandidate,
@@ -359,7 +357,7 @@ export default function RecordLinkageCandidateReview({
           <button
             type="button"
             onClick={() => onMergeCandidate(candidate, mergedData)}
-            disabled={resolving || !canUpdateCandidates || deletedCandidate}
+            disabled={resolving || deletedCandidate}
             className="inline-flex min-h-11 items-center justify-center rounded-lg bg-color-blue px-5 py-2.5 font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckIcon className="mr-2 h-5 w-5" />
@@ -517,19 +515,13 @@ export default function RecordLinkageCandidateReview({
         <button
           type="button"
           onClick={() => setMergeMode(true)}
-          disabled={resolving || !canUpdateCandidates || deletedCandidate}
+          disabled={resolving || deletedCandidate}
           className="inline-flex min-h-12 items-center justify-center rounded-lg border-2 border-color-blue px-4 py-3 font-semibold text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
         >
           <PencilSquareIcon className="mr-2 h-5 w-5" />
           {t('crud.mergeWithCandidate')}
         </button>
       </div>
-
-      {!canUpdateCandidates && (
-        <p className="text-center text-sm text-gray-600 dark:text-gray-300">
-          {t('crud.mergeNeedsUpdatePermission')}
-        </p>
-      )}
 
       <div className="flex justify-center">
         <button

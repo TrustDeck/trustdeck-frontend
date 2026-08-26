@@ -145,6 +145,8 @@
     "scopeCurrentProject": "Aktuelles Projekt",
     "scopeUnassigned": "Nicht zugeordnet",
     "scopeOtherProject": "Anderes Projekt",
+    "searchLabel": "Pseudonym-Domänen suchen",
+    "searchPlaceholder": "Nach Name, Präfix oder übergeordneter Domäne suchen",
     "noGroupsInSection": "Keine Pseudonym-Domänen in diesem Bereich.",
     "selectGroupHint": "Wähle eine Pseudonym-Domäne aus der Liste oder Hierarchie aus, um Details zu sehen.",
     "detailSubtitle": "Alle verfügbaren Pseudonym-Domänenattribute werden unten angezeigt. Nicht konfigurierte Werte werden als — dargestellt.",

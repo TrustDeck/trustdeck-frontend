@@ -145,6 +145,8 @@
     "scopeCurrentProject": "Current project",
     "scopeUnassigned": "Unassigned",
     "scopeOtherProject": "Other project",
+    "searchLabel": "Search pseudonym domains",
+    "searchPlaceholder": "Search by name, prefix, or parent domain",
     "noGroupsInSection": "No pseudonym domains in this section.",
     "selectGroupHint": "Select a pseudonym domain from the list or hierarchy to see its details.",
     "detailSubtitle": "All available pseudonym domain attributes are shown below. Values that are not configured are shown as —.",

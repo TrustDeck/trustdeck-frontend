@@ -21,6 +21,8 @@
     "backToDetails": "Zurück zu den Details",
     "addGroups": "Pseudonym-Domäne hinzufügen",
     "cancel": "Abbrechen",
+    "yesCancel": "Ja, abbrechen",
+    "noKeepEditing": "Nein, weiter bearbeiten",
     "closeEditView": "Bearbeitungsansicht schließen.",
     "closeCreateView": "Erstellungsansicht schließen."
   },
@@ -124,6 +126,8 @@
   "messages": {
     "deleteConfirmation": "Möchten Sie wirklich diese Pseudonym-Domäne löschen?",
     "confirmDelete": "Löschen bestätigen",
+    "cancelCreationConfirmation": "Die eingegebenen Pseudonym-Domänendaten werden verworfen und nicht gespeichert.",
+    "confirmCancel": "Abbrechen bestätigen",
     "unsavedChangesHeader": "Ungespeicherte Änderungen",
     "unsavedChanges": "Sie haben ungespeicherte Änderungen. Möchten Sie diese speichern, bevor Sie fortfahren?",
     "saveOtherChanges": "Es gibt weitere ungespeicherte Änderungen. Diese müssen ebenfalls gespeichert werden, bevor Sie fortfahren können.",

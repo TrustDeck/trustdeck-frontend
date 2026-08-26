@@ -485,27 +485,32 @@ export default function DomainForm() {
             title={inheritedTitle}
             iconClassName="right-10 top-1/2 -translate-y-1/2"
           >
-            <CustomInputNumber
-              id="psnlength"
-              placeholder={t('groups:inputs.psnlength.label')}
-              value={
-                temporal.psnlength === undefined || temporal.psnlength === ''
-                  ? null
-                  : Number(temporal.psnlength)
-              }
-              onChange={(event) => {
-                updateNodeAttribute(
-                  selectedNodeKey,
-                  'psnlength',
-                  event.value === null ? '' : String(event.value)
-                )
-                markAlgorithmOverridden()
-              }}
-              min={2}
-              max={256}
-              step={1}
-              showButtons
-            />
+            <label htmlFor="psnlength" className="block">
+              <span className="td-field-label mb-1 block">
+                {t('groups:inputs.psnlength.label')}
+              </span>
+              <CustomInputNumber
+                id="psnlength"
+                placeholder={t('groups:inputs.psnlength.label')}
+                value={
+                  temporal.psnlength === undefined || temporal.psnlength === ''
+                    ? null
+                    : Number(temporal.psnlength)
+                }
+                onChange={(event) => {
+                  updateNodeAttribute(
+                    selectedNodeKey,
+                    'psnlength',
+                    event.value === null ? '' : String(event.value)
+                  )
+                  markAlgorithmOverridden()
+                }}
+                min={2}
+                max={256}
+                step={1}
+                showButtons
+              />
+            </label>
           </InheritedField>
           <div className="md:col-span-2">
             <CustomFloatLabel

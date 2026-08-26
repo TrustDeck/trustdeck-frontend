@@ -139,17 +139,14 @@ function actionAllows(grantedAction: string, requestedAction: string) {
   if (!granted || !requested) return false
   if (granted === requested || granted === '*' || granted === 'all') return true
 
-  const [scope] = requested.split(':')
-  if (
-    requested === 'entity:resolve:linkage' &&
-    granted === 'entity:crud'
-  )
-    return false
+  const [scope, action] = requested.split(':')
+  if (granted === `${scope}:crud`) {
+    return ['create', 'read', 'update', 'delete'].includes(action)
+  }
 
   return (
     granted === `${scope}:*` ||
-    granted === `${scope}:all` ||
-    granted === `${scope}:crud`
+    granted === `${scope}:all`
   )
 }
 

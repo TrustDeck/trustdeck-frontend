@@ -12,6 +12,7 @@ type CustomCalendarProps = {
   errorMessage?: string
   validate?: (value: Date | null) => boolean
   className?: string
+  containerClassName?: string
   readOnly?: boolean
   required?: boolean
   dateFormat?: string
@@ -30,6 +31,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   errorMessage = '',
   validate,
   className = '',
+  containerClassName = '',
   readOnly,
   required,
   dateFormat = 'yy-mm-dd',
@@ -50,7 +52,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   const fieldLabel = (label || placeholder || '').trim()
 
   return (
-    <div className="w-full">
+    <div className={`w-full ${containerClassName}`}>
       {fieldLabel && (
         <label htmlFor={id} className="td-field-label mb-1 flex items-center gap-1">
           <span>{fieldLabel}</span>

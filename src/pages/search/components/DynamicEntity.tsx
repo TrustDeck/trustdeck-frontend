@@ -206,7 +206,7 @@ export default function DynamicEntity({
             showSeconds={attr.type === 'datetime'}
             dateFormat="dd.mm.yy"
             hourFormat="24"
-            className="max-w-xs"
+            containerClassName="max-w-xs"
           />
         </label>
       )

@@ -45,7 +45,7 @@ export default function RegistrationDomainOption({
   const showToast = useToastStore((state) => state.show)
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const setJustCreated = useProjectStore((state) => state.setJustCreated)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
   const {
     tree,
     setTree,
@@ -81,11 +81,11 @@ export default function RegistrationDomainOption({
   }
 
   function handleDelete() {
-    setShowDeleteDialog(true)
+    setShowCancelDialog(true)
   }
 
   const deleteNodes = () => {
-    setShowDeleteDialog(false)
+    setShowCancelDialog(false)
     deleteNode(selectedNodeKey)
     setGroupOption('default')
   }
@@ -187,11 +187,12 @@ export default function RegistrationDomainOption({
       ) : (
         <>
           <ConfirmDialog
-            visible={showDeleteDialog}
-            message={t('groups:messages.deleteConfirmation')}
-            header={t('groups:messages.confirmDelete')}
-            label={t('groups:buttons.yesDelete')}
-            onHide={() => setShowDeleteDialog(false)}
+            visible={showCancelDialog}
+            message={t('groups:messages.cancelCreationConfirmation')}
+            header={t('groups:messages.confirmCancel')}
+            label={t('groups:buttons.yesCancel')}
+            rejectLabel={t('groups:buttons.noKeepEditing')}
+            onHide={() => setShowCancelDialog(false)}
             onAccept={() => deleteNodes()}
             destructive
           />
@@ -206,7 +207,7 @@ export default function RegistrationDomainOption({
           <DomainForm />
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <SecondaryOutlinedButton
-              label={t('groups:buttons.discardChanges')}
+              label={t('groups:buttons.cancel')}
               onClick={handleDelete}
             />
             <PrimaryButton

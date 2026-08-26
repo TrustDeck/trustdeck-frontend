@@ -21,6 +21,8 @@
     "backToDetails": "Back to details",
     "addGroups": "Add pseudonym domain",
     "cancel": "Cancel",
+    "yesCancel": "Yes, cancel",
+    "noKeepEditing": "No, keep editing",
     "closeEditView": "Close edit-view.",
     "closeCreateView": "Close create-view."
   },
@@ -124,6 +126,8 @@
   "messages": {
     "deleteConfirmation": "Are you sure you want to delete this pseudonym domain?",
     "confirmDelete": "Confirm Delete",
+    "cancelCreationConfirmation": "The entered pseudonym-domain data will be discarded and not saved.",
+    "confirmCancel": "Confirm Cancel",
     "unsavedChangesHeader": "Unsaved changes",
     "unsavedChanges": "You have unsaved changes. Would you like to save before continuing?",
     "saveOtherChanges": "There are additional unsaved changes. They must also be saved before you can continue.",

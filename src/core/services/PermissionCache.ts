@@ -415,7 +415,10 @@ export function canUseEntityTypeAction(
     if (!permissionDecisionAllows(permission)) return false
     if (!actionPatternAllows(permissionAction(permission), action)) return false
 
-    const resourceType = normalize(permissionResourceType(permission))
+    const resourceType = normalize(permissionResourceType(permission)).replace(
+      /_/g,
+      '-'
+    )
     const resourceName = normalize(permissionResourceName(permission))
     const permissionProject = normalize(permission.projectAbbreviation)
     return (

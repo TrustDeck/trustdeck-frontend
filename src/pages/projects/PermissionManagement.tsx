@@ -41,6 +41,7 @@ import TrustDeck, { TrustDeckHttpError } from '../../core/services/TrustDeck'
 import { refreshAccessTokenForNavigation } from '../../core/services/tokenRefresh'
 import {
   canManagePermissions,
+  clearPermissionCache,
   getCurrentUserAccess
 } from '../../core/services/PermissionCache'
 import useToastStore from '../../core/stores/ToastStore'
@@ -119,15 +120,19 @@ function normalizePermission(permission: any): EffectivePermission | null {
     permission?.resourceType ?? permission?.resource ?? permission?.scope ?? ''
   ).toUpperCase()
   const resourceName =
-    permission?.resourceName ??
-    permission?.projectAbbreviation ??
-    permission?.projectName ??
-    permission?.domainName ??
-    permission?.entityTypeName ??
-    permission?.entityType ??
-    permission?.typeName ??
-    permission?.project ??
-    permission?.domain
+    resourceType === 'ENTITY_TYPE'
+      ? permission?.entityTypeName ??
+        permission?.entityType ??
+        permission?.typeName ??
+        permission?.resourceName
+      : resourceType === 'PROJECT'
+        ? permission?.projectAbbreviation ??
+          permission?.projectName ??
+          permission?.project ??
+          permission?.resourceName
+        : resourceType === 'DOMAIN'
+          ? permission?.domainName ?? permission?.domain ?? permission?.resourceName
+          : permission?.resourceName
   const action = String(
     permission?.action ?? permission?.operation ?? permission?.permission ?? ''
   )
@@ -1274,6 +1279,7 @@ export default function PermissionManagement({
       }
 
       await loadTargetPermissions()
+      clearPermissionCache()
       setIsEditing(false)
       showToast({
         severity: 'success',

@@ -93,10 +93,13 @@ function canSeeProjectDomainPermissions(
 function normalizePermissionForSidebar(permission: any) {
   const resourceType = String(permission?.resourceType ?? '').toUpperCase()
   const resourceName =
-    permission?.resourceName ??
-    permission?.projectAbbreviation ??
-    permission?.domainName ??
-    permission?.entityTypeName
+    resourceType === 'ENTITY_TYPE'
+      ? permission?.entityTypeName ?? permission?.resourceName
+      : resourceType === 'PROJECT'
+        ? permission?.projectAbbreviation ?? permission?.resourceName
+        : resourceType === 'DOMAIN'
+          ? permission?.domainName ?? permission?.resourceName
+          : permission?.resourceName
   const action = String(permission?.action ?? permission?.operation ?? '')
   if (!resourceType || !action) return null
   return {

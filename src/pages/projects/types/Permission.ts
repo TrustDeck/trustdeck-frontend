@@ -42,6 +42,15 @@ export type ProjectPermissionUpdate = {
   decision: 'ALLOW' | 'DENY'
 }
 
+/** Describes an entity-type-scoped permission update sent to the API. */
+export type EntityTypePermissionUpdate = {
+  subjectId: string
+  resourceType: 'ENTITY_TYPE'
+  entityTypeName: string
+  action: string
+  decision: 'ALLOW' | 'DENY'
+}
+
 /** Describes a global permission update sent to the API. */
 export type GlobalPermissionUpdate = {
   subjectId: string

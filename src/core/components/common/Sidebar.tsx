@@ -19,6 +19,7 @@ import useUserStore from '../../stores/UserStore'
 import {
   CachedUserAccess,
   canAccessBaseTypes,
+  canManagePermissions,
   getCurrentUserAccess
 } from '../../services/PermissionCache'
 
@@ -83,61 +84,19 @@ function canSeeProjectDomainPermissions(
   })
   if (privileged) return true
 
-  const scopedPermissionRole = (access.roles ?? []).some((role) => {
-    const normalized = String(role)
-      .trim()
-      .toLowerCase()
-      .replace(/[_.-]+/g, ':')
-    return (
-      normalized.includes('project:manage:permissions') ||
-      normalized.includes('domain:manage:permissions')
-    )
-  })
-  if (scopedPermissionRole) return true
-
-  return (access.effectivePermissions ?? []).some((permission) => {
-    const resourceType = String(
-      permission.resourceType ??
-        permission.resource ??
-        permission.scope ??
-        permission.type ??
-        ''
-    ).toUpperCase()
-    const resourceName = String(
-      permission.resourceName ??
-        permission.projectAbbreviation ??
-        permission.projectName ??
-        permission.domainName ??
-        permission.project ??
-        permission.domain ??
-        ''
-    )
-    const action = String(
-      permission.action ??
-        permission.operation ??
-        permission.permission ??
-        ''
-    )
-      .trim()
-      .toLowerCase()
-      .replace(/[_.-]+/g, ':')
-
-    if (!action.endsWith(':manage:permissions') && action !== 'manage:permissions') {
-      return false
-    }
-    if (resourceType === 'DOMAIN') return true
-    return (
-      resourceType === 'PROJECT' &&
-      (!selectedProjectAbbreviation || resourceName === selectedProjectAbbreviation)
-    )
-  })
+  return (
+    canManagePermissions(access, 'PROJECT', selectedProjectAbbreviation) ||
+    canManagePermissions(access, 'DOMAIN') ||
+    canManagePermissions(access, 'ENTITY_TYPE', undefined, selectedProjectAbbreviation)
+  )
 }
 function normalizePermissionForSidebar(permission: any) {
   const resourceType = String(permission?.resourceType ?? '').toUpperCase()
   const resourceName =
     permission?.resourceName ??
     permission?.projectAbbreviation ??
-    permission?.domainName
+    permission?.domainName ??
+    permission?.entityTypeName
   const action = String(permission?.action ?? permission?.operation ?? '')
   if (!resourceType || !action) return null
   return {
@@ -297,6 +256,19 @@ export default function Sidebar({
             requests.push(
               TrustDeck.instance().getDomainPermissions(
                 domainName,
+                subjectId
+              ) as Promise<unknown[]>
+            )
+          })
+          entityTypes.forEach((entityType: any) => {
+            const entityTypeName = String(
+              entityType?.name ?? entityType?.entityTypeName ?? ''
+            ).trim()
+            if (!entityTypeName) return
+            requests.push(
+              TrustDeck.instance().getEntityTypePermissions(
+                abbreviation,
+                entityTypeName,
                 subjectId
               ) as Promise<unknown[]>
             )

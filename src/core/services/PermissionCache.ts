@@ -4,6 +4,7 @@ import useUserStore from '../stores/UserStore'
 export type CachedEffectivePermission = {
   resourceType?: string
   resourceName?: string
+  entityTypeName?: string
   projectAbbreviation?: string
   projectName?: string
   domainName?: string
@@ -315,6 +316,9 @@ function permissionResourceType(permission: CachedEffectivePermission) {
 function permissionResourceName(permission: CachedEffectivePermission) {
   return (
     permission.resourceName ??
+    permission.entityTypeName ??
+    permission.entityType ??
+    permission.typeName ??
     permission.projectAbbreviation ??
     permission.projectName ??
     permission.domainName ??
@@ -380,6 +384,65 @@ export function canUseProjectAction(
   )
 }
 
+function hasGlobalPrivilegedRole(roles: string[]) {
+  return roles.some((role) =>
+    [
+      'admin',
+      'administrator',
+      'realm-admin',
+      'trustdeck-admin',
+      'trustdeck_admin',
+      'backend-admin'
+    ].includes(normalize(role))
+  )
+}
+
+/** Checks an entity-instance action against the grant for its entity type. */
+export function canUseEntityTypeAction(
+  access: CachedUserAccess | null | undefined,
+  projectAbbreviation: string | undefined,
+  entityTypeName: string | undefined,
+  action: string
+) {
+  if (!access) return false
+  if (hasGlobalPrivilegedRole(access.roles)) return true
+
+  const project = normalize(projectAbbreviation)
+  const entityType = normalize(entityTypeName)
+  if (!project || !entityType) return false
+
+  return access.effectivePermissions.some((permission) => {
+    if (!permissionDecisionAllows(permission)) return false
+    if (!actionPatternAllows(permissionAction(permission), action)) return false
+
+    const resourceType = normalize(permissionResourceType(permission))
+    const resourceName = normalize(permissionResourceName(permission))
+    const permissionProject = normalize(permission.projectAbbreviation)
+    return (
+      (resourceType === 'entity-type' || resourceType === 'entity-types') &&
+      permissionProject === project &&
+      (!resourceName ||
+        resourceName === entityType ||
+        resourceName === '*' ||
+        resourceName === 'all')
+    )
+  })
+}
+
+/** Resolves the current user's grant before an entity-instance mutation. */
+export async function canCurrentUserUseEntityTypeAction(
+  projectAbbreviation: string | undefined,
+  entityTypeName: string | undefined,
+  action: string
+) {
+  return canUseEntityTypeAction(
+    await getCurrentUserAccess(false),
+    projectAbbreviation,
+    entityTypeName,
+    action
+  )
+}
+
 
 function tokenRoleAllowsDomainAction(roles: string[], requestedAction: string) {
   if (hasPrivilegedRole(roles)) return true
@@ -433,6 +496,43 @@ export function canUseDomainAction(
   return access.effectivePermissions.some((permission) =>
     permissionAllowsDomainAction(permission, domainName, action)
   )
+}
+
+/** Checks whether the user may administer grants for a concrete permission scope. */
+export function canManagePermissions(
+  access: CachedUserAccess | null | undefined,
+  resourceType: 'PROJECT' | 'DOMAIN' | 'ENTITY_TYPE',
+  resourceName?: string,
+  projectAbbreviation?: string
+) {
+  if (!access) return false
+  if (hasPrivilegedRole(access.roles)) return true
+
+  const expectedType = normalize(resourceType).replace(/_/g, '-')
+  const expectedAction = `${expectedType}:manage-permissions`
+  const expectedName = normalize(resourceName)
+  const expectedProject = normalize(projectAbbreviation)
+
+  if (access.roles.some((role) => actionPatternAllows(role, expectedAction))) {
+    return true
+  }
+
+  return access.effectivePermissions.some((permission) => {
+    if (!permissionDecisionAllows(permission)) return false
+    if (!actionPatternAllows(permissionAction(permission), expectedAction)) return false
+
+    const permissionType = normalize(permissionResourceType(permission)).replace(/_/g, '-')
+    const permissionName = normalize(permissionResourceName(permission))
+    if (permissionType !== expectedType) return false
+    if (expectedName && permissionName && permissionName !== expectedName) return false
+
+    return (
+      resourceType !== 'ENTITY_TYPE' ||
+      !expectedProject ||
+      !permission.projectAbbreviation ||
+      normalize(permission.projectAbbreviation) === expectedProject
+    )
+  })
 }
 
 export function canManageProject(

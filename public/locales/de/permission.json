@@ -26,9 +26,10 @@
     "projectPermissions": "Projektspezifische Berechtigungen",
     "groupPermissions": "Berechtigungen für Pseudonym-Domänen",
     "domain": "Pseudonym-Domäne",
-    "selectScope": "Projekt oder Pseudonym-Domäne",
-    "selectDescription": "Wählen Sie das Projekt, eine dem Projekt zugeordnete Pseudonym-Domäne oder eine Pseudonym-Domäne aus, die keinem Projekt zugeordnet ist. Mit dem Suchfeld im Dropdown können Sie die Liste filtern.",
-    "searchPlaceholder": "Projekt oder Pseudonym-Domäne suchen"
+    "entityType": "Entitätstyp",
+    "selectScope": "Projekt, Entitätstyp oder Pseudonym-Domäne",
+    "selectDescription": "Wählen Sie das Projekt, einen Entitätstyp, eine dem Projekt zugeordnete Pseudonym-Domäne oder eine Pseudonym-Domäne aus, die keinem Projekt zugeordnet ist. Mit dem Suchfeld im Dropdown können Sie die Liste filtern.",
+    "searchPlaceholder": "Projekt, Entitätstyp oder Pseudonym-Domäne suchen"
   },
   "status": {
     "granted": "Vergeben",

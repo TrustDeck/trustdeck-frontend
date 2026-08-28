@@ -17,6 +17,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 import useLayoutStore from '../../core/stores/LayoutStore'
 import useToastStore from '../../core/stores/ToastStore'
 import TrustDeck from '../../core/services/TrustDeck'
+import { canCurrentUserUseEntityTypeAction } from '../../core/services/PermissionCache'
 import DynamicEntity from './components/DynamicEntity'
 import InlinePseudonymDetail from './components/InlinePseudonymDetail'
 import PseudonymService from './services/PseudonymService'
@@ -95,7 +96,7 @@ function removeLinkedPseudonym(
 
 const EntityDetails: React.FC = () => {
   const { results, setResults } = useSearchResultsStore()
-  const { entityAttributes } = useProjectStore()
+  const { entityAttributes, selectedProject } = useProjectStore()
   const { editMode, setEditMode } = useLayoutStore()
   const { entityId } = useParams()
   const { t } = useTranslation()
@@ -258,6 +259,15 @@ const EntityDetails: React.FC = () => {
       })
       return
     }
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        entityType,
+        'entity:update'
+      ))
+    ) {
+      return
+    }
 
     try {
       const schemaAttributes = schema?.typeDefinition?.attributes ?? []
@@ -302,6 +312,15 @@ const EntityDetails: React.FC = () => {
         detail: t('search:deleteFailed'),
         life: 4000
       })
+      return
+    }
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        entityType,
+        'entity:delete'
+      ))
+    ) {
       return
     }
 

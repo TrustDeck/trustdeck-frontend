@@ -26,9 +26,10 @@
     "projectPermissions": "Project-specific permissions",
     "groupPermissions": "Pseudonym-domain permissions",
     "domain": "Pseudonym domain",
-    "selectScope": "Project or pseudonym domain",
-    "selectDescription": "Select the project, a project-associated pseudonym domain, or a domain that is not assigned to any project. Use the search field in the dropdown to filter the list.",
-    "searchPlaceholder": "Search project or pseudonym domain"
+    "entityType": "Entity type",
+    "selectScope": "Project, entity type, or pseudonym domain",
+    "selectDescription": "Select the project, an entity type, a project-associated pseudonym domain, or a domain that is not assigned to any project. Use the search field in the dropdown to filter the list.",
+    "searchPlaceholder": "Search project, entity type, or pseudonym domain"
   },
   "status": {
     "granted": "Granted",

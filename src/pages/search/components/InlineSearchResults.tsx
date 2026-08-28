@@ -16,6 +16,7 @@ import IconActionButton from '../../../core/components/common/IconActionButton'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
+import { canCurrentUserUseEntityTypeAction } from '../../../core/services/PermissionCache'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import type { Pseudonym } from '../../../core/types/Pseudonym'
@@ -240,6 +241,15 @@ export function InlineEntityResults({
   const deleteResult = async () => {
     const identifier = resolveTrustDeckId(pendingDelete)
     if (!identifier || !entityTypeName) return
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        entityTypeName,
+        'entity:delete'
+      ))
+    ) {
+      return
+    }
 
     setDeleting(true)
     try {

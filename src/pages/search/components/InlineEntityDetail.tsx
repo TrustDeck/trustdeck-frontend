@@ -16,6 +16,7 @@ import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryButton from '../../../core/components/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
+import { canCurrentUserUseEntityTypeAction } from '../../../core/services/PermissionCache'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import { pickSchemaData } from '../utils/schemaData'
@@ -233,6 +234,15 @@ export default function InlineEntityDetail({
   const save = async () => {
     const typeName = entityTypeName || entity?.entityTypeName || entity?.type
     if (!typeName || !identifier) return
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        typeName,
+        'entity:update'
+      ))
+    ) {
+      return
+    }
 
     setSaving(true)
     try {
@@ -264,6 +274,15 @@ export default function InlineEntityDetail({
   const remove = async () => {
     const typeName = entityTypeName || entity?.entityTypeName || entity?.type
     if (!typeName || !identifier) return
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        typeName,
+        'entity:delete'
+      ))
+    ) {
+      return
+    }
 
     setDeleting(true)
     try {

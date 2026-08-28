@@ -36,7 +36,7 @@ import type { Link } from '../../core/types/Link'
 import type { Pseudonym } from '../../core/types/Pseudonym'
 import {
   CachedUserAccess,
-  canUseProjectAction,
+  canUseEntityTypeAction,
   getCurrentUserAccess
 } from '../../core/services/PermissionCache'
 
@@ -141,7 +141,8 @@ function hasEntityPermissionEvidence(
       action === '*' ||
       action === 'all' ||
       action.includes('crud') ||
-      resourceType === 'project' ||
+       resourceType === 'entity-type' ||
+       resourceType === 'entity_type' ||
       resourceType === 'global'
     )
   })
@@ -648,9 +649,6 @@ export default function PreReg() {
   const [resultLimit, setResultLimit] = useState(5)
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
-  const [directProjectPermissions, setDirectProjectPermissions] = useState<
-    Record<string, any>[]
-  >([])
   const [permissionsReady, setPermissionsReady] = useState(false)
   const [backendDeniedActions, setBackendDeniedActions] = useState<string[]>([])
   const [modalOpen, setModalOpen] = useState(false)
@@ -744,28 +742,8 @@ export default function PreReg() {
   const selectedProjectAbbreviation = selectedProject?.abbreviation
 
   useEffect(() => {
-    // Do not call the permission-management endpoint from Entities.
-    // That endpoint is not available to all users and can return 404/403 even
-    // when the user is allowed to work with entity instances. Token roles and
-    // cached effective permissions are used for optimistic UI hints; the backend
-    // remains the source of truth for every instance CRUD request.
-    setDirectProjectPermissions([])
-  }, [permissionAccess, permissionsReady, selectedProjectAbbreviation])
-
-  useEffect(() => {
     setBackendDeniedActions([])
   }, [selectedProjectAbbreviation, auth.user?.access_token])
-
-  const effectivePermissionAccess = useMemo<CachedUserAccess | null>(() => {
-    if (!permissionAccess) return null
-    return {
-      ...permissionAccess,
-      effectivePermissions: [
-        ...(permissionAccess.effectivePermissions ?? []),
-        ...directProjectPermissions
-      ]
-    }
-  }, [directProjectPermissions, permissionAccess])
 
   const markBackendDenied = useCallback((action: string) => {
     setBackendDeniedActions((current) =>
@@ -779,47 +757,52 @@ export default function PreReg() {
   )
 
   const permissionEvidenceAvailable = hasEntityPermissionEvidence(
-    effectivePermissionAccess
+    permissionAccess
   )
-  const canSearchByPermission = canUseProjectAction(
-    effectivePermissionAccess,
+  const canSearchByPermission = canUseEntityTypeAction(
+    permissionAccess,
     selectedProjectAbbreviation,
+    selectedTypeName,
     'entity:search'
   )
   const canSearchInstances =
     permissionsReady &&
     !isBackendDenied('entity:search') &&
     (canSearchByPermission || !permissionEvidenceAvailable)
-  const canCreateByPermission = canUseProjectAction(
-    effectivePermissionAccess,
+  const canCreateByPermission = canUseEntityTypeAction(
+    permissionAccess,
     selectedProjectAbbreviation,
+    selectedTypeName,
     'entity:create'
   )
   const canCreateInstances =
     permissionsReady &&
     !isBackendDenied('entity:create') &&
     (canCreateByPermission || !permissionEvidenceAvailable)
-  const canReadByPermission = canUseProjectAction(
-    effectivePermissionAccess,
+  const canReadByPermission = canUseEntityTypeAction(
+    permissionAccess,
     selectedProjectAbbreviation,
+    selectedTypeName,
     'entity:read'
   )
   const canReadInstances =
     permissionsReady &&
     !isBackendDenied('entity:read') &&
     (canReadByPermission || canSearchInstances || !permissionEvidenceAvailable)
-  const canUpdateByPermission = canUseProjectAction(
-    effectivePermissionAccess,
+  const canUpdateByPermission = canUseEntityTypeAction(
+    permissionAccess,
     selectedProjectAbbreviation,
+    selectedTypeName,
     'entity:update'
   )
   const canUpdateInstances =
     permissionsReady &&
     !isBackendDenied('entity:update') &&
     (canUpdateByPermission || !permissionEvidenceAvailable)
-  const canDeleteByPermission = canUseProjectAction(
-    effectivePermissionAccess,
+  const canDeleteByPermission = canUseEntityTypeAction(
+    permissionAccess,
     selectedProjectAbbreviation,
+    selectedTypeName,
     'entity:delete'
   )
   const canDeleteInstances =
@@ -1295,7 +1278,7 @@ export default function PreReg() {
     candidate: RecordLinkageCandidate,
     mergedData: Record<string, any>
   ) => {
-    if (!selectedTypeName) return
+    if (!selectedTypeName || !canUpdateInstances) return
     const identifier = entityId(candidate.entity)
     if (!identifier) return
     const dataToSave = prepareEntityData(mergedData)

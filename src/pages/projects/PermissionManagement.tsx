@@ -39,7 +39,10 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import TrustDeck, { TrustDeckHttpError } from '../../core/services/TrustDeck'
 import { refreshAccessTokenForNavigation } from '../../core/services/tokenRefresh'
-import { getCurrentUserAccess } from '../../core/services/PermissionCache'
+import {
+  canManagePermissions,
+  getCurrentUserAccess
+} from '../../core/services/PermissionCache'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
@@ -47,6 +50,7 @@ import type { Operator } from '../../core/types/Permission'
 import type {
   DefinedPermission,
   DomainPermissionUpdate,
+  EntityTypePermissionUpdate,
   EffectivePermission,
   GlobalPermissionUpdate,
   ProjectPermissionUpdate
@@ -79,7 +83,7 @@ type LoadingState = 'idle' | 'loading' | 'ready' | 'forbidden' | 'error'
 type ScopeOption = {
   key: string
   label: string
-  resourceType: 'GLOBAL' | 'PROJECT' | 'DOMAIN'
+  resourceType: 'GLOBAL' | 'PROJECT' | 'DOMAIN' | 'ENTITY_TYPE'
   resourceName?: string
 }
 
@@ -119,6 +123,9 @@ function normalizePermission(permission: any): EffectivePermission | null {
     permission?.projectAbbreviation ??
     permission?.projectName ??
     permission?.domainName ??
+    permission?.entityTypeName ??
+    permission?.entityType ??
+    permission?.typeName ??
     permission?.project ??
     permission?.domain
   const action = String(
@@ -199,6 +206,9 @@ function scopeLabel(
   if (option.resourceType === 'GLOBAL') return t('scope.global')
   if (option.resourceType === 'PROJECT') {
     return `${t('scope.project')}: ${selectedProjectName || option.resourceName || '—'}`
+  }
+  if (option.resourceType === 'ENTITY_TYPE') {
+    return `Entity type: ${option.resourceName || '—'}`
   }
   return `${t('scope.domain')}: ${option.resourceName || '—'}`
 }
@@ -541,12 +551,14 @@ export default function PermissionManagement({
   const currentUserId = useUserStore((state) => state.username)
   const currentUserEmail = useUserStore((state) => state.email)
   const currentUserFullname = useUserStore((state) => state.fullname)
+  const currentUserRoles = useUserStore((state) => state.roles)
   const selectedProject = useProjectStore((state) => state.selectedProject)
 
   const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
   const definedPermissionsRef = useRef<DefinedPermission[] | null>(null)
   const [currentEffectivePermissions, setCurrentEffectivePermissions] = useState<EffectivePermission[]>([])
   const [permissionDomainNames, setPermissionDomainNames] = useState<Set<string>>(new Set<string>())
+  const [permissionEntityTypeNames, setPermissionEntityTypeNames] = useState<Set<string>>(new Set<string>())
   const [permissionState, setPermissionState] = useState<Record<string, boolean>>({})
   const [permissionApiState, setPermissionApiState] = useState<LoadingState>('idle')
   const [currentAccessState, setCurrentAccessState] = useState<LoadingState>('idle')
@@ -665,6 +677,42 @@ export default function PermissionManagement({
   useEffect(() => {
     let active = true
 
+    async function loadPermissionEntityTypes() {
+      if (
+        scopeMode !== 'project-domain' ||
+        !selectedProject?.abbreviation ||
+        !auth.user?.access_token
+      ) {
+        if (active) setPermissionEntityTypeNames(new Set<string>())
+        return
+      }
+
+      try {
+        TrustDeck.instance().setToken(auth.user.access_token)
+        const entities = await TrustDeck.instance().getProjectEntities('*')
+        const names = new Set(
+          entities
+            .map((entity: { name?: unknown; entityTypeName?: unknown }) =>
+              String(entity.name ?? entity.entityTypeName ?? '').trim()
+            )
+            .filter(Boolean)
+        )
+        if (active) setPermissionEntityTypeNames(names)
+      } catch (error) {
+        console.warn('Could not load project entity types for permissions', error)
+        if (active) setPermissionEntityTypeNames(new Set<string>())
+      }
+    }
+
+    void loadPermissionEntityTypes()
+    return () => {
+      active = false
+    }
+  }, [scopeMode, selectedProject?.abbreviation, auth.user?.access_token])
+
+  useEffect(() => {
+    let active = true
+
     async function loadCurrentScopedPermissions() {
       if (!auth.isAuthenticated || auth.isLoading) return
 
@@ -716,6 +764,15 @@ export default function PermissionManagement({
               ) as Promise<unknown[]>
             )
           })
+          Array.from(permissionEntityTypeNames).forEach((entityTypeName) => {
+            requests.push(
+              TrustDeck.instance().getEntityTypePermissions(
+                selectedProject.abbreviation!,
+                entityTypeName,
+                subjectId
+              ) as Promise<unknown[]>
+            )
+          })
 
           const results = await Promise.allSettled(requests)
           results.forEach((result) => {
@@ -752,6 +809,7 @@ export default function PermissionManagement({
     auth.isLoading,
     auth.user?.profile?.sub,
     permissionDomainNames,
+    permissionEntityTypeNames,
     scopeMode,
     selectedProject?.abbreviation
   ])
@@ -789,10 +847,24 @@ export default function PermissionManagement({
               })
             )
         })
+
+      Array.from(permissionEntityTypeNames)
+        .sort((a, b) => a.localeCompare(b))
+        .forEach((entityTypeName) => {
+          definedPermissions
+            .filter((permission) => permission.resourceType === 'ENTITY_TYPE')
+            .forEach((permission) =>
+              rows.push({
+                resourceType: 'ENTITY_TYPE',
+                resourceName: entityTypeName,
+                action: permission.action
+              })
+            )
+        })
     }
 
     return uniquePermissions(rows)
-  }, [definedPermissions, permissionDomainNames, scopeMode, selectedProject?.abbreviation])
+  }, [definedPermissions, permissionDomainNames, permissionEntityTypeNames, scopeMode, selectedProject?.abbreviation])
 
   const scopedCurrentPermissions = useMemo(() => {
     return currentEffectivePermissions.filter((permission) => {
@@ -807,9 +879,13 @@ export default function PermissionManagement({
         permission.resourceType === 'DOMAIN' &&
         Boolean(permission.resourceName) &&
         permissionDomainNames.has(permission.resourceName!)
+      ) || (
+        permission.resourceType === 'ENTITY_TYPE' &&
+        Boolean(permission.resourceName) &&
+        permissionEntityTypeNames.has(permission.resourceName!)
       )
     })
-  }, [currentEffectivePermissions, permissionDomainNames, scopeMode, selectedProject?.abbreviation])
+  }, [currentEffectivePermissions, permissionDomainNames, permissionEntityTypeNames, scopeMode, selectedProject?.abbreviation])
 
   const manageableRows = useMemo(() => {
     return uniquePermissions([...scopeRows, ...scopedCurrentPermissions])
@@ -856,15 +932,38 @@ export default function PermissionManagement({
     [scopeOptions, selectedScopeKey]
   )
 
+  const canEditSelectedScope = useMemo(() => {
+    if (scopeMode === 'global') return true
+    if (!selectedScope || selectedScope.resourceType === 'GLOBAL') return false
+    return canManagePermissions(
+      {
+        userId: currentUserId || 'current-user',
+        roles: currentUserRoles ?? [],
+        effectivePermissions: currentEffectivePermissions,
+        loadedAt: Date.now()
+      },
+      selectedScope.resourceType,
+      selectedScope.resourceName,
+      selectedProject?.abbreviation
+    )
+  }, [
+    currentEffectivePermissions,
+    currentUserId,
+    currentUserRoles,
+    scopeMode,
+    selectedProject?.abbreviation,
+    selectedScope
+  ])
+
   const scopeSearchResults = useMemo(() => {
     const project = scopeOptions.find((option) => option.resourceType === 'PROJECT')
-    const domains = scopeOptions
-      .filter((option) => option.resourceType === 'DOMAIN')
+    const nonProjectScopes = scopeOptions
+      .filter((option) => option.resourceType !== 'PROJECT')
       .sort((a, b) => a.label.localeCompare(b.label))
     const query = scopeQuery.trim().toLocaleLowerCase()
 
-    if (!query) return [...(project ? [project] : []), ...domains]
-    return [...(project ? [project] : []), ...domains].filter((option) =>
+    if (!query) return [...(project ? [project] : []), ...nonProjectScopes]
+    return [...(project ? [project] : []), ...nonProjectScopes].filter((option) =>
       option.label.toLocaleLowerCase().includes(query)
     )
   }, [scopeOptions, scopeQuery])
@@ -918,6 +1017,16 @@ export default function PermissionManagement({
           selectedScope.resourceName,
           userId
         )) as unknown[]
+      } else if (
+        selectedScope.resourceType === 'ENTITY_TYPE' &&
+        selectedScope.resourceName &&
+        selectedProject?.abbreviation
+      ) {
+        permissions = (await TrustDeck.instance().getEntityTypePermissions(
+          selectedProject.abbreviation,
+          selectedScope.resourceName,
+          userId
+        )) as unknown[]
       }
 
       setTargetScopePermissions(
@@ -934,7 +1043,7 @@ export default function PermissionManagement({
       setTargetScopePermissions([])
       setTargetAccessState(permissionErrorState(error))
     }
-  }, [selectedPerson?.userId, selectedScope])
+  }, [selectedPerson?.userId, selectedProject?.abbreviation, selectedScope])
 
   useEffect(() => {
     void loadTargetPermissions()
@@ -988,7 +1097,8 @@ export default function PermissionManagement({
     const resourceOrder: Record<string, number> = {
       GLOBAL: 0,
       PROJECT: 1,
-      DOMAIN: 2
+      ENTITY_TYPE: 2,
+      DOMAIN: 3
     }
 
     return Array.from(groups.entries())
@@ -1081,7 +1191,7 @@ export default function PermissionManagement({
 
   const handleSave = async () => {
     const selectedPersonId = selectedPerson?.userId
-    if (!selectedPersonId || !selectedScopeRows.length) return
+    if (!selectedPersonId || !selectedScopeRows.length || !canEditSelectedScope) return
 
     setSaving(true)
     try {
@@ -1139,6 +1249,24 @@ export default function PermissionManagement({
           decision: 'ALLOW'
         }))
         await TrustDeck.instance().updateDomainPermissionGrants(
+          scopeTemplate.resourceName,
+          selectedPersonId,
+          payload
+        )
+      } else if (
+        scopeTemplate.resourceType === 'ENTITY_TYPE' &&
+        scopeTemplate.resourceName &&
+        selectedProject?.abbreviation
+      ) {
+        const payload: EntityTypePermissionUpdate[] = finalPermissions.map((permission) => ({
+          subjectId: selectedPersonId,
+          resourceType: 'ENTITY_TYPE',
+          entityTypeName: scopeTemplate.resourceName!,
+          action: permission.action,
+          decision: 'ALLOW'
+        }))
+        await TrustDeck.instance().updateEntityTypePermissionGrants(
+          selectedProject.abbreviation,
           scopeTemplate.resourceName,
           selectedPersonId,
           payload
@@ -1228,7 +1356,9 @@ export default function PermissionManagement({
                     <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       {option.resourceType === 'PROJECT'
                         ? t('scope.project')
-                        : t('scope.domain')}
+                        : option.resourceType === 'ENTITY_TYPE'
+                          ? t('scope.entityType')
+                          : t('scope.domain')}
                     </span>
                   </button>
                 ))}
@@ -1360,6 +1490,7 @@ export default function PermissionManagement({
                 placeholder={t('userSearchPlaceholder')}
                 className="min-w-0 flex-1 !w-full"
                 inputClassName="w-full min-w-0 text-base"
+                disabled={!canEditSelectedScope}
               />
               {!selectedPerson && personValue.trim() && (
                 <PrimaryButton
@@ -1413,8 +1544,9 @@ export default function PermissionManagement({
                       label={t('actions.editPermissions')}
                       icon={<PencilSquareIcon className="h-5 w-5" />}
                       onClick={() => setIsEditing(true)}
-                      disabled={
-                        !selectedScopeRows.length ||
+                       disabled={
+                         !canEditSelectedScope ||
+                         !selectedScopeRows.length ||
                         targetAccessState === 'loading' ||
                         targetAccessState === 'forbidden' ||
                         targetAccessState === 'error'
@@ -1492,8 +1624,9 @@ export default function PermissionManagement({
                     onClick={handleSave}
                     loading={saving}
                     disabled={
-                      !hasPermissionChanges ||
-                      !selectedScopeRows.length ||
+                       !hasPermissionChanges ||
+                       !canEditSelectedScope ||
+                       !selectedScopeRows.length ||
                       targetAccessState === 'loading' ||
                       targetAccessState === 'forbidden' ||
                       targetAccessState === 'error'

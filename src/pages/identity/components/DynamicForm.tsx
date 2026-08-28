@@ -13,6 +13,7 @@ import { ArrowDownIcon, ArrowUpIcon } from '@heroicons/react/24/outline'
 import type { Attribute } from '../../../core/stores/ProjectStore'
 import TrustDeck, { TrustDeckHttpError } from '../../../core/services/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
+import { canCurrentUserUseEntityTypeAction } from '../../../core/services/PermissionCache'
 
 type Props = {
   entityName: string
@@ -158,6 +159,15 @@ export default function DynamicForm({
   }
 
   const handleRegister = async () => {
+    if (
+      !(await canCurrentUserUseEntityTypeAction(
+        selectedProject?.abbreviation,
+        entityName,
+        'entity:create'
+      ))
+    ) {
+      return
+    }
     const normalizedData = normalizeRepeatableGroups(
       formValues,
       entity.typeDefinition.attributes ?? []

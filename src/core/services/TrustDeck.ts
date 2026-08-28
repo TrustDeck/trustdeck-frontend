@@ -117,9 +117,10 @@ export type ProjectDomain = {
 
 export type PermissionGrant = {
   subjectId: string
-  resourceType: 'DOMAIN' | 'PROJECT' | 'GLOBAL' | string
+  resourceType: 'DOMAIN' | 'PROJECT' | 'ENTITY_TYPE' | 'GLOBAL' | string
   domainName?: string
   projectAbbreviation?: string
+  entityTypeName?: string
   action: string
   decision: 'ALLOW' | 'DENY' | string
   validFrom?: string
@@ -132,6 +133,7 @@ export type PermissionUpdate = {
   oldAction?: string
   oldDomainName?: string
   oldProjectName?: string
+  oldEntityTypeName?: string
   newSubjectId?: string
   newResourceType?: string
   newAction?: string
@@ -140,6 +142,16 @@ export type PermissionUpdate = {
   validTo?: string
   domainName?: string
   projectName?: string
+  entityTypeName?: string
+}
+
+export type EntityTypePermissionGrant = PermissionGrant & {
+  resourceType: 'ENTITY_TYPE'
+  entityTypeName: string
+}
+
+export type EntityTypePermissionUpdate = PermissionUpdate & {
+  entityTypeName: string
 }
 
 export type TableStorageInfo = {
@@ -977,6 +989,18 @@ class TrustDeck {
     )
   }
 
+  public async createEntityTypePermissions(
+    projectAbbreviation: string,
+    entityTypeName: string,
+    permissions: EntityTypePermissionGrant[]
+  ) {
+    return this.request<PermissionGrant[]>(
+      'POST',
+      `/permissions/projects/${encodeURIComponent(projectAbbreviation)}/entity-types/${encodeURIComponent(entityTypeName)}`,
+      permissions
+    )
+  }
+
   public async createGlobalPermissions(permissions: PermissionGrant[]) {
     return this.request<PermissionGrant[]>(
       'POST',
@@ -1009,6 +1033,20 @@ class TrustDeck {
       {
         userId
       }
+    )
+    return this.asArray<Permission>(response)
+  }
+
+  public async getEntityTypePermissions(
+    projectAbbreviation: string,
+    entityTypeName: string,
+    userId?: string
+  ) {
+    const response = await this.request<unknown>(
+      'GET',
+      `/permissions/projects/${encodeURIComponent(projectAbbreviation)}/entity-types/${encodeURIComponent(entityTypeName)}`,
+      undefined,
+      { userId }
     )
     return this.asArray<Permission>(response)
   }
@@ -1092,6 +1130,20 @@ class TrustDeck {
     )
   }
 
+  public async updateEntityTypePermissionGrants(
+    projectAbbreviation: string,
+    entityTypeName: string,
+    userId: string,
+    permissions: EntityTypePermissionUpdate[] | EntityTypePermissionGrant[]
+  ) {
+    return this.request<unknown>(
+      'PUT',
+      `/permissions/projects/${encodeURIComponent(projectAbbreviation)}/entity-types/${encodeURIComponent(entityTypeName)}`,
+      permissions,
+      { userId }
+    )
+  }
+
   public async deleteDomainPermissions(
     domainName: string,
     userId: string,
@@ -1119,6 +1171,20 @@ class TrustDeck {
       {
         userId
       }
+    )
+  }
+
+  public async deleteEntityTypePermissions(
+    projectAbbreviation: string,
+    entityTypeName: string,
+    userId: string,
+    permissions: EntityTypePermissionGrant[]
+  ) {
+    return this.request<unknown>(
+      'DELETE',
+      `/permissions/projects/${encodeURIComponent(projectAbbreviation)}/entity-types/${encodeURIComponent(entityTypeName)}`,
+      permissions,
+      { userId }
     )
   }
 

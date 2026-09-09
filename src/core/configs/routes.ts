@@ -112,7 +112,7 @@ export const routes: RouteConfig[] = [
     isNonProject: true
   },
   {
-    path: '/base-types',
+    path: '/global-settings',
     titleKey: 'layout:menu.globalSettings',
     component: BaseTypeManager,
     Icon: WrenchScrewdriverIcon,

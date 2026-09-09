@@ -66,7 +66,7 @@ export default function BaseTypeManager() {
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        if (!message.includes('404')) {
+        if (!message.includes('403') && !message.includes('404')) {
           console.error('Failed to load base entities', error)
           showToast({
             severity: 'error',

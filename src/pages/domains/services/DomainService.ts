@@ -15,7 +15,10 @@
  * limitations under the License.
  */
 
-import type { CustomTreeNode, GroupStoredAttributes } from '../types/CustomTreeNode'
+import type {
+  CustomTreeNode,
+  GroupStoredAttributes
+} from '../types/CustomTreeNode'
 import TrustDeck, { TrustDeckHttpError } from '@service/TrustDeck'
 import type { Algorithm, Domain } from '../../../core/types/Domain'
 import {
@@ -114,9 +117,7 @@ const normalizeDomain = (
       String(DEFAULT_ALGORITHM.randomAlgorithmDesiredSuccessProbability),
     randomAlgorithmDesiredSuccessProbabilityInherited: algorithmInherited,
     multiplepsn: Boolean(domain.multiplePsnAllowed ?? false),
-    multiplePsnAllowedInherited: Boolean(
-      domain.multiplePsnAllowedInherited
-    ),
+    multiplePsnAllowedInherited: Boolean(domain.multiplePsnAllowedInherited),
     consecutiveValueCounter:
       numberToString(algorithm.consecutiveValueCounter) ?? '1',
     paddingchar:
@@ -131,9 +132,7 @@ const normalizeDomain = (
         DEFAULT_ALGORITHM.lengthIncludesCheckDigit
     ),
     lengthIncludesCheckDigitInherited: algorithmInherited,
-    enforceStartDateValidity: Boolean(
-      domain.enforceStartDateValidity ?? false
-    ),
+    enforceStartDateValidity: Boolean(domain.enforceStartDateValidity ?? false),
     enforceStartDateValidityInherited: Boolean(
       domain.enforceStartDateValidityInherited
     ),
@@ -254,9 +253,7 @@ const buildAlgorithm = (
       base.randomAlgorithmDesiredSize ??
       DEFAULT_ALGORITHM.randomAlgorithmDesiredSize,
     randomAlgorithmDesiredSuccessProbability:
-      toDecimalNumberOrNull(
-        payload.randomAlgorithmDesiredSuccessProbability
-      ) ??
+      toDecimalNumberOrNull(payload.randomAlgorithmDesiredSuccessProbability) ??
       base.randomAlgorithmDesiredSuccessProbability ??
       DEFAULT_ALGORITHM.randomAlgorithmDesiredSuccessProbability,
     consecutiveValueCounter:
@@ -335,9 +332,7 @@ const mapCreateDomain = (
     ...(payload.enforceStartDateValidityInherited
       ? {}
       : {
-          enforceStartDateValidity: Boolean(
-            payload.enforceStartDateValidity
-          )
+          enforceStartDateValidity: Boolean(payload.enforceStartDateValidity)
         }),
     ...(payload.enforceEndDateValidityInherited
       ? {}
@@ -410,7 +405,12 @@ const mapUpdateDomain = (node: CustomTreeNode): Record<string, unknown> => {
 
   assignIfChanged(output, 'name', stored.label, temporal.label)
   assignIfChanged(output, 'prefix', stored.prefix, temporal.prefix)
-  assignIfChanged(output, 'description', stored.description, temporal.description)
+  assignIfChanged(
+    output,
+    'description',
+    stored.description,
+    temporal.description
+  )
   assignIfChanged(
     output,
     'validFrom',
@@ -455,11 +455,7 @@ const mapUpdateDomain = (node: CustomTreeNode): Record<string, unknown> => {
 
   if (hasAlgorithmChanges(stored, temporal)) {
     if (!temporal.algorithmInherited) {
-      output.algorithm = buildAlgorithm(
-        temporal,
-        original?.algorithm,
-        stored
-      )
+      output.algorithm = buildAlgorithm(temporal, original?.algorithm, stored)
       output.algorithmInherited = false
     }
   }
@@ -481,7 +477,12 @@ const mapStandardUpdateDomain = (
 
   assignIfChanged(output, 'name', stored.label, temporal.label)
   assignIfChanged(output, 'prefix', stored.prefix, temporal.prefix)
-  assignIfChanged(output, 'description', stored.description, temporal.description)
+  assignIfChanged(
+    output,
+    'description',
+    stored.description,
+    temporal.description
+  )
   assignIfChanged(
     output,
     'validFrom',
@@ -645,13 +646,19 @@ const DomainService = {
     group: Domain
   ): CustomTreeNode[] => hydrateDomainInTree(trees, lookupName, group),
 
-  getGroups: async (projectAbbreviation?: string): Promise<CustomTreeNode[]> => {
+  getGroups: async (
+    projectAbbreviation?: string
+  ): Promise<CustomTreeNode[]> => {
     if (projectAbbreviation) {
       try {
-        const projectDomains = await TrustDeck.instance().getProjectDomains(
-          projectAbbreviation
+        const projectDomains =
+          await TrustDeck.instance().getProjectDomains(projectAbbreviation)
+        const project = projectAbbreviation.toLowerCase()
+        return buildProjectDomainTrees(
+          projectDomains.filter(
+            (domain) => domain.projectAbbreviation?.toLowerCase() === project
+          )
         )
-        return buildProjectDomainTrees(projectDomains)
           .map((item, index) => mapTree(item, String(index), null))
           .filter(Boolean) as CustomTreeNode[]
       } catch {
@@ -661,7 +668,9 @@ const DomainService = {
     try {
       const remoteTrees = await TrustDeck.instance().getDomainsHierarchy()
       const treeItems = filterDomainTreesByProject(
-        (Array.isArray(remoteTrees) ? remoteTrees : [remoteTrees]) as DomainTreeDto[],
+        (Array.isArray(remoteTrees)
+          ? remoteTrees
+          : [remoteTrees]) as DomainTreeDto[],
         projectAbbreviation
       )
       const mapped = treeItems
@@ -674,7 +683,9 @@ const DomainService = {
       // Fall back to the domain search endpoint when hierarchy access is unavailable.
     }
 
-    const domains = (await TrustDeck.instance().searchReadableDomains('*')).filter(
+    const domains = (
+      await TrustDeck.instance().searchReadableDomains('*')
+    ).filter(
       (domain) =>
         !projectAbbreviation ||
         domain.projectAbbreviation?.toLowerCase() ===
@@ -685,10 +696,17 @@ const DomainService = {
     )
   },
 
-  getReadableGroups: async (projectAbbreviation?: string): Promise<Domain[]> => {
+  getReadableGroups: async (
+    projectAbbreviation?: string
+  ): Promise<Domain[]> => {
     if (projectAbbreviation) {
       try {
-        return await TrustDeck.instance().getProjectDomains(projectAbbreviation)
+        const project = projectAbbreviation.toLowerCase()
+        const domains =
+          await TrustDeck.instance().getProjectDomains(projectAbbreviation)
+        return domains.filter(
+          (domain) => domain.projectAbbreviation?.toLowerCase() === project
+        )
       } catch {
         // Fall back to the hierarchy and readable-domain endpoints.
       }
@@ -778,7 +796,11 @@ const DomainService = {
         : mapStandardUpdateDomain(node)
       if (Object.keys(payload).length === 0) continue
       if (complete) {
-        await TrustDeck.instance().updateGroupComplete(storedName, true, payload)
+        await TrustDeck.instance().updateGroupComplete(
+          storedName,
+          true,
+          payload
+        )
       } else {
         await TrustDeck.instance().updateGroup(storedName, payload)
       }

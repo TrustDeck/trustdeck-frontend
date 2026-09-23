@@ -7,7 +7,6 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import TrustDeck from '../../../core/services/TrustDeck'
-import useProjectStore from '../../../core/stores/ProjectStore'
 import type { Domain } from '../../../core/types/Domain'
 
 type DomainSearchResult = {
@@ -18,6 +17,7 @@ type DomainSearchResult = {
 type DomainSearchSelectProps = {
   value: string
   onChange: (domainName: string) => void
+  projectAbbreviation: string
 }
 
 function DomainHierarchyTree({
@@ -64,7 +64,8 @@ function DomainHierarchyTree({
 
 async function resolveHierarchy(
   domain: Domain,
-  cache: Map<string, Domain>
+  cache: Map<string, Domain>,
+  projectAbbreviation: string
 ): Promise<string[]> {
   const hierarchy = [domain.name]
   const visited = new Set<string>([domain.name])
@@ -72,17 +73,28 @@ async function resolveHierarchy(
 
   while (parentName && !visited.has(parentName) && hierarchy.length < 20) {
     visited.add(parentName)
-    hierarchy.unshift(parentName)
-
     let parent = cache.get(parentName)
     if (!parent) {
       try {
         parent = await TrustDeck.instance().getDomain(parentName)
+        if (
+          parent.projectAbbreviation?.toLowerCase() !==
+          projectAbbreviation.toLowerCase()
+        ) {
+          break
+        }
         cache.set(parentName, parent)
       } catch {
         break
       }
     }
+    if (
+      parent.projectAbbreviation?.toLowerCase() !==
+      projectAbbreviation.toLowerCase()
+    ) {
+      break
+    }
+    hierarchy.unshift(parentName)
     parentName = parent.superDomainName
   }
 
@@ -91,10 +103,10 @@ async function resolveHierarchy(
 
 export default function DomainSearchSelect({
   value,
-  onChange
+  onChange,
+  projectAbbreviation
 }: DomainSearchSelectProps) {
   const { t } = useTranslation('pseudonyms')
-  const selectedProject = useProjectStore((state) => state.selectedProject)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<DomainSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -103,44 +115,52 @@ export default function DomainSearchSelect({
   const [pageSize, setPageSize] = useState(5)
   const requestId = useRef(0)
   const domainCache = useRef(new Map<string, Domain>())
+  const previousProject = useRef(projectAbbreviation)
 
   const getProjectDomains = useCallback(
     async (searchQuery: string) => {
+      if (!projectAbbreviation) return []
       const query = searchQuery.trim().toLowerCase()
       let domains: Domain[]
       try {
-        domains = selectedProject?.abbreviation
-          ? await TrustDeck.instance().getProjectDomains(
-              selectedProject.abbreviation
-            )
-          : await TrustDeck.instance().searchReadableDomains('*')
+        domains =
+          await TrustDeck.instance().getProjectDomains(projectAbbreviation)
       } catch {
         domains = await TrustDeck.instance().searchReadableDomains('*')
-        if (selectedProject?.abbreviation) {
-          domains = domains.filter(
-            (domain) =>
-              domain.projectAbbreviation?.toLowerCase() ===
-              selectedProject.abbreviation.toLowerCase()
-          )
-        }
+        domains = domains.filter(
+          (domain) =>
+            domain.projectAbbreviation?.toLowerCase() ===
+            projectAbbreviation.toLowerCase()
+        )
       }
+
+      domains = domains.filter(
+        (domain) =>
+          domain.projectAbbreviation?.toLowerCase() ===
+          projectAbbreviation.toLowerCase()
+      )
 
       return domains
         .filter(
           (domain) =>
-            !query ||
-            query === '*' ||
-            domain.name.toLowerCase().includes(query)
+            !query || query === '*' || domain.name.toLowerCase().includes(query)
         )
         .sort((left, right) => left.name.localeCompare(right.name))
     },
-    [selectedProject?.abbreviation]
+    [projectAbbreviation]
   )
 
   useEffect(() => {
+    const projectChanged = previousProject.current !== projectAbbreviation
+    previousProject.current = projectAbbreviation
+    requestId.current += 1
     setResults([])
+    setPage(0)
+    setLoading(false)
+    setError('')
     domainCache.current.clear()
-  }, [selectedProject?.abbreviation])
+    if (projectChanged) onChange('')
+  }, [onChange, projectAbbreviation])
 
   useEffect(() => {
     setPage(0)
@@ -154,21 +174,32 @@ export default function DomainSearchSelect({
   useEffect(() => {
     const normalized = query.trim()
     const currentRequest = ++requestId.current
+    const requestCache = new Map<string, Domain>()
     const timer = window.setTimeout(async () => {
+      if (!projectAbbreviation) {
+        setResults([])
+        setLoading(false)
+        return
+      }
       setLoading(true)
       setError('')
       try {
         const domains = await getProjectDomains(normalized)
-        domains.forEach((domain) =>
-          domainCache.current.set(domain.name, domain)
-        )
+        domains.forEach((domain) => requestCache.set(domain.name, domain))
         const enriched = await Promise.all(
           domains.map(async (domain) => ({
             domain,
-            hierarchy: await resolveHierarchy(domain, domainCache.current)
+            hierarchy: await resolveHierarchy(
+              domain,
+              requestCache,
+              projectAbbreviation
+            )
           }))
         )
-        if (currentRequest === requestId.current) setResults(enriched)
+        if (currentRequest === requestId.current) {
+          domainCache.current = requestCache
+          setResults(enriched)
+        }
       } catch (searchError) {
         console.error('Failed to search pseudonym domains', searchError)
         if (currentRequest === requestId.current) {
@@ -181,7 +212,7 @@ export default function DomainSearchSelect({
     }, 300)
 
     return () => window.clearTimeout(timer)
-  }, [getProjectDomains, query, t])
+  }, [getProjectDomains, projectAbbreviation, query, t])
 
   const pageCount = Math.max(1, Math.ceil(results.length / pageSize))
   const pageResults = results.slice(page * pageSize, (page + 1) * pageSize)
@@ -211,41 +242,39 @@ export default function DomainSearchSelect({
       )}
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
-      {!loading &&
-        results.length === 0 &&
-        !error && (
-          <p className="rounded-xl border border-dashed border-gray-300 px-4 py-5 text-center text-sm text-gray-600 dark:border-slate-700 dark:text-gray-300">
-            {t('domainContext.noResults')}
-          </p>
-        )}
+      {!loading && results.length === 0 && !error && (
+        <p className="rounded-xl border border-dashed border-gray-300 px-4 py-5 text-center text-sm text-gray-600 dark:border-slate-700 dark:text-gray-300">
+          {t('domainContext.noResults')}
+        </p>
+      )}
 
       {results.length > 0 && (
         <div className="space-y-3">
           <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
-          <div className="bg-gray-50 px-4 py-3 text-base font-semibold text-gray-900 dark:bg-slate-800/70 dark:text-gray-100">
-            {t('domainContext.resultsTitle')}
-          </div>
-          {pageResults.map(({ domain, hierarchy }, resultIndex) => {
-            const selected = domain.name === value
-            return (
-              <button
-                key={domain.name}
-                type="button"
-                onClick={() => {
-                  onChange(domain.name)
-                }}
-                className={`block w-full border-t border-gray-200 px-4 py-4 text-left transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
-                  selected
-                    ? 'bg-blue-50 dark:bg-slate-800'
-                    : resultIndex % 2 === 0
-                      ? 'bg-white dark:bg-slate-900'
-                      : 'bg-gray-50/80 dark:bg-slate-800/45'
-                }`}
-              >
-                <DomainHierarchyTree hierarchy={hierarchy} />
-              </button>
-            )
-          })}
+            <div className="bg-gray-50 px-4 py-3 text-base font-semibold text-gray-900 dark:bg-slate-800/70 dark:text-gray-100">
+              {t('domainContext.resultsTitle')}
+            </div>
+            {pageResults.map(({ domain, hierarchy }, resultIndex) => {
+              const selected = domain.name === value
+              return (
+                <button
+                  key={domain.name}
+                  type="button"
+                  onClick={() => {
+                    onChange(domain.name)
+                  }}
+                  className={`block w-full border-t border-gray-200 px-4 py-4 text-left transition hover:bg-blue-50/70 dark:border-slate-700 dark:hover:bg-slate-700/60 ${
+                    selected
+                      ? 'bg-blue-50 dark:bg-slate-800'
+                      : resultIndex % 2 === 0
+                        ? 'bg-white dark:bg-slate-900'
+                        : 'bg-gray-50/80 dark:bg-slate-800/45'
+                  }`}
+                >
+                  <DomainHierarchyTree hierarchy={hierarchy} />
+                </button>
+              )
+            })}
           </div>
           <div className="grid grid-cols-1 items-center gap-4 px-5 py-1 sm:grid-cols-[1fr_auto_1fr]">
             {pageCount > 1 && (
@@ -261,13 +290,18 @@ export default function DomainSearchSelect({
                   <ChevronLeftIcon className="h-5 w-5" />
                 </button>
                 <span className="text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('search:pagination.pageOf', { page: page + 1, pages: pageCount })}
+                  {t('search:pagination.pageOf', {
+                    page: page + 1,
+                    pages: pageCount
+                  })}
                 </span>
                 <button
                   type="button"
                   title={t('search:pagination.next')}
                   aria-label={t('search:pagination.next')}
-                  onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+                  onClick={() =>
+                    setPage((current) => Math.min(pageCount - 1, current + 1))
+                  }
                   disabled={page >= pageCount - 1}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
                 >

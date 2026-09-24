@@ -20,7 +20,6 @@ import {
   getCurrentUserAccess,
   type CachedUserAccess
 } from '../../../core/services/PermissionCache'
-import DomainSearchSelect from './DomainSearchSelect'
 import {
   prepareSheet,
   parseImportFile,
@@ -57,6 +56,7 @@ type BatchStage =
 
 type Props = {
   projectAbbreviation: string
+  domainName: string
   onCancel: () => void
 }
 
@@ -119,6 +119,7 @@ function downloadResults(rows: ImportResultRow[]) {
 
 export default function BatchPseudonymImport({
   projectAbbreviation,
+  domainName,
   onCancel
 }: Props) {
   const { t } = useTranslation('pseudonyms')
@@ -132,7 +133,6 @@ export default function BatchPseudonymImport({
   const [delimiter, setDelimiter] = useState<CsvDelimiter>('auto')
   const [mapping, setMapping] = useState<ColumnMapping>(EMPTY_MAPPING)
   const [dateFormat, setDateFormat] = useState<DateFormat>('auto')
-  const [domainName, setDomainName] = useState('')
   const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set())
   const [includeDuplicateRows, setIncludeDuplicateRows] = useState(false)
   const [page, setPage] = useState(0)
@@ -469,11 +469,6 @@ export default function BatchPseudonymImport({
 
       {stage === 'file' && (
         <div className="space-y-5">
-          <DomainSearchSelect
-            value={domainName}
-            onChange={setDomainName}
-            projectAbbreviation={projectAbbreviation}
-          />
           <div
             className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center focus-within:ring-2 focus-within:ring-color-blue dark:border-slate-700 dark:bg-slate-900"
             role="button"
@@ -1065,7 +1060,6 @@ export default function BatchPseudonymImport({
                 setFile(null)
                 setSheets([])
                 setResult(null)
-                setDomainName('')
               }}
             />
             <PrimaryOutlinedButton

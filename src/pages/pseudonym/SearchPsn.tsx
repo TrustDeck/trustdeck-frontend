@@ -685,6 +685,7 @@ export default function SearchPsn() {
                 {generationMode === 'batch' && (
                   <BatchPseudonymImport
                     projectAbbreviation={projectAbbreviation}
+                    domainName={pseudonymDomain}
                     onCancel={cancelCreationPath}
                   />
                 )}

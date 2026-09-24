@@ -131,6 +131,9 @@
       "pseudonym": "Pseudonym"
     },
     "page": "Seite {{page}} von {{pages}}",
+    "pageOf": "von {{pages}}",
+    "pageNumber": "Seitennummer",
+    "nextIssue": "Nächsten Fehler anzeigen",
     "confirmationTitle": "Stapelverarbeitung bestätigen",
     "confirmation": {
       "file": "Datei",

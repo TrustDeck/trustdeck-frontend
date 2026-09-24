@@ -5,6 +5,8 @@ import {
   ArrowDownTrayIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   DocumentArrowUpIcon,
   ExclamationTriangleIcon,
   XMarkIcon
@@ -73,6 +75,84 @@ const EMPTY_MAPPING: ColumnMapping = {
 
 const PAGE_SIZE = 25
 
+function TablePagination({
+  page,
+  total,
+  onPageChange,
+  hasIssues,
+  onNextIssue
+}: {
+  page: number
+  total: number
+  onPageChange: (page: number) => void
+  hasIssues: boolean
+  onNextIssue: () => void
+}) {
+  const { t } = useTranslation('pseudonyms')
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const [pageInput, setPageInput] = useState(String(page + 1))
+
+  useEffect(() => {
+    setPageInput(String(page + 1))
+  }, [page])
+
+  const commitPageInput = () => {
+    const requestedPage = Number(pageInput)
+    if (!Number.isFinite(requestedPage)) {
+      setPageInput(String(page + 1))
+      return
+    }
+    onPageChange(Math.min(pageCount - 1, Math.max(0, requestedPage - 1)))
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
+      <button
+        type="button"
+        title={t('search:pagination.previous')}
+        aria-label={t('search:pagination.previous')}
+        onClick={() => onPageChange(Math.max(0, page - 1))}
+        disabled={page === 0}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+      >
+        <ChevronLeftIcon className="h-5 w-5" />
+      </button>
+      <label className="flex items-center gap-2">
+        <span className="sr-only">{t('batch.pageNumber')}</span>
+        <input
+          type="number"
+          min={1}
+          max={pageCount}
+          value={pageInput}
+          onChange={(event) => setPageInput(event.target.value)}
+          onBlur={commitPageInput}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') commitPageInput()
+          }}
+          className="w-20 rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-center font-medium dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
+        />
+        <span>{t('batch.pageOf', { pages: pageCount })}</span>
+      </label>
+      <button
+        type="button"
+        title={t('search:pagination.next')}
+        aria-label={t('search:pagination.next')}
+        onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
+        disabled={page >= pageCount - 1}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
+      >
+        <ChevronRightIcon className="h-5 w-5" />
+      </button>
+      {hasIssues && (
+        <SecondaryOutlinedButton
+          label={t('batch.nextIssue')}
+          onClick={onNextIssue}
+        />
+      )}
+    </div>
+  )
+}
+
 function extensionOf(file: File | null) {
   return file?.name.toLowerCase().split('.').pop() ?? ''
 }
@@ -140,6 +220,9 @@ export default function BatchPseudonymImport({
   const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set())
   const [includeDuplicateRows, setIncludeDuplicateRows] = useState(false)
   const [page, setPage] = useState(0)
+  const [previewIssueCursor, setPreviewIssueCursor] = useState(-1)
+  const [resultPage, setResultPage] = useState(0)
+  const [resultIssueCursor, setResultIssueCursor] = useState(-1)
   const [parsing, setParsing] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
@@ -442,6 +525,8 @@ export default function BatchPseudonymImport({
       stopped,
       stopMessage
     })
+    setResultPage(0)
+    setResultIssueCursor(-1)
     setProcessing(false)
     setStage('results')
   }
@@ -450,7 +535,33 @@ export default function BatchPseudonymImport({
     page * PAGE_SIZE,
     (page + 1) * PAGE_SIZE
   )
+  const previewIssues = validatedRows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.status !== 'valid')
+  const resultIssues = result
+    ? result.rows
+        .map((row, index) => ({ row, index }))
+        .filter(
+          ({ row }) =>
+            row.validationStatus !== 'valid' || row.status !== 'created'
+        )
+    : []
+  const visibleResultRows = result
+    ? result.rows.slice(resultPage * PAGE_SIZE, (resultPage + 1) * PAGE_SIZE)
+    : []
   const permissionMessage = permissionAccess && !canCreateBatch
+
+  const goToNextIssue = (
+    issues: { index: number }[],
+    cursor: number,
+    setCursor: (index: number) => void,
+    setTargetPage: (page: number) => void
+  ) => {
+    if (!issues.length) return
+    const nextIssue = issues.find(({ index }) => index > cursor) ?? issues[0]
+    setCursor(nextIssue.index)
+    setTargetPage(Math.floor(nextIssue.index / PAGE_SIZE))
+  }
 
   return (
     <Panel noMaxWidth className="mx-auto w-full">
@@ -841,40 +952,20 @@ export default function BatchPseudonymImport({
               </tbody>
             </table>
           </div>
-          <div className="flex items-center justify-center gap-3 text-sm">
-            <button
-              type="button"
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-              disabled={page === 0}
-              className="rounded border px-3 py-1 disabled:opacity-40"
-            >
-              {t('common:back')}
-            </button>
-            <span>
-              {t('batch.page', {
-                page: page + 1,
-                pages: Math.max(1, Math.ceil(validatedRows.length / PAGE_SIZE))
-              })}
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                setPage((current) =>
-                  Math.min(
-                    Math.max(
-                      0,
-                      Math.ceil(validatedRows.length / PAGE_SIZE) - 1
-                    ),
-                    current + 1
-                  )
-                )
-              }
-              disabled={(page + 1) * PAGE_SIZE >= validatedRows.length}
-              className="rounded border px-3 py-1 disabled:opacity-40"
-            >
-              {t('common:forward')}
-            </button>
-          </div>
+          <TablePagination
+            page={page}
+            total={validatedRows.length}
+            onPageChange={setPage}
+            hasIssues={previewIssues.length > 0}
+            onNextIssue={() =>
+              goToNextIssue(
+                previewIssues,
+                previewIssueCursor,
+                setPreviewIssueCursor,
+                setPage
+              )
+            }
+          />
           <div className="flex justify-between">
             <SecondaryOutlinedButton
               label={t('batch.back')}
@@ -1069,7 +1160,7 @@ export default function BatchPseudonymImport({
                 </tr>
               </thead>
               <tbody>
-                {result.rows.slice(0, 100).map((row) => (
+                {visibleResultRows.map((row) => (
                   <tr
                     key={row.sourceRowNumber}
                     className="border-t border-gray-200 dark:border-slate-700"
@@ -1100,6 +1191,20 @@ export default function BatchPseudonymImport({
               </tbody>
             </table>
           </div>
+          <TablePagination
+            page={resultPage}
+            total={result.rows.length}
+            onPageChange={setResultPage}
+            hasIssues={resultIssues.length > 0}
+            onNextIssue={() =>
+              goToNextIssue(
+                resultIssues,
+                resultIssueCursor,
+                setResultIssueCursor,
+                setResultPage
+              )
+            }
+          />
           <div className="flex flex-wrap justify-between gap-3">
             <SecondaryOutlinedButton
               label={t('batch.results.newImport')}

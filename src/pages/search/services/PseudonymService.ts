@@ -26,6 +26,9 @@ const PseudonymService = {
     query: string
   ): Promise<Pseudonym[]> => {
     try {
+      if (query.trim() === '*') {
+        return await TrustDeck.instance().getPseudonymsBatch(domainName)
+      }
       return await TrustDeck.instance().searchPseudonyms(domainName, query)
     } catch (error: any) {
       if (

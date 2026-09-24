@@ -131,6 +131,9 @@
       "pseudonym": "Pseudonym"
     },
     "page": "Page {{page}} of {{pages}}",
+    "pageOf": "of {{pages}}",
+    "pageNumber": "Page number",
+    "nextIssue": "Next issue",
     "confirmationTitle": "Confirm batch creation",
     "confirmation": {
       "file": "File",

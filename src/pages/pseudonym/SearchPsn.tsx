@@ -687,6 +687,7 @@ export default function SearchPsn() {
                     projectAbbreviation={projectAbbreviation}
                     domainName={pseudonymDomain}
                     onCancel={cancelCreationPath}
+                    onDone={cancelGeneration}
                   />
                 )}
 

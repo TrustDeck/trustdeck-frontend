@@ -112,6 +112,7 @@
     },
     "back": "Zurück",
     "next": "Weiter",
+    "domainRequired": "Wählen Sie im Auswahlfeld oben eine Pseudonym-Domäne aus, bevor Sie fortfahren.",
     "review": "Bestätigung prüfen",
     "excludeInvalid": "Alle ungültigen Zeilen ausschließen",
     "includeDuplicateRows": "Weitere Zeilen mit derselben Kennung und demselben Kennungstyp senden (Warnung bestätigt)",
@@ -191,7 +192,7 @@
       "duplicateNotSubmitted": "Weitere doppelte Zeile wurde nicht gesendet.",
       "notStarted": "Noch nicht verarbeitet.",
       "notStartedAfterStop": "Nicht gesendet, weil die Verarbeitung angehalten wurde.",
-      "back": "Zurück",
+      "done": "Fertig",
       "newImport": "Neuen Import starten",
       "downloadResults": "Ergebnis-CSV herunterladen"
     },

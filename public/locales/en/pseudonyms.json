@@ -112,6 +112,7 @@
     },
     "back": "Back",
     "next": "Next",
+    "domainRequired": "Select a pseudonym domain in the selector above before continuing.",
     "review": "Review confirmation",
     "excludeInvalid": "Exclude all invalid rows",
     "includeDuplicateRows": "Submit later rows with the same identifier and ID Type (I acknowledge the warning)",
@@ -191,7 +192,7 @@
       "duplicateNotSubmitted": "Later duplicate row was not submitted.",
       "notStarted": "Not processed yet.",
       "notStartedAfterStop": "Not submitted because processing stopped.",
-      "back": "Back",
+      "done": "Done",
       "newImport": "Start new import",
       "downloadResults": "Download results CSV"
     },

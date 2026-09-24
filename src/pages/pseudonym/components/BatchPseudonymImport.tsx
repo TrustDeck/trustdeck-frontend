@@ -58,6 +58,7 @@ type Props = {
   projectAbbreviation: string
   domainName: string
   onCancel: () => void
+  onDone: () => void
 }
 
 const EMPTY_MAPPING: ColumnMapping = {
@@ -122,7 +123,8 @@ function downloadResults(rows: ImportResultRow[]) {
 export default function BatchPseudonymImport({
   projectAbbreviation,
   domainName,
-  onCancel
+  onCancel,
+  onDone
 }: Props) {
   const { t } = useTranslation('pseudonyms')
   const auth = useAuth()
@@ -603,12 +605,18 @@ export default function BatchPseudonymImport({
             </p>
           )}
           <div className="flex justify-end">
-            <PrimaryButton
-              label={t('batch.next')}
-              onClick={() => setStage('mapping')}
-              disabled={!file || !activeSheet || !domainName || parsing}
-              icon={<ArrowRightIcon className="mr-1 h-5 w-5" />}
-            />
+            <span
+              title={
+                file && !domainName ? t('batch.domainRequired') : undefined
+              }
+            >
+              <PrimaryButton
+                label={t('batch.next')}
+                onClick={() => setStage('mapping')}
+                disabled={!file || !activeSheet || !domainName || parsing}
+                icon={<ArrowRightIcon className="mr-1 h-5 w-5" />}
+              />
+            </span>
           </div>
         </div>
       )}
@@ -783,6 +791,7 @@ export default function BatchPseudonymImport({
                   <th className="px-3 py-2">{t('batch.table.row')}</th>
                   <th className="px-3 py-2">{t('batch.fields.identifier')}</th>
                   <th className="px-3 py-2">{t('batch.fields.idType')}</th>
+                  <th className="px-3 py-2">{t('batch.fields.psn')}</th>
                   <th className="px-3 py-2">{t('batch.table.status')}</th>
                   <th className="px-3 py-2">{t('batch.table.messages')}</th>
                   <th className="px-3 py-2">{t('batch.table.exclude')}</th>
@@ -804,6 +813,9 @@ export default function BatchPseudonymImport({
                       </td>
                       <td className="px-3 py-2">
                         {validated?.idType || t('batch.table.noValue')}
+                      </td>
+                      <td className="px-3 py-2 font-mono">
+                        {validated?.psn || t('batch.table.noValue')}
                       </td>
                       <td className="px-3 py-2">
                         {statusLabel(t, validated?.status ?? 'invalid')}
@@ -1103,10 +1115,7 @@ export default function BatchPseudonymImport({
               onClick={() => downloadResults(result.rows)}
               icon={<ArrowDownTrayIcon className="mr-1 h-5 w-5" />}
             />
-            <SecondaryOutlinedButton
-              label={t('batch.results.back')}
-              onClick={onCancel}
-            />
+            <PrimaryButton label={t('batch.results.done')} onClick={onDone} />
           </div>
         </div>
       )}

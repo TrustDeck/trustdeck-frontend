@@ -92,9 +92,7 @@ function downloadResults(rows: ImportResultRow[]) {
     'idType',
     'pseudonym',
     'status',
-    'validationStatus',
-    'validationMessage',
-    'message'
+    'validationDetails'
   ]
   const csv = [
     header,
@@ -104,9 +102,9 @@ function downloadResults(rows: ImportResultRow[]) {
       row.idType,
       row.pseudonym ?? '',
       row.status,
-      row.validationStatus,
-      row.validationMessage ?? '',
-      row.message ?? ''
+      [row.validationStatus, row.validationMessage, row.message]
+        .filter(Boolean)
+        .join(' - ')
     ])
   ]
     .map((line) => line.map((value) => escapeCsv(value)).join(','))
@@ -531,7 +529,7 @@ export default function BatchPseudonymImport({
             </div>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900">
-              <p className="text-sm">
+              <p className="text-base font-medium">
                 {t('batch.selectedFile', {
                   name: file.name,
                   size: Math.ceil(file.size / 1024)

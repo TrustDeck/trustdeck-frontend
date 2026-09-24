@@ -114,7 +114,7 @@
     "next": "Weiter",
     "review": "Bestätigung prüfen",
     "excludeInvalid": "Alle ungültigen Zeilen ausschließen",
-    "includeDuplicateRows": "Weitere doppelte Kennung/Kennungstyp-Zeilen nach Bestätigung der Warnung einbeziehen",
+    "includeDuplicateRows": "Weitere Zeilen mit derselben Kennung und demselben Kennungstyp senden (Warnung bestätigt)",
     "table": {
       "row": "Quellzeile",
       "status": "Status",

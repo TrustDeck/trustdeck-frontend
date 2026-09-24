@@ -114,7 +114,7 @@
     "next": "Next",
     "review": "Review confirmation",
     "excludeInvalid": "Exclude all invalid rows",
-    "includeDuplicateRows": "Include later duplicate identifier/ID Type rows after acknowledging the warning",
+    "includeDuplicateRows": "Submit later rows with the same identifier and ID Type (I acknowledge the warning)",
     "table": {
       "row": "Source row",
       "status": "Status",

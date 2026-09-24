@@ -27,7 +27,13 @@ const PseudonymService = {
   ): Promise<Pseudonym[]> => {
     try {
       if (query.trim() === '*') {
-        return await TrustDeck.instance().getPseudonymsBatch(domainName)
+        try {
+          const batchResults =
+            await TrustDeck.instance().getPseudonymsBatch(domainName)
+          if (batchResults.length > 0) return batchResults
+        } catch {
+          // Fall back to the established wildcard search endpoint.
+        }
       }
       return await TrustDeck.instance().searchPseudonyms(domainName, query)
     } catch (error: any) {

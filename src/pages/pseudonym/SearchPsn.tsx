@@ -6,6 +6,7 @@ import { StepperPanel } from 'primereact/stepperpanel'
 import {
   ArrowLeftIcon,
   CheckIcon,
+  DocumentArrowUpIcon,
   FingerPrintIcon,
   IdentificationIcon,
   UserIcon,
@@ -44,6 +45,7 @@ import useStepperControlStore from './stores/StepperControlStore'
 import { PseudonymService } from './services/PseudonymService'
 import { getSelectedGroupNames } from './utils/findNodeLabelByKey'
 import DomainSearchSelect from './components/DomainSearchSelect'
+import BatchPseudonymImport from './components/BatchPseudonymImport'
 
 type StandalonePseudonymForm = {
   group: string
@@ -56,7 +58,13 @@ type StandalonePseudonymForm = {
   omitPrefix: boolean
 }
 
-type GenerationMode = 'choice' | 'entity' | 'standalone' | 'secondary' | null
+type GenerationMode =
+  | 'choice'
+  | 'entity'
+  | 'standalone'
+  | 'secondary'
+  | 'batch'
+  | null
 type ManagementTab = 'search' | 'add'
 
 function findGroupKeyByName(nodes: any[] | null, groupName: string): string {
@@ -609,7 +617,7 @@ export default function SearchPsn() {
                 </div>
 
                 {generationMode === 'choice' && (
-                  <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="grid gap-4 lg:grid-cols-4">
                     <button
                       type="button"
                       onClick={startEntityWorkflow}
@@ -621,6 +629,19 @@ export default function SearchPsn() {
                       </h3>
                       <p className="td-section-subtitle mt-2 flex-1">
                         {t('pseudonyms:management.entityDescription')}
+                      </p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGenerationMode('batch')}
+                      className="group flex min-h-40 flex-col rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-color-blue hover:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-color-blue/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/30"
+                    >
+                      <DocumentArrowUpIcon className="h-9 w-9 text-color-blue dark:text-blue-300" />
+                      <h3 className="td-section-title mt-4">
+                        {t('pseudonyms:management.batchTitle')}
+                      </h3>
+                      <p className="td-section-subtitle mt-2 flex-1">
+                        {t('pseudonyms:management.batchDescription')}
                       </p>
                     </button>
 
@@ -651,7 +672,7 @@ export default function SearchPsn() {
                         {t('pseudonyms:management.standaloneDescription')}
                       </p>
                     </button>
-                    <div className="flex justify-center lg:col-span-3">
+                    <div className="flex justify-center lg:col-span-4">
                       <SecondaryOutlinedButton
                         label={t('common:cancel')}
                         onClick={cancelGeneration}
@@ -659,6 +680,15 @@ export default function SearchPsn() {
                       />
                     </div>
                   </div>
+                )}
+
+                {generationMode === 'batch' && (
+                  <BatchPseudonymImport
+                    projectAbbreviation={projectAbbreviation}
+                    domainName={pseudonymDomain}
+                    onCancel={cancelCreationPath}
+                    onDone={cancelGeneration}
+                  />
                 )}
 
                 {generationMode === 'entity' && (

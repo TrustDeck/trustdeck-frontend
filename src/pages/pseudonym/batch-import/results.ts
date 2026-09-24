@@ -32,7 +32,14 @@ function rowBase(row: ValidatedImportRow): ImportResultRow {
     sourceRowNumber: row.sourceRowNumber,
     identifier: row.identifier,
     idType: row.idType,
-    status: 'not-confirmed'
+    validationStatus: row.status,
+    ...(row.messages.length
+      ? {
+          validationMessage: row.messages.map((item) => item.message).join('; ')
+        }
+      : {}),
+    status: 'not-confirmed',
+    ...(row.psn ? { pseudonym: row.psn } : {})
   }
 }
 

@@ -87,6 +87,8 @@ export type ImportResultRow = {
   sourceRowNumber: number
   identifier: string
   idType: string
+  validationStatus: ValidatedImportRow['status']
+  validationMessage?: string
   status: ImportRowStatus
   pseudonym?: string
   message?: string

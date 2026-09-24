@@ -90,8 +90,10 @@ function downloadResults(rows: ImportResultRow[]) {
     'sourceRowNumber',
     'identifier',
     'idType',
-    'status',
     'pseudonym',
+    'status',
+    'validationStatus',
+    'validationMessage',
     'message'
   ]
   const csv = [
@@ -100,8 +102,10 @@ function downloadResults(rows: ImportResultRow[]) {
       row.sourceRowNumber,
       row.identifier,
       row.idType,
-      row.status,
       row.pseudonym ?? '',
+      row.status,
+      row.validationStatus,
+      row.validationMessage ?? '',
       row.message ?? ''
     ])
   ]
@@ -307,8 +311,16 @@ export default function BatchPseudonymImport({
           sourceRowNumber: row.sourceRowNumber,
           identifier: row.identifier,
           idType: row.idType,
+          validationStatus: row.status,
           status: 'invalid',
-          message: row.messages.map((item) => item.message).join('; ')
+          ...(row.psn ? { pseudonym: row.psn } : {}),
+          ...(row.messages.length
+            ? {
+                validationMessage: row.messages
+                  .map((item) => item.message)
+                  .join('; ')
+              }
+            : {})
         }
       }
       if (excludedRows.has(row.sourceRowNumber)) {
@@ -316,7 +328,9 @@ export default function BatchPseudonymImport({
           sourceRowNumber: row.sourceRowNumber,
           identifier: row.identifier,
           idType: row.idType,
+          validationStatus: row.status,
           status: 'excluded',
+          ...(row.psn ? { pseudonym: row.psn } : {}),
           message: t('batch.results.excluded')
         }
       }
@@ -334,7 +348,9 @@ export default function BatchPseudonymImport({
           sourceRowNumber: row.sourceRowNumber,
           identifier: row.identifier,
           idType: row.idType,
+          validationStatus: row.status,
           status: 'not-submitted',
+          ...(row.psn ? { pseudonym: row.psn } : {}),
           message: t('batch.results.duplicateNotSubmitted')
         }
       }
@@ -342,7 +358,9 @@ export default function BatchPseudonymImport({
         sourceRowNumber: row.sourceRowNumber,
         identifier: row.identifier,
         idType: row.idType,
+        validationStatus: row.status,
         status: 'not-submitted',
+        ...(row.psn ? { pseudonym: row.psn } : {}),
         message: t('batch.results.notStarted')
       }
     })
@@ -441,12 +459,14 @@ export default function BatchPseudonymImport({
           <h2 className="td-panel-title">{t('batch.title')}</h2>
           <p className="td-section-subtitle mt-1">{t('batch.description')}</p>
         </div>
-        <SecondaryOutlinedButton
-          label={t('common:cancel')}
-          onClick={onCancel}
-          icon={<XMarkIcon className="mr-1 h-5 w-5" />}
-          disabled={processing}
-        />
+        {stage !== 'results' && (
+          <SecondaryOutlinedButton
+            label={t('common:cancel')}
+            onClick={onCancel}
+            icon={<XMarkIcon className="mr-1 h-5 w-5" />}
+            disabled={processing}
+          />
+        )}
       </div>
 
       {stage !== 'results' && (
@@ -469,49 +489,60 @@ export default function BatchPseudonymImport({
 
       {stage === 'file' && (
         <div className="space-y-5">
-          <div
-            className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center focus-within:ring-2 focus-within:ring-color-blue dark:border-slate-700 dark:bg-slate-900"
-            role="button"
-            tabIndex={0}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ')
-                fileInputRef.current?.click()
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="sr-only"
+            onChange={(event) => {
+              selectFile(event.target.files?.[0])
+              event.target.value = ''
             }}
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault()
-              selectFile(event.dataTransfer.files[0])
-            }}
-          >
-            <DocumentArrowUpIcon
-              className="h-10 w-10 text-color-blue"
-              aria-hidden="true"
-            />
-            <p className="font-semibold">{t('batch.fileDrop')}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {t('batch.fileTypes')}
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              className="sr-only"
-              onChange={(event) => selectFile(event.target.files?.[0])}
-            />
-            <PrimaryOutlinedButton
-              label={t('batch.chooseFile')}
+          />
+          {!file ? (
+            <div
+              className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center focus-within:ring-2 focus-within:ring-color-blue dark:border-slate-700 dark:bg-slate-900"
+              role="button"
+              tabIndex={0}
               onClick={() => fileInputRef.current?.click()}
-              disabled={parsing}
-            />
-          </div>
-          {file && (
-            <p className="text-sm">
-              {t('batch.selectedFile', {
-                name: file.name,
-                size: Math.ceil(file.size / 1024)
-              })}
-            </p>
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ')
+                  fileInputRef.current?.click()
+              }}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault()
+                selectFile(event.dataTransfer.files[0])
+              }}
+            >
+              <DocumentArrowUpIcon
+                className="h-10 w-10 text-color-blue"
+                aria-hidden="true"
+              />
+              <p className="font-semibold">{t('batch.fileDrop')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {t('batch.fileTypes')}
+              </p>
+              <PrimaryOutlinedButton
+                label={t('batch.chooseFile')}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={parsing}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+              <p className="text-sm">
+                {t('batch.selectedFile', {
+                  name: file.name,
+                  size: Math.ceil(file.size / 1024)
+                })}
+              </p>
+              <PrimaryOutlinedButton
+                label={t('batch.changeFile')}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={parsing}
+              />
+            </div>
           )}
           {file && extensionOf(file) === 'csv' && (
             <label className="block max-w-sm">
@@ -754,7 +785,6 @@ export default function BatchPseudonymImport({
                   <th className="px-3 py-2">{t('batch.table.row')}</th>
                   <th className="px-3 py-2">{t('batch.fields.identifier')}</th>
                   <th className="px-3 py-2">{t('batch.fields.idType')}</th>
-                  <th className="px-3 py-2">{t('batch.table.normalized')}</th>
                   <th className="px-3 py-2">{t('batch.table.status')}</th>
                   <th className="px-3 py-2">{t('batch.table.messages')}</th>
                   <th className="px-3 py-2">{t('batch.table.exclude')}</th>
@@ -776,11 +806,6 @@ export default function BatchPseudonymImport({
                       </td>
                       <td className="px-3 py-2">
                         {validated?.idType || t('batch.table.noValue')}
-                      </td>
-                      <td className="px-3 py-2 font-mono">
-                        {validated?.payload
-                          ? JSON.stringify(validated.payload)
-                          : t('batch.table.noPayload')}
                       </td>
                       <td className="px-3 py-2">
                         {statusLabel(t, validated?.status ?? 'invalid')}
@@ -1025,9 +1050,12 @@ export default function BatchPseudonymImport({
                 <tr>
                   <th className="px-3 py-2">{t('batch.table.row')}</th>
                   <th className="px-3 py-2">{t('batch.fields.identifier')}</th>
-                  <th className="px-3 py-2">{t('batch.table.status')}</th>
+                  <th className="px-3 py-2">{t('batch.fields.idType')}</th>
                   <th className="px-3 py-2">{t('batch.table.pseudonym')}</th>
-                  <th className="px-3 py-2">{t('batch.table.messages')}</th>
+                  <th className="px-3 py-2">{t('batch.table.status')}</th>
+                  <th className="px-3 py-2">
+                    {t('batch.table.validationDetails')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1040,12 +1068,22 @@ export default function BatchPseudonymImport({
                     <td className="px-3 py-2 font-mono">
                       {row.identifier || t('batch.table.noValue')}
                     </td>
-                    <td className="px-3 py-2">{statusLabel(t, row.status)}</td>
+                    <td className="px-3 py-2">
+                      {row.idType || t('batch.table.noValue')}
+                    </td>
                     <td className="px-3 py-2 font-mono">
                       {row.pseudonym ?? t('batch.table.noValue')}
                     </td>
+                    <td className="px-3 py-2">{statusLabel(t, row.status)}</td>
                     <td className="px-3 py-2">
-                      {row.message ?? t('batch.table.noMessage')}
+                      <span>{statusLabel(t, row.validationStatus)}</span>
+                      {(row.validationMessage || row.message) && (
+                        <span className="block text-gray-600 dark:text-gray-300">
+                          {[row.validationMessage, row.message]
+                            .filter(Boolean)
+                            .join('; ')}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -1054,7 +1092,7 @@ export default function BatchPseudonymImport({
           </div>
           <div className="flex flex-wrap justify-between gap-3">
             <SecondaryOutlinedButton
-              label={t('batch.newImport')}
+              label={t('batch.results.newImport')}
               onClick={() => {
                 setStage('file')
                 setFile(null)
@@ -1063,12 +1101,12 @@ export default function BatchPseudonymImport({
               }}
             />
             <PrimaryOutlinedButton
-              label={t('batch.downloadResults')}
+              label={t('batch.results.downloadResults')}
               onClick={() => downloadResults(result.rows)}
               icon={<ArrowDownTrayIcon className="mr-1 h-5 w-5" />}
             />
             <SecondaryOutlinedButton
-              label={t('common:cancel')}
+              label={t('batch.results.back')}
               onClick={onCancel}
             />
           </div>

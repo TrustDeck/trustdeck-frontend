@@ -78,6 +78,7 @@
     "fileDrop": "Drop one CSV or XLSX file here",
     "fileTypes": "CSV and XLSX only. Maximum file size: 25 MB; maximum rows: 50,000.",
     "chooseFile": "Choose file",
+    "changeFile": "Change file",
     "selectedFile": "Selected file: {{name}} ({{size}} KB)",
     "delimiter": "CSV delimiter",
     "delimiterAuto": "Detect automatically",
@@ -103,6 +104,12 @@
     "dateFormat": "Source date format",
     "dateFormatAuto": "Automatic for supported formats",
     "mappingDuplicateWarning": "The same source column is mapped more than once. Confirm that this is intentional.",
+    "summary": {
+      "total": "Total rows: {{count}}",
+      "valid": "Valid: {{count}}",
+      "invalid": "Invalid: {{count}}",
+      "warnings": "Warnings: {{count}}"
+    },
     "back": "Back",
     "next": "Next",
     "review": "Review confirmation",
@@ -111,6 +118,7 @@
     "table": {
       "row": "Source row",
       "status": "Status",
+      "validationDetails": "Validation / details",
       "messages": "Validation messages",
       "normalized": "Normalized payload",
       "exclude": "Exclude",
@@ -183,6 +191,7 @@
       "duplicateNotSubmitted": "Later duplicate row was not submitted.",
       "notStarted": "Not processed yet.",
       "notStartedAfterStop": "Not submitted because processing stopped.",
+      "back": "Back",
       "newImport": "Start new import",
       "downloadResults": "Download results CSV"
     },

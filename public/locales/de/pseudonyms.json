@@ -78,6 +78,7 @@
     "fileDrop": "Eine CSV- oder XLSX-Datei hier ablegen",
     "fileTypes": "Nur CSV und XLSX. Maximale Dateigröße: 25 MB; maximale Zeilen: 50.000.",
     "chooseFile": "Datei auswählen",
+    "changeFile": "Datei ändern",
     "selectedFile": "Ausgewählte Datei: {{name}} ({{size}} KB)",
     "delimiter": "CSV-Trennzeichen",
     "delimiterAuto": "Automatisch erkennen",
@@ -103,6 +104,12 @@
     "dateFormat": "Datumsformat der Quelle",
     "dateFormatAuto": "Automatisch für unterstützte Formate",
     "mappingDuplicateWarning": "Dieselbe Quellspalte ist mehrmals zugeordnet. Bestätigen Sie, dass dies beabsichtigt ist.",
+    "summary": {
+      "total": "Zeilen gesamt: {{count}}",
+      "valid": "Gültig: {{count}}",
+      "invalid": "Ungültig: {{count}}",
+      "warnings": "Warnungen: {{count}}"
+    },
     "back": "Zurück",
     "next": "Weiter",
     "review": "Bestätigung prüfen",
@@ -111,6 +118,7 @@
     "table": {
       "row": "Quellzeile",
       "status": "Status",
+      "validationDetails": "Validierung / Details",
       "messages": "Prüfmeldungen",
       "normalized": "Normalisierte Nutzlast",
       "exclude": "Ausschließen",
@@ -183,6 +191,7 @@
       "duplicateNotSubmitted": "Weitere doppelte Zeile wurde nicht gesendet.",
       "notStarted": "Noch nicht verarbeitet.",
       "notStartedAfterStop": "Nicht gesendet, weil die Verarbeitung angehalten wurde.",
+      "back": "Zurück",
       "newImport": "Neuen Import starten",
       "downloadResults": "Ergebnis-CSV herunterladen"
     },

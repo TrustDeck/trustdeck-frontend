@@ -705,9 +705,7 @@ class TrustDeck {
       'POST',
       `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityType)}`,
       payload,
-      recordLinkageResolution
-        ? { recordLinkageResolution }
-        : undefined
+      recordLinkageResolution ? { recordLinkageResolution } : undefined
     )
     return {
       entity: response.data,
@@ -813,6 +811,28 @@ class TrustDeck {
       payload
     )
     return this.asArray<Pseudonym>(response)
+  }
+
+  public async createPseudonymsBatchWithStatus(
+    payload: PseudonymCreatePayload[],
+    domainName: string
+  ): Promise<{ status: number; data: Pseudonym[]; errorBody?: string }> {
+    try {
+      const response = await this.requestWithStatus<unknown>(
+        'POST',
+        `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`,
+        payload
+      )
+      return {
+        status: response.status,
+        data: this.asArray<Pseudonym>(response.data)
+      }
+    } catch (error) {
+      if (error instanceof TrustDeckHttpError) {
+        return { status: error.status, data: [], errorBody: error.body }
+      }
+      throw error
+    }
   }
 
   public async searchPseudonym(

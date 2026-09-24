@@ -33,6 +33,17 @@ describe('batch import parser', () => {
     expect(sheet.rows[0].values[2]).toBe('say "hello"')
   })
 
+  it('accepts exactly 50,000 data rows when the CSV includes a header', async () => {
+    const rows = ['identifier,idType']
+    for (let index = 1; index <= 50_000; index += 1) {
+      rows.push(`ID-${index},PatientID`)
+    }
+    const [sheet] = await parseImportFile(
+      new File([rows.join('\n')], 'large.csv')
+    )
+    expect(sheet.rows).toHaveLength(50_000)
+  })
+
   it('supports an XLSX workbook with multiple sheets and string numbers', async () => {
     mockedReadExcelFile.mockResolvedValue([
       {

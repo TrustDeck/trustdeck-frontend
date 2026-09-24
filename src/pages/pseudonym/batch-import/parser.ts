@@ -131,13 +131,17 @@ async function parseCsv(
     parsed.data.map((row) => row.map(cellToSourceCell))
   )
   if (rows.length === 0) throw new ImportFileError('no-usable-rows')
-  if (rows.length > BATCH_ROW_LIMIT) {
+  const suggestedHeader = rows.findIndex((row) => !isEmptyRow(row.values))
+  const sheet = prepareSheet(
+    'CSV',
+    rows,
+    suggestedHeader < 0 ? null : suggestedHeader
+  )
+  if (sheet.rows.length === 0) throw new ImportFileError('no-usable-rows')
+  if (sheet.rows.length > BATCH_ROW_LIMIT) {
     throw new ImportFileError('too-many-rows')
   }
-  const suggestedHeader = rows.findIndex((row) => !isEmptyRow(row.values))
-  return [
-    prepareSheet('CSV', rows, suggestedHeader < 0 ? null : suggestedHeader)
-  ]
+  return [sheet]
 }
 
 async function parseXlsx(file: File): Promise<ParsedSheet[]> {

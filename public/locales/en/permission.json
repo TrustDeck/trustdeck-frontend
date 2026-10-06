@@ -119,7 +119,7 @@
   "globalBoxSubtitle": "Inspect and manage global rights that apply across TrustDeck.",
   "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
   "projectDomainSearchHelp": "First select a project or pseudonym domain above. Then search for a user below to grant or revoke the rights you hold for that scope.",
-  "userSearchPlaceholder": "Search by name, email, or user ID",
+  "userSearchPlaceholder": "Search by name, username, email, or user ID",
   "userSearchRestrictedFallback": "User search requires the relevant global permission.",
   "selectedUserPrefix": "Selected user:",
   "mode": {

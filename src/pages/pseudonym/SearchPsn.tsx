@@ -170,7 +170,7 @@ export default function SearchPsn() {
   const {
     setPseudonymValue,
     setResults: setPseudonymResults,
-    clearSelectedResult,
+    selectResult,
     clearResults: clearPseudonymResults
   } = usePseudonymStore()
 
@@ -399,7 +399,7 @@ export default function SearchPsn() {
     setPseudonymGroup(normalized.domainName)
     setPseudonymValue(normalized)
     setPseudonymResults([normalized])
-    clearSelectedResult()
+    selectResult(normalized.domainName, normalized.psn, false)
     setGenerationMode(null)
     setManagementTab('search')
 

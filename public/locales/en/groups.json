@@ -6,6 +6,21 @@
     "modalHeader": "How to use this page:",
     "subtitle": "Create and configure pseudonym domains and organize their inheritance hierarchy."
   },
+  "algorithms": {
+    "randomCustomAlphabet": "Random custom alphabet",
+    "randomNumbers": "Random numbers",
+    "randomHexadecimal": "Random hexadecimal",
+    "randomLetters": "Random letters",
+    "randomLettersAndNumbers": "Random letters and numbers",
+    "randomLettersAndNumbersWithoutBios": "Random letters and numbers without B/I/O/S",
+    "consecutiveNumbers": "Consecutive numbers",
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha2": "SHA-2",
+    "sha3": "SHA-3",
+    "blake3": "BLAKE3",
+    "xxHash": "xxHash"
+  },
   "buttons": {
     "newGroup": "New pseudonym domain",
     "createGroup": "Create pseudonym domain",

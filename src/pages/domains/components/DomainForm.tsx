@@ -641,7 +641,10 @@ export default function DomainForm() {
                 }
                 markAlgorithmOverridden()
               }}
-              options={algorithmOptions}
+              options={algorithmOptions.map((option) => ({
+                label: t(`groups:${option.labelKey}`),
+                value: option.value
+              }))}
             />
           </InheritedField>
           <InheritedField

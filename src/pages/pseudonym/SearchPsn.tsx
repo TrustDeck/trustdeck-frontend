@@ -241,8 +241,6 @@ export default function SearchPsn() {
     clearPseudonymResults()
     setPseudonymQuery('')
     setPseudonymGroup('')
-    setSourceGroup('')
-    setSourceQuery('')
   }, [
     setStepperRef,
     clearEntityResults,
@@ -258,8 +256,6 @@ export default function SearchPsn() {
     setGroups([])
     setSelectedGroup('')
     setPseudonymGroup('')
-    setSourceGroup('')
-    setSourceQuery('')
     setStandaloneForm((current) => ({ ...current, group: '' }))
     setGroupsLoading(Boolean(projectAbbreviation))
 
@@ -337,7 +333,8 @@ export default function SearchPsn() {
     location.pathname,
     location.state,
     navigate,
-    projectAbbreviation
+    projectAbbreviation,
+    clearPseudonymResults
   ])
 
   const resetEntityWorkflow = () => {

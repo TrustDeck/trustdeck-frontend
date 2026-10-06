@@ -43,6 +43,16 @@ export function trimPersonSearchQuery(value: string) {
   return query || null
 }
 
+export function formatPersonSuggestionName(
+  person: {
+    username: string
+    firstName?: string | null
+    lastName?: string | null
+  }
+) {
+  return `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim() || person.username
+}
+
 export function isReturnedPersonSuggestion(
   value: unknown,
   suggestions: PersonSuggestion[]

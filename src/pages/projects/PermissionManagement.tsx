@@ -27,6 +27,7 @@ import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import {
   AutoComplete,
+  AutoCompleteCompleteEvent,
   AutoCompleteChangeEvent
 } from 'primereact/autocomplete'
 import {
@@ -65,6 +66,7 @@ import type {
 } from './types/Permission'
 import {
   initialPermissionUserSearchState,
+  formatPersonSuggestionName,
   isReturnedPersonSuggestion,
   permissionUserSearchReducer,
   trimPersonSearchQuery
@@ -635,9 +637,7 @@ export default function PermissionManagement({
       const operators = await TrustDeck.instance().searchOperators(query)
       return operators.map((operator: any) => ({
         ...operator,
-        name:
-          `${operator.firstName ?? ''} ${operator.lastName ?? ''}`.trim() ||
-          operator.username,
+        name: formatPersonSuggestionName(operator),
         effectivePermissions: Array.isArray(operator.effectivePermissions)
           ? operator.effectivePermissions
               .map(normalizePermission)
@@ -1218,10 +1218,14 @@ export default function PermissionManagement({
   }
 
   useEffect(() => {
-    if (personSearch.status === 'success') {
+    if (personSearch.status === 'success' && !personSearch.selectedPerson) {
       personInputRef.current?.show()
     }
-  }, [personSearch.status, personSearch.suggestions])
+  }, [
+    personSearch.selectedPerson,
+    personSearch.status,
+    personSearch.suggestions
+  ])
 
   const handleSave = async () => {
     const selectedPersonId = personSearch.selectedPerson?.userId
@@ -1347,6 +1351,9 @@ export default function PermissionManagement({
   const personTemplate = (person: PersonSuggestion) => (
     <div>
       <span className="font-semibold">{person.name}</span>
+      {person.username && person.username !== person.name && (
+        <span className="ml-2 text-sm text-gray-500">{person.username}</span>
+      )}
       {person.email && (
         <span className="ml-2 text-sm text-gray-500">{person.email}</span>
       )}
@@ -1520,6 +1527,12 @@ export default function PermissionManagement({
                 value={personValue}
                 suggestions={personSuggestions}
                 onChange={handlePersonChange}
+                onClear={clearPersonSelection}
+                completeMethod={(event: AutoCompleteCompleteEvent) => {
+                  void handlePersonSearch(event.query)
+                }}
+                delay={300}
+                minLength={1}
                 onKeyPress={(event) => {
                   if (event.key !== 'Enter' || event.defaultPrevented) return
                   event.preventDefault()

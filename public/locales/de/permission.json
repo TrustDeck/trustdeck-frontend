@@ -119,7 +119,7 @@
   "globalBoxSubtitle": "Prüfen und verwalten Sie globale Rechte, die in TrustDeck projektübergreifend gelten.",
   "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
   "projectDomainSearchHelp": "Wählen Sie zuerst oben ein Projekt oder eine Pseudonym-Domäne. Suchen Sie anschließend unten nach einem Benutzer, um für diesen Bereich eigene Rechte zu vergeben oder zu entziehen.",
-  "userSearchPlaceholder": "Nach Name, E-Mail oder Benutzer-ID suchen",
+  "userSearchPlaceholder": "Nach Name, Benutzername, E-Mail oder Benutzer-ID suchen",
   "userSearchRestrictedFallback": "Die Benutzersuche erfordert die entsprechende globale Berechtigung.",
   "selectedUserPrefix": "Ausgewählter Benutzer:",
   "mode": {

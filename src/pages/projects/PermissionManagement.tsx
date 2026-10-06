@@ -15,18 +15,25 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState
+} from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import {
   AutoComplete,
-  AutoCompleteChangeEvent,
-  AutoCompleteCompleteEvent
+  AutoCompleteChangeEvent
 } from 'primereact/autocomplete'
 import {
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
   PencilSquareIcon,
   XCircleIcon,
   XMarkIcon
@@ -47,15 +54,21 @@ import {
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
 import useProjectStore from '../../core/stores/ProjectStore'
-import type { Operator } from '../../core/types/Permission'
 import type {
   DefinedPermission,
   DomainPermissionUpdate,
   EntityTypePermissionUpdate,
   EffectivePermission,
   GlobalPermissionUpdate,
+  PersonSuggestion,
   ProjectPermissionUpdate
 } from './types/Permission'
+import {
+  initialPermissionUserSearchState,
+  isReturnedPersonSuggestion,
+  permissionUserSearchReducer,
+  trimPersonSearchQuery
+} from './permissionUserSearch'
 import { permissionKey } from './utils/permissionRows'
 import {
   DOMAIN_SUBGROUP_LABELS,
@@ -72,11 +85,6 @@ export type PermissionScopeMode = 'global' | 'project-domain'
 type ScopedPermissionsProps = {
   scopeMode?: PermissionScopeMode
   embedded?: boolean
-}
-
-type PersonSuggestion = Operator & {
-  name: string
-  effectivePermissions?: EffectivePermission[]
 }
 
 type LoadingState = 'idle' | 'loading' | 'ready' | 'forbidden' | 'error'
@@ -572,14 +580,22 @@ export default function PermissionManagement({
   const [retrying, setRetrying] = useState(false)
   const [targetScopePermissions, setTargetScopePermissions] = useState<EffectivePermission[]>([])
   const [targetAccessState, setTargetAccessState] = useState<LoadingState>('idle')
-  const [userSearchRestricted, setUserSearchRestricted] = useState(false)
 
-  const [personValue, setPersonValue] = useState('')
-  const [personSuggestions, setPersonSuggestions] = useState<PersonSuggestion[]>([])
-  const [selectedPerson, setSelectedPerson] = useState<PersonSuggestion | null>(null)
+  const [personSearch, dispatchPersonSearch] = useReducer(
+    permissionUserSearchReducer,
+    initialPermissionUserSearchState
+  )
+  const personSearchRequestId = useRef(0)
+  const personInputRef = useRef<AutoComplete<PersonSuggestion> | null>(null)
   const [selectedScopeKey, setSelectedScopeKey] = useState('')
   const [scopeQuery, setScopeQuery] = useState('')
   const [scopePage, setScopePage] = useState(0)
+  const {
+    query: personValue,
+    suggestions: personSuggestions,
+    selectedPerson,
+    userSearchRestricted
+  } = personSearch
 
   const currentUserLabel =
     currentUserFullname || currentUserEmail || currentUserId || t('currentUser')
@@ -1130,21 +1146,37 @@ export default function PermissionManagement({
       })
   }, [scopeRows, scopedCurrentPermissions, selectedProject?.name, t])
 
-  const handlePersonSearch = async (event: AutoCompleteCompleteEvent) => {
-    if (!event.query.trim()) {
-      setPersonSuggestions([])
+  const handlePersonSearch = async () => {
+    const query = trimPersonSearchQuery(personSearch.query)
+    if (
+      !query ||
+      personSearch.status === 'searching' ||
+      !canEditSelectedScope
+    ) {
       return
     }
+
+    const requestId = personSearchRequestId.current + 1
+    personSearchRequestId.current = requestId
+    personInputRef.current?.hide()
+    dispatchPersonSearch({ type: 'searchStarted', requestId })
+
     try {
-      setUserSearchRestricted(false)
-      setPersonSuggestions(await fetchPersons(event.query))
+      const suggestions = await fetchPersons(query)
+      if (personSearchRequestId.current !== requestId) return
+      dispatchPersonSearch({
+        type: 'searchSucceeded',
+        requestId,
+        suggestions
+      })
     } catch (error) {
       console.error('Failed to search permission users', error)
-      setPersonSuggestions([])
+      if (personSearchRequestId.current !== requestId) return
       if (error instanceof TrustDeckHttpError && error.status === 403) {
-        setUserSearchRestricted(true)
+        dispatchPersonSearch({ type: 'searchForbidden', requestId })
         return
       }
+      dispatchPersonSearch({ type: 'searchFailed', requestId })
       showToast({
         severity: 'error',
         summary: t('toast.searchFailed'),
@@ -1156,46 +1188,43 @@ export default function PermissionManagement({
 
   const handlePersonChange = (event: AutoCompleteChangeEvent) => {
     const value = event.value
-    if (value && typeof value === 'object' && 'username' in value) {
-      const person = value as PersonSuggestion
-      setSelectedPerson(person)
+    if (value && typeof value === 'object') {
+      if (!isReturnedPersonSuggestion(value, personSearch.suggestions)) return
+      const person = value
+      dispatchPersonSearch({ type: 'personSelected', person })
       setIsEditing(false)
-      setPersonValue(
-        [person.name, person.email ? `(${person.email})` : '']
-          .filter(Boolean)
-          .join(' ')
-      )
       return
     }
 
-    setPersonValue(String(value ?? ''))
-    setSelectedPerson(null)
-    setIsEditing(false)
-  }
-
-  const clearPersonSelection = () => {
-    setPersonValue('')
-    setSelectedPerson(null)
-    setPersonSuggestions([])
+    const requestId = personSearchRequestId.current + 1
+    personSearchRequestId.current = requestId
+    personInputRef.current?.hide()
+    dispatchPersonSearch({
+      type: 'queryChanged',
+      value: String(value ?? ''),
+      requestId
+    })
     setPermissionState({})
     setIsEditing(false)
   }
 
-  const useEnteredUserId = () => {
-    const userId = personValue.trim()
-    if (!userId) return
+  const clearPersonSelection = () => {
+    const requestId = personSearchRequestId.current + 1
+    personSearchRequestId.current = requestId
+    personInputRef.current?.hide()
+    dispatchPersonSearch({ type: 'cleared', requestId })
+    setPermissionState({})
     setIsEditing(false)
-    setSelectedPerson({
-      userId,
-      username: userId,
-      name: userId,
-      effectivePermissions: []
-    })
   }
 
+  useEffect(() => {
+    if (personSearch.status === 'success') {
+      personInputRef.current?.show()
+    }
+  }, [personSearch.status, personSearch.suggestions])
 
   const handleSave = async () => {
-    const selectedPersonId = selectedPerson?.userId
+    const selectedPersonId = personSearch.selectedPerson?.userId
     if (!selectedPersonId || !selectedScopeRows.length || !canEditSelectedScope) return
 
     setSaving(true)
@@ -1484,26 +1513,46 @@ export default function PermissionManagement({
           )}
 
           <div className="space-y-2">
-            <div className="relative flex w-full min-w-0 items-center gap-2">
+            <div className="relative flex w-full min-w-0 flex-wrap items-center gap-2">
               <AutoComplete
+                ref={personInputRef}
+                inputId="permission-user-search"
                 value={personValue}
                 suggestions={personSuggestions}
-                completeMethod={handlePersonSearch}
                 onChange={handlePersonChange}
+                onKeyPress={(event) => {
+                  if (event.key !== 'Enter' || event.defaultPrevented) return
+                  event.preventDefault()
+                  void handlePersonSearch()
+                }}
                 field="name"
                 itemTemplate={personTemplate}
                 forceSelection={false}
                 placeholder={t('userSearchPlaceholder')}
-                className="min-w-0 flex-1 !w-full"
+                aria-label={t('userSearchPlaceholder')}
+                emptyMessage={t('empty.noUsersFound')}
+                showEmptyMessage={personSearch.status === 'success'}
+                className="min-w-0 flex-1 basis-full !w-full sm:basis-0"
                 inputClassName="w-full min-w-0 text-base"
                 disabled={!canEditSelectedScope}
               />
-              {!selectedPerson && personValue.trim() && (
-                <PrimaryButton
-                  label={t('actions.useUserId')}
-                  onClick={useEnteredUserId}
-                />
-              )}
+              <PrimaryButton
+                label={
+                  personSearch.status === 'searching'
+                    ? t('actions.searching')
+                    : t('actions.search')
+                }
+                icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+                onClick={() => void handlePersonSearch()}
+                loading={personSearch.status === 'searching'}
+                disabled={
+                  !canEditSelectedScope ||
+                  personSearch.status === 'searching' ||
+                  !personValue.trim()
+                }
+                tooltip={t('actions.search')}
+                className="shrink-0"
+              />
               {personValue && (
                 <button
                   type="button"

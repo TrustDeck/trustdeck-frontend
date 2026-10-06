@@ -481,47 +481,57 @@ export default function RecordLinkageCandidateReview({
                     {displayValue(candidateValue)}
                   </td>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                )
+              })}
+            </tbody>
+            <tfoot className="border-t border-gray-200 dark:border-slate-700">
+              <tr>
+                <td />
+                <td className="px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={onCreateOriginal}
+                    disabled={resolving || !canCreateOriginal}
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-color-blue px-4 py-3 font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <CheckIcon className="mr-2 h-5 w-5" />
+                    {t('crud.createOriginalAnyway')}
+                  </button>
+                </td>
+                <td className="px-4 py-4">
+                  <button
+                    type="button"
+                    onClick={() => onUseCandidate(candidate)}
+                    disabled={resolving || deletedCandidate}
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-lg border-2 border-color-blue px-4 py-3 font-semibold text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+                  >
+                    <CheckIcon className="mr-2 h-5 w-5" />
+                    {t('crud.useCandidate')}
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={3} className="px-4 py-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => setMergeMode(true)}
+                    disabled={resolving || deletedCandidate}
+                    className="inline-flex min-h-12 items-center justify-center rounded-lg border-2 border-color-blue px-4 py-3 font-semibold text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
+                  >
+                    <PencilSquareIcon className="mr-2 h-5 w-5" />
+                    {t('crud.mergeWithCandidate')}
+                  </button>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
       {deletedCandidate && (
         <p className="rounded-lg border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-200">
           {t('crud.deletedCandidateNotice')}
         </p>
       )}
-
-      <div className="grid grid-cols-1 gap-3 border-t border-gray-200 pt-5 md:grid-cols-3 dark:border-slate-700">
-        <button
-          type="button"
-          onClick={() => onUseCandidate(candidate)}
-          disabled={resolving || deletedCandidate}
-          className="inline-flex min-h-12 items-center justify-center rounded-lg border-2 border-color-blue px-4 py-3 font-semibold text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
-        >
-          <CheckIcon className="mr-2 h-5 w-5" />
-          {t('crud.useCandidate')}
-        </button>
-        <button
-          type="button"
-          onClick={onCreateOriginal}
-          disabled={resolving || !canCreateOriginal}
-          className="inline-flex min-h-12 items-center justify-center rounded-lg bg-color-blue px-4 py-3 font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <CheckIcon className="mr-2 h-5 w-5" />
-          {t('crud.createOriginalAnyway')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMergeMode(true)}
-          disabled={resolving || deletedCandidate}
-          className="inline-flex min-h-12 items-center justify-center rounded-lg border-2 border-color-blue px-4 py-3 font-semibold text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-slate-800"
-        >
-          <PencilSquareIcon className="mr-2 h-5 w-5" />
-          {t('crud.mergeWithCandidate')}
-        </button>
-      </div>
 
       <div className="flex justify-center">
         <button

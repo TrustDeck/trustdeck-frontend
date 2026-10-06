@@ -26,6 +26,7 @@ import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import EntityMask from '../search/components/EntityMask'
 import PseudonymMask from '../search/components/PseudonymMask'
+import { InlinePseudonymResults } from '../search/components/InlineSearchResults'
 import SearchPseudonymService from '../search/services/PseudonymService'
 import usePseudonymStore from '../search/stores/PseudonymSearchResults'
 import useSearchResultsStore from '../search/stores/SearchResultsStore'
@@ -170,7 +171,7 @@ export default function SearchPsn() {
   const {
     setPseudonymValue,
     setResults: setPseudonymResults,
-    clearSelectedResult,
+    selectResult,
     clearResults: clearPseudonymResults
   } = usePseudonymStore()
 
@@ -189,6 +190,10 @@ export default function SearchPsn() {
   )
   const [standaloneError, setStandaloneError] = useState('')
   const [standaloneCreating, setStandaloneCreating] = useState(false)
+  const [sourceGroup, setSourceGroup] = useState('')
+  const [sourceQuery, setSourceQuery] = useState('')
+  const [sourceSearchError, setSourceSearchError] = useState('')
+  const [sourceSearching, setSourceSearching] = useState(false)
   const [groupsLoading, setGroupsLoading] = useState(false)
 
   const localStepperRef = useRef<any | null>(null)
@@ -303,6 +308,9 @@ export default function SearchPsn() {
         identifier: secondaryPseudonym.psn,
         idType: group ? `${secondaryPseudonym.domainName}_PSN` : ''
       })
+      setSourceGroup(group)
+      setSourceQuery(secondaryPseudonym.psn)
+      clearPseudonymResults()
       setStandaloneAdvancedOpen(false)
       setStandaloneError('')
       setGenerationMode('secondary')
@@ -325,7 +333,8 @@ export default function SearchPsn() {
     location.pathname,
     location.state,
     navigate,
-    projectAbbreviation
+    projectAbbreviation,
+    clearPseudonymResults
   ])
 
   const resetEntityWorkflow = () => {
@@ -357,6 +366,10 @@ export default function SearchPsn() {
 
   const startSecondaryPseudonymWorkflow = () => {
     setStandaloneForm(createStandaloneForm())
+    setSourceGroup('')
+    setSourceQuery('')
+    setSourceSearchError('')
+    clearPseudonymResults()
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
     setGenerationMode('secondary')
@@ -365,6 +378,10 @@ export default function SearchPsn() {
   const cancelGeneration = () => {
     resetEntityWorkflow()
     setStandaloneForm(createStandaloneForm())
+    setSourceGroup('')
+    setSourceQuery('')
+    setSourceSearchError('')
+    clearPseudonymResults()
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
     setEntitySearchPrefill(null)
@@ -375,6 +392,10 @@ export default function SearchPsn() {
   const cancelCreationPath = () => {
     resetEntityWorkflow()
     setStandaloneForm(createStandaloneForm())
+    setSourceGroup('')
+    setSourceQuery('')
+    setSourceSearchError('')
+    clearPseudonymResults()
     setStandaloneAdvancedOpen(false)
     setStandaloneError('')
     setEntitySearchPrefill(null)
@@ -399,7 +420,7 @@ export default function SearchPsn() {
     setPseudonymGroup(normalized.domainName)
     setPseudonymValue(normalized)
     setPseudonymResults([normalized])
-    clearSelectedResult()
+    selectResult(normalized.domainName, normalized.psn, false)
     setGenerationMode(null)
     setManagementTab('search')
 
@@ -540,6 +561,46 @@ export default function SearchPsn() {
       )
     } finally {
       setStandaloneCreating(false)
+    }
+  }
+
+  const searchSourcePseudonyms = async () => {
+    const sourceDomain = getSelectedGroupNames(
+      sourceGroup,
+      groups,
+      projectAbbreviation
+    )[0]
+    const query = sourceQuery.trim()
+
+    if (!sourceDomain) {
+      setSourceSearchError(t('pseudonyms:management.sourceGroupRequired'))
+      return
+    }
+    if (!query) {
+      setSourceSearchError(t('pseudonyms:management.sourceQueryRequired'))
+      return
+    }
+
+    setSourceSearchError('')
+    setSourceSearching(true)
+    clearPseudonymResults()
+    try {
+      const results = await SearchPseudonymService.searchPseudonyms(
+        sourceDomain,
+        query
+      )
+      setPseudonymResults(
+        results.map((entry) => ({
+          ...entry,
+          domainName: entry.domainName || sourceDomain
+        }))
+      )
+    } catch (error) {
+      console.error('Error searching source pseudonyms:', error)
+      setPseudonymResults([])
+      setSourceSearchError(t('pseudonyms:management.sourceSearchFailed'))
+    } finally {
+      setSourceSearching(false)
     }
   }
 
@@ -1015,6 +1076,74 @@ export default function SearchPsn() {
                         icon={<XMarkIcon className="mr-1 h-5 w-5" />}
                       />
                     </div>
+
+                    {generationMode === 'secondary' && (
+                      <div className="space-y-4 border-t border-gray-200 pt-5 dark:border-slate-700">
+                        <div>
+                          <h3 className="td-section-title !mb-0">
+                            {t('pseudonyms:management.sourceSearchTitle')}
+                          </h3>
+                          <p className="td-section-subtitle mt-1">
+                            {t('pseudonyms:management.sourceSearchDescription')}
+                          </p>
+                        </div>
+
+                        <CustomTreeSelect
+                          id="source-pseudonym-group"
+                          placeholder={t(
+                            'pseudonyms:management.sourceGroup'
+                          )}
+                          value={sourceGroup || null}
+                          options={groups || []}
+                          onChange={(event) => {
+                            setSourceGroup(String(event.value ?? ''))
+                            setSourceSearchError('')
+                          }}
+                          selectionMode="single"
+                          required
+                          filter
+                          filterPlaceholder={t(
+                            'pseudonyms:standalone.fields.groupSearch'
+                          )}
+                        />
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                          <CustomFloatLabel
+                            id="source-pseudonym-query"
+                            placeholder={t(
+                              'pseudonyms:management.sourceQuery'
+                            )}
+                            value={sourceQuery}
+                            onChange={(event) => {
+                              setSourceQuery(event.target.value)
+                              if (sourceSearchError) setSourceSearchError('')
+                            }}
+                          />
+                          <PrimaryButton
+                            label={t('pseudonyms:management.sourceSearch')}
+                            onClick={searchSourcePseudonyms}
+                            loading={sourceSearching}
+                            disabled={sourceSearching}
+                          />
+                        </div>
+
+                        {sourceSearchError && (
+                          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                            {sourceSearchError}
+                          </p>
+                        )}
+
+                        <InlinePseudonymResults
+                          fallbackDomain={
+                            getSelectedGroupNames(
+                              sourceGroup,
+                              groups,
+                              projectAbbreviation
+                            )[0] || ''
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

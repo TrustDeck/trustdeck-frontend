@@ -7,7 +7,9 @@ import CustomDropdown from '@component/form/CustomDropdown'
 import DomainService from '../../domains/services/DomainService'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
-import usePseudonymStore from '../stores/PseudonymSearchResults'
+import usePseudonymStore, {
+  findSelectedPseudonym
+} from '../stores/PseudonymSearchResults'
 import PseudonymService from '../services/PseudonymService'
 import { InlinePseudonymResults } from './InlineSearchResults'
 
@@ -35,6 +37,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
   const [groups, setGroups] = useState<any[]>([])
   const initialDomainSet = useRef(false)
   const defaultResultKey = useRef('')
+  const searchRequestId = useRef(0)
 
   const { selectedProject } = useProjectStore()
   const { pseudonym, setPseudonym, group, setGroup } = useSearchStore()
@@ -48,6 +51,7 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
     const projectChanged =
       previousProject.current !== selectedProject?.abbreviation
     previousProject.current = selectedProject?.abbreviation
+    searchRequestId.current += 1
     initialDomainSet.current = false
     setGroups([])
     if (projectChanged || !selectedProject?.abbreviation) setGroup('')
@@ -108,11 +112,13 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
     setQueryError('')
     setLoading(true)
     clearSelectedResult()
+    const requestId = ++searchRequestId.current
     try {
       const result = await PseudonymService.searchPseudonyms(
         domain,
         normalizedQuery
       )
+      if (requestId !== searchRequestId.current) return
       setResults(
         result.map((entry) => ({
           ...entry,
@@ -120,10 +126,11 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
         }))
       )
     } catch (error) {
+      if (requestId !== searchRequestId.current) return
       console.error('Error during pseudonym search:', error)
       setResults([])
     } finally {
-      setLoading(false)
+      if (requestId === searchRequestId.current) setLoading(false)
     }
   }
 
@@ -140,9 +147,11 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
     const key = `${domain}:default`
     if (defaultResultKey.current === key) return
     defaultResultKey.current = key
+    const requestId = ++searchRequestId.current
 
     PseudonymService.searchPseudonyms(domain, '*')
       .then((results) => {
+        if (requestId !== searchRequestId.current) return
         const initialResults = results
           .map((entry) => ({
             ...entry,
@@ -151,10 +160,28 @@ const PseudonymMask: React.FC<PseudonymMaskProps> = ({
           .sort((left, right) =>
             String(left.psn ?? '').localeCompare(String(right.psn ?? ''))
           )
-        clearSelectedResult()
-        setResults(initialResults)
+        const currentState = usePseudonymStore.getState()
+        const selectedPseudonym = findSelectedPseudonym(
+          currentState.results,
+          currentState.selectedResult,
+          domain
+        )
+        const nextResults = selectedPseudonym
+          ? [
+              selectedPseudonym,
+              ...initialResults.filter(
+                (entry) =>
+                  entry.psn !== selectedPseudonym.psn ||
+                  (entry.domainName || domain) !==
+                    (selectedPseudonym.domainName || domain)
+              )
+            ]
+          : initialResults
+        if (!selectedPseudonym) clearSelectedResult()
+        setResults(nextResults)
       })
       .catch((error) => {
+        if (requestId !== searchRequestId.current) return
         console.error('Error during initial pseudonym search:', error)
         setResults([])
       })

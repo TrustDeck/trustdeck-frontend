@@ -21,7 +21,9 @@ import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import type { Pseudonym } from '../../../core/types/Pseudonym'
 import useSearchResultsStore from '../stores/SearchResultsStore'
-import usePseudonymStore from '../stores/PseudonymSearchResults'
+import usePseudonymStore, {
+  findSelectedPseudonym
+} from '../stores/PseudonymSearchResults'
 import {
   formatDisplayValue,
   readDisplayValue,
@@ -479,14 +481,7 @@ export function InlinePseudonymResults({
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(5)
   const selectedPseudonym = useMemo(
-    () =>
-      results.find(
-        (result) =>
-          Boolean(selectedResult) &&
-          (result.domainName || fallbackDomain) ===
-            selectedResult?.domainName &&
-          result.psn === selectedResult?.psn
-      ),
+    () => findSelectedPseudonym(results, selectedResult, fallbackDomain),
     [fallbackDomain, results, selectedResult]
   )
 

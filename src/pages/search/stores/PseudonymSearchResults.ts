@@ -1,15 +1,17 @@
 import { create } from 'zustand'
 import { Pseudonym } from '../../../core/types/Pseudonym'
 
+export type PseudonymSelection = {
+  domainName: string
+  psn: string
+  editMode: boolean
+}
+
 type PseudonymSearchResultState = {
   pseudonymValue: Pseudonym | null
   results: Pseudonym[]
   hasSearched: boolean
-  selectedResult: {
-    domainName: string
-    psn: string
-    editMode: boolean
-  } | null
+  selectedResult: PseudonymSelection | null
   setPseudonymValue: (pseudonym: Pseudonym) => void
   clearPseudonymValue: () => void
   setResults: (results: Pseudonym[]) => void
@@ -17,6 +19,21 @@ type PseudonymSearchResultState = {
   clearSelectedResult: () => void
   removeResult: (domainName: string, psn: string) => void
   clearResults: () => void
+}
+
+export function findSelectedPseudonym(
+  results: Pseudonym[],
+  selection: PseudonymSelection | null,
+  fallbackDomain: string
+): Pseudonym | null {
+  if (!selection) return null
+  return (
+    results.find(
+      (result) =>
+        (result.domainName || fallbackDomain) === selection.domainName &&
+        result.psn === selection.psn
+    ) ?? null
+  )
 }
 
 const usePseudonymStore = create<PseudonymSearchResultState>((set) => ({

@@ -48,7 +48,8 @@
     "noProjectRows": "No project-specific permission definitions are available.",
     "noGroupRows": "No pseudonym-domain permission definitions are available.",
     "noRightsInScope": "You do not currently hold any rights in this scope.",
-    "noManageableRights": "There are no rights in this scope that you are allowed to grant or revoke."
+    "noManageableRights": "There are no rights in this scope that you are allowed to grant or revoke.",
+    "noUsersFound": "No users found."
   },
   "loading": {
     "effectivePermissions": "Loading effective permissions...",
@@ -71,7 +72,8 @@
     "retry": "Retry",
     "saving": "Saving...",
     "savePermissions": "Save permissions",
-    "useUserId": "Use user ID",
+    "search": "Search",
+    "searching": "Searching...",
     "editPermissions": "Edit permissions",
     "cancelEditing": "Cancel",
     "grantAll": "Grant all permissions",
@@ -117,8 +119,8 @@
   "globalBoxSubtitle": "Inspect and manage global rights that apply across TrustDeck.",
   "globalSearchHelp": "Search for a user and grant or revoke global rights that you already hold yourself.",
   "projectDomainSearchHelp": "First select a project or pseudonym domain above. Then search for a user below to grant or revoke the rights you hold for that scope.",
-  "userSearchPlaceholder": "Search by name, email, or user ID",
-  "userSearchRestrictedFallback": "User search requires a global permission. You can still enter an exact Keycloak user ID and use it directly.",
+  "userSearchPlaceholder": "Search by name, username, email, or user ID",
+  "userSearchRestrictedFallback": "User search requires the relevant global permission.",
   "selectedUserPrefix": "Selected user:",
   "mode": {
     "view": "View only",

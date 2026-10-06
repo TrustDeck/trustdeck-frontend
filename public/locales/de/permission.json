@@ -48,7 +48,8 @@
     "noProjectRows": "Es sind keine projektspezifischen Berechtigungsdefinitionen verfügbar.",
     "noGroupRows": "Es sind keine Berechtigungsdefinitionen für Pseudonym-Domänen verfügbar.",
     "noRightsInScope": "Sie besitzen aktuell keine Rechte in diesem Geltungsbereich.",
-    "noManageableRights": "In diesem Geltungsbereich gibt es keine Rechte, die Sie vergeben oder entziehen dürfen."
+    "noManageableRights": "In diesem Geltungsbereich gibt es keine Rechte, die Sie vergeben oder entziehen dürfen.",
+    "noUsersFound": "Keine Benutzer gefunden."
   },
   "loading": {
     "effectivePermissions": "Effektive Berechtigungen werden geladen...",
@@ -71,7 +72,8 @@
     "retry": "Erneut versuchen",
     "saving": "Speichern...",
     "savePermissions": "Berechtigungen speichern",
-    "useUserId": "Benutzer-ID verwenden",
+    "search": "Suchen",
+    "searching": "Suche...",
     "editPermissions": "Berechtigungen bearbeiten",
     "cancelEditing": "Abbrechen",
     "grantAll": "Alle Berechtigungen erteilen",
@@ -117,8 +119,8 @@
   "globalBoxSubtitle": "Prüfen und verwalten Sie globale Rechte, die in TrustDeck projektübergreifend gelten.",
   "globalSearchHelp": "Suchen Sie nach einem Benutzer und vergeben oder entziehen Sie globale Rechte, die Sie selbst besitzen.",
   "projectDomainSearchHelp": "Wählen Sie zuerst oben ein Projekt oder eine Pseudonym-Domäne. Suchen Sie anschließend unten nach einem Benutzer, um für diesen Bereich eigene Rechte zu vergeben oder zu entziehen.",
-  "userSearchPlaceholder": "Nach Name, E-Mail oder Benutzer-ID suchen",
-  "userSearchRestrictedFallback": "Die Benutzersuche erfordert eine globale Berechtigung. Sie können weiterhin eine exakte Keycloak-Benutzer-ID eingeben und direkt verwenden.",
+  "userSearchPlaceholder": "Nach Name, Benutzername, E-Mail oder Benutzer-ID suchen",
+  "userSearchRestrictedFallback": "Die Benutzersuche erfordert die entsprechende globale Berechtigung.",
   "selectedUserPrefix": "Ausgewählter Benutzer:",
   "mode": {
     "view": "Nur anzeigen",

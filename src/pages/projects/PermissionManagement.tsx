@@ -1146,8 +1146,8 @@ export default function PermissionManagement({
       })
   }, [scopeRows, scopedCurrentPermissions, selectedProject?.name, t])
 
-  const handlePersonSearch = async () => {
-    const query = trimPersonSearchQuery(personSearch.query)
+  const handlePersonSearch = async (searchQuery = personSearch.query) => {
+    const query = trimPersonSearchQuery(searchQuery)
     if (
       !query ||
       personSearch.status === 'searching' ||

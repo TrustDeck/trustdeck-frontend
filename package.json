@@ -15,7 +15,7 @@
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
     "i18next": "^24.2.2",
-    "i18next-http-backend": "^3.0.5",
+    "i18next-http-backend": "^4.0.2",
     "oidc-client-ts": "^3.4.1",
     "papaparse": "5.7.0",
     "primereact": "^10.9.2",

@@ -20,6 +20,10 @@ import { createRoot } from 'react-dom/client'
 import { AuthProvider } from 'react-oidc-context'
 import { PrimeReactProvider } from 'primereact/api'
 import { BrowserRouter } from 'react-router-dom'
+// The font is bundled with the app instead of being loaded from Google Fonts,
+// so that no request reveals the users' IP addresses to a third party.
+import '@fontsource-variable/arimo/wght.css'
+import '@fontsource-variable/arimo/wght-italic.css'
 import './index.css'
 import AppRouter from './core/AppRouter'
 import './core/configs/i18n'

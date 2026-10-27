@@ -65,8 +65,8 @@ if [ -z "${CONTENT_SECURITY_POLICY:-}" ]; then
   authority_origin="$(origin_of "$AUTHORITY_URL")"
   CONTENT_SECURITY_POLICY="default-src 'self'; \
 script-src 'self'; \
-style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; \
-font-src 'self' data: https://fonts.gstatic.com; \
+style-src 'self' 'unsafe-inline'; \
+font-src 'self' data:; \
 img-src 'self' data: blob:; \
 connect-src 'self' ${api_origin} ${authority_origin}; \
 frame-src 'self' ${authority_origin}; \

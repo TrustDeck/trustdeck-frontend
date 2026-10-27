@@ -32,6 +32,16 @@ npm run pretty
 
 Tooling configuration is in `config/`. The application receives its public API and OpenID Connect settings from the runtime-generated `env.js` file.
 
+### Keycloak Client
+
+The frontend signs in through a public Keycloak client (`AUTHORITY_CLIENT`, by default `frontend`) using the Authorization Code flow. The backend only accepts access tokens whose `aud` claim contains `trustdeck`, so the client needs an audience mapper:
+
+1. In the Keycloak admin console, open **Clients → frontend → Client scopes → frontend-dedicated**.
+2. Choose **Configure a new mapper → Audience**.
+3. Set **Included Client Audience** to `trustdeck` and enable **Add to access token**.
+
+Without the mapper, every API request is answered with `401 Unauthorized`.
+
 ## Docker Deployment
 
 All container assets are in `docker/`. The Compose file uses the repository root as its build context, so run it with an explicit file path.

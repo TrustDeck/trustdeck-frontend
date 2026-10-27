@@ -9,7 +9,6 @@ import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
 import { oidcConfig } from '../../core/configs/oidc'
 import useUserStore from '../../core/stores/UserStore'
-import { useAuthStore } from '../../core/stores/AuthWebStore'
 import TrustDeck from '@service/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
@@ -44,7 +43,6 @@ const Login: React.FC = () => {
     TrustDeck.instance().clearToken()
     useProjectStore.getState().clearSelectedProject()
     useUserStore.getState().clear()
-    useAuthStore.getState().clear()
 
     try {
       await auth.removeUser()

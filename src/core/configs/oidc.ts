@@ -75,15 +75,20 @@ export const oidcConfig = {
     window.__ENV__?.AUTHORITY_REDIRECT_URI ??
     import.meta.env.VITE_AUTHORITY_REDIRECT_URI,
   silent_redirect_uri: resolveSilentRedirectUri(),
+  // Keycloak sends the browser back here after ending its session; the URI must be
+  // registered as a valid post logout redirect URI of the frontend client.
   post_logout_redirect_uri:
-    window.__ENV__?.AUTHORITY_REDIRECT_URI ??
-    import.meta.env.VITE_AUTHORITY_REDIRECT_URI,
+    window.__ENV__?.AUTHORITY_POST_LOGOUT_REDIRECT_URI ??
+    import.meta.env.VITE_AUTHORITY_POST_LOGOUT_REDIRECT_URI ??
+    `${window.location.origin}/logged-out`,
   account_console_url:
     window.__ENV__?.ACCOUNT_CONSOLE_URL ??
     import.meta.env.VITE_ACCOUNT_CONSOLE_URL,
   response_type: 'code',
   scope: 'openid profile email',
-  userStore: new WebStorageStateStore({ store: window.localStorage }),
+  // Tokens live only as long as the tab. New tabs sign in silently against the
+  // Keycloak session instead of reading tokens that other tabs persisted.
+  userStore: new WebStorageStateStore({ store: window.sessionStorage }),
   monitorSession: false,
   automaticSilentRenew: true,
   accessTokenExpiringNotificationTimeInSeconds: 5,

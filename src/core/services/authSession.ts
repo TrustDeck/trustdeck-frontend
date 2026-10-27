@@ -46,6 +46,15 @@ export function clearLoggedOutMarker() {
   window.localStorage.removeItem(LOGGED_OUT_KEY)
 }
 
+/** Calls the listener when another tab of this browser logs out. */
+export function onLoggedOutInOtherTab(listener: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === LOGGED_OUT_KEY && event.newValue) listener()
+  }
+  window.addEventListener('storage', handleStorage)
+  return () => window.removeEventListener('storage', handleStorage)
+}
+
 export function isMarkedLoggedOut() {
   return readLoggedOutMarker() !== null
 }

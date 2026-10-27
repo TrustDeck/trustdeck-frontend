@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import {
   ArrowTopRightOnSquareIcon,
@@ -37,6 +38,7 @@ function getInitialDarkMode() {
 
 export default function UserManagement() {
   const navigate = useNavigate()
+  const auth = useAuth()
   const { t } = useTranslation('layout')
   const fullname = useUserStore((state) => state.fullname)
   const username = useUserStore((state) => state.username)
@@ -74,9 +76,15 @@ export default function UserManagement() {
     if (newWindow) newWindow.opener = null
   }
 
-  const logout = () => {
+  // Ends the Keycloak session as well; Keycloak redirects back to /logged-out afterwards.
+  const logout = async () => {
     markLoggedOut('manual')
-    navigate('/logged-out')
+    try {
+      await auth.signoutRedirect()
+    } catch (error) {
+      console.warn('Could not end the Keycloak session; logging out locally only.', error)
+      navigate('/logged-out')
+    }
   }
 
   return (
@@ -174,7 +182,7 @@ export default function UserManagement() {
               <button
                 type="button"
                 className="flex w-full items-center justify-between rounded-xl border border-red-200 bg-white px-4 py-3 text-left text-base font-medium text-red-700 transition hover:bg-red-50 dark:border-red-900 dark:bg-slate-900 dark:text-red-300 dark:hover:bg-red-950/30"
-                onClick={logout}
+                onClick={() => void logout()}
               >
                 <span>{t('userManagement.logout')}</span>
                 <ArrowRightStartOnRectangleIcon className="h-5 w-5" />

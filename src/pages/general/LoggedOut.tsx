@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { useAuth } from 'react-oidc-context'
 import useUserStore from '../../core/stores/UserStore'
-import { useAuthStore } from '../../core/stores/AuthWebStore'
-import useLayoutStore from '../../core/stores/LayoutStore'
 import TrustDeck from '@service/TrustDeck'
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
@@ -18,9 +16,6 @@ import {
 const LoggedOut: React.FC = () => {
   const auth = useAuth()
   const [isLoading, setIsLoading] = useState(true)
-  const isAuthenticated = useUserStore((state) => state.isAuthenticated)
-  const authData = useAuthStore((state) => state.data)
-  const isTabActive = useLayoutStore((state) => state.isTabActive)
   const hasRun = useRef(false)
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -38,9 +33,6 @@ const LoggedOut: React.FC = () => {
 
     // Clear user store state
     useUserStore.getState().clear()
-
-    // Clear auth store state (this clears localStorage 'auth-storage')
-    useAuthStore.getState().clear()
 
     // Remove user from OIDC library
     await auth.removeUser()
@@ -61,40 +53,14 @@ const LoggedOut: React.FC = () => {
     setIsLoading(false)
   }, [auth])
 
+  // A manual logout already ended the Keycloak session before redirecting here;
+  // a timeout or a logout in another tab only needs the local cleanup.
   useEffect(() => {
-    const logout = async () => {
-      if (!hasRun.current) {
-        hasRun.current = true
-        if (
-          isAuthenticated &&
-          Object.keys(authData).length > 0 &&
-          isTabActive
-        ) {
-          auth
-            .signoutSilent()
-            .then(async () => {
-              await logout_helper()
-            })
-            .catch(async () => {
-              await logout_helper()
-            })
-        } else {
-          await logout_helper()
-        }
-      }
-    }
-    //make sure that this runs only once
     if (hasLoggedOutMarker && !hasRun.current) {
-      logout()
+      hasRun.current = true
+      void logout_helper()
     }
-  }, [
-    auth,
-    isAuthenticated,
-    authData,
-    isTabActive,
-    hasLoggedOutMarker,
-    logout_helper
-  ])
+  }, [hasLoggedOutMarker, logout_helper])
 
   if (!hasLoggedOutMarker) return null
 

@@ -25,7 +25,7 @@ import {
 } from 'react-router-dom'
 import Layout from './components/common/Layout'
 import { useAuth } from 'react-oidc-context'
-import { FC, useEffect, useRef } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { routes } from './configs/routes'
 import useLayoutStore from './stores/LayoutStore'
 import useUserStore from './stores/UserStore'
@@ -33,31 +33,57 @@ import TrustDeck from '@service/TrustDeck'
 import { useSyncApiToken } from './services/setupApi'
 import { refreshAccessTokenForNavigation } from './services/tokenRefresh'
 import RequireProject from './components/routing/RequireProject'
-import { hasValidOidcUser, isMarkedLoggedOut, isTimestampExpired, markLoggedOut } from './services/authSession'
+import { hasValidOidcUser, isMarkedLoggedOut, markLoggedOut, onLoggedOutInOtherTab } from './services/authSession'
 
 /** Defines the authentication state needed to render a route. */
 interface ProtectedRouteProps {
-  checkAuth: boolean
   component: FC
   isProtected: boolean
 }
 
-/** Renders a route only when the current OIDC or persisted session is valid. */
+/**
+ * Tokens are kept per tab, so a new tab starts without them. It tries one silent
+ * sign-in against the Keycloak session before sending the user to the login page.
+ */
+let silentSignin: Promise<boolean> | null = null
+
+function trySilentSignin(auth: ReturnType<typeof useAuth>) {
+  silentSignin ??= auth
+    .signinSilent()
+    .then((user) => hasValidOidcUser(user))
+    .catch(() => false)
+    .finally(() => {
+      silentSignin = null
+    })
+  return silentSignin
+}
+
+/** Renders a route only when this tab holds a valid OIDC session. */
 const ProtectedRoute: FC<ProtectedRouteProps> = ({
-  checkAuth,
   component: Component,
   isProtected
 }) => {
   const auth = useAuth()
   const location = useLocation()
-  const tokenExpiresAt = useUserStore((state) => state.tokenExpiresAt)
+  const [silentSigninFailed, setSilentSigninFailed] = useState(false)
   const locallyLoggedOut = isMarkedLoggedOut()
-  const hasValidStoredUser = checkAuth && !isTimestampExpired(tokenExpiresAt, 0)
-  const hasValidOidcSession = auth.isAuthenticated && hasValidOidcUser(auth.user)
-  const authenticated = !locallyLoggedOut && (hasValidStoredUser || hasValidOidcSession)
+  const authenticated =
+    !locallyLoggedOut && auth.isAuthenticated && hasValidOidcUser(auth.user)
+  const needsSilentSignin =
+    isProtected && !auth.isLoading && !authenticated && !locallyLoggedOut && !silentSigninFailed
 
+  useEffect(() => {
+    if (!needsSilentSignin) return
+    let active = true
+    void trySilentSignin(auth).then((success) => {
+      if (active && !success) setSilentSigninFailed(true)
+    })
+    return () => {
+      active = false
+    }
+  }, [auth, needsSilentSignin])
 
-  if (auth.isLoading && isProtected && !authenticated && !locallyLoggedOut) {
+  if ((auth.isLoading || needsSilentSignin) && isProtected && !authenticated) {
     return (
       <div className="flex min-h-[60vh] w-full items-center justify-center text-gray-500">
         Checking your session...
@@ -146,6 +172,12 @@ const AuthStateListener: React.FC = () => {
     return () => unsubscribe()
   }, [isAuthenticated, isTabActive, location, navigate])
 
+  // Tokens are kept per tab, so a logout in another tab has to be followed explicitly.
+  useEffect(
+    () => onLoggedOutInOtherTab(() => navigate('/logged-out')),
+    [navigate]
+  )
+
   // OIDC renews proactively; this listener registers the lifecycle event intentionally.
   useEffect(() => {
     const handleTokenExpiring = () => {
@@ -178,7 +210,6 @@ const AuthStateListener: React.FC = () => {
 /** Mounts application routes and the authentication lifecycle listeners. */
 const AppRouter: FC = () => {
   useSyncApiToken()
-  const isAuthenticated = useUserStore((state) => state.isAuthenticated)
 
   return (
     <>
@@ -193,7 +224,6 @@ const AppRouter: FC = () => {
               element={
                 <RequireProject>
                   <ProtectedRoute
-                    checkAuth={isAuthenticated}
                     component={component}
                     isProtected={isProtected}
                   />

@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { shared } from 'use-broadcast-ts'
 import { jwtDecode } from 'jwt-decode'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { isTimestampExpired } from '../services/authSession'
@@ -45,9 +44,10 @@ interface UserState {
   clear: () => void
 }
 
+// Each tab holds its own tokens, so the user state is kept per tab.
+// A logout in another tab is noticed through the logged-out marker instead.
 const useUserStore = create<UserState>()(
   subscribeWithSelector(
-    shared(
       (set) => ({
         username: '',
         firstname: '',
@@ -121,9 +121,7 @@ const useUserStore = create<UserState>()(
                 tokenExpiresAt: null,
             isAuthenticated: false
           })
-      }),
-      { name: 'user-broadcast' }
-    )
+      })
   )
 )
 

@@ -16,10 +16,6 @@ interface TokenDetails {
   email: string
   locale: string
   exp?: number
-  realm_access?: {
-    roles?: string[]
-  }
-  resource_access?: Record<string, { roles?: string[] }>
 }
 
 function getStoredLocaleOverride() {
@@ -41,7 +37,6 @@ interface UserState {
   lastname: string
   fullname: string
   email: string
-  roles: string[]
   tokenExpiresAt: number | null
   isAuthenticated: boolean
   locale: string
@@ -60,7 +55,6 @@ const useUserStore = create<UserState>()(
         fullname: '',
         email: '',
         locale: getStoredLocaleOverride() ?? 'en',
-        roles: [],
         tokenExpiresAt: null,
         isAuthenticated: false,
         setFromAccessToken: (token: string) => {
@@ -76,18 +70,11 @@ const useUserStore = create<UserState>()(
                 fullname: '',
                 email: '',
                 locale: getStoredLocaleOverride() ?? 'en',
-                roles: [],
-                tokenExpiresAt: null,
+                        tokenExpiresAt: null,
                 isAuthenticated: false
               })
               return
             }
-
-            const resourceRoles = Object.values(
-              decoded.resource_access ?? {}
-            ).flatMap((client) => client.roles ?? [])
-            const realmRoles = decoded.realm_access?.roles ?? []
-            const roles = Array.from(new Set([...realmRoles, ...resourceRoles]))
 
             set({
               username: decoded.preferred_username || decoded.sub,
@@ -101,7 +88,6 @@ const useUserStore = create<UserState>()(
               email: decoded.email || '',
               locale:
                 getStoredLocaleOverride() ?? normalizeLocale(decoded.locale),
-              roles,
               tokenExpiresAt,
               isAuthenticated: true
             })
@@ -114,8 +100,7 @@ const useUserStore = create<UserState>()(
               fullname: '',
               email: '',
               locale: getStoredLocaleOverride() ?? 'en',
-              roles: [],
-              tokenExpiresAt: null,
+                    tokenExpiresAt: null,
               isAuthenticated: false
             })
           }
@@ -133,8 +118,7 @@ const useUserStore = create<UserState>()(
             fullname: '',
             email: '',
             locale: getStoredLocaleOverride() ?? 'en',
-            roles: [],
-            tokenExpiresAt: null,
+                tokenExpiresAt: null,
             isAuthenticated: false
           })
       }),

@@ -982,6 +982,17 @@ class TrustDeck {
     return this.asArray<Operator>(response)
   }
 
+  /** Loads the effective grants of the signed-in user. */
+  public async getOwnPermissions() {
+    const response = await this.request<unknown>('GET', '/permissions/me')
+    return this.asArray<{
+      resourceType?: string
+      resourceName?: string
+      projectAbbreviation?: string
+      action?: string
+    }>(response)
+  }
+
   public async getDefinedPermissions() {
     const response = await this.request<unknown>('GET', '/permissions')
     return this.asArray<{ resourceType: string; action: string }>(response)

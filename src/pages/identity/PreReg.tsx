@@ -97,57 +97,6 @@ function parseRecordLinkageCandidates(body: string): RecordLinkageCandidate[] {
   }
 }
 
-function permissionActionValue(permission: Record<string, any>) {
-  return String(
-    permission.action ??
-      permission.operation ??
-      permission.permission ??
-      permission.name ??
-      ''
-  ).toLowerCase()
-}
-
-function hasEntityPermissionEvidence(
-  access: CachedUserAccess | null | undefined
-) {
-  if (!access) return false
-
-  const hasRelevantRole = (access.roles ?? []).some((role) => {
-    const normalized = String(role).toLowerCase()
-    return (
-      normalized.includes('entity') ||
-      normalized.includes('trustdeck-admin') ||
-      normalized.includes('project-admin') ||
-      normalized === 'admin' ||
-      normalized === 'administrator' ||
-      normalized === 'realm-admin' ||
-      normalized === 'backend-admin'
-    )
-  })
-
-  if (hasRelevantRole) return true
-
-  return (access.effectivePermissions ?? []).some((permission) => {
-    const action = permissionActionValue(permission as Record<string, any>)
-    const resourceType = String(
-      permission.resourceType ??
-        permission.resource ??
-        permission.scope ??
-        permission.type ??
-        ''
-    ).toLowerCase()
-    return (
-      action.includes('entity') ||
-      action === '*' ||
-      action === 'all' ||
-      action.includes('crud') ||
-       resourceType === 'entity-type' ||
-       resourceType === 'entity_type' ||
-      resourceType === 'global'
-    )
-  })
-}
-
 function resolveLabel(attr: Attribute, language: string) {
   const a = attr as any
   const isGerman = language.toLowerCase().startsWith('de')
@@ -756,9 +705,6 @@ export default function PreReg() {
     [backendDeniedActions]
   )
 
-  const permissionEvidenceAvailable = hasEntityPermissionEvidence(
-    permissionAccess
-  )
   const canSearchByPermission = canUseEntityTypeAction(
     permissionAccess,
     selectedProjectAbbreviation,
@@ -768,7 +714,7 @@ export default function PreReg() {
   const canSearchInstances =
     permissionsReady &&
     !isBackendDenied('entity:search') &&
-    (canSearchByPermission || !permissionEvidenceAvailable)
+    canSearchByPermission
   const canCreateByPermission = canUseEntityTypeAction(
     permissionAccess,
     selectedProjectAbbreviation,
@@ -778,7 +724,7 @@ export default function PreReg() {
   const canCreateInstances =
     permissionsReady &&
     !isBackendDenied('entity:create') &&
-    (canCreateByPermission || !permissionEvidenceAvailable)
+    canCreateByPermission
   const canReadByPermission = canUseEntityTypeAction(
     permissionAccess,
     selectedProjectAbbreviation,
@@ -788,7 +734,7 @@ export default function PreReg() {
   const canReadInstances =
     permissionsReady &&
     !isBackendDenied('entity:read') &&
-    (canReadByPermission || canSearchInstances || !permissionEvidenceAvailable)
+    (canReadByPermission || canSearchInstances)
   const canUpdateByPermission = canUseEntityTypeAction(
     permissionAccess,
     selectedProjectAbbreviation,
@@ -798,7 +744,7 @@ export default function PreReg() {
   const canUpdateInstances =
     permissionsReady &&
     !isBackendDenied('entity:update') &&
-    (canUpdateByPermission || !permissionEvidenceAvailable)
+    canUpdateByPermission
   const canDeleteByPermission = canUseEntityTypeAction(
     permissionAccess,
     selectedProjectAbbreviation,
@@ -808,7 +754,7 @@ export default function PreReg() {
   const canDeleteInstances =
     permissionsReady &&
     !isBackendDenied('entity:delete') &&
-    (canDeleteByPermission || !permissionEvidenceAvailable)
+    canDeleteByPermission
   const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
 
   const visibleInstances = useMemo(

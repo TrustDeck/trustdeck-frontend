@@ -91,7 +91,8 @@
     "searchFailed": "Search failed",
     "searchFailedDetail": "Users could not be loaded. Please check your permission-management access.",
     "permissionsUpdated": "Permissions updated successfully.",
-    "updateFailedDetail": "Failed to update permissions. The backend may have rejected this operation."
+    "updateFailedDetail": "Failed to update permissions. The backend may have rejected this operation.",
+    "updateRejectedDetail": "You can only grant permissions you hold yourself. Not granted: {{actions}}. Nothing was changed."
   },
   "subgroup": {
     "project": {
@@ -127,5 +128,6 @@
     "edit": "Editing"
   },
   "viewModeHint": "Permissions are shown read-only. Select Edit permissions to make changes.",
-  "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving."
+  "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving.",
+  "lockedPermissionHint": "You can only grant permissions you hold yourself."
 }

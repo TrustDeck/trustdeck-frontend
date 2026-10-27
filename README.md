@@ -42,6 +42,20 @@ The frontend signs in through a public Keycloak client (`AUTHORITY_CLIENT`, by d
 
 Without the mapper, every API request is answered with `401 Unauthorized`.
 
+The client also needs these settings in its **Settings** tab:
+
+- **Valid redirect URIs**: `AUTHORITY_REDIRECT_URI` and `AUTHORITY_SILENT_URI`
+- **Valid post logout redirect URIs**: `https://<frontend>/logged-out` (or `AUTHORITY_POST_LOGOUT_REDIRECT_URI`); logging out ends the Keycloak session and returns here
+- **Web origins**: the frontend origin
+
+### Sessions
+
+Tokens are stored in the browser's `sessionStorage`, so they belong to one tab and are removed when it is closed. A new tab first signs in silently in a hidden frame using the Keycloak session; if that is not possible, for example because the browser blocks Keycloak's cookie on a different site, the login page is shown. Logging out ends the Keycloak session, and the other open tabs follow.
+
+### Content Security Policy
+
+The container sends a `Content-Security-Policy` header, generated at startup from `API_BASE_URL` and `AUTHORITY_URL`. It allows scripts only from the frontend itself, network requests only to the frontend, the backend, and Keycloak, and frames only for the silent sign-in. To use a different policy, set `CONTENT_SECURITY_POLICY` to the complete header value. The Vite development server does not send the header.
+
 ## Docker Deployment
 
 All container assets are in `docker/`. The Compose file uses the repository root as its build context, so run it with an explicit file path.

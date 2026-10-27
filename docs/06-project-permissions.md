@@ -4,6 +4,8 @@
 
 In **Project Settings**, users can manage access to a specific project by assigning permissions to other users.
 
+You can manage the permissions of a project, a group, or an entity type when you hold its permission to manage permissions, for example because you created it. Global permissions are not needed for this.
+
 This allows fine-grained control over who can view, create, edit, or delete data within the project.
 
 ---
@@ -13,15 +15,17 @@ This allows fine-grained control over who can view, create, edit, or delete data
 To grant access to a project:
 
 1. Navigate to **Project Settings**  
-3. Search for a user by name in the permissions section 
-4. Select the user from the search results  
-5. Assign the appropriate permissions  
+2. Search for a user by name in the permissions section 
+3. Select the user from the search results  
+4. Assign the appropriate permissions  
 
 ---
 
 ### Permission Levels
 
-Permissions can be configured at a granular level by selecting checkboxes
+Permissions can be configured at a granular level by selecting checkboxes.
+
+You can only grant permissions you hold yourself; the others are shown but can't be selected. Permissions the user already has can always be kept or removed, even if you don't hold them yourself.
 
 ---
 

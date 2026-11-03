@@ -1,7 +1,12 @@
 import type { AuthContextProps } from 'react-oidc-context'
 import TrustDeck from './TrustDeck'
 import useUserStore from '../stores/UserStore'
-import { hasValidOidcUser, isMarkedLoggedOut } from './authSession'
+import {
+  hasValidOidcUser,
+  isMarkedLoggedOut,
+  isSessionEndedError,
+  reportSessionEnded
+} from './authSession'
 
 const MIN_REFRESH_INTERVAL_MS = 30_000
 let lastRefreshAttemptAt = 0
@@ -35,6 +40,8 @@ export async function refreshAccessTokenForNavigation(
     })
     .catch((error) => {
       console.warn('Silent token refresh on navigation failed', error)
+      // The current access token stays valid until it expires, so an ended session must be handled now
+      if (isSessionEndedError(error)) reportSessionEnded()
       return false
     })
     .finally(() => {

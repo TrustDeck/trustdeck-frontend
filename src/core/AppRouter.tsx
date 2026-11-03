@@ -33,7 +33,14 @@ import TrustDeck from '@service/TrustDeck'
 import { useSyncApiToken } from './services/setupApi'
 import { refreshAccessTokenForNavigation } from './services/tokenRefresh'
 import RequireProject from './components/routing/RequireProject'
-import { hasValidOidcUser, isMarkedLoggedOut, markLoggedOut, onLoggedOutInOtherTab } from './services/authSession'
+import {
+  hasValidOidcUser,
+  isMarkedLoggedOut,
+  isSessionEndedError,
+  markLoggedOut,
+  onLoggedOutInOtherTab,
+  onSessionEnded
+} from './services/authSession'
 
 /** Defines the authentication state needed to render a route. */
 interface ProtectedRouteProps {
@@ -189,9 +196,10 @@ const AuthStateListener: React.FC = () => {
   }, [auth.events])
 
   // Every tab routes to the logged-out view; only the active tab starts provider logout.
+  // This happens when the access token expires, and as soon as Keycloak refuses a renewal
+  // because the session has ended, since the current access token would otherwise stay usable.
   useEffect(() => {
-    // the `return` is important - addAccessTokenExpired() returns a cleanup function
-    return auth.events.addAccessTokenExpired(() => {
+    const endSession = () => {
       TrustDeck.instance().clearToken()
       useUserStore.getState().clear()
 
@@ -201,7 +209,19 @@ const AuthStateListener: React.FC = () => {
       } else {
         navigate('/login', { replace: true })
       }
+    }
+
+    const unsubscribeExpired = auth.events.addAccessTokenExpired(endSession)
+    const unsubscribeRenewError = auth.events.addSilentRenewError((error) => {
+      if (isSessionEndedError(error)) endSession()
     })
+    const unsubscribeSessionEnded = onSessionEnded(endSession)
+
+    return () => {
+      unsubscribeExpired()
+      unsubscribeRenewError()
+      unsubscribeSessionEnded()
+    }
   }, [auth.events, navigate])
 
   return null

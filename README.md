@@ -52,6 +52,8 @@ The client also needs these settings in its **Settings** tab:
 
 Tokens are stored in the browser's `sessionStorage`, so they belong to one tab and are removed when it is closed. A new tab first signs in silently in a hidden frame using the Keycloak session; if that is not possible, for example because the browser blocks Keycloak's cookie on a different site, the login page is shown. Logging out ends the Keycloak session, and the other open tabs follow.
 
+If the Keycloak session ends otherwise, for example because an administrator ended it, the frontend logs out as soon as Keycloak refuses a token renewal. Renewals happen when switching between the main pages and shortly before the access token expires. Until then, the backend still accepts the already issued access token, so a short access token lifespan in Keycloak keeps that window small.
+
 ### Content Security Policy
 
 The container sends a `Content-Security-Policy` header, generated at startup from `API_BASE_URL` and `AUTHORITY_URL`. It allows scripts only from the frontend itself, network requests only to the frontend, the backend, and Keycloak, and frames only for the silent sign-in. To use a different policy, set `CONTENT_SECURITY_POLICY` to the complete header value. The Vite development server does not send the header.

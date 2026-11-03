@@ -46,6 +46,33 @@ export function clearLoggedOutMarker() {
   window.localStorage.removeItem(LOGGED_OUT_KEY)
 }
 
+/** OIDC error codes with which Keycloak refuses a renewal because the session no longer exists. */
+const SESSION_ENDED_ERRORS = new Set(['invalid_grant', 'login_required', 'interaction_required'])
+
+const sessionEndedListeners = new Set<() => void>()
+
+/**
+ * Checks whether a failed token renewal means that the Keycloak session has ended,
+ * e.g. because an administrator ended it. Network errors and timeouts do not count.
+ */
+export function isSessionEndedError(error: unknown) {
+  const code = (error as { error?: unknown } | null | undefined)?.error
+  return typeof code === 'string' && SESSION_ENDED_ERRORS.has(code)
+}
+
+/** Calls the listener when a token renewal reveals that the Keycloak session has ended. */
+export function onSessionEnded(listener: () => void) {
+  sessionEndedListeners.add(listener)
+  return () => {
+    sessionEndedListeners.delete(listener)
+  }
+}
+
+/** Informs the listeners that the Keycloak session has ended. */
+export function reportSessionEnded() {
+  sessionEndedListeners.forEach((listener) => listener())
+}
+
 /** Calls the listener when another tab of this browser logs out. */
 export function onLoggedOutInOtherTab(listener: () => void) {
   const handleStorage = (event: StorageEvent) => {

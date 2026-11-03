@@ -55,6 +55,8 @@
   "updateNotAllowed": "You do not have permission to update this project.",
   "updateExpired": "Your session has expired. Please sign in again.",
   "updateNotFound": "The project no longer exists or is no longer accessible.",
+  "abbreviationInUse": "The abbreviation cannot be changed because the project already has domains, entity types, or entities. Other changes were not saved either.",
+  "abbreviationInUseHint": "Can only be changed while the project has no domains, entity types, or entities.",
   "updateBackendError": "The backend could not update the project. Please check the backend logs or try again later.",
   "imageUploadNotAllowed": "You do not have permission to change the project image.",
   "imageDeleteNotAllowed": "You do not have permission to remove the project image.",

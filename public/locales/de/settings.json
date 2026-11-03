@@ -55,6 +55,8 @@
   "updateNotAllowed": "Sie haben keine Berechtigung, dieses Projekt zu bearbeiten.",
   "updateExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
   "updateNotFound": "Das Projekt existiert nicht mehr oder ist nicht mehr zugänglich.",
+  "abbreviationInUse": "Das Kürzel kann nicht geändert werden, weil das Projekt bereits Domänen, Entitätstypen oder Entitäten hat. Auch die übrigen Änderungen wurden nicht gespeichert.",
+  "abbreviationInUseHint": "Kann nur geändert werden, solange das Projekt keine Domänen, Entitätstypen oder Entitäten hat.",
   "updateBackendError": "Das Backend konnte das Projekt nicht aktualisieren. Bitte prüfen Sie die Backend-Logs oder versuchen Sie es später erneut.",
   "imageUploadNotAllowed": "Sie haben keine Berechtigung, das Projektbild zu ändern.",
   "imageDeleteNotAllowed": "Sie haben keine Berechtigung, das Projektbild zu entfernen.",

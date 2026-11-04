@@ -81,6 +81,8 @@ export default function ProjectDetailsExpansion({
   )
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const [removeImageRequested, setRemoveImageRequested] = useState(false)
+  // The backend refuses abbreviation changes of projects with domains, entity types, or entities
+  const [abbreviationLocked, setAbbreviationLocked] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const originalAbbreviation = project.abbreviation
   const isEditing = mode === 'edit'
@@ -218,6 +220,7 @@ export default function ProjectDetailsExpansion({
     if (status === 403) return t('settings:updateNotAllowed')
     if (status === 401) return t('settings:updateExpired')
     if (status === 404) return t('settings:updateNotFound')
+    if (status === 409) return t('settings:abbreviationInUse')
     if (status && status >= 500) return t('settings:updateBackendError')
     return t('settings:updateFailedDetail')
   }
@@ -356,11 +359,19 @@ export default function ProjectDetailsExpansion({
       })
     } catch (error) {
       console.error('Failed to update project', error)
+      const abbreviationRefused = getHttpStatus(error) === 409
+      if (abbreviationRefused) {
+        setAbbreviationLocked(true)
+        setProjectForm((previous) => ({
+          ...previous,
+          abbreviation: originalAbbreviation
+        }))
+      }
       showToast({
         severity: 'error',
         summary: t('settings:updateFailed'),
         detail:
-          error instanceof Error && error.message
+          !abbreviationRefused && error instanceof Error && error.message
             ? error.message
             : getUpdateErrorDetail(error),
         life: 4000
@@ -434,14 +445,18 @@ export default function ProjectDetailsExpansion({
                   {t('settings:projectAbbreviation')}
                   <input
                     value={projectForm.abbreviation}
+                    disabled={abbreviationLocked}
                     onChange={(event) =>
                       setProjectForm((previous) => ({
                         ...previous,
                         abbreviation: event.target.value
                       }))
                     }
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
                   />
+                  <span className="mt-1 block text-sm font-normal text-gray-500 dark:text-gray-400">
+                    {t('settings:abbreviationInUseHint')}
+                  </span>
                 </label>
               </div>
 

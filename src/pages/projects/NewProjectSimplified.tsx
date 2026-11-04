@@ -24,6 +24,8 @@ export default function NewProjectSimplified() {
   const [loading, setLoading] = useState(false)
   const [nameError, setNameError] = useState('')
   const [abbreviationError, setAbbreviationError] = useState('')
+  const [legalBasisConfirmed, setLegalBasisConfirmed] = useState(false)
+  const [legalBasisError, setLegalBasisError] = useState('')
 
   const {
     projectName,
@@ -60,7 +62,11 @@ export default function NewProjectSimplified() {
     setAbbreviationError(
       missingAbbreviation ? t('projects:requiredProjectAbbreviation') : ''
     )
-    return !missingName && !missingAbbreviation
+    // Required by data protection: a project may only be created with a legal basis.
+    setLegalBasisError(
+      legalBasisConfirmed ? '' : t('projects:requiredLegalBasisConfirmation')
+    )
+    return !missingName && !missingAbbreviation && legalBasisConfirmed
   }
 
   async function postProject() {
@@ -222,6 +228,31 @@ export default function NewProjectSimplified() {
               className="w-full resize-y rounded-lg border border-color-light-gray bg-white px-3 py-2 font-font-text text-xl text-gray-900 outline-none transition focus:border-color-blue focus:ring-1 focus:ring-color-blue dark:bg-slate-900 dark:text-gray-100"
             />
           </label>
+
+          <div className="md:col-span-2">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                id="legalBasisConfirmed"
+                type="checkbox"
+                checked={legalBasisConfirmed}
+                onChange={(event) => {
+                  setLegalBasisConfirmed(event.target.checked)
+                  if (event.target.checked) setLegalBasisError('')
+                }}
+                aria-invalid={Boolean(legalBasisError)}
+                className="mt-1 h-4 w-4 shrink-0"
+              />
+              <span className="text-base text-gray-800 dark:text-gray-100">
+                {t('projects:legalBasisConfirmation')}{' '}
+                <span className="text-red-600">*</span>
+              </span>
+            </label>
+            {legalBasisError && (
+              <span className="mt-1 block text-sm font-medium text-red-600">
+                {legalBasisError}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="mt-8 flex justify-center gap-3">

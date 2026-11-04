@@ -26,7 +26,8 @@ To create a new project:
 1. Navigate to the **Project Overview** page  
 2. Click on the **New Project** button  
 3. Enter the required project information
-4. Confirm by clicking **Create project**
+4. Confirm that a legal basis (e.g., a consent) exists for the project; a project can't be created without this confirmation
+5. Confirm by clicking **Create project**
 
 ---
 
@@ -46,5 +47,5 @@ Once the project is created:
 If you cannot create a project:
 
 - Check that you have assigned global permissions correctly  
-- Ensure all required fields are filled in  
+- Ensure all required fields are filled in and the legal basis is confirmed  
 - Verify that you have sufficient rights to create projects  

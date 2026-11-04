@@ -5,7 +5,7 @@
 @config '../config/tailwind.config.js';
 
 :root {
-  --font-family: Arimo, sans-serif;
+  --font-family: 'Arimo Variable', Arimo, sans-serif;
 }
 
 /* Keep application action colors independent of PrimeReact's theme palette. */
@@ -391,7 +391,7 @@
 .td-page-title {
   margin: 0;
   text-align: center;
-  font-family: Arimo, serif;
+  font-family: 'Arimo Variable', Arimo, sans-serif;
   font-size: 2rem;
   line-height: 1.2;
   font-weight: 700;
@@ -423,7 +423,7 @@
 
 .td-panel-title {
   margin: 0 0 1rem;
-  font-family: Arimo, serif;
+  font-family: 'Arimo Variable', Arimo, sans-serif;
   font-size: 1.25rem;
   line-height: 1.5rem;
   font-weight: 700;
@@ -436,7 +436,7 @@
 
 .td-section-title {
   margin: 0;
-  font-family: Arimo, serif;
+  font-family: 'Arimo Variable', Arimo, sans-serif;
   font-size: 1.125rem;
   line-height: 1.5rem;
   font-weight: 600;
@@ -564,7 +564,7 @@
 /* Group-management titles use one consistent hierarchy level. */
 .td-group-panel-title {
   margin: 0;
-  font-family: Arimo, serif;
+  font-family: 'Arimo Variable', Arimo, sans-serif;
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 700;

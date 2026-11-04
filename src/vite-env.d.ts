@@ -10,6 +10,7 @@ declare global {
       AUTHORITY_CLIENT?: string
       AUTHORITY_REDIRECT_URI?: string
       AUTHORITY_SILENT_URI?: string
+      AUTHORITY_POST_LOGOUT_REDIRECT_URI?: string
       ACCOUNT_CONSOLE_URL?: string
       [key: string]: string | undefined
     }
@@ -21,6 +22,7 @@ declare global {
     readonly VITE_AUTHORITY_CLIENT?: string
     readonly VITE_AUTHORITY_REDIRECT_URI?: string
     readonly VITE_AUTHORITY_SILENT_URI?: string
+    readonly VITE_AUTHORITY_POST_LOGOUT_REDIRECT_URI?: string
     readonly VITE_ACCOUNT_CONSOLE_URL?: string
   }
 }

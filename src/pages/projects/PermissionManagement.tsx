@@ -48,9 +48,11 @@ import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedBu
 import TrustDeck, { TrustDeckHttpError } from '../../core/services/TrustDeck'
 import { refreshAccessTokenForNavigation } from '../../core/services/tokenRefresh'
 import {
+  canManageGlobalPermissions,
   canManagePermissions,
   clearPermissionCache,
-  getCurrentUserAccess
+  getCurrentUserAccess,
+  holdsAction
 } from '../../core/services/PermissionCache'
 import useToastStore from '../../core/stores/ToastStore'
 import useUserStore from '../../core/stores/UserStore'
@@ -190,6 +192,17 @@ function permissionIsGranted(
   )
 }
 
+/** Reads the actions the backend refused to grant from a 403 response of a permission replacement. */
+function rejectedActionsFromError(error: unknown): string[] {
+  if (!(error instanceof TrustDeckHttpError) || error.status !== 403) return []
+  try {
+    const body = JSON.parse(error.body) as { rejected?: unknown }
+    return Array.isArray(body.rejected) ? body.rejected.map(String) : []
+  } catch {
+    return []
+  }
+}
+
 function formatPermissionAction(action: string) {
   const formatted = action
     .replace(/[_:.-]+/g, ' ')
@@ -232,6 +245,7 @@ function PermissionRows({
   rows,
   grantedPermissions,
   editable,
+  isLocked,
   permissionState,
   onChange,
   emptyText
@@ -239,6 +253,7 @@ function PermissionRows({
   rows: EffectivePermission[]
   grantedPermissions: EffectivePermission[]
   editable: boolean
+  isLocked?: (permission: EffectivePermission) => boolean
   permissionState?: Record<string, boolean>
   onChange?: (key: string, checked: boolean) => void
   emptyText: string
@@ -257,6 +272,8 @@ function PermissionRows({
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {rows.map((permission) => {
         const key = permissionKey(permission)
+        const locked = editable && Boolean(isLocked?.(permission))
+        const toggleable = editable && !locked
         const checked = editable
           ? Boolean(permissionState?.[key])
           : permissionIsGranted(grantedPermissions, permission)
@@ -264,8 +281,8 @@ function PermissionRows({
         return (
           <div
             key={key}
-            role={editable ? 'switch' : undefined}
-            tabIndex={editable ? 0 : undefined}
+            role={toggleable ? 'switch' : undefined}
+            tabIndex={toggleable ? 0 : undefined}
             aria-checked={editable ? checked : undefined}
             aria-label={
               editable
@@ -274,11 +291,12 @@ function PermissionRows({
                   }`
                 : undefined
             }
+            title={locked ? t('lockedPermissionHint') : undefined}
             onClick={
-              editable ? () => onChange?.(key, !checked) : undefined
+              toggleable ? () => onChange?.(key, !checked) : undefined
             }
             onKeyDown={
-              editable
+              toggleable
                 ? (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault()
@@ -288,7 +306,7 @@ function PermissionRows({
                 : undefined
             }
             className={`flex min-h-16 flex-col justify-center rounded-xl border px-3 py-2 transition ${
-              editable
+              toggleable
                 ? 'cursor-pointer border-gray-300 bg-white hover:border-color-blue hover:bg-blue-50/40 focus:ring-2 focus:ring-color-blue/30 dark:border-slate-600 dark:bg-slate-900 dark:hover:border-blue-500 dark:hover:bg-blue-950/25'
                 : 'border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-950'
             }`}
@@ -302,6 +320,7 @@ function PermissionRows({
                   type="button"
                   role="switch"
                   aria-checked={checked}
+                  disabled={locked}
                   aria-label={`${formatPermissionAction(permission.action)}: ${
                     checked ? t('status.granted') : t('status.notGranted')
                   }`}
@@ -310,6 +329,8 @@ function PermissionRows({
                     onChange?.(key, !checked)
                   }}
                   className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${
+                    locked ? 'cursor-not-allowed opacity-50 ' : ''
+                  }${
                     checked
                       ? 'bg-emerald-600'
                       : 'bg-gray-300 dark:bg-slate-600'
@@ -349,6 +370,7 @@ function GroupedPermissionRows({
   rows,
   grantedPermissions,
   editable,
+  isLocked,
   permissionState,
   onChange,
   emptyText
@@ -356,6 +378,7 @@ function GroupedPermissionRows({
   rows: EffectivePermission[]
   grantedPermissions: EffectivePermission[]
   editable: boolean
+  isLocked?: (permission: EffectivePermission) => boolean
   permissionState?: Record<string, boolean>
   onChange?: (key: string, checked: boolean) => void
   emptyText: string
@@ -377,6 +400,7 @@ function GroupedPermissionRows({
             rows={group.rows}
             grantedPermissions={grantedPermissions}
             editable={editable}
+            isLocked={isLocked}
             permissionState={permissionState}
             onChange={onChange}
             emptyText={emptyText}
@@ -566,7 +590,6 @@ export default function PermissionManagement({
   const currentUserId = useUserStore((state) => state.username)
   const currentUserEmail = useUserStore((state) => state.email)
   const currentUserFullname = useUserStore((state) => state.fullname)
-  const currentUserRoles = useUserStore((state) => state.roles)
   const selectedProject = useProjectStore((state) => state.selectedProject)
 
   const [definedPermissions, setDefinedPermissions] = useState<DefinedPermission[]>([])
@@ -738,102 +761,28 @@ export default function PermissionManagement({
       if (!auth.isAuthenticated || auth.isLoading) return
 
       setCurrentAccessState('loading')
-      const cachedPermissions: EffectivePermission[] = []
-      let subjectId = String(auth.user?.profile?.sub ?? '').trim()
-
       try {
-        const cachedAccess = await getCurrentUserAccess(false)
-        subjectId = subjectId || String(cachedAccess.subjectId ?? '').trim()
-        cachedPermissions.push(
-          ...((cachedAccess.effectivePermissions ?? [])
-            .map(normalizePermission)
-            .filter(Boolean) as EffectivePermission[])
+        const access = await getCurrentUserAccess(false)
+        if (!active) return
+        setCurrentEffectivePermissions(
+          uniquePermissions(
+            access.effectivePermissions
+              .map(normalizePermission)
+              .filter(Boolean) as EffectivePermission[]
+          )
         )
+        setCurrentAccessState('ready')
       } catch (error) {
-        console.warn('Could not read cached current-user permissions', error)
+        console.warn('Could not read current-user permissions', error)
+        if (active) setCurrentAccessState('error')
       }
-
-      const fetchedPermissions: EffectivePermission[] = []
-      let hardFailure = false
-
-      if (subjectId) {
-        if (scopeMode === 'global') {
-          try {
-            const permissions = await TrustDeck.instance().getGlobalPermissions(subjectId)
-            fetchedPermissions.push(
-              ...(permissions.map(normalizePermission).filter(Boolean) as EffectivePermission[])
-            )
-          } catch (error) {
-            if (!(error instanceof TrustDeckHttpError && [403, 404].includes(error.status))) {
-              hardFailure = true
-              console.warn('Could not load current global permissions', error)
-            }
-          }
-        } else if (selectedProject?.abbreviation) {
-          const requests: Promise<unknown[]>[] = [
-            TrustDeck.instance().getProjectPermissions(
-              selectedProject.abbreviation,
-              subjectId
-            ) as Promise<unknown[]>
-          ]
-
-          Array.from(permissionDomainNames).forEach((domainName) => {
-            requests.push(
-              TrustDeck.instance().getDomainPermissions(
-                domainName,
-                subjectId
-              ) as Promise<unknown[]>
-            )
-          })
-          Array.from(permissionEntityTypeNames).forEach((entityTypeName) => {
-            requests.push(
-              TrustDeck.instance().getEntityTypePermissions(
-                selectedProject.abbreviation!,
-                entityTypeName,
-                subjectId
-              ) as Promise<unknown[]>
-            )
-          })
-
-          const results = await Promise.allSettled(requests)
-          results.forEach((result) => {
-            if (result.status === 'fulfilled') {
-              fetchedPermissions.push(
-                ...(result.value
-                  .map(normalizePermission)
-                  .filter(Boolean) as EffectivePermission[])
-              )
-              return
-            }
-
-            const error = result.reason
-            if (!(error instanceof TrustDeckHttpError && [403, 404].includes(error.status))) {
-              hardFailure = true
-              console.warn('Could not load a current scoped permission set', error)
-            }
-          })
-        }
-      }
-
-      if (!active) return
-      const merged = uniquePermissions([...cachedPermissions, ...fetchedPermissions])
-      setCurrentEffectivePermissions(merged)
-      setCurrentAccessState(hardFailure && merged.length === 0 ? 'error' : 'ready')
     }
 
     void loadCurrentScopedPermissions()
     return () => {
       active = false
     }
-  }, [
-    auth.isAuthenticated,
-    auth.isLoading,
-    auth.user?.profile?.sub,
-    permissionDomainNames,
-    permissionEntityTypeNames,
-    scopeMode,
-    selectedProject?.abbreviation
-  ])
+  }, [auth.isAuthenticated, auth.isLoading, auth.user?.access_token])
 
   const scopeRows = useMemo(() => {
     const rows: EffectivePermission[] = []
@@ -953,28 +902,25 @@ export default function PermissionManagement({
     [scopeOptions, selectedScopeKey]
   )
 
+  const currentAccess = useMemo(
+    () => ({
+      userId: currentUserId || 'current-user',
+      effectivePermissions: currentEffectivePermissions,
+      loadedAt: Date.now()
+    }),
+    [currentEffectivePermissions, currentUserId]
+  )
+
   const canEditSelectedScope = useMemo(() => {
-    if (scopeMode === 'global') return true
+    if (scopeMode === 'global') return canManageGlobalPermissions(currentAccess)
     if (!selectedScope || selectedScope.resourceType === 'GLOBAL') return false
     return canManagePermissions(
-      {
-        userId: currentUserId || 'current-user',
-        roles: currentUserRoles ?? [],
-        effectivePermissions: currentEffectivePermissions,
-        loadedAt: Date.now()
-      },
+      currentAccess,
       selectedScope.resourceType,
       selectedScope.resourceName,
       selectedProject?.abbreviation
     )
-  }, [
-    currentEffectivePermissions,
-    currentUserId,
-    currentUserRoles,
-    scopeMode,
-    selectedProject?.abbreviation,
-    selectedScope
-  ])
+  }, [currentAccess, scopeMode, selectedProject?.abbreviation, selectedScope])
 
   const scopeSearchResults = useMemo(() => {
     const project = scopeOptions.find((option) => option.resourceType === 'PROJECT')
@@ -1071,6 +1017,21 @@ export default function PermissionManagement({
   }, [loadTargetPermissions])
 
   const selectedPersonPermissions = targetScopePermissions
+
+  // Bounded delegation: an action can only be added when the editor holds it on the same resource.
+  // Actions the selected user already holds can always be kept or removed.
+  const isPermissionLocked = useCallback(
+    (permission: EffectivePermission) =>
+      !permissionIsGranted(selectedPersonPermissions, permission) &&
+      !holdsAction(
+        currentAccess,
+        permission.resourceType as 'GLOBAL' | 'PROJECT' | 'DOMAIN' | 'ENTITY_TYPE',
+        permission.action,
+        permission.resourceName,
+        selectedProject?.abbreviation
+      ),
+    [currentAccess, selectedPersonPermissions, selectedProject?.abbreviation]
+  )
 
   const resetPermissionState = useCallback(() => {
     const next: Record<string, boolean> = {}
@@ -1322,11 +1283,16 @@ export default function PermissionManagement({
       })
     } catch (error) {
       console.error('Failed to update scoped permissions', error)
+      const rejected = rejectedActionsFromError(error)
       showToast({
         severity: 'error',
         summary: t('common:error'),
-        detail: t('toast.updateFailedDetail'),
-        life: 4500
+        detail: rejected.length
+          ? t('toast.updateRejectedDetail', {
+              actions: rejected.map(formatPermissionAction).join(', ')
+            })
+          : t('toast.updateFailedDetail'),
+        life: 6000
       })
     } finally {
       setSaving(false)
@@ -1636,11 +1602,13 @@ export default function PermissionManagement({
                           (permission) =>
                             Boolean(permissionState[permissionKey(permission)])
                         )
-                        setPermissionState(
+                        setPermissionState((current) =>
                           Object.fromEntries(
                             selectedScopeRows.map((permission) => [
                               permissionKey(permission),
-                              grantAll
+                              isPermissionLocked(permission)
+                                ? Boolean(current[permissionKey(permission)])
+                                : grantAll
                             ])
                           )
                         )
@@ -1664,6 +1632,7 @@ export default function PermissionManagement({
                     rows={selectedScopeRows}
                     grantedPermissions={selectedPersonPermissions}
                     editable={isEditing}
+                    isLocked={isPermissionLocked}
                     permissionState={permissionState}
                     onChange={(key, checked) =>
                       setPermissionState((current) => ({

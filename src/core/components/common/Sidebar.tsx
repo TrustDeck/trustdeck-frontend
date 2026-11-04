@@ -30,29 +30,6 @@ interface SidebarProps {
 
 const XL_BREAKPOINT = 1280
 
-function rolesFromAccessToken(accessToken?: string) {
-  if (!accessToken) return []
-  try {
-    const payload = accessToken.split('.')[1]
-    if (!payload) return []
-    const decodedPayload = JSON.parse(
-      window.atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-    )
-    const realmRoles = decodedPayload?.realm_access?.roles
-    const resourceRoles = Object.values(decodedPayload?.resource_access ?? {})
-      .flatMap((client: any) => client?.roles ?? [])
-      .filter((role): role is string => typeof role === 'string')
-    return Array.from(
-      new Set([
-        ...(Array.isArray(realmRoles) ? realmRoles : []),
-        ...resourceRoles
-      ])
-    )
-  } catch {
-    return []
-  }
-}
-
 function formatRemaining(expiresAt: number | null) {
   if (!expiresAt) return '—'
   const remaining = Math.max(0, expiresAt - Date.now())
@@ -71,18 +48,6 @@ function canSeeProjectDomainPermissions(
   selectedProjectAbbreviation?: string
 ) {
   if (!access) return false
-  const privileged = (access.roles ?? []).some((role) => {
-    const normalized = String(role).trim().toLowerCase()
-    return [
-      'admin',
-      'administrator',
-      'realm-admin',
-      'trustdeck-admin',
-      'trustdeck_admin',
-      'backend-admin'
-    ].includes(normalized)
-  })
-  if (privileged) return true
 
   return (
     canManagePermissions(access, 'PROJECT', selectedProjectAbbreviation) ||
@@ -90,25 +55,6 @@ function canSeeProjectDomainPermissions(
     canManagePermissions(access, 'ENTITY_TYPE', undefined, selectedProjectAbbreviation)
   )
 }
-function normalizePermissionForSidebar(permission: any) {
-  const resourceType = String(permission?.resourceType ?? '').toUpperCase()
-  const resourceName =
-    resourceType === 'ENTITY_TYPE'
-      ? permission?.entityTypeName ?? permission?.resourceName
-      : resourceType === 'PROJECT'
-        ? permission?.projectAbbreviation ?? permission?.resourceName
-        : resourceType === 'DOMAIN'
-          ? permission?.domainName ?? permission?.resourceName
-          : permission?.resourceName
-  const action = String(permission?.action ?? permission?.operation ?? '')
-  if (!resourceType || !action) return null
-  return {
-    resourceType,
-    resourceName: resourceName ? String(resourceName) : undefined,
-    action
-  }
-}
-
 function shortenProjectAbbreviation(abbreviation?: string) {
   if (!abbreviation) return 'TrustDeck'
   return abbreviation.length > 10
@@ -126,7 +72,6 @@ export default function Sidebar({
   const projectImage = useProjectStore((state) => state.projectImage)
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const setProjectImage = useProjectStore((state) => state.setProjectImage)
-  const roles = useUserStore((state) => state.roles)
   const fullname = useUserStore((state) => state.fullname)
   const email = useUserStore((state) => state.email)
   const username = useUserStore((state) => state.username)
@@ -217,97 +162,11 @@ export default function Sidebar({
 
     async function loadSidebarAccess() {
       TrustDeck.instance().setToken(accessToken!)
-      let access: CachedUserAccess
       try {
-        access = await getCurrentUserAccess(false)
+        const access = await getCurrentUserAccess(false)
+        if (active) setPermissionAccess(access)
       } catch {
-        access = {
-          userId: 'current-user',
-          roles: roles ?? [],
-          effectivePermissions: [],
-          loadedAt: Date.now()
-        }
-      }
-
-      const subjectId = String(auth.user?.profile?.sub ?? access.subjectId ?? '').trim()
-      const abbreviation = selectedProject?.abbreviation
-      const scopedPermissions: any[] = []
-
-      if (subjectId && abbreviation) {
-        const requests: Promise<unknown[]>[] = [
-          TrustDeck.instance().getProjectPermissions(
-            abbreviation,
-            subjectId
-          ) as Promise<unknown[]>
-        ]
-
-        try {
-          const entityTypes = await TrustDeck.instance().getProjectEntities(
-            '*',
-            abbreviation
-          )
-          const domainNames = Array.from(
-            new Set(
-              entityTypes
-                .map((entityType: any) =>
-                  String(entityType?.associatedDomainName ?? '').trim()
-                )
-                .filter(Boolean)
-            )
-          )
-          domainNames.forEach((domainName) => {
-            requests.push(
-              TrustDeck.instance().getDomainPermissions(
-                domainName,
-                subjectId
-              ) as Promise<unknown[]>
-            )
-          })
-          entityTypes.forEach((entityType: any) => {
-            const entityTypeName = String(
-              entityType?.name ?? entityType?.entityTypeName ?? ''
-            ).trim()
-            if (!entityTypeName) return
-            requests.push(
-              TrustDeck.instance().getEntityTypePermissions(
-                abbreviation,
-                entityTypeName,
-                subjectId
-              ) as Promise<unknown[]>
-            )
-          })
-        } catch {
-          // Project/entity access is independently guarded. The project permission
-          // request above still allows the route to be detected when possible.
-        }
-
-        const results = await Promise.allSettled(requests)
-        results.forEach((result) => {
-          if (result.status === 'fulfilled') scopedPermissions.push(...result.value)
-        })
-      }
-
-      const normalizedScoped = scopedPermissions
-        .map(normalizePermissionForSidebar)
-        .filter(Boolean)
-      const uniquePermissions = Array.from(
-        new Map(
-          [...(access.effectivePermissions ?? []), ...normalizedScoped].map(
-            (permission: any) => [
-              `${permission.resourceType}:${permission.resourceName ?? '*'}:${permission.action}`,
-              permission
-            ]
-          )
-        ).values()
-      ) as CachedUserAccess['effectivePermissions']
-
-      if (active) {
-        setPermissionAccess({
-          ...access,
-          subjectId: subjectId || access.subjectId,
-          effectivePermissions: uniquePermissions,
-          loadedAt: Date.now()
-        })
+        if (active) setPermissionAccess(null)
       }
     }
 
@@ -315,34 +174,7 @@ export default function Sidebar({
     return () => {
       active = false
     }
-  }, [
-    auth.user?.access_token,
-    auth.user?.profile?.sub,
-    roles,
-    selectedProject?.abbreviation
-  ])
-
-  const tokenRoles = useMemo(
-    () => rolesFromAccessToken(auth.user?.access_token),
-    [auth.user?.access_token]
-  )
-
-  const accessForSidebar = useMemo<CachedUserAccess | null>(() => {
-    const mergedRoles = Array.from(
-      new Set([
-        ...(roles ?? []),
-        ...tokenRoles,
-        ...(permissionAccess?.roles ?? [])
-      ])
-    )
-    if (permissionAccess) return { ...permissionAccess, roles: mergedRoles }
-    return {
-      userId: 'current-user',
-      roles: mergedRoles,
-      effectivePermissions: [],
-      loadedAt: Date.now()
-    }
-  }, [permissionAccess, roles, tokenRoles])
+  }, [auth.user?.access_token])
 
   const sidebarRoutes = useMemo(() => {
     return routes
@@ -352,13 +184,13 @@ export default function Sidebar({
           if (requiresScopedPermission === 'project-domain') {
             if (!permissionAccess && auth.isAuthenticated) return true
             return canSeeProjectDomainPermissions(
-              accessForSidebar,
+              permissionAccess,
               selectedProject?.abbreviation
             )
           }
           if (!requiresBaseTypeAccess) return true
           if (!permissionAccess && auth.isAuthenticated) return true
-          return canAccessBaseTypes(accessForSidebar)
+          return canAccessBaseTypes(permissionAccess)
         }
       )
       .sort(
@@ -366,7 +198,6 @@ export default function Sidebar({
           (a.sideboardOrder ?? Infinity) - (b.sideboardOrder ?? Infinity)
       )
   }, [
-    accessForSidebar,
     auth.isAuthenticated,
     permissionAccess,
     selectedProject?.abbreviation

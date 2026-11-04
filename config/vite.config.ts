@@ -28,6 +28,15 @@ export default defineConfig(({ command }) => ({
     host: 'localhost',
     port: 5173
   },
+  build: {
+    rolldownOptions: {
+      // The silent renew page is loaded in a hidden iframe and needs its own bundle.
+      input: {
+        main: path.resolve(projectRoot, 'index.html'),
+        silentRenew: path.resolve(projectRoot, 'silent-renew.html')
+      }
+    }
+  },
   css: {
     postcss: path.resolve(__dirname)
   }

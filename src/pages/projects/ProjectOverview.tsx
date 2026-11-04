@@ -109,9 +109,8 @@ export default function ProjectOverview() {
     }
 
     TrustDeck.instance().setToken(accessToken)
-    // Synchronize token roles before evaluating project actions. This avoids a
-    // race after frontend redeploys where the permission cache was populated
-    // before the refreshed Keycloak roles reached the user store.
+    // Synchronize the user store before reloading the grants, so that the
+    // permission cache is keyed by the user of the current token.
     useUserStore.getState().setFromAccessToken(accessToken)
     clearPermissionCache()
     setPermissionsReady(false)

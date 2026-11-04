@@ -71,5 +71,7 @@
   "endDateLabel": "Enddatum",
   "description": "Beschreibung",
   "requiredProjectName": "Der Projektname ist erforderlich.",
-  "requiredProjectAbbreviation": "Das Projektkürzel ist erforderlich."
+  "requiredProjectAbbreviation": "Das Projektkürzel ist erforderlich.",
+  "legalBasisConfirmation": "Ich bestätige, dass für dieses Projekt eine Rechtsgrundlage (z. B. eine Einwilligung) vorliegt.",
+  "requiredLegalBasisConfirmation": "Bitte bestätigen Sie, dass für dieses Projekt eine Rechtsgrundlage vorliegt."
 }

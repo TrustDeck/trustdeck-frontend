@@ -91,7 +91,8 @@
     "searchFailed": "Suche fehlgeschlagen",
     "searchFailedDetail": "Benutzer konnten nicht geladen werden. Bitte prüfen Sie Ihren Zugriff auf die Berechtigungsverwaltung.",
     "permissionsUpdated": "Berechtigungen wurden erfolgreich aktualisiert.",
-    "updateFailedDetail": "Berechtigungen konnten nicht aktualisiert werden. Das Backend hat den Vorgang möglicherweise abgelehnt."
+    "updateFailedDetail": "Berechtigungen konnten nicht aktualisiert werden. Das Backend hat den Vorgang möglicherweise abgelehnt.",
+    "updateRejectedDetail": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen. Nicht vergeben: {{actions}}. Es wurde nichts geändert."
   },
   "subgroup": {
     "project": {
@@ -127,5 +128,6 @@
     "edit": "Bearbeitung"
   },
   "viewModeHint": "Die Berechtigungen werden schreibgeschützt angezeigt. Wählen Sie „Berechtigungen bearbeiten“, um Änderungen vorzunehmen.",
-  "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen."
+  "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen.",
+  "lockedPermissionHint": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen."
 }

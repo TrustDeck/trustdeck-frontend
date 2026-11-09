@@ -57,7 +57,10 @@
     },
     "psnlength": {
       "label": "Pseudonym-Länge",
-      "error": "Bitte geben Sie eine Pseudonym-Länge ein"
+      "error": "Bitte geben Sie eine Pseudonym-Länge ein",
+      "automatic": "Automatisch",
+      "automaticWithLength": "Automatisch ({{length}})",
+      "help": "Leer lassen, um die kürzeste Länge zu verwenden, die die gewünschte Anzahl an Pseudonymen mit der gewünschten Erfolgswahrscheinlichkeit noch erlaubt. Eine kürzere Länge wird auf dieses Minimum angehoben."
     },
     "alphabet": {
       "label": "Alphabet",
@@ -125,7 +128,8 @@
       "help": "Optionaler expliziter Salt für die Pseudonymgenerierung. Lassen Sie das Feld leer, damit das Backend einen Salt generiert oder die Standardbehandlung nutzt."
     },
     "lengthIncludesCheckDigit": {
-      "label": "Länge enthält Prüfziffer"
+      "label": "Länge enthält Prüfziffer",
+      "randomInfo": "Die Prüfziffer ersetzt das letzte Zeichen und trägt daher keine Zufälligkeit bei. Die berechnete Pseudonym-Länge enthält deshalb ein zusätzliches Zeichen."
     },
     "inheritedEditable": "Von der übergeordneten Pseudonym-Domäne übernommen; kann überschrieben werden.",
     "inheritedReadonly": "Von der übergeordneten Pseudonym-Domäne übernommen.",

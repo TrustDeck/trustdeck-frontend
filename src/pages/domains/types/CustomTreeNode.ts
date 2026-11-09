@@ -8,6 +8,8 @@ export interface GroupStoredAttributes {
   validityTime?: string
   prefix?: string
   psnlength?: string
+  /** Length stored in the backend; shown as placeholder while psnlength is empty. */
+  currentPseudonymLength?: string
   alphabet?: string
   customAlphabetCharacters?: string
   algorithm?: string

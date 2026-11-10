@@ -21,6 +21,7 @@ import type {
 } from '../types/CustomTreeNode'
 import TrustDeck, { TrustDeckHttpError } from '@service/TrustDeck'
 import type { Algorithm, Domain } from '../../../core/types/Domain'
+import { isRandomAlgorithm } from '../utils/pseudonymLength'
 import {
   characters,
   CUSTOM_ALPHABET_VALUE,
@@ -39,7 +40,6 @@ const DEFAULT_ALGORITHM: Algorithm = {
   randomAlgorithmDesiredSize: 100_000_000,
   randomAlgorithmDesiredSuccessProbability: 0.99999998,
   consecutiveValueCounter: 1,
-  pseudonymLength: 16,
   paddingCharacter: '0',
   addCheckDigit: true,
   lengthIncludesCheckDigit: false,
@@ -99,7 +99,12 @@ const normalizeDomain = (
     validityTime: domain.validityTime ?? '',
     validToInherited: Boolean(domain.validToInherited),
     prefix: domain.prefix ?? '',
-    psnlength: numberToString(algorithm.pseudonymLength),
+    // Random algorithms get their length calculated by the backend: the field stays empty unless the user
+    // enters a length, and the stored length is only shown as the placeholder
+    psnlength: isRandomAlgorithm(algorithm.name)
+      ? ''
+      : numberToString(algorithm.pseudonymLength),
+    currentPseudonymLength: numberToString(algorithm.pseudonymLength),
     pseudonymLengthInherited: algorithmInherited,
     alphabet: alphabetKey ?? CUSTOM_ALPHABET_VALUE,
     alphabetInherited: algorithmInherited,
@@ -231,7 +236,7 @@ const resolveAlphabet = (
 }
 
 /** Builds the complete nested algorithm DTO expected by the backend. */
-const buildAlgorithm = (
+export const buildAlgorithm = (
   payload: GroupStoredAttributes,
   fallback?: Algorithm | null,
   stored?: GroupStoredAttributes,
@@ -260,10 +265,11 @@ const buildAlgorithm = (
       toNumberOrNull(payload.consecutiveValueCounter) ??
       base.consecutiveValueCounter ??
       DEFAULT_ALGORITHM.consecutiveValueCounter,
-    pseudonymLength:
-      toNumberOrNull(payload.psnlength) ??
-      base.pseudonymLength ??
-      DEFAULT_ALGORITHM.pseudonymLength,
+    // Only an explicitly entered length is sent; without one, the backend calculates the shortest
+    // suitable length for random algorithms and uses its default for the others
+    ...(toNumberOrNull(payload.psnlength) !== null
+      ? { pseudonymLength: toNumberOrNull(payload.psnlength) as number }
+      : {}),
     paddingCharacter:
       String(payload.paddingchar ?? base.paddingCharacter ?? '0').slice(0, 1) ||
       DEFAULT_ALGORITHM.paddingCharacter,

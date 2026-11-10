@@ -331,7 +331,8 @@ export const useTreeStateStore = create<TreeState>((set) => ({
         label = `New_Domain${counter}`
       }
       const prefix = counter === 1 ? 'ND-' : `ND${counter}-`
-      const psnlength = '16'
+      // Empty: the backend calculates the shortest suitable length for random algorithms
+      const psnlength = ''
 
       const formatLocalDateTime = (date: Date) => {
         const day = String(date.getDate()).padStart(2, '0')

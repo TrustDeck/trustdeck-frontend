@@ -58,7 +58,9 @@
     },
     "psnlength": {
       "label": "PSN length",
-      "error": "Please enter a PSN length"
+      "error": "Please enter a PSN length",
+      "automatic": "Automatic",
+      "help": "Leave empty to use the shortest length that still allows the desired number of pseudonyms with the desired success probability. A shorter length is raised to that minimum."
     },
     "alphabet": {
       "label": "Alphabet",
@@ -125,7 +127,8 @@
       "help": "Optional explicit salt used for pseudonym generation. Leave empty so the backend can generate or use its default salt handling."
     },
     "lengthIncludesCheckDigit": {
-      "label": "Length includes check digit"
+      "label": "Length includes check digit",
+      "randomInfo": "The check digit replaces the last character, so it adds no randomness. The calculated pseudonym length therefore includes one additional character."
     },
     "inheritedEditable": "Inherited from parent pseudonym domain; you can override it.",
     "inheritedReadonly": "Inherited from the parent pseudonym domain.",

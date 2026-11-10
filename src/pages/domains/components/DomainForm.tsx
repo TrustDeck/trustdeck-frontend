@@ -25,6 +25,7 @@ import {
   isRandomnessAlgorithm
 } from '../utils/algorithmOutputLength'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
+import { isRandomAlgorithm } from '../utils/pseudonymLength'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -32,6 +33,8 @@ import InheritanceIndicator from '../../../core/components/common/InheritanceInd
 import DomainService from '../services/DomainService'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
+// Length of the example pseudonym of a new random domain, whose length the backend calculates on creation
+const EXAMPLE_PSEUDONYM_LENGTH = 10
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
 
 const FIXED_RANDOM_ALGORITHMS = new Set([
@@ -164,6 +167,11 @@ export default function DomainForm() {
 
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
+
+  // Random algorithms get the shortest suitable pseudonym length from the backend unless the user enters one
+  const randomAlgorithm = isRandomAlgorithm(temporal.algorithm)
+  const checkDigitReplacesLastCharacter =
+    Boolean(temporal.checkdigit) && Boolean(temporal.lengthIncludesCheckDigit)
   const domainNameInUse = (() => {
     const candidate = String(node?.label ?? '').trim().toLowerCase()
     if (!candidate) return false
@@ -361,7 +369,14 @@ export default function DomainForm() {
         ? (temporal.customAlphabetCharacters ?? '')
         : (characters[temporal.alphabet as AlphabetKey] ??
           characters.HEXADECIMAL_ALPHABET)
-    const selectedLength = Math.max(Number(temporal.psnlength) || 0, 0)
+    // Without an entered length, the example uses the stored length or, for a new domain, an example length
+    const selectedLength = Math.max(
+      Number(temporal.psnlength) ||
+        (randomAlgorithm
+          ? Number(temporal.currentPseudonymLength) || EXAMPLE_PSEUDONYM_LENGTH
+          : 0),
+      0
+    )
     const includesCheckDigit =
       Boolean(temporal.checkdigit) &&
       Boolean(temporal.lengthIncludesCheckDigit) &&
@@ -373,7 +388,7 @@ export default function DomainForm() {
       : ''
 
     setExamplePsn(`${temporal.prefix ?? ''}${body}${fakeCheckDigit}`)
-  }, [temporal])
+  }, [temporal, randomAlgorithm])
 
   const changeParent = async (parentValue: string) => {
     const parentName = parentValue === 'ROOT' ? '' : parentValue
@@ -480,38 +495,6 @@ export default function DomainForm() {
             validate={validation.isValidRegistrationPrefix}
             required
           />
-          <InheritedField
-            inherited={Boolean(temporal.pseudonymLengthInherited)}
-            title={inheritedTitle}
-            iconClassName="right-10 top-1/2 -translate-y-1/2"
-          >
-            <label htmlFor="psnlength" className="block">
-              <span className="td-field-label mb-1 block">
-                {t('groups:inputs.psnlength.label')}
-              </span>
-              <CustomInputNumber
-                id="psnlength"
-                placeholder={t('groups:inputs.psnlength.label')}
-                value={
-                  temporal.psnlength === undefined || temporal.psnlength === ''
-                    ? null
-                    : Number(temporal.psnlength)
-                }
-                onChange={(event) => {
-                  updateNodeAttribute(
-                    selectedNodeKey,
-                    'psnlength',
-                    event.value === null ? '' : String(event.value)
-                  )
-                  markAlgorithmOverridden()
-                }}
-                min={2}
-                max={256}
-                step={1}
-                showButtons
-              />
-            </label>
-          </InheritedField>
           <div className="md:col-span-2">
             <CustomFloatLabel
               id="description"
@@ -815,6 +798,47 @@ export default function DomainForm() {
             </p>
             <div className="grid gap-5 md:grid-cols-2">
               <InheritedField
+                inherited={Boolean(temporal.pseudonymLengthInherited)}
+                title={inheritedTitle}
+                iconClassName="right-10 top-1/2 -translate-y-1/2"
+              >
+                <label htmlFor="psnlength" className="block">
+                  <span className="td-field-label mb-1 block">
+                    {t('groups:inputs.psnlength.label')}
+                  </span>
+                  <CustomInputNumber
+                    id="psnlength"
+                    placeholder={
+                      randomAlgorithm
+                        ? t('groups:inputs.psnlength.automatic')
+                        : t('groups:inputs.psnlength.label')
+                    }
+                    helpText={
+                      randomAlgorithm
+                        ? t('groups:inputs.psnlength.help')
+                        : undefined
+                    }
+                    value={
+                      temporal.psnlength === undefined || temporal.psnlength === ''
+                        ? null
+                        : Number(temporal.psnlength)
+                    }
+                    onChange={(event) => {
+                      updateNodeAttribute(
+                        selectedNodeKey,
+                        'psnlength',
+                        event.value === null ? '' : String(event.value)
+                      )
+                      markAlgorithmOverridden()
+                    }}
+                    min={4}
+                    max={256}
+                    step={1}
+                    showButtons
+                  />
+                </label>
+              </InheritedField>
+              <InheritedField
                 inherited={Boolean(temporal.algorithmInherited)}
                 title={inheritedTitle}
                 iconClassName="right-10 top-1/2 -translate-y-1/2"
@@ -914,6 +938,11 @@ export default function DomainForm() {
                   }}
                 />
               </InheritedField>
+              {randomAlgorithm && checkDigitReplacesLastCharacter && (
+                <p className="md:col-span-2 text-sm text-gray-600 dark:text-slate-400">
+                  {t('groups:inputs.lengthIncludesCheckDigit.randomInfo')}
+                </p>
+              )}
 
               <InheritedField
                 inherited={Boolean(temporal.enforceStartDateValidityInherited)}

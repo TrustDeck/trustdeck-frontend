@@ -73,22 +73,27 @@ const ProtectedRoute: FC<ProtectedRouteProps> = ({
   const auth = useAuth()
   const location = useLocation()
   const [silentSigninFailed, setSilentSigninFailed] = useState(false)
+  const silentSigninStarted = useRef(false)
   const locallyLoggedOut = isMarkedLoggedOut()
   const authenticated =
     !locallyLoggedOut && auth.isAuthenticated && hasValidOidcUser(auth.user)
   const needsSilentSignin =
     isProtected && !auth.isLoading && !authenticated && !locallyLoggedOut && !silentSigninFailed
 
+  // The sign-in itself sets auth.isLoading, which ends needsSilentSignin while it runs.
+  // Its result must therefore outlive this effect, or a failed attempt would never be
+  // recorded and the next render would start another one instead of going to the login page.
   useEffect(() => {
-    if (!needsSilentSignin) return
-    let active = true
+    if (!needsSilentSignin || silentSigninStarted.current) return
+    silentSigninStarted.current = true
     void trySilentSignin(auth).then((success) => {
-      if (active && !success) setSilentSigninFailed(true)
+      if (!success) setSilentSigninFailed(true)
     })
-    return () => {
-      active = false
-    }
   }, [auth, needsSilentSignin])
+
+  useEffect(() => {
+    if (authenticated) silentSigninStarted.current = false
+  }, [authenticated])
 
   if ((auth.isLoading || needsSilentSignin) && isProtected && !authenticated) {
     return (

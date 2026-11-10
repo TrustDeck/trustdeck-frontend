@@ -60,7 +60,6 @@
       "label": "PSN length",
       "error": "Please enter a PSN length",
       "automatic": "Automatic",
-      "automaticWithLength": "Automatic ({{length}})",
       "help": "Leave empty to use the shortest length that still allows the desired number of pseudonyms with the desired success probability. A shorter length is raised to that minimum."
     },
     "alphabet": {

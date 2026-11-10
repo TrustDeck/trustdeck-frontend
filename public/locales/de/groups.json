@@ -59,7 +59,6 @@
       "label": "Pseudonym-Länge",
       "error": "Bitte geben Sie eine Pseudonym-Länge ein",
       "automatic": "Automatisch",
-      "automaticWithLength": "Automatisch ({{length}})",
       "help": "Leer lassen, um die kürzeste Länge zu verwenden, die die gewünschte Anzahl an Pseudonymen mit der gewünschten Erfolgswahrscheinlichkeit noch erlaubt. Eine kürzere Länge wird auf dieses Minimum angehoben."
     },
     "alphabet": {

@@ -25,10 +25,7 @@ import {
   isRandomnessAlgorithm
 } from '../utils/algorithmOutputLength'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
-import {
-  estimateMinimumPseudonymLength,
-  isRandomAlgorithm
-} from '../utils/pseudonymLength'
+import { isRandomAlgorithm } from '../utils/pseudonymLength'
 import type { GroupStoredAttributes } from '../types/CustomTreeNode'
 import validation from '../../../core/utils/validation'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -36,6 +33,8 @@ import InheritanceIndicator from '../../../core/components/common/InheritanceInd
 import DomainService from '../services/DomainService'
 
 const BACKEND_DEFAULT_SALT_LENGTH = '32'
+// Length of the example pseudonym of a new random domain, whose length the backend calculates on creation
+const EXAMPLE_PSEUDONYM_LENGTH = 10
 const EMPTY_GROUP_ATTRIBUTES: GroupStoredAttributes = {}
 
 const FIXED_RANDOM_ALGORITHMS = new Set([
@@ -168,45 +167,11 @@ export default function DomainForm() {
 
   const node = findNodeByKey(tree, selectedNodeKey)
   const temporal = node?.data?.temporal ?? EMPTY_GROUP_ATTRIBUTES
-  const stored = node?.data?.stored ?? EMPTY_GROUP_ATTRIBUTES
 
   // Random algorithms get the shortest suitable pseudonym length from the backend unless the user enters one
   const randomAlgorithm = isRandomAlgorithm(temporal.algorithm)
   const checkDigitReplacesLastCharacter =
     Boolean(temporal.checkdigit) && Boolean(temporal.lengthIncludesCheckDigit)
-  const lengthParametersUnchanged = (
-    [
-      'algorithm',
-      'alphabet',
-      'customAlphabetCharacters',
-      'maxnumpsn',
-      'randomAlgorithmDesiredSuccessProbability',
-      'checkdigit',
-      'lengthIncludesCheckDigit'
-    ] as const
-  ).every((field) => (stored[field] ?? '') === (temporal[field] ?? ''))
-  const alphabetCharacters =
-    temporal.alphabet === CUSTOM_ALPHABET_VALUE
-      ? (temporal.customAlphabetCharacters ?? '')
-      : (characters[temporal.alphabet as AlphabetKey] ?? '')
-  const parseNumber = (value?: string | null): number | null => {
-    const parsed = Number(String(value ?? '').replace(/\s/g, '').replace(',', '.'))
-    return value && Number.isFinite(parsed) ? parsed : null
-  }
-  // Placeholder for an empty length field: the stored length while nothing that affects it changed,
-  // otherwise the length the backend will calculate
-  const automaticPseudonymLength: number | null = !randomAlgorithm
-    ? null
-    : lengthParametersUnchanged && temporal.currentPseudonymLength
-      ? Number(temporal.currentPseudonymLength)
-      : estimateMinimumPseudonymLength({
-          desiredSize: parseNumber(temporal.maxnumpsn),
-          successProbability: parseNumber(
-            temporal.randomAlgorithmDesiredSuccessProbability
-          ),
-          alphabetSize: alphabetCharacters.length,
-          checkDigitReplacesLastCharacter
-        })
   const domainNameInUse = (() => {
     const candidate = String(node?.label ?? '').trim().toLowerCase()
     if (!candidate) return false
@@ -404,8 +369,12 @@ export default function DomainForm() {
         ? (temporal.customAlphabetCharacters ?? '')
         : (characters[temporal.alphabet as AlphabetKey] ??
           characters.HEXADECIMAL_ALPHABET)
+    // Without an entered length, the example uses the stored length or, for a new domain, an example length
     const selectedLength = Math.max(
-      Number(temporal.psnlength) || automaticPseudonymLength || 0,
+      Number(temporal.psnlength) ||
+        (randomAlgorithm
+          ? Number(temporal.currentPseudonymLength) || EXAMPLE_PSEUDONYM_LENGTH
+          : 0),
       0
     )
     const includesCheckDigit =
@@ -419,7 +388,7 @@ export default function DomainForm() {
       : ''
 
     setExamplePsn(`${temporal.prefix ?? ''}${body}${fakeCheckDigit}`)
-  }, [temporal, automaticPseudonymLength])
+  }, [temporal, randomAlgorithm])
 
   const changeParent = async (parentValue: string) => {
     const parentName = parentValue === 'ROOT' ? '' : parentValue
@@ -841,11 +810,7 @@ export default function DomainForm() {
                     id="psnlength"
                     placeholder={
                       randomAlgorithm
-                        ? automaticPseudonymLength === null
-                          ? t('groups:inputs.psnlength.automatic')
-                          : t('groups:inputs.psnlength.automaticWithLength', {
-                              length: automaticPseudonymLength
-                            })
+                        ? t('groups:inputs.psnlength.automatic')
                         : t('groups:inputs.psnlength.label')
                     }
                     helpText={

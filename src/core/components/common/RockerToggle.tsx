@@ -15,7 +15,7 @@ export const RockerToggle: React.FC<RockerProps> = ({
 
   return (
     <div className="td-rocker-toggle rounded-lg border border-transparent p-3">
-      <label className="mb-2 block pr-7 font-semibold">{label}</label>
+      <label className="td-field-label mb-2 block pr-7">{label}</label>
       <div className="flex overflow-hidden rounded-md border border-gray-300 dark:border-slate-700">
         <button
           type="button"

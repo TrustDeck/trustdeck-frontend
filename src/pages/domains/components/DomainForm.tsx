@@ -126,15 +126,19 @@ function InheritedField({
   inherited,
   title,
   children,
-  iconClassName = 'right-3 top-1/2 -translate-y-1/2'
+  iconClassName = 'right-3 top-1/2 -translate-y-1/2',
+  className = ''
 }: {
   inherited: boolean
   title: string
   children: ReactNode
   iconClassName?: string
+  className?: string
 }) {
   return (
-    <div className={`relative ${inherited ? 'td-inherited-field' : ''}`}>
+    <div
+      className={`relative ${inherited ? 'td-inherited-field' : ''} ${className}`}
+    >
       {children}
       {inherited && (
         <InheritanceIndicator
@@ -842,6 +846,7 @@ export default function DomainForm() {
                 inherited={Boolean(temporal.algorithmInherited)}
                 title={inheritedTitle}
                 iconClassName="right-10 top-1/2 -translate-y-1/2"
+                className="md:col-start-1"
               >
                 <CustomFloatLabel
                   id="saltLength"
@@ -981,22 +986,21 @@ export default function DomainForm() {
                 />
               </InheritedField>
 
-              <div className="md:col-span-2">
-                <InheritedField
-                  inherited={Boolean(temporal.multiplePsnAllowedInherited)}
-                  title={inheritedTitle}
-                  iconClassName="right-3 top-3"
-                >
-                  <RockerToggle
-                    label={t('groups:inputs.multiplepsn.label')}
-                    value={Boolean(temporal.multiplepsn)}
-                    onChange={(value) => {
-                      updateNodeAttribute(selectedNodeKey, 'multiplepsn', value)
-                      markFieldOverridden('multiplePsnAllowedInherited')
-                    }}
-                  />
-                </InheritedField>
-              </div>
+              <InheritedField
+                inherited={Boolean(temporal.multiplePsnAllowedInherited)}
+                title={inheritedTitle}
+                iconClassName="right-3 top-3"
+                className="md:col-start-1"
+              >
+                <RockerToggle
+                  label={t('groups:inputs.multiplepsn.label')}
+                  value={Boolean(temporal.multiplepsn)}
+                  onChange={(value) => {
+                    updateNodeAttribute(selectedNodeKey, 'multiplepsn', value)
+                    markFieldOverridden('multiplePsnAllowedInherited')
+                  }}
+                />
+              </InheritedField>
             </div>
           </div>
         )}

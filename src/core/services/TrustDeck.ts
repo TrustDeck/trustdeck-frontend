@@ -46,6 +46,17 @@ export type QueryParams = Record<
 >
 
 /** Identifies an external identifier and its type. */
+/** One page of a paged pseudonym search. */
+export type PseudonymPage = {
+  items: Pseudonym[]
+  page: number
+  size: number
+  /** Number of matches, counted at most up to the backend's count limit. */
+  total: number
+  /** Whether more pseudonyms match than counted. */
+  totalIsLowerBound: boolean
+}
+
 export type IdentifierItem = {
   identifier: string
   idType: string
@@ -876,6 +887,46 @@ class TrustDeck {
       }
     )
     return this.asArray<Pseudonym>(response)
+  }
+
+  /**
+   * Searches one page of pseudonyms. Every query part must match the beginning of the
+   * identifier, ID type, or pseudonym; "*" matches all. Backends without paged search answer
+   * with a (truncated) list, which is then paged here.
+   */
+  public async searchPseudonymsPage(
+    domainName: string,
+    query: string,
+    page: number,
+    size: number
+  ): Promise<PseudonymPage> {
+    const response = await this.request<unknown>(
+      'GET',
+      `/domains/${encodeURIComponent(domainName)}/pseudonyms`,
+      undefined,
+      {
+        query,
+        page: String(page),
+        size: String(size)
+      }
+    )
+
+    if (response && typeof response === 'object' && 'items' in response) {
+      const paged = response as PseudonymPage
+      return {
+        ...paged,
+        items: Array.isArray(paged.items) ? paged.items : []
+      }
+    }
+
+    const all = this.asArray<Pseudonym>(response)
+    return {
+      items: all.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: all.length,
+      totalIsLowerBound: false
+    }
   }
 
   public async getPseudonymsBatch(domainName: string) {

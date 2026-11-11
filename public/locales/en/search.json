@@ -22,7 +22,8 @@
     "title": "Entity",
     "entityType": {
       "title": "Entity type",
-      "help": "Choose what you want to search."
+      "help": "Choose what you want to search.",
+      "selectPlaceholder": "Select an entity type"
     },
     "person": {
       "title": "Person",
@@ -165,15 +166,17 @@
     "inherited": "Inherited",
     "noLinkedPseudonyms": "No linked pseudonyms available.",
     "searchHint": "Enter a pseudonym and select the pseudonym domain in which it should be searched.",
-    "searchInputPlaceholder": "Pseudonym, identifier, or ID Type",
-    "domain": "Pseudonym domain"
+    "searchInputPlaceholder": "Beginning of a pseudonym, identifier, or ID type (* for all)",
+    "domain": "Pseudonym domain",
+    "searchFailed": "The pseudonyms could not be searched. Please try again."
   },
   "group": {
     "title": "Pseudonym domain",
     "placeholder": "Pseudonym domain",
     "help": "Select a pseudonym domain",
     "error": "Invalid pseudonym domain",
-    "searchHint": "Enter a pseudonym-domain name to search for it."
+    "searchHint": "Enter a pseudonym-domain name to search for it.",
+    "selectPlaceholder": "Select a domain"
   },
   "headers": {
     "personalData": "Personal data",
@@ -222,5 +225,6 @@
   },
   "resultNumber": "No.",
   "domainRequired": "Select a pseudonym domain first.",
-  "backToEntityDetails": "Back to entity details"
+  "backToEntityDetails": "Back to entity details",
+  "entityTypeRequired": "Select an entity type first."
 }

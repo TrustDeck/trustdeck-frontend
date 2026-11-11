@@ -427,7 +427,10 @@ export function InlinePseudonymResults({
     selectedResult,
     selectResult,
     clearSelectedResult,
-    removeResult
+    removeResult,
+    paging,
+    loadPage,
+    loadingPage
   } = usePseudonymStore()
   const [pendingDelete, setPendingDelete] = useState<Pseudonym | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -505,9 +508,32 @@ export function InlinePseudonymResults({
     }
   }
 
-  const pageStart = page * pageSize
-  const pageResults = sortedResults.slice(pageStart, pageStart + pageSize)
-  const pseudonymPageCount = Math.ceil(results.length / pageSize)
+  // Backend searches deliver one page at a time; other results are paged here
+  const shownPage = paging ? paging.page : page
+  const shownPageSize = paging ? paging.pageSize : pageSize
+  const pageStart = shownPage * shownPageSize
+  const pageResults = paging
+    ? sortedResults
+    : sortedResults.slice(pageStart, pageStart + pageSize)
+
+  const loadOtherPage = (nextPage: number, nextPageSize?: number) => {
+    if (!paging) return
+    clearSelectedResult()
+    loadPage(paging.domainName, paging.query, nextPage, nextPageSize).catch(
+      (error) => {
+        console.error('Failed to load a page of pseudonyms', error)
+        showToast({
+          severity: 'error',
+          summary: t('pseudonym.title'),
+          detail: t('pseudonym.searchFailed'),
+          life: 4500
+        })
+      }
+    )
+  }
+  const pseudonymPageCount = paging
+    ? Math.ceil(paging.total / paging.pageSize)
+    : Math.ceil(results.length / pageSize)
   const pseudonymFillerRows =
     pseudonymPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
 
@@ -669,7 +695,23 @@ export function InlinePseudonymResults({
         )}
       </Panel>
 
-      {results.length > 0 && (
+      {paging && (paging.total > 0 || paging.page > 0) && (
+        <div className="w-full">
+          <SharedPagination
+            page={paging.page}
+            pageCount={Math.max(1, pseudonymPageCount)}
+            morePagesExist={paging.totalIsLowerBound}
+            onPageChange={(nextPage) => loadOtherPage(nextPage)}
+            pageSize={paging.pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={(nextPageSize) => loadOtherPage(0, nextPageSize)}
+            alwaysShowPageSize
+            disabled={loadingPage}
+          />
+        </div>
+      )}
+
+      {!paging && results.length > 0 && (
         <div className="w-full">
           <Pagination
             total={results.length}

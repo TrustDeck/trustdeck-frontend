@@ -23,7 +23,8 @@
     "title": "Entität",
     "entityType": {
       "title": "Entitätstyp",
-      "help": "Wählen Sie die Entität, die Sie suchen möchten, aus."
+      "help": "Wählen Sie die Entität, die Sie suchen möchten, aus.",
+      "selectPlaceholder": "Entitätstyp auswählen"
     },
     "person": {
       "title": "Person",
@@ -166,15 +167,17 @@
     "inherited": "Geerbt",
     "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden.",
     "searchHint": "Geben Sie ein Pseudonym ein und wählen Sie die Pseudonym-Domäne, in der gesucht werden soll.",
-    "searchInputPlaceholder": "Pseudonym, Identifier oder ID-Typ",
-    "domain": "Pseudonym-Domäne"
+    "searchInputPlaceholder": "Anfang eines Pseudonyms, Identifikators oder ID-Typs (* für alle)",
+    "domain": "Pseudonym-Domäne",
+    "searchFailed": "Die Pseudonyme konnten nicht durchsucht werden. Bitte versuchen Sie es erneut."
   },
   "group": {
     "title": "Pseudonym-Domäne",
     "placeholder": "Pseudonym-Domäne",
     "help": "Pseudonym-Domäne auswählen",
     "error": "Ungültige Pseudonym-Domäne",
-    "searchHint": "Geben Sie den Namen einer Pseudonym-Domäne ein, um danach zu suchen."
+    "searchHint": "Geben Sie den Namen einer Pseudonym-Domäne ein, um danach zu suchen.",
+    "selectPlaceholder": "Domäne auswählen"
   },
   "headers": {
     "personalData": "Stammdaten",
@@ -222,5 +225,6 @@
   },
   "resultNumber": "Nr.",
   "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus.",
-  "backToEntityDetails": "Zurück zu den Entitätsdetails"
+  "backToEntityDetails": "Zurück zu den Entitätsdetails",
+  "entityTypeRequired": "Wählen Sie zuerst einen Entitätstyp aus."
 }

@@ -34,4 +34,10 @@ RUN chmod +x /docker-entrypoint.sh \
     && chown -R nginx:nginx /usr/share/nginx/html
 
 EXPOSE 8080
+
+# Docker reports the container as healthy once nginx answers on its own port. The first
+# checks run during start-up do not count as failures.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -fsS -o /dev/null http://127.0.0.1:8080/healthz || exit 1
+
 ENTRYPOINT ["/docker-entrypoint.sh"]

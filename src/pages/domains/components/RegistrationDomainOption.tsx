@@ -12,6 +12,14 @@ import useToastStore from '../../../core/stores/ToastStore'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import { findNodeByKey, findNodeByLabel } from '../utils/findNodeByKey'
 
+/** Signals that a domain with the name exists already, possibly in another project. */
+class DomainNameTakenError extends Error {
+  constructor(readonly domainName: string) {
+    super('A domain with this name already exists.')
+    this.name = 'DomainNameTakenError'
+  }
+}
+
 function domainNameExists(
   nodes: any[],
   selectedNodeKey: string,
@@ -107,19 +115,17 @@ export default function RegistrationDomainOption({
         throw new Error('Select a project before creating a pseudonym domain.')
       }
       if (domainNameExists(tree, String(selectedNodeKey), createdName)) {
-        throw new Error('A domain with this name already exists.')
+        throw new DomainNameTakenError(createdName)
       }
+      // Domain names are unique across all projects, so also look for readable domains elsewhere
+      let readableDomainExists = false
       try {
         await DomainService.getGroup(createdName)
-        throw new Error('A domain with this name already exists.')
-      } catch (error) {
-        if (
-          error instanceof Error &&
-          error.message === 'A domain with this name already exists.'
-        ) {
-          throw error
-        }
+        readableDomainExists = true
+      } catch {
+        // Not readable: the name is free or used by a domain the user cannot see
       }
+      if (readableDomainExists) throw new DomainNameTakenError(createdName)
 
       await DomainService.updateGroups(tree, currentDataNode, useCompleteEndpoint)
       let createdDomain = await DomainService.createGroup(
@@ -127,6 +133,14 @@ export default function RegistrationDomainOption({
         selectedProject.abbreviation,
         useCompleteEndpoint
       )
+      // For a taken name, the backend answers with the existing domain instead of creating one
+      if (
+        createdDomain.projectAbbreviation &&
+        createdDomain.projectAbbreviation.toLowerCase() !==
+          selectedProject.abbreviation.toLowerCase()
+      ) {
+        throw new DomainNameTakenError(createdName)
+      }
 
       try {
         createdDomain = await DomainService.getGroup(createdName)
@@ -168,8 +182,11 @@ export default function RegistrationDomainOption({
       showToast({
         severity: 'error',
         summary: t('common:error'),
-        detail: t('groups:crud.createFailedDetail'),
-        life: 4000
+        detail:
+          error instanceof DomainNameTakenError
+            ? t('groups:crud.createNameTakenDetail', { name: error.domainName })
+            : t('groups:crud.createFailedDetail'),
+        life: error instanceof DomainNameTakenError ? 7000 : 4000
       })
     } finally {
       setIsCreating(false)

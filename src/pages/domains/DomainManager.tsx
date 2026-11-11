@@ -219,6 +219,32 @@ function hydrateGroupNode(
   })
 }
 
+/** Checks whether a node is an unsaved draft of a new domain. */
+const isDraftNode = (node: CustomTreeNode) => {
+  const stored = node.data?.stored
+  return (
+    String(node.key).startsWith('temporal') &&
+    (!stored ||
+      (typeof stored === 'object' && Object.keys(stored).length === 0))
+  )
+}
+
+/** Removes the unsaved drafts of new domains from a domain tree. */
+const withoutDraftNodes = (nodes: CustomTreeNode[]): CustomTreeNode[] =>
+  nodes
+    .filter((node) => !isDraftNode(node))
+    .map((node) =>
+      Array.isArray(node.children)
+        ? {
+            ...node,
+            children: withoutDraftNodes(node.children as CustomTreeNode[])
+          }
+        : node
+    )
+
+/** The default name of new domains, followed by a counter when it is taken. */
+const DEFAULT_DOMAIN_NAME = 'New_Domain'
+
 export default function DomainManager() {
   const {
     tree,
@@ -403,14 +429,7 @@ export default function DomainManager() {
       )
       const pendingNodes = useTreeStateStore
         .getState()
-        .tree.filter((node) => {
-          const stored = node.data?.stored
-          return (
-            String(node.key).startsWith('temporal') &&
-            (!stored ||
-              (typeof stored === 'object' && Object.keys(stored).length === 0))
-          )
-        })
+        .tree.filter(isDraftNode)
       setTree([...(groupTree as CustomTreeNode[]), ...pendingNodes])
       const treeDomains = flattenTree(groupTree).flatMap((node) =>
         node.data?.raw ? [node.data.raw] : []
@@ -439,6 +458,15 @@ export default function DomainManager() {
     showToast,
     t
   ])
+
+  // Drafts of new domains belong to the open create view only. The tree store outlives this
+  // page, so drafts would otherwise show up as domains after leaving or switching projects.
+  useEffect(() => {
+    const removeDrafts = () =>
+      setTree(withoutDraftNodes(useTreeStateStore.getState().tree))
+    removeDrafts()
+    return removeDrafts
+  }, [selectedProject?.abbreviation, setTree])
 
   useEffect(() => {
     let active = true
@@ -557,6 +585,41 @@ export default function DomainManager() {
     if (node?.label) selectGroup(node.label, 'details')
   }
 
+  /**
+   * Replaces the default name of a new draft when a readable domain already uses it. Domain
+   * names are unique across all projects, so the name can also be taken in another project.
+   */
+  const avoidTakenDefaultName = async () => {
+    const store = useTreeStateStore.getState()
+    const draft = findNodeByKey(store.tree, store.selectedNodeKey)
+    const draftName = String(draft?.label ?? '')
+    if (!draft || !draftName.startsWith(DEFAULT_DOMAIN_NAME)) return
+
+    const localNames = new Set(
+      flattenTree(store.tree)
+        .filter((node) => node.key !== draft.key)
+        .map((node) => String(node.label ?? '').toLowerCase())
+    )
+    const startCounter = Number(draftName.slice(DEFAULT_DOMAIN_NAME.length)) || 1
+    for (let counter = startCounter; counter < startCounter + 20; counter += 1) {
+      const candidate =
+        counter === 1 ? DEFAULT_DOMAIN_NAME : `${DEFAULT_DOMAIN_NAME}${counter}`
+      if (localNames.has(candidate.toLowerCase())) continue
+      try {
+        await DomainService.getGroup(candidate)
+        // The name is taken by a readable domain, try the next one
+      } catch {
+        // Not readable: free, or taken by a domain the user cannot see, which creation reports
+        const current = useTreeStateStore.getState()
+        const stillDraft = findNodeByKey(current.tree, draft.key as string)
+        if (stillDraft && stillDraft.label === draftName && candidate !== draftName) {
+          current.updateNodeAttribute(draft.key as string, 'label', candidate)
+        }
+        return
+      }
+    }
+  }
+
   const handleNewGroup = () => {
     if (!canCreateGroups) return
     newNode()
@@ -564,6 +627,7 @@ export default function DomainManager() {
     setGroupOption('registration')
     setSelectedGroup(null)
     setSelectedGroupName('')
+    void avoidTakenDefaultName()
   }
 
   const handleEdit = (groupName: string) => {
@@ -572,6 +636,8 @@ export default function DomainManager() {
   }
 
   const closeEditor = () => {
+    // Closing the create view discards the unsaved draft
+    if (viewMode === 'create') deleteNode(selectedNodeKey)
     setViewMode('details')
     setGroupOption('default')
     fetchGroups()
@@ -747,9 +813,34 @@ export default function DomainManager() {
               {t('groups:crud.detailSubtitle')}
             </p>
           </div>
-          <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
-            {selectedGroup.projectAbbreviation ?? '-'}
-          </span>
+          <div className="flex shrink-0 gap-2">
+            {canEditGroup(selectedGroup.name) && (
+              <IconActionButton
+                title={t('groups:buttons.edit')}
+                onClick={() => handleEdit(selectedGroup.name)}
+              >
+                <PencilSquareIcon className="h-5 w-5" />
+              </IconActionButton>
+            )}
+            {canDeleteGroup(selectedGroup.name) && (
+              <IconActionButton
+                title={t('groups:buttons.delete')}
+                onClick={() => handleDelete(selectedGroup.name)}
+                variant="danger"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </IconActionButton>
+            )}
+            <IconActionButton
+              title={t('groups:buttons.closeDetails')}
+              onClick={() => {
+                setSelectedGroup(null)
+                setSelectedGroupName('')
+              }}
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </IconActionButton>
+          </div>
         </div>
         <Divider />
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700">

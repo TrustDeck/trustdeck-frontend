@@ -167,7 +167,7 @@
     "inherited": "Geerbt",
     "noLinkedPseudonyms": "Keine verknüpften Pseudonyme vorhanden.",
     "searchHint": "Geben Sie ein Pseudonym ein und wählen Sie die Pseudonym-Domäne, in der gesucht werden soll.",
-    "searchInputPlaceholder": "Anfang eines Pseudonyms, Identifikators oder ID-Typs (* für alle)",
+    "searchInputPlaceholder": "Anfang eines Pseudonyms, einer Kennung oder eines ID-Typs (* für alle)",
     "domain": "Pseudonym-Domäne",
     "searchFailed": "Die Pseudonyme konnten nicht durchsucht werden. Bitte versuchen Sie es erneut."
   },

@@ -215,7 +215,7 @@
     "bloomBands": "Uses bands of the entity-level Bloom filter as protected blocking keys."
   },
   "dragHint": "Drag attributes to reorder them or drop them into a section.",
-  "addMoreAttributesHint": "Add more attributes or sections to the definition.",
+  "addMoreAttributesHint": "Add more attributes to the definition.",
   "associatedGroupNamePlaceholder": "Search and select a pseudonym domain",
   "loadingBaseType": "Loading selected base entity...",
   "addNestedSection": "Add nested section",

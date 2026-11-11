@@ -4,7 +4,8 @@ import {
   EyeIcon,
   PencilSquareIcon,
   PlusIcon,
-  TrashIcon
+  TrashIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline'
 import Panel from '../../core/components/common/Panel'
 import IconActionButton from '../../core/components/common/IconActionButton'
@@ -276,13 +277,12 @@ export default function BaseTypeManager() {
                 </p>
               </div>
               {detailMode === 'view' && (
-                <button
-                  type="button"
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-800"
+                <IconActionButton
+                  title={t('common:close')}
                   onClick={() => setDetailMode(null)}
                 >
-                  {t('common:close')}
-                </button>
+                  <XMarkIcon className="h-6 w-6" />
+                </IconActionButton>
               )}
             </div>
 

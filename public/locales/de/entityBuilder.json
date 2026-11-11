@@ -215,7 +215,7 @@
     "bloomBands": "Verwendet Bänder des entitätsweiten Bloom-Filters als geschützte Blocking-Schlüssel."
   },
   "dragHint": "Ziehen Sie Attribute, um sie neu anzuordnen oder in einen Abschnitt zu verschieben.",
-  "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute oder Abschnitte hinzu.",
+  "addMoreAttributesHint": "Fügen Sie der Definition weitere Attribute hinzu.",
   "associatedGroupNamePlaceholder": "Pseudonym-Domäne suchen und auswählen",
   "loadingBaseType": "Ausgewählte Basisentität wird geladen...",
   "addNestedSection": "Verschachtelten Abschnitt hinzufügen",

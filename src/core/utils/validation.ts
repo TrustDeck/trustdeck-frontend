@@ -70,7 +70,8 @@ const validation = {
   },
 
   isValidRegistrationGroupName: (groupName: string) => {
-    return /^[A-Za-z0-9ÄÖÜäöüß\s\-.]{4,}$/.test(groupName.trim());
+    // Underscores are allowed, since default names like "New_Domain" use them.
+    return /^[A-Za-z0-9ÄÖÜäöüß\s\-._]{4,}$/.test(groupName.trim());
   },
 
   isValidRegistrationPrefix: (prefix: string) => {

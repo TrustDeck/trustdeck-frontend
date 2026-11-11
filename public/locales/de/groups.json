@@ -48,7 +48,7 @@
     "psnexample": "Das Pseudonym sieht so aus:",
     "groupname": {
       "label": "Pseudonym-Domänenname",
-      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein",
+      "error": "Bitte geben Sie einen Namen mit mindestens 4 Zeichen ein (Buchstaben, Ziffern, Leerzeichen, \"-\", \".\" oder \"_\").",
       "duplicate": "Dieser Domänenname wird bereits von einer anderen Domäne verwendet."
     },
     "prefix": {

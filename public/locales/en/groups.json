@@ -49,7 +49,7 @@
     "psnexampleNew": "The pseudonym will look like this:",
     "groupname": {
       "label": "Pseudonym domain name",
-      "error": "Please enter a pseudonym domain name",
+      "error": "Please enter a name with at least 4 characters (letters, digits, spaces, \"-\", \".\", or \"_\").",
       "duplicate": "This domain name is already in use by another domain."
     },
     "prefix": {

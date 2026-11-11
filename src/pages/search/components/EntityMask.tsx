@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useRef, useState } from 'react'
+import React, { FormEvent, useEffect, useState } from 'react'
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 
@@ -44,11 +44,15 @@ const EntityMask: React.FC<EntityMaskProps> = ({
   const [queryError, setQueryError] = useState('')
   const { entities, selectedProject, setEntities, setEntityAttributes } =
     useProjectStore()
-  const [selectedType, setSelectedType] = useState<string>(entities[0] ?? '')
+  // The search starts without an entity type, so that nothing is searched before the user chooses
+  const [selectedType, setSelectedType] = useState<string>(
+    initialEntityType && entities.includes(initialEntityType)
+      ? initialEntityType
+      : ''
+  )
   const { nextStep, stepperRef } = useStepperControlStore()
   const { quick, setQuick } = useSearchStore()
   const { setResults } = useSearchResultsStore()
-  const defaultResultKey = useRef('')
 
   const normalizeEntityResult = (result: any) => {
     const trustdeckID = String(
@@ -130,8 +134,8 @@ const EntityMask: React.FC<EntityMaskProps> = ({
       setSelectedType('')
       return
     }
-    if (!selectedType || !entities.includes(selectedType)) {
-      setSelectedType(entities[0])
+    if (selectedType && !entities.includes(selectedType)) {
+      setSelectedType('')
     }
   }, [entities, selectedType])
 
@@ -151,7 +155,11 @@ const EntityMask: React.FC<EntityMaskProps> = ({
       setQueryError(t('queryRequired'))
       return
     }
-    if (!selectedType || !selectedProject?.abbreviation) return
+    if (!selectedType) {
+      setQueryError(t('entityTypeRequired'))
+      return
+    }
+    if (!selectedProject?.abbreviation) return
 
     setQueryError('')
     setLoading(true)
@@ -207,14 +215,6 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     await runEntitySearch(quick)
   }
 
-  useEffect(() => {
-    if (!inlineResults || psn || !selectedType || !selectedProject?.abbreviation) return
-    const key = `${selectedProject.abbreviation}:${selectedType}`
-    if (defaultResultKey.current === key) return
-    defaultResultKey.current = key
-    void runEntitySearch('*')
-  }, [inlineResults, psn, selectedProject?.abbreviation, selectedType])
-
   const entityDropdownOptions = entities.map((entity) => ({
     label: entity,
     value: entity
@@ -233,6 +233,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
               value={selectedType}
               onChange={(event) => setSelectedType(String(event.value ?? ''))}
               options={entityDropdownOptions}
+              emptyPlaceholder={t('entity.entityType.selectPlaceholder')}
               className="w-full"
             />
           </label>

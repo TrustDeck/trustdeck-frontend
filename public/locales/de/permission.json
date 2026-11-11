@@ -89,7 +89,7 @@
     "retryFailed": "Erneuter Versuch fehlgeschlagen",
     "retryFailedDetail": "Die Token-Aktualisierung oder Berechtigungssuche ist fehlgeschlagen. Bitte versuchen Sie es erneut oder prüfen Sie das Backend-Rollenmapping.",
     "searchFailed": "Suche fehlgeschlagen",
-    "searchFailedDetail": "Benutzer konnten nicht geladen werden. Bitte prüfen Sie Ihren Zugriff auf die Berechtigungsverwaltung.",
+    "searchFailedDetail": "Benutzer konnten nicht aus dem Benutzerverzeichnis geladen werden. Bitte versuchen Sie es später erneut oder wenden Sie sich an Ihre Administration, falls das Problem bestehen bleibt.",
     "permissionsUpdated": "Berechtigungen wurden erfolgreich aktualisiert.",
     "updateFailedDetail": "Berechtigungen konnten nicht aktualisiert werden. Das Backend hat den Vorgang möglicherweise abgelehnt.",
     "updateRejectedDetail": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen. Nicht vergeben: {{actions}}. Es wurde nichts geändert."

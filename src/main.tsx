@@ -28,6 +28,10 @@ import './index.css'
 import AppRouter from './core/AppRouter'
 import './core/configs/i18n'
 import { oidcConfig } from './core/configs/oidc'
+import { getInitialDarkMode } from './core/utils/theme'
+
+// Apply the remembered theme before the first render, not only on the user page
+document.documentElement.classList.toggle('dark', getInitialDarkMode())
 
 /** Rejects external and protocol-relative paths before redirecting after sign-in. */
 const isSafeLocalPath = (value: string | null) => {

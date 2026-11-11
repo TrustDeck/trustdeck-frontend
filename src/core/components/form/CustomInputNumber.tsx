@@ -61,27 +61,35 @@ const CustomInputNumber: React.FC<CustomInputNumberProps> = ({
 
   return (
     <div className="relative flex flex-col items-start">
-      <div className="relative flex w-full items-center">
-        <div className="min-w-0 flex-1">
-          <InputNumber
-            id={id}
-            value={value}
-            onValueChange={handleValueChange}
-            placeholder={placeholder}
-            onBlur={handleBlur}
-            useGrouping={false}
-            min={min}
-            max={max}
-            mode={mode}
-            showButtons={showButtons}
-            step={step}
-            suffix={suffix}
-            prefix={prefix}
-            inputClassName={`h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 !font-font-text !text-xl !font-normal text-gray-900 dark:bg-slate-950 dark:text-gray-100 ${!isValid ? 'p-invalid' : ''}`}
-            className={`w-full ${className ?? ''}`}
+      <div className="relative w-full">
+        <InputNumber
+          id={id}
+          value={value}
+          onValueChange={handleValueChange}
+          placeholder={placeholder}
+          onBlur={handleBlur}
+          useGrouping={false}
+          min={min}
+          max={max}
+          mode={mode}
+          showButtons={showButtons}
+          step={step}
+          suffix={suffix}
+          prefix={prefix}
+          inputClassName={`h-[44px] w-full rounded-lg border border-color-light-gray bg-white px-3 !font-font-text !text-xl !font-normal text-gray-900 dark:bg-slate-950 dark:text-gray-100 ${
+            helpText ? '!pr-10' : ''
+          } ${!isValid ? 'p-invalid' : ''}`}
+          className={`w-full ${className ?? ''}`}
+        />
+        {helpText && (
+          // Inside the field; the stacked increment/decrement buttons (3rem) sit right of the input
+          <HelpTooltip
+            text={helpText}
+            className={`absolute top-1/2 z-10 -translate-y-1/2 ${
+              showButtons ? 'right-[3.75rem]' : 'right-3'
+            }`}
           />
-        </div>
-        {helpText && <HelpTooltip text={helpText} className="ml-2 shrink-0" />}
+        )}
       </div>
       {!isValid && errorMessage && (
         <small id={`${id}-error`} className="p-error">

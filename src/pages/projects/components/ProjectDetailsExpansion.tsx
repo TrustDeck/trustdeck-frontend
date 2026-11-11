@@ -3,12 +3,17 @@ import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from 'react-oidc-context'
 import CustomCalendar from '@component/form/CustomCalendar'
+import HelpTooltip from '@component/common/HelpTooltip'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '@service/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
-import { formatDateTime } from '../../../core/utils/date'
+import {
+  endOfLocalDay,
+  formatDate,
+  startOfLocalDay
+} from '../../../core/utils/date'
 import { getHttpStatus } from '../../../core/utils/httpErrors'
 import ProjectService from '../services/ProjectService'
 import { ProjectType } from '../types/ProjectType'
@@ -44,6 +49,23 @@ const toDate = (value?: string | null) => {
   if (!value) return null
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+/**
+ * Projects are active for whole days. A date picked in the form becomes the start or end of
+ * that day, while an unchanged date keeps its stored time, so saving other changes does not
+ * shift the period.
+ */
+const toActiveBound = (
+  picked: Date | null,
+  stored: string | undefined,
+  toBound: (date: Date) => Date
+) => {
+  const storedDate = toDate(stored)
+  if (picked && storedDate && picked.getTime() === storedDate.getTime()) {
+    return stored as string
+  }
+  return toBound(picked ?? storedDate ?? new Date()).toISOString()
 }
 
 const toFormState = (project: ProjectType): ProjectFormState => ({
@@ -128,6 +150,34 @@ export default function ProjectDetailsExpansion({
 
   useEffect(() => {
     let active = true
+
+    // Lock the abbreviation upfront when the backend would refuse changing it, i.e. when
+    // the project already has domains or entity types (entities always have a type).
+    const loadUsage = async () => {
+      try {
+        const statistics = (await TrustDeck.instance().getProjectStatistics(
+          project.abbreviation
+        )) as { counts?: { domains?: number; entityTypes?: number } }
+        const counts = statistics?.counts
+        if (active && counts) {
+          setAbbreviationLocked(
+            (counts.domains ?? 0) > 0 || (counts.entityTypes ?? 0) > 0
+          )
+        }
+      } catch (error) {
+        // Without statistics access, the backend's 409 response locks the field instead.
+        console.warn('Failed to check whether the project is in use', error)
+      }
+    }
+
+    void loadUsage()
+    return () => {
+      active = false
+    }
+  }, [project.abbreviation])
+
+  useEffect(() => {
+    let active = true
     revokeBlobPreview(imagePreview)
     setSelectedImageFile(null)
     setRemoveImageRequested(false)
@@ -197,13 +247,13 @@ export default function ProjectDetailsExpansion({
       {
         label: t('settings:projectStartDate'),
         value: projectDetails.startDate
-          ? formatDateTime(projectDetails.startDate)
+          ? formatDate(projectDetails.startDate)
           : '—'
       },
       {
         label: t('settings:projectEndDate'),
         value: projectDetails.endDate
-          ? formatDateTime(projectDetails.endDate)
+          ? formatDate(projectDetails.endDate)
           : '—'
       },
       {
@@ -324,12 +374,16 @@ export default function ProjectDetailsExpansion({
         ...projectDetails,
         name: projectForm.name.trim(),
         abbreviation: projectForm.abbreviation.trim(),
-        startDate: (
-          projectForm.startDate ?? toDate(projectDetails.startDate) ?? new Date()
-        ).toISOString(),
-        endDate: (
-          projectForm.endDate ?? toDate(projectDetails.endDate) ?? new Date()
-        ).toISOString(),
+        startDate: toActiveBound(
+          projectForm.startDate,
+          projectDetails.startDate,
+          startOfLocalDay
+        ),
+        endDate: toActiveBound(
+          projectForm.endDate,
+          projectDetails.endDate,
+          endOfLocalDay
+        ),
         // Preserve backend-only flags without exposing them in the UI.
         storeEntities: projectDetails.storeEntities,
         storePseudonyms: projectDetails.storePseudonyms,
@@ -388,9 +442,6 @@ export default function ProjectDetailsExpansion({
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h3 className="td-section-title">{t('settings:projectInfo')}</h3>
-          <p className="td-section-subtitle mt-1">
-            {t('settings:projectInfoHelp')}
-          </p>
         </div>
         <button
           type="button"
@@ -443,26 +494,33 @@ export default function ProjectDetailsExpansion({
                 </label>
                 <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
                   {t('settings:projectAbbreviation')}
-                  <input
-                    value={projectForm.abbreviation}
-                    disabled={abbreviationLocked}
-                    onChange={(event) =>
-                      setProjectForm((previous) => ({
-                        ...previous,
-                        abbreviation: event.target.value
-                      }))
-                    }
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100"
-                  />
-                  <span className="mt-1 block text-sm font-normal text-gray-500 dark:text-gray-400">
-                    {t('settings:abbreviationInUseHint')}
-                  </span>
+                  <div className="relative mt-1">
+                    <input
+                      value={projectForm.abbreviation}
+                      disabled={abbreviationLocked}
+                      onChange={(event) =>
+                        setProjectForm((previous) => ({
+                          ...previous,
+                          abbreviation: event.target.value
+                        }))
+                      }
+                      className={`block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-base text-gray-900 shadow-sm focus:border-color-blue focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 ${
+                        abbreviationLocked ? 'pr-10' : ''
+                      }`}
+                    />
+                    {abbreviationLocked && (
+                      <HelpTooltip
+                        text={t('settings:abbreviationInUseHint')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                      />
+                    )}
+                  </div>
                 </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('settings:startDateTime')}
+                  {t('settings:projectStartDate')}
                   <CustomCalendar
                     id={`project-start-${fieldIdSuffix}`}
                     value={projectForm.startDate}
@@ -473,11 +531,11 @@ export default function ProjectDetailsExpansion({
                       }))
                     }
                     className="mt-1"
-                    showTime
+                    dateFormat="dd.mm.yy"
                   />
                 </label>
                 <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('settings:endDateTime')}
+                  {t('settings:projectEndDate')}
                   <CustomCalendar
                     id={`project-end-${fieldIdSuffix}`}
                     value={projectForm.endDate}
@@ -488,7 +546,7 @@ export default function ProjectDetailsExpansion({
                       }))
                     }
                     className="mt-1"
-                    showTime
+                    dateFormat="dd.mm.yy"
                   />
                 </label>
               </div>

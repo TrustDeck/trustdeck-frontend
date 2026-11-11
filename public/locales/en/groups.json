@@ -39,7 +39,8 @@
     "yesCancel": "Yes, cancel",
     "noKeepEditing": "No, keep editing",
     "closeEditView": "Close edit-view.",
-    "closeCreateView": "Close create-view."
+    "closeCreateView": "Close create-view.",
+    "closeDetails": "Close details"
   },
   "default": {
     "text": "Select a pseudonym domain to see its settings here."
@@ -49,7 +50,7 @@
     "psnexampleNew": "The pseudonym will look like this:",
     "groupname": {
       "label": "Pseudonym domain name",
-      "error": "Please enter a pseudonym domain name",
+      "error": "Please enter a name with at least 4 characters (letters, digits, spaces, \"-\", \".\", or \"_\").",
       "duplicate": "This domain name is already in use by another domain."
     },
     "prefix": {
@@ -186,6 +187,7 @@
     },
     "createSuccessDetail": "The pseudonym domain was created successfully.",
     "createFailedDetail": "The pseudonym domain could not be created.",
+    "createNameTakenDetail": "The name \"{{name}}\" is already used by another pseudonym domain, possibly in another project. Domain names must be unique across all projects, so please choose a different name.",
     "updateSuccessDetail": "The pseudonym domain changes were saved successfully.",
     "updateFailedDetail": "The pseudonym domain changes could not be saved.",
     "createSubtitle": "Define the pseudonym domain hierarchy, pseudonym-generation rules, validity, and optional advanced settings.",

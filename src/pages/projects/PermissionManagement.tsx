@@ -41,6 +41,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 import Panel from '@component/common/Panel'
+import Pagination from '@component/common/Pagination'
 import PageHeader from '@component/common/PageHeader'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
@@ -615,6 +616,7 @@ export default function PermissionManagement({
   const [selectedScopeKey, setSelectedScopeKey] = useState('')
   const [scopeQuery, setScopeQuery] = useState('')
   const [scopePage, setScopePage] = useState(0)
+  const [scopePageSize, setScopePageSize] = useState(5)
   const {
     query: personValue,
     suggestions: personSuggestions,
@@ -935,7 +937,6 @@ export default function PermissionManagement({
     )
   }, [scopeOptions, scopeQuery])
 
-  const scopePageSize = 5
   const scopePageCount = Math.max(1, Math.ceil(scopeSearchResults.length / scopePageSize))
   const visibleScopeResults = scopeSearchResults.slice(
     scopePage * scopePageSize,
@@ -1354,7 +1355,7 @@ export default function PermissionManagement({
                     onClick={() => selectScope(option.key)}
                     className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-slate-800 ${
                       option.key === selectedScopeKey
-                        ? 'bg-blue-50 text-color-blue dark:bg-blue-950/30 dark:text-blue-100'
+                        ? 'td-row-selected text-color-blue'
                         : 'bg-white text-gray-800 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
@@ -1376,34 +1377,17 @@ export default function PermissionManagement({
                 {t('empty.noProjectOrGroupRows')}
               </p>
             )}
-            {scopeQuery.trim() && scopeSearchResults.length > scopePageSize && (
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setScopePage((page) => Math.max(0, page - 1))}
-                  disabled={scopePage === 0}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
-                >
-                  {t('search:pagination.previous')}
-                </button>
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('search:pagination.pageOf', {
-                    page: scopePage + 1,
-                    pages: scopePageCount
-                  })}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScopePage((page) => Math.min(scopePageCount - 1, page + 1))
-                  }
-                  disabled={scopePage >= scopePageCount - 1}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:border-color-blue hover:text-color-blue disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-gray-200"
-                >
-                  {t('search:pagination.next')}
-                </button>
-              </div>
-            )}
+            <Pagination
+              className="!px-0 !py-2"
+              page={scopePage}
+              pageCount={scopePageCount}
+              onPageChange={setScopePage}
+              pageSize={scopePageSize}
+              onPageSizeChange={(size) => {
+                setScopePageSize(size)
+                setScopePage(0)
+              }}
+            />
           </div>
         ) : (
           <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-5 text-center text-base text-gray-500 dark:border-slate-700 dark:bg-slate-950 dark:text-gray-300">

@@ -39,7 +39,8 @@
     "yesCancel": "Ja, abbrechen",
     "noKeepEditing": "Nein, weiter bearbeiten",
     "closeEditView": "Bearbeitungsansicht schließen.",
-    "closeCreateView": "Erstellungsansicht schließen."
+    "closeCreateView": "Erstellungsansicht schließen.",
+    "closeDetails": "Details schließen"
   },
   "default": {
     "text": "Wählen Sie eine Pseudonym-Domäne aus, um deren Einstellungen hier anzuzeigen."
@@ -48,7 +49,7 @@
     "psnexample": "Das Pseudonym sieht so aus:",
     "groupname": {
       "label": "Pseudonym-Domänenname",
-      "error": "Bitte geben Sie einen Pseudonym-Domänennamen ein",
+      "error": "Bitte geben Sie einen Namen mit mindestens 4 Zeichen ein (Buchstaben, Ziffern, Leerzeichen, \"-\", \".\" oder \"_\").",
       "duplicate": "Dieser Domänenname wird bereits von einer anderen Domäne verwendet."
     },
     "prefix": {
@@ -186,6 +187,7 @@
     },
     "createSuccessDetail": "Die Pseudonym-Domäne wurde erfolgreich erstellt.",
     "createFailedDetail": "Die Pseudonym-Domäne konnte nicht erstellt werden.",
+    "createNameTakenDetail": "Der Name „{{name}}“ wird bereits von einer anderen Pseudonym-Domäne verwendet, möglicherweise in einem anderen Projekt. Domänennamen müssen projektübergreifend eindeutig sein. Bitte wählen Sie einen anderen Namen.",
     "updateSuccessDetail": "Die Pseudonym-Domänenänderungen wurden erfolgreich gespeichert.",
     "updateFailedDetail": "Die Pseudonym-Domänenänderungen konnten nicht gespeichert werden.",
     "createSubtitle": "Definieren Sie Hierarchie, Pseudonymregeln, Gültigkeit und optionale erweiterte Einstellungen.",

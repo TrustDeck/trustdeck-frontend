@@ -10,6 +10,7 @@ import {
   UserCircleIcon
 } from '@heroicons/react/24/outline'
 import useUserStore from '../../core/stores/UserStore'
+import { applyDarkMode, getInitialDarkMode } from '../../core/utils/theme'
 import { oidcConfig } from '../../core/configs/oidc'
 import { markLoggedOut } from '../../core/services/authSession'
 import Panel from '../../core/components/common/Panel'
@@ -26,14 +27,6 @@ function formatRemaining(expiresAt: number | null) {
   if (hours > 0)
     return `${hours}h ${minutes}m ${String(seconds).padStart(2, '0')}s`
   return `${minutes}m ${String(seconds).padStart(2, '0')}s`
-}
-
-function getInitialDarkMode() {
-  if (typeof window === 'undefined') return false
-  const stored = window.localStorage.getItem('trustdeck:theme')
-  if (stored === 'dark') return true
-  if (stored === 'light') return false
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
 }
 
 export default function UserManagement() {
@@ -61,8 +54,7 @@ export default function UserManagement() {
   }, [tokenExpiresAt])
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode)
-    window.localStorage.setItem('trustdeck:theme', darkMode ? 'dark' : 'light')
+    applyDarkMode(darkMode)
   }, [darkMode])
 
   const openAccountConsole = () => {

@@ -610,3 +610,164 @@
 .dark .td-inherited-field .td-rocker-toggle label {
   color: rgb(147 197 253) !important;
 }
+
+/*
+ * Dark mode for PrimeReact overlays and native controls. The overlays (dropdown panels,
+ * date pickers, autocomplete suggestions, ...) are appended to <body>, so they are styled
+ * here globally instead of in the components that open them.
+ */
+.dark {
+  color-scheme: dark;
+}
+
+.dark select,
+.dark select option,
+.dark select optgroup {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+.dark .p-dropdown-label.p-placeholder,
+.dark .p-inputtext::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark .p-dropdown .p-dropdown-trigger,
+.dark .p-dropdown .p-dropdown-clear-icon,
+.dark .p-autocomplete .p-autocomplete-dropdown,
+.dark .p-inputnumber-button {
+  color: #cbd5e1 !important;
+}
+
+.dark .p-dropdown.p-disabled,
+.dark .p-inputtext:disabled,
+.dark input:disabled {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  opacity: 1;
+}
+
+.dark .p-inputnumber-button {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.dark .p-inputnumber-button:hover {
+  background-color: #334155 !important;
+}
+
+.dark .p-dropdown-panel,
+.dark .p-autocomplete-panel,
+.dark .p-multiselect-panel,
+.dark .p-treeselect-panel,
+.dark .p-datepicker:not(.p-datepicker-inline) {
+  background-color: #1e293b !important;
+  border: 1px solid #475569 !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 0.45) !important;
+}
+
+.dark .p-dropdown-panel .p-dropdown-header,
+.dark .p-multiselect-panel .p-multiselect-header,
+.dark .p-treeselect-panel .p-treeselect-header {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item,
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item-group,
+.dark .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item,
+.dark .p-multiselect-panel .p-multiselect-items .p-multiselect-item,
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-empty-message,
+.dark .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-empty-message {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover,
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-focus:not(.p-highlight),
+.dark .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item:hover,
+.dark .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-focus,
+.dark .p-multiselect-panel .p-multiselect-items .p-multiselect-item:not(.p-highlight):hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+.dark .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight,
+.dark .p-autocomplete-panel .p-autocomplete-items .p-autocomplete-item.p-highlight,
+.dark .p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight {
+  background-color: rgb(30 64 175 / 0.55) !important;
+  color: #ffffff !important;
+}
+
+/* Date picker panel. */
+.dark .p-datepicker .p-datepicker-header,
+.dark .p-datepicker .p-timepicker,
+.dark .p-datepicker .p-datepicker-buttonbar {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-datepicker .p-datepicker-header .p-datepicker-title button,
+.dark .p-datepicker .p-datepicker-header .p-datepicker-prev,
+.dark .p-datepicker .p-datepicker-header .p-datepicker-next,
+.dark .p-datepicker .p-timepicker button,
+.dark .p-datepicker .p-timepicker span,
+.dark .p-datepicker table th,
+.dark .p-datepicker table td > span,
+.dark .p-datepicker .p-monthpicker .p-monthpicker-month,
+.dark .p-datepicker .p-yearpicker .p-yearpicker-year {
+  color: #e5e7eb !important;
+}
+
+.dark .p-datepicker .p-datepicker-header .p-datepicker-title button:hover,
+.dark .p-datepicker .p-datepicker-header .p-datepicker-prev:hover,
+.dark .p-datepicker .p-datepicker-header .p-datepicker-next:hover,
+.dark .p-datepicker .p-timepicker button:hover,
+.dark .p-datepicker table td > span:not(.p-highlight):not(.p-disabled):hover,
+.dark .p-datepicker .p-monthpicker .p-monthpicker-month:not(.p-highlight):not(.p-disabled):hover,
+.dark .p-datepicker .p-yearpicker .p-yearpicker-year:not(.p-highlight):not(.p-disabled):hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+.dark .p-datepicker table td.p-datepicker-today > span {
+  background-color: #475569 !important;
+  color: #ffffff !important;
+}
+
+.dark .p-datepicker table td > span.p-highlight,
+.dark .p-datepicker .p-monthpicker .p-monthpicker-month.p-highlight,
+.dark .p-datepicker .p-yearpicker .p-yearpicker-year.p-highlight {
+  background-color: #004d9b !important;
+  color: #ffffff !important;
+}
+
+.dark .p-datepicker table td.p-datepicker-other-month > span,
+.dark .p-datepicker table td > span.p-disabled {
+  color: #64748b !important;
+}
+
+/* Paginators. */
+.dark .p-paginator {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-paginator .p-paginator-first,
+.dark .p-paginator .p-paginator-prev,
+.dark .p-paginator .p-paginator-next,
+.dark .p-paginator .p-paginator-last,
+.dark .p-paginator .p-paginator-pages .p-paginator-page {
+  color: #e5e7eb !important;
+}
+
+.dark .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background-color: #004d9b !important;
+  color: #ffffff !important;
+}

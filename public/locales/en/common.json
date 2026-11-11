@@ -35,5 +35,14 @@
     "fallbackMessage": "The page could not be rendered."
   },
   "view": "View",
-  "actions": "Actions"
+  "actions": "Actions",
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "page": "Page",
+    "pageNumber": "Page number",
+    "of": "of {{pages}}",
+    "ofAtLeast": "of {{pages}}+",
+    "resultsPerPage": "Results shown"
+  }
 }

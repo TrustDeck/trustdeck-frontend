@@ -35,5 +35,14 @@
     "fallbackMessage": "Die Seite konnte nicht dargestellt werden."
   },
   "view": "Anzeigen",
-  "actions": "Aktionen"
+  "actions": "Aktionen",
+  "pagination": {
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "page": "Seite",
+    "pageNumber": "Seitennummer",
+    "of": "von {{pages}}",
+    "ofAtLeast": "von {{pages}}+",
+    "resultsPerPage": "Angezeigte Ergebnisse"
+  }
 }

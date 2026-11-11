@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon
-} from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { useTranslation } from 'react-i18next'
 
+import Pagination from '../../../core/components/common/Pagination'
 import TrustDeck from '../../../core/services/TrustDeck'
 import type { Domain } from '../../../core/types/Domain'
 
@@ -276,57 +273,18 @@ export default function DomainSearchSelect({
               )
             })}
           </div>
-          <div className="grid grid-cols-1 items-center gap-4 px-5 py-1 sm:grid-cols-[1fr_auto_1fr]">
-            {pageCount > 1 && (
-              <div className="flex items-center justify-self-center gap-3 sm:col-start-2">
-                <button
-                  type="button"
-                  title={t('search:pagination.previous')}
-                  aria-label={t('search:pagination.previous')}
-                  onClick={() => setPage((current) => Math.max(0, current - 1))}
-                  disabled={page === 0}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-                >
-                  <ChevronLeftIcon className="h-5 w-5" />
-                </button>
-                <span className="text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('search:pagination.pageOf', {
-                    page: page + 1,
-                    pages: pageCount
-                  })}
-                </span>
-                <button
-                  type="button"
-                  title={t('search:pagination.next')}
-                  aria-label={t('search:pagination.next')}
-                  onClick={() =>
-                    setPage((current) => Math.min(pageCount - 1, current + 1))
-                  }
-                  disabled={page >= pageCount - 1}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-                >
-                  <ChevronRightIcon className="h-5 w-5" />
-                </button>
-              </div>
-            )}
-            <label className="flex items-center justify-self-end gap-2 text-base font-medium text-gray-700 dark:text-gray-200 sm:col-start-3">
-              <span>{t('search:pagination.resultsPerPage')}</span>
-              <select
-                value={pageSize}
-                onChange={(event) => {
-                  setPageSize(Number(event.target.value))
-                  setPage(0)
-                }}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-              >
-                {[5, 10, 20, 50, 100].map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <Pagination
+            className="!py-1"
+            page={page}
+            pageCount={pageCount}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(size) => {
+              setPageSize(size)
+              setPage(0)
+            }}
+            alwaysShowPageSize
+          />
         </div>
       )}
     </div>

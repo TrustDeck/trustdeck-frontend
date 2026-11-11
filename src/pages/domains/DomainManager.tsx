@@ -5,9 +5,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { useTranslation } from 'react-i18next'
 import IconActionButton from '../../core/components/common/IconActionButton'
+import Pagination from '../../core/components/common/Pagination'
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   MagnifyingGlassIcon,
   EyeIcon,
   PencilSquareIcon,
@@ -879,60 +878,14 @@ export default function DomainManager() {
                 </div>
               )}
               {!isLoading && filteredGroups.length > 0 && (
-                <div className="grid grid-cols-1 items-center gap-4 px-5 py-4 sm:grid-cols-[1fr_auto_1fr]">
-                  {groupPageCount > 1 && (
-                    <div className="flex items-center justify-self-center gap-3 sm:col-start-2">
-                      <button
-                        type="button"
-                        title={t('search:pagination.previous')}
-                        aria-label={t('search:pagination.previous')}
-                        onClick={() =>
-                          setGroupPage((page) => Math.max(0, page - 1))
-                        }
-                        disabled={groupPage === 0}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-                      >
-                        <ChevronLeftIcon className="h-5 w-5" />
-                      </button>
-                      <span className="text-base font-medium text-gray-700 dark:text-gray-200">
-                        {t('search:pagination.pageOf', {
-                          page: groupPage + 1,
-                          pages: groupPageCount
-                        })}
-                      </span>
-                      <button
-                        type="button"
-                        title={t('search:pagination.next')}
-                        aria-label={t('search:pagination.next')}
-                        onClick={() =>
-                          setGroupPage((page) =>
-                            Math.min(groupPageCount - 1, page + 1)
-                          )
-                        }
-                        disabled={groupPage >= groupPageCount - 1}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-                      >
-                        <ChevronRightIcon className="h-5 w-5" />
-                      </button>
-                    </div>
-                  )}
-                  <label className="flex items-center justify-self-end gap-2 text-base font-medium text-gray-700 dark:text-gray-200 sm:col-start-3">
-                    <span>{t('search:pagination.resultsPerPage')}</span>
-                    <select
-                      value={groupPageSize}
-                      onChange={(event) =>
-                        setGroupPageSize(Number(event.target.value))
-                      }
-                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-                    >
-                      {[5, 10, 20, 50, 100].map((size) => (
-                        <option key={size} value={size}>
-                          {size}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                <Pagination
+                  page={groupPage}
+                  pageCount={groupPageCount}
+                  onPageChange={setGroupPage}
+                  pageSize={groupPageSize}
+                  onPageSizeChange={setGroupPageSize}
+                  alwaysShowPageSize
+                />
               )}
             </Panel>
           </div>

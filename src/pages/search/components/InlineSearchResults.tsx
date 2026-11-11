@@ -1,8 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Dialog } from 'primereact/dialog'
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   EyeIcon,
   FingerPrintIcon,
   PencilSquareIcon,
@@ -13,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 
 import Panel from '../../../core/components/common/Panel'
 import IconActionButton from '../../../core/components/common/IconActionButton'
+import SharedPagination from '../../../core/components/common/Pagination'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '../../../core/services/TrustDeck'
@@ -64,70 +63,24 @@ function Pagination({
   alwaysShowPageSize?: boolean
   offerAllPageSizes?: boolean
 }) {
-  const { t } = useTranslation('search')
-  const pageCount = Math.ceil(total / pageSize)
   const pageSizeOptions = offerAllPageSizes
-    ? [...PAGE_SIZE_OPTIONS]
-    : PAGE_SIZE_OPTIONS.filter(
-        (option) => option === 10 || option <= total
-      )
-
-  if (
-    pageCount <= 1 &&
-    pageSizeOptions.length <= 1 &&
-    !alwaysShowPageSize
-  )
-    return null
-
-  const showPageSize = alwaysShowPageSize || pageSizeOptions.length > 1
+    ? PAGE_SIZE_OPTIONS
+    : PAGE_SIZE_OPTIONS.filter((option) => option === 10 || option <= total)
 
   return (
-    <div className="grid grid-cols-1 items-center gap-4 px-5 py-4 sm:grid-cols-[1fr_auto_1fr]">
-      {pageCount > 1 && (
-        <div className="flex items-center justify-self-center gap-3 sm:col-start-2">
-          <button
-            type="button"
-            title={t('pagination.previous')}
-            aria-label={t('pagination.previous')}
-            disabled={page === 0}
-            onClick={() => onPageChange(Math.max(0, page - 1))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </button>
-          <span className="text-base font-medium text-gray-700 dark:text-gray-200">
-            {t('pagination.pageOf', { page: page + 1, pages: pageCount })}
-          </span>
-          <button
-            type="button"
-            title={t('pagination.next')}
-            aria-label={t('pagination.next')}
-            disabled={page >= pageCount - 1}
-            onClick={() => onPageChange(Math.min(pageCount - 1, page + 1))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-color-blue text-color-blue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-slate-800"
-          >
-            <ChevronRightIcon className="h-5 w-5" />
-          </button>
-        </div>
-      )}
-
-      {showPageSize && (
-        <label className="flex items-center justify-self-end gap-2 text-base font-medium text-gray-700 dark:text-gray-200 sm:col-start-3">
-          <span>{t('pagination.resultsPerPage')}</span>
-          <select
-            value={pageSize}
-            onChange={(event) => onPageSizeChange(Number(event.target.value))}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-base dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-          >
-            {pageSizeOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-    </div>
+    <SharedPagination
+      page={page}
+      pageCount={Math.ceil(total / pageSize)}
+      onPageChange={onPageChange}
+      pageSize={pageSize}
+      pageSizeOptions={pageSizeOptions}
+      onPageSizeChange={
+        alwaysShowPageSize || pageSizeOptions.length > 1
+          ? onPageSizeChange
+          : undefined
+      }
+      alwaysShowPageSize={alwaysShowPageSize}
+    />
   )
 }
 

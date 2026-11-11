@@ -71,7 +71,7 @@ export default function UserManagement() {
     ).account_console_url
     const accountUrl =
       configuredAccountUrl ||
-      `${String(oidcConfig.authority).replace(/\/$/, '')}/account/#/personal-info`
+      `${String(oidcConfig.authority).replace(/\/$/, '')}/account/`
     const newWindow = window.open(accountUrl, '_blank', 'noopener,noreferrer')
     if (newWindow) newWindow.opener = null
   }

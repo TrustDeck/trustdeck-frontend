@@ -805,3 +805,112 @@
 .dark .border-color-blue {
   border-color: #60a5fa !important;
 }
+
+/* Steppers (e.g. adding a pseudonym for an existing entity, registering entities). */
+.dark .p-stepper,
+.dark .p-stepper .p-stepper-nav,
+.dark .p-stepper .p-stepper-header,
+.dark .p-stepper .p-stepper-panels,
+.dark .p-stepper .p-stepper-panel,
+.dark .p-stepper .p-stepper-content,
+.dark .p-stepper .p-stepper-toggleable-content,
+.dark .p-stepper .p-stepper-action {
+  background-color: transparent !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-stepper .p-stepper-number {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-stepper .p-stepper-title {
+  color: #cbd5e1 !important;
+}
+
+.dark .p-stepper .p-stepper-header.p-highlight .p-stepper-number {
+  background-color: #004d9b !important;
+  border-color: #93c5fd !important;
+  color: #ffffff !important;
+}
+
+.dark .p-stepper .p-stepper-header.p-highlight .p-stepper-title {
+  color: #93c5fd !important;
+}
+
+.dark .p-stepper .p-stepper-separator {
+  background-color: #475569 !important;
+}
+
+/* Tree selections and trees. */
+.dark .p-treeselect {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+}
+
+.dark .p-treeselect .p-treeselect-label,
+.dark .p-treeselect .p-treeselect-trigger {
+  color: #f8fafc !important;
+}
+
+.dark .p-treeselect .p-treeselect-label.p-placeholder {
+  color: #94a3b8 !important;
+}
+
+.dark .p-treeselect-panel .p-tree,
+.dark .p-tree {
+  background-color: transparent !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-tree .p-treenode-content,
+.dark .p-tree .p-tree-toggler,
+.dark .p-tree .p-treenode-label {
+  color: #e5e7eb !important;
+}
+
+.dark .p-tree .p-treenode-content:not(.p-highlight):hover {
+  background-color: #334155 !important;
+}
+
+.dark .p-tree .p-treenode-content.p-highlight {
+  background-color: #004d9b !important;
+  color: #ffffff !important;
+}
+
+/* Checkboxes. */
+.dark .p-checkbox .p-checkbox-box {
+  background-color: #0f172a !important;
+  border-color: #64748b !important;
+}
+
+.dark .p-checkbox.p-highlight .p-checkbox-box,
+.dark .p-checkbox .p-checkbox-box.p-highlight {
+  background-color: #004d9b !important;
+  border-color: #93c5fd !important;
+}
+
+/* Tables. */
+.dark .p-datatable .p-datatable-thead > tr > th,
+.dark .p-treetable .p-treetable-thead > tr > th {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr,
+.dark .p-treetable .p-treetable-tbody > tr {
+  background-color: #0f172a !important;
+  color: #e5e7eb !important;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr > td,
+.dark .p-treetable .p-treetable-tbody > tr > td {
+  border-color: #334155 !important;
+}
+
+.dark .p-treetable .p-treetable-toggler {
+  color: #cbd5e1 !important;
+}

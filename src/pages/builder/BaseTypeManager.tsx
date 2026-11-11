@@ -207,7 +207,7 @@ export default function BaseTypeManager() {
                         }}
                         className={`cursor-pointer text-base transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:hover:bg-slate-800 ${
                           selected
-                            ? 'bg-blue-50 dark:bg-blue-950/30'
+                            ? 'td-row-selected'
                             : 'dark:text-gray-100'
                         }`}
                       >

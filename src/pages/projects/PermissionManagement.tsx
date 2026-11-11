@@ -1354,7 +1354,7 @@ export default function PermissionManagement({
                     onClick={() => selectScope(option.key)}
                     className={`flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-3 text-left last:border-b-0 dark:border-slate-800 ${
                       option.key === selectedScopeKey
-                        ? 'bg-blue-50 text-color-blue dark:bg-blue-950/30 dark:text-blue-100'
+                        ? 'td-row-selected text-color-blue'
                         : 'bg-white text-gray-800 hover:bg-gray-50 dark:bg-slate-900 dark:text-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >

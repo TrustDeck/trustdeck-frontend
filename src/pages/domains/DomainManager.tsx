@@ -657,7 +657,7 @@ export default function DomainManager() {
         }}
         className={`cursor-pointer border-t border-gray-200 text-lg transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:border-slate-700 dark:hover:bg-slate-800 ${
           selectedGroupName === group.name
-            ? 'bg-blue-50 dark:bg-blue-950/30'
+            ? 'td-row-selected'
             : ''
         }`}
       >

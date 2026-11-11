@@ -771,3 +771,37 @@
   background-color: #004d9b !important;
   color: #ffffff !important;
 }
+
+/*
+ * Selected rows in selection lists and tables (entity types, domains, base types, scopes).
+ * Dark mode reuses the filled blue of the batch import's current step, since the
+ * dark surface overrides above flatten the light theme's pale highlight.
+ */
+.td-row-selected {
+  background-color: #dbeafe !important;
+  box-shadow: inset 4px 0 0 #004d9b;
+}
+
+.dark .td-row-selected {
+  background-color: #004d9b !important;
+  box-shadow: inset 4px 0 0 #93c5fd;
+  color: #ffffff !important;
+}
+
+.dark .td-row-selected.td-row-selected:hover {
+  background-color: #0b5cb0 !important;
+}
+
+.dark .td-row-selected,
+.dark .td-row-selected * {
+  color: #ffffff !important;
+}
+
+/* Icon buttons and pagers keep a readable blue on dark surfaces. */
+.dark .text-color-blue {
+  color: #93c5fd !important;
+}
+
+.dark .border-color-blue {
+  border-color: #60a5fa !important;
+}

@@ -1539,7 +1539,7 @@ export default function PreReg() {
                         onClick={() => setSelectedTypeName(type.name)}
                         className={`grid w-full gap-1 border-t border-gray-200 px-4 py-4 text-left transition hover:bg-blue-50/70 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-center dark:border-slate-700 dark:hover:bg-slate-700/60 ${
                           selected
-                            ? 'bg-blue-50 dark:bg-slate-800'
+                            ? 'td-row-selected'
                             : typeIndex % 2 === 0
                               ? 'bg-white dark:bg-slate-900'
                               : 'bg-gray-50/80 dark:bg-slate-800/45'

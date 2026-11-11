@@ -13,6 +13,8 @@ type CustomDropdownProps = {
   options: DropdownOption[]
   onChange: (e: DropdownChangeEvent) => void
   placeholder?: string
+  /** Text shown inside the field while no option is selected. */
+  emptyPlaceholder?: string
   className?: string
   helpText?: string
   textColor?: 'text-gray-500' | 'text-gray-700'
@@ -31,6 +33,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   options,
   onChange,
   placeholder,
+  emptyPlaceholder = '',
   className = '',
   helpText,
   textColor = 'text-gray-500',
@@ -59,7 +62,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           value={value}
           options={options}
           onChange={onChange}
-          placeholder=""
+          placeholder={emptyPlaceholder}
           disabled={disabled}
           filter={filter}
           filterPlaceholder={filterPlaceholder}

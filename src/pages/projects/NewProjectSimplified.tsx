@@ -13,6 +13,7 @@ import ProjectService from './services/ProjectService'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { encodeUriName } from '../../core/utils/encodeURIComponent'
 import { getHttpStatus } from '../../core/utils/httpErrors'
+import { endOfLocalDay, startOfLocalDay } from '../../core/utils/date'
 import type { ProjectType } from './types/ProjectType'
 
 export default function NewProjectSimplified() {
@@ -76,14 +77,18 @@ export default function NewProjectSimplified() {
     const trimmedName = projectName.trim()
     const trimmedAbbreviation = projectAbbreviation.trim()
 
+    // Projects are active for whole days: from the start of the first until the end of the last day
+    const activeFrom = startDate ? startOfLocalDay(startDate).toISOString() : undefined
+    const activeUntil = endDate ? endOfLocalDay(endDate).toISOString() : undefined
+
     const payload: ProjectType = {
       name: trimmedName,
       abbreviation: trimmedAbbreviation,
       description: description.trim(),
       storeEntities: true,
       storePseudonyms: true,
-      ...(startDate ? { startDate: startDate.toISOString() } : {}),
-      ...(endDate ? { endDate: endDate.toISOString() } : {})
+      ...(activeFrom ? { startDate: activeFrom } : {}),
+      ...(activeUntil ? { endDate: activeUntil } : {})
     }
 
     const defaultGroup: Record<string, unknown> = {
@@ -91,8 +96,8 @@ export default function NewProjectSimplified() {
       prefix: `${encodeUriName(trimmedAbbreviation)}-`,
       projectAbbreviation: trimmedAbbreviation
     }
-    if (startDate) defaultGroup.validFrom = startDate.toISOString()
-    if (endDate) defaultGroup.validTo = endDate.toISOString()
+    if (activeFrom) defaultGroup.validFrom = activeFrom
+    if (activeUntil) defaultGroup.validTo = activeUntil
 
     try {
       const createdProject = await ProjectService.postProject(payload)
@@ -195,9 +200,6 @@ export default function NewProjectSimplified() {
               value={startDate}
               onChange={(event) => setStartDate(event.value)}
               dateFormat="dd.mm.yy"
-              showTime
-              showSeconds
-              hourFormat="24"
             />
           </label>
 
@@ -210,9 +212,6 @@ export default function NewProjectSimplified() {
               value={endDate}
               onChange={(event) => setEndDate(event.value)}
               dateFormat="dd.mm.yy"
-              showTime
-              showSeconds
-              hourFormat="24"
             />
           </label>
 

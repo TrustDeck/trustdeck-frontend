@@ -9,7 +9,11 @@ import SecondaryButton from '@component/form/buttons/SecondaryButton'
 import SecondaryOutlinedButton from '@component/form/buttons/SecondaryOutlinedButton'
 import TrustDeck from '@service/TrustDeck'
 import useToastStore from '../../../core/stores/ToastStore'
-import { formatDate } from '../../../core/utils/date'
+import {
+  endOfLocalDay,
+  formatDate,
+  startOfLocalDay
+} from '../../../core/utils/date'
 import { getHttpStatus } from '../../../core/utils/httpErrors'
 import ProjectService from '../services/ProjectService'
 import { ProjectType } from '../types/ProjectType'
@@ -45,6 +49,23 @@ const toDate = (value?: string | null) => {
   if (!value) return null
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+/**
+ * Projects are active for whole days. A date picked in the form becomes the start or end of
+ * that day, while an unchanged date keeps its stored time, so saving other changes does not
+ * shift the period.
+ */
+const toActiveBound = (
+  picked: Date | null,
+  stored: string | undefined,
+  toBound: (date: Date) => Date
+) => {
+  const storedDate = toDate(stored)
+  if (picked && storedDate && picked.getTime() === storedDate.getTime()) {
+    return stored as string
+  }
+  return toBound(picked ?? storedDate ?? new Date()).toISOString()
 }
 
 const toFormState = (project: ProjectType): ProjectFormState => ({
@@ -353,12 +374,16 @@ export default function ProjectDetailsExpansion({
         ...projectDetails,
         name: projectForm.name.trim(),
         abbreviation: projectForm.abbreviation.trim(),
-        startDate: (
-          projectForm.startDate ?? toDate(projectDetails.startDate) ?? new Date()
-        ).toISOString(),
-        endDate: (
-          projectForm.endDate ?? toDate(projectDetails.endDate) ?? new Date()
-        ).toISOString(),
+        startDate: toActiveBound(
+          projectForm.startDate,
+          projectDetails.startDate,
+          startOfLocalDay
+        ),
+        endDate: toActiveBound(
+          projectForm.endDate,
+          projectDetails.endDate,
+          endOfLocalDay
+        ),
         // Preserve backend-only flags without exposing them in the UI.
         storeEntities: projectDetails.storeEntities,
         storePseudonyms: projectDetails.storePseudonyms,
@@ -495,7 +520,7 @@ export default function ProjectDetailsExpansion({
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('settings:startDateTime')}
+                  {t('settings:projectStartDate')}
                   <CustomCalendar
                     id={`project-start-${fieldIdSuffix}`}
                     value={projectForm.startDate}
@@ -506,11 +531,11 @@ export default function ProjectDetailsExpansion({
                       }))
                     }
                     className="mt-1"
-                    showTime
+                    dateFormat="dd.mm.yy"
                   />
                 </label>
                 <label className="block text-base font-medium text-gray-700 dark:text-gray-200">
-                  {t('settings:endDateTime')}
+                  {t('settings:projectEndDate')}
                   <CustomCalendar
                     id={`project-end-${fieldIdSuffix}`}
                     value={projectForm.endDate}
@@ -521,7 +546,7 @@ export default function ProjectDetailsExpansion({
                       }))
                     }
                     className="mt-1"
-                    showTime
+                    dateFormat="dd.mm.yy"
                   />
                 </label>
               </div>

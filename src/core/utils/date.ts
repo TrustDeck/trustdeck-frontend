@@ -8,6 +8,16 @@ export function dateToLocalYYYYMMDD(d: Date): string {
   return `${y}-${m}-${day}`
 }
 
+/** Returns the start (00:00:00.000, local time) of the given date's day. */
+export function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+}
+
+/** Returns the end (23:59:59.999, local time) of the given date's day, so that the day itself still counts. */
+export function endOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
+}
+
 /** Parse a YYYY-MM-DD string as local date (so calendar shows the correct day). */
 export function localYYYYMMDDToDate(s: string): Date | null {
   if (!s || s.length < 10) return null

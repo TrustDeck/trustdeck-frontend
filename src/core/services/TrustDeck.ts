@@ -53,8 +53,8 @@ export type PseudonymPage = {
   size: number
   /** Number of matches, counted at most up to the backend's count limit. */
   total: number
-  /** Whether more pseudonyms match than counted. */
-  totalIsLowerBound: boolean
+  /** Whether more pseudonyms match than `total` says, because counting stopped at the count limit. */
+  moreMatchesThanTotal: boolean
 }
 
 export type IdentifierItem = {
@@ -925,7 +925,7 @@ class TrustDeck {
       page,
       size,
       total: all.length,
-      totalIsLowerBound: false
+      moreMatchesThanTotal: false
     }
   }
 

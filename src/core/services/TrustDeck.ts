@@ -929,14 +929,6 @@ class TrustDeck {
     }
   }
 
-  public async getPseudonymsBatch(domainName: string) {
-    const response = await this.request<unknown>(
-      'GET',
-      `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`
-    )
-    return this.asArray<Pseudonym>(response)
-  }
-
   public async updatePseudonym(
     domainName: string,
     payload: PseudonymUpdatePayload
@@ -984,17 +976,6 @@ class TrustDeck {
         idType: payload.identifierItem?.idType,
         psn: payload.psn
       }
-    )
-  }
-
-  public async deletePseudonymsBatch(
-    domainName: string,
-    payload: { identifierItem?: IdentifierItem; psn?: string }[]
-  ) {
-    return this.request<unknown>(
-      'DELETE',
-      `/domains/${encodeURIComponent(domainName)}/pseudonyms/batch`,
-      payload
     )
   }
 

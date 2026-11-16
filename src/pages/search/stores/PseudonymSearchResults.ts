@@ -9,7 +9,7 @@ export type PseudonymPaging = {
   page: number
   pageSize: number
   total: number
-  totalIsLowerBound: boolean
+  moreMatchesThanTotal: boolean
 }
 
 export const DEFAULT_PSEUDONYM_PAGE_SIZE = 10
@@ -101,7 +101,7 @@ const usePseudonymStore = create<PseudonymSearchResultState>((set, get) => ({
           page,
           pageSize: size,
           total: result.total,
-          totalIsLowerBound: result.totalIsLowerBound
+          moreMatchesThanTotal: result.moreMatchesThanTotal
         }
       })
     } catch (error) {

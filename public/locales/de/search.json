@@ -226,5 +226,17 @@
   "resultNumber": "Nr.",
   "domainRequired": "Wählen Sie zuerst eine Pseudonym-Domäne aus.",
   "backToEntityDetails": "Zurück zu den Entitätsdetails",
-  "entityTypeRequired": "Wählen Sie zuerst einen Entitätstyp aus."
+  "entityTypeRequired": "Wählen Sie zuerst einen Entitätstyp aus.",
+  "columns": {
+    "button_one": "{{count}} Spalte",
+    "button_other": "{{count}} Spalten",
+    "title": "Angezeigte Attribute",
+    "reset": "Standardspalten wiederherstellen"
+  },
+  "sorting": {
+    "relevance": "Relevanteste zuerst",
+    "label": "Sortierung:",
+    "narrowSearch": "Mehr als {{count}} Entitäten passen. Grenzen Sie die Suche ein, um nach „{{column}}“ zu sortieren, oder lassen Sie dieses Attribut im Entitätstyp für beliebige Größen sortierbar machen.",
+    "partialRelevance": "Die Suche ist zu breit, um alle Treffer zu ordnen; nur die ersten {{count}} Treffer wurden nach Relevanz geordnet."
+  }
 }

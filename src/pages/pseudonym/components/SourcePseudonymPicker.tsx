@@ -4,7 +4,12 @@ import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outlin
 
 import Pagination from '../../../core/components/common/Pagination'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
-import TrustDeck, { type PseudonymPage } from '../../../core/services/TrustDeck'
+import { SortButton } from '../../../core/components/common/SortableHeader'
+import TrustDeck, {
+  type PseudonymPage,
+  type PseudonymSortKey
+} from '../../../core/services/TrustDeck'
+import { nextSort, type SortState } from '../../../core/utils/sorting'
 import type { Pseudonym } from '../../../core/types/Pseudonym'
 
 const PAGE_SIZE_OPTIONS = [5, 10, 20, 50] as const
@@ -38,6 +43,11 @@ export default function SourcePseudonymPicker({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searchedDomain, setSearchedDomain] = useState(domainName)
+  // The backend orders by pseudonym unless another column is chosen
+  const [sort, setSort] = useState<SortState<PseudonymSortKey>>({
+    key: 'pseudonym',
+    direction: 'asc'
+  })
 
   // A different domain invalidates the shown results
   if (searchedDomain !== domainName) {
@@ -46,7 +56,12 @@ export default function SourcePseudonymPicker({
     setError('')
   }
 
-  const search = async (searchQuery: string, page: number, size: number) => {
+  const search = async (
+    searchQuery: string,
+    page: number,
+    size: number,
+    order: SortState<PseudonymSortKey> = sort
+  ) => {
     setLoading(true)
     setError('')
     try {
@@ -54,7 +69,8 @@ export default function SourcePseudonymPicker({
         domainName,
         searchQuery,
         page,
-        size
+        size,
+        order
       )
       setResult(pageResult)
       setSearchedQuery(searchQuery)
@@ -83,6 +99,23 @@ export default function SourcePseudonymPicker({
   }
 
   const pageCount = result ? Math.ceil(result.total / result.size) : 0
+
+  const sortBy = (key: PseudonymSortKey) => {
+    const next = nextSort(sort, key)
+    setSort(next)
+    if (result) void search(searchedQuery, 0, result.size, next)
+  }
+
+  const sortButton = (key: PseudonymSortKey, label: string) => (
+    <SortButton
+      label={label}
+      columnName={label}
+      sortKey={key}
+      sort={sort}
+      onSort={sortBy}
+      disabled={loading}
+    />
+  )
 
   return (
     <div className="space-y-3">
@@ -131,9 +164,11 @@ export default function SourcePseudonymPicker({
           ) : (
             <ul>
               <li className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-3 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-700 sm:grid dark:bg-slate-800/70 dark:text-gray-200">
-                <span>{t('search:pseudonym.value')}</span>
-                <span>{t('search:pseudonym.id')}</span>
-                <span>{t('search:pseudonym.idType')}</span>
+                <span>
+                  {sortButton('pseudonym', t('search:pseudonym.value'))}
+                </span>
+                <span>{sortButton('identifier', t('search:pseudonym.id'))}</span>
+                <span>{sortButton('idType', t('search:pseudonym.idType'))}</span>
                 <span />
               </li>
               {result.items.map((pseudonym) => {

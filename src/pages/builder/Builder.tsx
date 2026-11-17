@@ -85,6 +85,8 @@ type BuilderAttribute = {
   required?: boolean
   linkage?: boolean
   repeatable?: boolean
+  /** Keeps a database index, so that result lists sort by this attribute at any size. */
+  sortIndex?: boolean
   minimum?: number
   maximum?: number
   minLength?: number
@@ -458,6 +460,7 @@ function mapBackendAttribute(attribute: any): BuilderAttribute {
     required: Boolean(attribute?.required),
     linkage: Boolean(attribute?.linkage),
     repeatable: Boolean(attribute?.repeatable),
+    sortIndex: Boolean(attribute?.sortIndex),
     minimum: attribute?.minimum,
     maximum: attribute?.maximum,
     minLength: attribute?.minLength,
@@ -684,6 +687,7 @@ function serializeAttribute(
     linkage: Boolean(attribute.linkage)
   }
   if (attribute.repeatable) field.repeatable = true
+  if (attribute.sortIndex) field.sortIndex = true
   if (attribute.minimum !== undefined && attribute.minimum !== null)
     field.minimum = Number(attribute.minimum)
   if (attribute.maximum !== undefined && attribute.maximum !== null)
@@ -1244,6 +1248,7 @@ export default function Builder({
     required: source?.required ?? false,
     linkage: source?.linkage ?? false,
     repeatable: source?.repeatable ?? false,
+    sortIndex: source?.sortIndex ?? false,
     minimum: source?.minimum,
     maximum: source?.maximum,
     minLength: source?.minLength,
@@ -2750,14 +2755,14 @@ function AttributeOptions({
   attribute: BuilderAttribute
   locked: boolean
   onToggle: (
-    flag: 'required' | 'linkage' | 'repeatable',
+    flag: 'required' | 'linkage' | 'repeatable' | 'sortIndex',
     checked: boolean
   ) => void
 }) {
   const { t } = useTranslation(['entityBuilder'])
   return (
     <div className="flex flex-wrap gap-4">
-      {(['required', 'repeatable', 'linkage'] as const).map((flag) => (
+      {(['required', 'repeatable', 'linkage', 'sortIndex'] as const).map((flag) => (
         <label key={flag} className="inline-flex items-center gap-2">
           <input
             type="checkbox"

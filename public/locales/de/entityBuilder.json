@@ -147,12 +147,14 @@
   "attribute": {
     "required": "Pflichtattribut",
     "linkage": "Record Linkage",
-    "repeatable": "Wiederholbar"
+    "repeatable": "Wiederholbar",
+    "sortIndex": "Bei jeder Größe sortierbar"
   },
   "attributeHelp": {
     "required": "Kennzeichnet dieses Attribut als verpflichtend. Registrierungsformulare müssen dafür einen Wert enthalten.",
     "linkage": "Verwendet dieses Attribut für Record-Linkage- und Dublettenprüfungen. Wenn aktiviert, kann die Linkage-Konfiguration darunter angepasst werden.",
-    "repeatable": "Erlaubt mehrere Werte oder wiederholte Einträge statt eines einzelnen Werts."
+    "repeatable": "Erlaubt mehrere Werte oder wiederholte Einträge statt eines einzelnen Werts.",
+    "sortIndex": "Hält einen Datenbankindex, damit Ergebnislisten unabhängig von der Trefferzahl nach diesem Attribut sortieren können. Ohne ihn ist Sortieren möglich, sobald eine Suche die Treffer eingrenzt. Beim Speichern wird der Index im Hintergrund aufgebaut; das dauert länger und braucht mehr Speicher, je mehr Entitäten existieren."
   },
   "linkageConfig": {
     "title": "Record-Linkage-Konfiguration",

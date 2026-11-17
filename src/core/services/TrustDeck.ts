@@ -727,7 +727,6 @@ class TrustDeck {
         query,
         page: String(page),
         size: String(size),
-        include: 'pseudonyms',
         ...(sort ? { sort: sort.key, direction: sort.direction } : {})
       }
     )

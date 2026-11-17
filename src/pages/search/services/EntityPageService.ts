@@ -116,10 +116,8 @@ export async function fetchEntityPage(
 
   const items = await Promise.all(
     result.items.map(async (entry) => {
+      // The pseudonym endpoint applies the domain permissions, so pseudonyms are loaded per entity
       const entity = normalizeEntityResult(entry, entityTypeName)
-      if (Array.isArray(entry?.pseudonyms)) {
-        return { ...entity, links: pseudonymsToLinks(entry.pseudonyms) }
-      }
       if (!entity.trustdeckID) return entity
 
       try {

@@ -74,26 +74,6 @@ export function collectDisplayAttributes(
   })
 }
 
-export function selectSummaryAttributes(
-  attributes: Attribute[] = [],
-  language: string,
-  limit = 3
-): DisplayAttribute[] {
-  const all = collectDisplayAttributes(attributes, language)
-  const ordered = [
-    ...all.filter((attribute) => attribute.required),
-    ...all.filter((attribute) => !attribute.required)
-  ]
-
-  const seen = new Set<string>()
-  return ordered.filter((attribute) => {
-    const path = attribute.path.join('.')
-    if (seen.has(path)) return false
-    seen.add(path)
-    return true
-  }).slice(0, limit)
-}
-
 export function readDisplayValue(
   source: unknown,
   path: string[]

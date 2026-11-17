@@ -698,6 +698,61 @@ class TrustDeck {
     return this.asArray<unknown>(response)
   }
 
+  /**
+   * Searches one page of entities. `sort` names `relevance`, `trustDeckId`, `createdAt`,
+   * `updatedAt`, or `attribute:<path>`; without it, the backend orders searches by relevance and
+   * the complete list by the latest update. Backends without paged search answer with a
+   * (truncated) list, which is then paged here.
+   */
+  public async searchEntitiesPage(
+    entityTypeName: string,
+    query: string,
+    page: number,
+    size: number,
+    sort?: SortState | null,
+    projectAbbreviation?: string
+  ): Promise<{
+    items: any[]
+    page: number
+    size: number
+    total: number
+    moreMatchesThanTotal: boolean
+  }> {
+    const projectName = projectAbbreviation ?? this.getSelectedProjectName()
+    const response = await this.request<unknown>(
+      'GET',
+      `/projects/${encodeURIComponent(projectName)}/entities/${encodeURIComponent(entityTypeName)}`,
+      undefined,
+      {
+        query,
+        page: String(page),
+        size: String(size),
+        include: 'pseudonyms',
+        ...(sort ? { sort: sort.key, direction: sort.direction } : {})
+      }
+    )
+
+    if (response && typeof response === 'object' && 'items' in response) {
+      const paged = response as { items?: unknown } & Record<string, unknown>
+      return {
+        items: Array.isArray(paged.items) ? paged.items : [],
+        page: Number(paged.page ?? page),
+        size: Number(paged.size ?? size),
+        total: Number(paged.total ?? 0),
+        moreMatchesThanTotal: Boolean(paged.moreMatchesThanTotal)
+      }
+    }
+
+    const all = this.asArray<any>(response)
+    return {
+      items: all.slice(page * size, (page + 1) * size),
+      page,
+      size,
+      total: all.length,
+      moreMatchesThanTotal: false
+    }
+  }
+
   public async getEntity(
     entityTypeName: string,
     trustdeckID: string,

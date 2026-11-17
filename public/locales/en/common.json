@@ -44,5 +44,10 @@
     "of": "of {{pages}}",
     "ofAtLeast": "of {{pages}}+",
     "resultsPerPage": "Results shown"
+  },
+  "sorting": {
+    "sortBy": "Sort by {{column}}",
+    "sortedAscending": "Sorted by {{column}}, ascending. Click to sort descending.",
+    "sortedDescending": "Sorted by {{column}}, descending. Click to sort ascending."
   }
 }

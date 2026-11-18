@@ -18,24 +18,6 @@ const PseudonymService = {
       }
       throw error
     }
-  },
-
-  /** Search pseudonyms through GET /domains/{domainName}/pseudonyms?query=... */
-  searchPseudonyms: async (
-    domainName: string,
-    query: string
-  ): Promise<Pseudonym[]> => {
-    try {
-      return await TrustDeck.instance().searchPseudonyms(domainName, query)
-    } catch (error: any) {
-      if (
-        error instanceof Error &&
-        error.message.startsWith('Request failed: 404')
-      ) {
-        return []
-      }
-      throw error
-    }
   }
 }
 

@@ -22,6 +22,7 @@ import useProjectStore from '../stores/ProjectStore'
 import { PersonType } from '../types/PersonEntity'
 import { BioSampleEntity } from 'core/types/BioSampleEntity'
 import { Pseudonym } from '../../core/types/Pseudonym'
+import { compareCellValues, type SortState } from '../utils/sorting'
 
 /** Identifies an HTTP method supported by the API client. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -46,6 +47,9 @@ export type QueryParams = Record<
 >
 
 /** Identifies an external identifier and its type. */
+/** The columns by which the backend can order a pseudonym search. */
+export type PseudonymSortKey = 'pseudonym' | 'identifier' | 'idType'
+
 /** One page of a paged pseudonym search. */
 export type PseudonymPage = {
   items: Pseudonym[]
@@ -886,7 +890,8 @@ class TrustDeck {
     domainName: string,
     query: string,
     page: number,
-    size: number
+    size: number,
+    sort?: SortState<PseudonymSortKey> | null
   ): Promise<PseudonymPage> {
     const response = await this.request<unknown>(
       'GET',
@@ -895,7 +900,8 @@ class TrustDeck {
       {
         query,
         page: String(page),
-        size: String(size)
+        size: String(size),
+        ...(sort ? { sort: sort.key, direction: sort.direction } : {})
       }
     )
 
@@ -908,6 +914,18 @@ class TrustDeck {
     }
 
     const all = this.asArray<Pseudonym>(response)
+    // Older backends neither page nor sort, so their (truncated) list is sorted here
+    if (sort) {
+      const value = (entry: Pseudonym) =>
+        sort.key === 'pseudonym'
+          ? entry.psn
+          : sort.key === 'identifier'
+            ? entry.identifierItem?.identifier
+            : entry.identifierItem?.idType
+      all.sort((left, right) =>
+        compareCellValues(value(left), value(right), sort.direction)
+      )
+    }
     return {
       items: all.slice(page * size, (page + 1) * size),
       page,

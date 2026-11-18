@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { Pseudonym } from '../../../core/types/Pseudonym'
-import TrustDeck from '../../../core/services/TrustDeck'
+import TrustDeck, {
+  type PseudonymSortKey
+} from '../../../core/services/TrustDeck'
+import type { SortState } from '../../../core/utils/sorting'
 
 /** The search behind the current page of results, so that other pages can be loaded. */
 export type PseudonymPaging = {
@@ -10,6 +13,8 @@ export type PseudonymPaging = {
   pageSize: number
   total: number
   numberOfMatchesExceedsSearchLimit: boolean
+  /** The column the backend ordered the results by; null for its default order. */
+  sort: SortState<PseudonymSortKey> | null
 }
 
 export const DEFAULT_PSEUDONYM_PAGE_SIZE = 10
@@ -42,7 +47,9 @@ type PseudonymSearchResultState = {
     domainName: string,
     query: string,
     page: number,
-    pageSize?: number
+    pageSize?: number,
+    /** The order; omitted keeps the current order, null restores the default. */
+    sort?: SortState<PseudonymSortKey> | null
   ) => Promise<void>
   selectResult: (domainName: string, psn: string, editMode?: boolean) => void
   clearSelectedResult: () => void
@@ -75,9 +82,10 @@ const usePseudonymStore = create<PseudonymSearchResultState>((set, get) => ({
   setPseudonymValue: (pseudonymValue) => set({ pseudonymValue }),
   clearPseudonymValue: () => set({ pseudonymValue: null }),
   setResults: (results) => set({ results, hasSearched: true }),
-  loadPage: async (domainName, query, page, pageSize) => {
+  loadPage: async (domainName, query, page, pageSize, sort) => {
     const size =
       pageSize ?? get().paging?.pageSize ?? DEFAULT_PSEUDONYM_PAGE_SIZE
+    const order = sort === undefined ? (get().paging?.sort ?? null) : sort
     const request = ++latestPageRequest
     set({ loadingPage: true })
     try {
@@ -85,7 +93,8 @@ const usePseudonymStore = create<PseudonymSearchResultState>((set, get) => ({
         domainName,
         query,
         page,
-        size
+        size,
+        order
       )
       if (request !== latestPageRequest) return
       set({
@@ -101,7 +110,8 @@ const usePseudonymStore = create<PseudonymSearchResultState>((set, get) => ({
           page,
           pageSize: size,
           total: result.total,
-          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit
+          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit,
+          sort: order
         }
       })
     } catch (error) {

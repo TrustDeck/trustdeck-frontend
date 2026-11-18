@@ -12,9 +12,17 @@ import { useNavigate } from 'react-router-dom'
 import Panel from '../../../core/components/common/Panel'
 import IconActionButton from '../../../core/components/common/IconActionButton'
 import SharedPagination from '../../../core/components/common/Pagination'
+import SortableHeader from '../../../core/components/common/SortableHeader'
+import {
+  compareCellValues,
+  nextSort,
+  type SortState
+} from '../../../core/utils/sorting'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import SecondaryOutlinedButton from '../../../core/components/form/buttons/SecondaryOutlinedButton'
-import TrustDeck from '../../../core/services/TrustDeck'
+import TrustDeck, {
+  type PseudonymSortKey
+} from '../../../core/services/TrustDeck'
 import { canCurrentUserUseEntityTypeAction } from '../../../core/services/PermissionCache'
 import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
@@ -84,6 +92,17 @@ function Pagination({
   )
 }
 
+/** Sort key of the TrustDeck ID column of entity results. */
+const TRUSTDECK_ID_SORT_KEY = 'trustDeckId'
+
+const DEFAULT_ENTITY_SORT: SortState = {
+  key: TRUSTDECK_ID_SORT_KEY,
+  direction: 'asc'
+}
+
+/** Sort key of an attribute column of entity results; prefixed so it cannot clash with the ID column. */
+const attributeSortKey = (attributeKey: string) => `attribute:${attributeKey}`
+
 export function InlineEntityResults({
   entityTypeName
 }: {
@@ -125,13 +144,37 @@ export function InlineEntityResults({
     [results, selectedIdentifier]
   )
 
-  const sortedResults = useMemo(
-    () =>
-      [...results].sort((left, right) =>
-        resolveTrustDeckId(left).localeCompare(resolveTrustDeckId(right))
-      ),
-    [results]
+  // Entity searches return few results, which are therefore sorted here. Attribute values are
+  // compared raw, so that ISO dates and numbers sort correctly regardless of their display format.
+  const [chosenEntitySort, setEntitySort] = useState<SortState>(
+    DEFAULT_ENTITY_SORT
   )
+  // A sorted attribute column can disappear with another entity type; the ID order applies then
+  const sortedAttribute = summaryAttributes.find(
+    (candidate) => attributeSortKey(candidate.key) === chosenEntitySort.key
+  )
+  const entitySort =
+    sortedAttribute || chosenEntitySort.key === TRUSTDECK_ID_SORT_KEY
+      ? chosenEntitySort
+      : DEFAULT_ENTITY_SORT
+  const sortedResults = useMemo(() => {
+    const attribute = sortedAttribute
+    const value = (result: any) => {
+      if (!attribute) return resolveTrustDeckId(result)
+      const raw = readDisplayValue(result?.data ?? {}, attribute.path)
+      return raw !== null && typeof raw === 'object'
+        ? formatDisplayValue(raw)
+        : raw
+    }
+    return [...results].sort((left, right) =>
+      compareCellValues(value(left), value(right), entitySort.direction)
+    )
+  }, [entitySort.direction, results, sortedAttribute])
+
+  const sortEntities = (key: string) => {
+    setEntitySort(nextSort(entitySort, key))
+    setPage(0)
+  }
 
   useEffect(() => {
     setPage(0)
@@ -263,16 +306,22 @@ export function InlineEntityResults({
                 <th className="w-20 px-4 py-3 text-center text-base font-semibold">
                   {t('resultNumber')}
                 </th>
-                <th className="w-[25%] px-5 py-3 text-base font-semibold">
-                  {t('trustDeckId')}
-                </th>
+                <SortableHeader
+                  label={t('trustDeckId')}
+                  sortKey={TRUSTDECK_ID_SORT_KEY}
+                  sort={entitySort}
+                  onSort={sortEntities}
+                  cellClassName="w-[25%] px-5 py-3 text-base font-semibold"
+                />
                 {summaryAttributes.map((attribute) => (
-                  <th
+                  <SortableHeader
                     key={attribute.key}
-                    className="px-4 py-3 text-base font-semibold"
-                  >
-                    {attribute.label}
-                  </th>
+                    label={attribute.label}
+                    sortKey={attributeSortKey(attribute.key)}
+                    sort={entitySort}
+                    onSort={sortEntities}
+                    cellClassName="px-4 py-3 text-base font-semibold"
+                  />
                 ))}
                 {summaryAttributes.length === 0 && (
                   <th className="px-4 py-3 text-base font-semibold">
@@ -441,19 +490,47 @@ export function InlinePseudonymResults({
     [fallbackDomain, results, selectedResult]
   )
 
-  const sortedResults = useMemo(
-    () =>
-      [...results].sort((left, right) => {
-        const pseudonymOrder = String(left.psn ?? '').localeCompare(
-          String(right.psn ?? '')
-        )
-        if (pseudonymOrder !== 0) return pseudonymOrder
-        return String(left.domainName || fallbackDomain).localeCompare(
-          String(right.domainName || fallbackDomain)
-        )
-      }),
-    [fallbackDomain, results]
-  )
+  // Results of a backend search arrive sorted; other results are sorted here. Both start
+  // ordered by pseudonym, which the header therefore shows as sorted.
+  const [localSort, setLocalSort] =
+    useState<SortState<PseudonymSortKey> | null>(null)
+  const pseudonymSort: SortState<PseudonymSortKey> = (paging
+    ? paging.sort
+    : localSort) ?? { key: 'pseudonym', direction: 'asc' }
+
+  const sortedResults = useMemo(() => {
+    if (paging) return results
+    const value = (entry: Pseudonym) =>
+      pseudonymSort.key === 'pseudonym'
+        ? entry.psn
+        : pseudonymSort.key === 'identifier'
+          ? entry.identifierItem?.identifier
+          : entry.identifierItem?.idType
+    return [...results].sort((left, right) =>
+      compareCellValues(value(left), value(right), pseudonymSort.direction)
+    )
+  }, [paging, pseudonymSort.direction, pseudonymSort.key, results])
+
+  const sortPseudonyms = (key: PseudonymSortKey) => {
+    const next = nextSort(pseudonymSort, key)
+    if (!paging) {
+      setLocalSort(next)
+      setPage(0)
+      return
+    }
+    clearSelectedResult()
+    loadPage(paging.domainName, paging.query, 0, undefined, next).catch(
+      (error) => {
+        console.error('Failed to sort the pseudonyms', error)
+        showToast({
+          severity: 'error',
+          summary: t('pseudonym.title'),
+          detail: t('pseudonym.searchFailed'),
+          life: 4500
+        })
+      }
+    )
+  }
 
   useEffect(() => {
     const maxPage = Math.max(0, Math.ceil(results.length / pageSize) - 1)
@@ -535,7 +612,9 @@ export function InlinePseudonymResults({
     ? Math.ceil(paging.total / paging.pageSize)
     : Math.ceil(results.length / pageSize)
   const pseudonymFillerRows =
-    pseudonymPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
+    pseudonymPageCount > 1
+      ? Math.max(0, shownPageSize - pageResults.length)
+      : 0
 
   return (
     <>
@@ -552,15 +631,30 @@ export function InlinePseudonymResults({
                 <th className="w-20 whitespace-nowrap px-4 py-3 text-center text-base font-semibold">
                   {t('resultNumber')}
                 </th>
-                <th className="min-w-56 whitespace-nowrap px-5 py-3 text-base font-semibold">
-                  {t('pseudonym.value')}
-                </th>
-                <th className="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold">
-                  {t('pseudonym.id')}
-                </th>
-                <th className="min-w-32 whitespace-nowrap px-5 py-3 text-base font-semibold">
-                  {t('pseudonym.idType')}
-                </th>
+                <SortableHeader
+                  label={t('pseudonym.value')}
+                  sortKey="pseudonym"
+                  sort={pseudonymSort}
+                  onSort={sortPseudonyms}
+                  disabled={loadingPage}
+                  cellClassName="min-w-56 whitespace-nowrap px-5 py-3 text-base font-semibold"
+                />
+                <SortableHeader
+                  label={t('pseudonym.id')}
+                  sortKey="identifier"
+                  sort={pseudonymSort}
+                  onSort={sortPseudonyms}
+                  disabled={loadingPage}
+                  cellClassName="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold"
+                />
+                <SortableHeader
+                  label={t('pseudonym.idType')}
+                  sortKey="idType"
+                  sort={pseudonymSort}
+                  onSort={sortPseudonyms}
+                  disabled={loadingPage}
+                  cellClassName="min-w-32 whitespace-nowrap px-5 py-3 text-base font-semibold"
+                />
                 <th className="min-w-48 whitespace-nowrap px-5 py-3 text-base font-semibold">
                   {t('pseudonym.group')}
                 </th>

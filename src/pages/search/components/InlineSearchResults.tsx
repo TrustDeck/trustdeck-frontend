@@ -409,7 +409,7 @@ export function InlineEntityResults({
               />
             </div>
           </div>
-          {relevanceActive && paging?.moreMatchesThanTotal && (
+          {relevanceActive && paging?.numberOfMatchesExceedsSearchLimit && (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
               {t('sorting.partialRelevance', { count: paging.total })}
             </p>
@@ -555,7 +555,7 @@ export function InlineEntityResults({
           <SharedPagination
             page={paging.page}
             pageCount={Math.max(1, entityPageCount)}
-            morePagesExist={paging.moreMatchesThanTotal}
+            morePagesExist={paging.numberOfMatchesExceedsSearchLimit}
             onPageChange={(nextPage) => loadEntityPage(nextPage)}
             pageSize={paging.pageSize}
             pageSizeOptions={PAGE_SIZE_OPTIONS}

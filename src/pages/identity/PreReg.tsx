@@ -62,7 +62,7 @@ type InstancePaging = {
   page: number
   pageSize: number
   total: number
-  moreMatchesThanTotal: boolean
+  numberOfMatchesExceedsSearchLimit: boolean
   /** The chosen order; null for the backend's default (relevance, or latest update for "*"). */
   sort: SortState | null
 }
@@ -940,7 +940,7 @@ export default function PreReg() {
           page,
           pageSize,
           total: result.total,
-          moreMatchesThanTotal: result.moreMatchesThanTotal,
+          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit,
           sort
         })
       } catch (error) {
@@ -1771,7 +1771,7 @@ export default function PreReg() {
                     onChange={setVisibleColumnPaths}
                   />
                 </div>
-                {relevanceActive && instancePaging?.moreMatchesThanTotal && (
+                {relevanceActive && instancePaging?.numberOfMatchesExceedsSearchLimit && (
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t('search:sorting.partialRelevance', {
                       count: instancePaging.total
@@ -2109,7 +2109,7 @@ export default function PreReg() {
                       1,
                       Math.ceil(instancePaging.total / instancePaging.pageSize)
                     )}
-                    morePagesExist={instancePaging.moreMatchesThanTotal}
+                    morePagesExist={instancePaging.numberOfMatchesExceedsSearchLimit}
                     onPageChange={(page) => loadInstancePage({ page })}
                     pageSize={instancePaging.pageSize}
                     pageSizeOptions={[5, 10, 20, 50, 100]}

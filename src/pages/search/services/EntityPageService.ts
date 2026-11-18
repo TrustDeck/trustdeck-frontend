@@ -10,7 +10,7 @@ export type EntityResultPage = {
   /** Number of matches, counted at most up to the backend's count limit. */
   total: number
   /** Whether more entities match than counted. */
-  moreMatchesThanTotal: boolean
+  numberOfMatchesExceedsSearchLimit: boolean
 }
 
 /**

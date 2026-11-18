@@ -716,7 +716,7 @@ class TrustDeck {
     page: number
     size: number
     total: number
-    moreMatchesThanTotal: boolean
+    numberOfMatchesExceedsSearchLimit: boolean
   }> {
     const projectName = projectAbbreviation ?? this.getSelectedProjectName()
     const response = await this.request<unknown>(
@@ -738,7 +738,7 @@ class TrustDeck {
         page: Number(paged.page ?? page),
         size: Number(paged.size ?? size),
         total: Number(paged.total ?? 0),
-        moreMatchesThanTotal: Boolean(paged.moreMatchesThanTotal)
+        numberOfMatchesExceedsSearchLimit: Boolean(paged.numberOfMatchesExceedsSearchLimit)
       }
     }
 
@@ -748,7 +748,7 @@ class TrustDeck {
       page,
       size,
       total: all.length,
-      moreMatchesThanTotal: false
+      numberOfMatchesExceedsSearchLimit: false
     }
   }
 

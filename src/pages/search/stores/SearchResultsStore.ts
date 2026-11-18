@@ -10,7 +10,7 @@ export type EntityPaging = {
   page: number
   pageSize: number
   total: number
-  moreMatchesThanTotal: boolean
+  numberOfMatchesExceedsSearchLimit: boolean
   /** The chosen order; null for the backend's default (relevance, or latest update for "*"). */
   sort: SortState | null
 }
@@ -108,7 +108,7 @@ const useSearchResultsStore = create<SearchResultsState>((set, get) => ({
           page,
           pageSize: size,
           total: result.total,
-          moreMatchesThanTotal: result.moreMatchesThanTotal,
+          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit,
           sort: order
         }
       })

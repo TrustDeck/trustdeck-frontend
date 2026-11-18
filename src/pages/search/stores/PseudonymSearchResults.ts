@@ -12,7 +12,7 @@ export type PseudonymPaging = {
   page: number
   pageSize: number
   total: number
-  moreMatchesThanTotal: boolean
+  numberOfMatchesExceedsSearchLimit: boolean
   /** The column the backend ordered the results by; null for its default order. */
   sort: SortState<PseudonymSortKey> | null
 }
@@ -110,7 +110,7 @@ const usePseudonymStore = create<PseudonymSearchResultState>((set, get) => ({
           page,
           pageSize: size,
           total: result.total,
-          moreMatchesThanTotal: result.moreMatchesThanTotal,
+          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit,
           sort: order
         }
       })

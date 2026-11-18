@@ -213,7 +213,7 @@ export default function SourcePseudonymPicker({
             className="!py-2"
             page={result.page}
             pageCount={Math.max(1, pageCount)}
-            morePagesExist={result.moreMatchesThanTotal}
+            morePagesExist={result.numberOfMatchesExceedsSearchLimit}
             onPageChange={(page) => void search(searchedQuery, page, result.size)}
             pageSize={pageSize}
             pageSizeOptions={PAGE_SIZE_OPTIONS}

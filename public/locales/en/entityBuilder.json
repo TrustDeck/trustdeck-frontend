@@ -148,13 +148,13 @@
     "required": "Required",
     "linkage": "Linkage",
     "repeatable": "Repeatable",
-    "sortIndex": "Sortable at any size"
+    "sortIndex": "Fast sorting for large datasets"
   },
   "attributeHelp": {
     "required": "Marks this attribute as mandatory. Registration forms must contain a value for it.",
     "linkage": "Uses this attribute for record linkage and duplicate checks. When enabled, linkage configuration can be adjusted below.",
     "repeatable": "Allows several values or repeated entries instead of a single value.",
-    "sortIndex": "Keeps a database index, so that result lists can sort by this attribute however many entities match. Without it, sorting works once a search narrows the matches. Saving builds the index in the background; it takes longer and needs more storage the more entities exist."
+    "sortIndex": "Creates a database index so this attribute can be sorted quickly even when many entities match. Uses extra storage; enable only for attributes you sort by often."
   },
   "linkageConfig": {
     "title": "Record linkage configuration",

@@ -877,18 +877,6 @@ class TrustDeck {
     )
   }
 
-  public async searchPseudonyms(domainName: string, query = '*') {
-    const response = await this.request<unknown>(
-      'GET',
-      `/domains/${encodeURIComponent(domainName)}/pseudonyms`,
-      undefined,
-      {
-        query
-      }
-    )
-    return this.asArray<Pseudonym>(response)
-  }
-
   /**
    * Searches one page of pseudonyms. Every query part must match the beginning of the
    * identifier, ID type, or pseudonym; "*" matches all. Backends without paged search answer

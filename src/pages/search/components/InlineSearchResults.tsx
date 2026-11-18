@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import Panel from '../../../core/components/common/Panel'
 import IconActionButton from '../../../core/components/common/IconActionButton'
 import SharedPagination from '../../../core/components/common/Pagination'
+import LoadingOverlay from '../../../core/components/common/LoadingOverlay'
 import SortableHeader from '../../../core/components/common/SortableHeader'
 import EntityColumnSelector from './EntityColumnSelector'
 import {
@@ -428,6 +429,7 @@ export function InlineEntityResults({
             {t('noResults')}
           </p>
         ) : (
+          <LoadingOverlay loading={loadingPage}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
@@ -544,6 +546,7 @@ export function InlineEntityResults({
             </tbody>
           </table>
           </div>
+          </LoadingOverlay>
         )}
       </Panel>
 
@@ -773,6 +776,7 @@ export function InlinePseudonymResults({
             {t('noResults')}
           </p>
         ) : (
+          <LoadingOverlay loading={loadingPage}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
@@ -935,6 +939,7 @@ export function InlinePseudonymResults({
             </tbody>
           </table>
           </div>
+          </LoadingOverlay>
         )}
       </Panel>
 

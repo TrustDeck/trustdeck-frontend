@@ -36,6 +36,7 @@ import type { Attribute } from '../../core/stores/ProjectStore'
 import type { Link } from '../../core/types/Link'
 import type { Pseudonym } from '../../core/types/Pseudonym'
 import Pagination from '../../core/components/common/Pagination'
+import LoadingOverlay from '../../core/components/common/LoadingOverlay'
 import SortableHeader from '../../core/components/common/SortableHeader'
 import { nextSort, type SortState } from '../../core/utils/sorting'
 import EntityColumnSelector from '../search/components/EntityColumnSelector'
@@ -1785,6 +1786,7 @@ export default function PreReg() {
                     {instanceSortNotice}
                   </p>
                 )}
+                <LoadingOverlay loading={instancePageLoading}>
                 <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-700">
                   <table className="min-w-full divide-y divide-gray-200 text-left text-base dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-900">
@@ -2094,6 +2096,7 @@ export default function PreReg() {
                     </tbody>
                   </table>
                 </div>
+                </LoadingOverlay>
                 </>
               )}
 

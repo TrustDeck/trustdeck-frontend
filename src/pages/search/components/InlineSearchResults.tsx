@@ -700,7 +700,7 @@ export function InlinePseudonymResults({
           <SharedPagination
             page={paging.page}
             pageCount={Math.max(1, pseudonymPageCount)}
-            morePagesExist={paging.moreMatchesThanTotal}
+            morePagesExist={paging.numberOfMatchesExceedsSearchLimit}
             onPageChange={(nextPage) => loadOtherPage(nextPage)}
             pageSize={paging.pageSize}
             pageSizeOptions={PAGE_SIZE_OPTIONS}

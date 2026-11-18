@@ -53,8 +53,8 @@ export type PseudonymPage = {
   size: number
   /** Number of matches, counted at most up to the backend's count limit. */
   total: number
-  /** Whether more pseudonyms match than `total` says, because counting stopped at the count limit. */
-  moreMatchesThanTotal: boolean
+  /** Whether more pseudonyms match than the backend's count limit, so that `total` is lower than the real number. */
+  numberOfMatchesExceedsSearchLimit: boolean
 }
 
 export type IdentifierItem = {
@@ -877,18 +877,6 @@ class TrustDeck {
     )
   }
 
-  public async searchPseudonyms(domainName: string, query = '*') {
-    const response = await this.request<unknown>(
-      'GET',
-      `/domains/${encodeURIComponent(domainName)}/pseudonyms`,
-      undefined,
-      {
-        query
-      }
-    )
-    return this.asArray<Pseudonym>(response)
-  }
-
   /**
    * Searches one page of pseudonyms. Every query part must match the beginning of the
    * identifier, ID type, or pseudonym; "*" matches all. Backends without paged search answer
@@ -925,7 +913,7 @@ class TrustDeck {
       page,
       size,
       total: all.length,
-      moreMatchesThanTotal: false
+      numberOfMatchesExceedsSearchLimit: false
     }
   }
 

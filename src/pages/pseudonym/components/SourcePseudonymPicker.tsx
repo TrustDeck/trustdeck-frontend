@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
+import LoadingOverlay from '../../../core/components/common/LoadingOverlay'
 import Pagination from '../../../core/components/common/Pagination'
 import PrimaryButton from '../../../core/components/form/buttons/PrimaryButton'
 import { SortButton } from '../../../core/components/common/SortableHeader'
@@ -157,6 +158,7 @@ export default function SourcePseudonymPicker({
 
       {result && (
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-slate-700">
+          <LoadingOverlay loading={loading}>
           {result.items.length === 0 ? (
             <p className="px-4 py-6 text-center text-gray-600 dark:text-gray-300">
               {t('search:pseudonym.notFound')}
@@ -206,6 +208,7 @@ export default function SourcePseudonymPicker({
               })}
             </ul>
           )}
+          </LoadingOverlay>
           <Pagination
             className="!py-2"
             page={result.page}

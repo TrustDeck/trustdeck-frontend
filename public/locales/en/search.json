@@ -226,5 +226,18 @@
   "resultNumber": "No.",
   "domainRequired": "Select a pseudonym domain first.",
   "backToEntityDetails": "Back to entity details",
-  "entityTypeRequired": "Select an entity type first."
+  "entityTypeRequired": "Select an entity type first.",
+  "columns": {
+    "button_one": "{{count}} column",
+    "button_other": "{{count}} columns",
+    "title": "Shown attributes",
+    "reset": "Reset to default columns"
+  },
+  "sorting": {
+    "relevance": "Most relevant first",
+    "label": "Sort:",
+    "narrowSearch": "More than {{count}} entities match. Narrow the search to sort by \"{{column}}\", or ask an administrator to make this attribute sortable at any size in the entity type.",
+    "partialRelevance": "The search is too broad to rank all matches; only the first {{count}} matches were ranked."
+  },
+  "entitySearchFailed": "The entities could not be searched. Please try again."
 }

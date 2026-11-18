@@ -8,29 +8,14 @@ import useProjectStore from '../../../core/stores/ProjectStore'
 import useSearchStore from '../stores/SearchStore'
 import useSearchResultsStore from '../stores/SearchResultsStore'
 import useStepperControlStore from '../../pseudonym/stores/StepperControlStore'
-import PersonService from '../services/PersonService'
 import ProjectService from '../../projects/services/ProjectService'
 import { InlineEntityResults } from './InlineSearchResults'
-import TrustDeck from '../../../core/services/TrustDeck'
-import type { Link } from '../../../core/types/Link'
 
 interface EntityMaskProps {
   psn?: boolean
   inlineResults?: boolean
   initialEntityType?: string
   initialQuery?: string
-}
-
-function pseudonymsToLinks(pseudonyms: any[] = []): Link[] {
-  return pseudonyms
-    .map((pseudonym) => ({
-      group: pseudonym?.domainName ?? pseudonym?.group ?? '',
-      pseudonym: pseudonym?.psn ?? pseudonym?.pseudonym ?? '',
-      children: Array.isArray(pseudonym?.children)
-        ? pseudonymsToLinks(pseudonym.children)
-        : undefined
-    }))
-    .filter((link) => link.group || link.pseudonym)
 }
 
 const EntityMask: React.FC<EntityMaskProps> = ({
@@ -52,60 +37,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
   )
   const { nextStep, stepperRef } = useStepperControlStore()
   const { quick, setQuick } = useSearchStore()
-  const { setResults } = useSearchResultsStore()
-
-  const normalizeEntityResult = (result: any) => {
-    const trustdeckID = String(
-      result?.trustdeckID ??
-        result?.trustdeckId ??
-        result?.trustDeckId ??
-        result?.id ??
-        ''
-    )
-
-    if (!result || !result.data) {
-      return {
-        ...result,
-        trustdeckID,
-        entityTypeName: result?.entityTypeName ?? selectedType,
-        type: result?.type ?? selectedType
-      }
-    }
-
-    const data = result.data
-    const firstAddress = Array.isArray(data.address)
-      ? data.address[0]
-      : undefined
-
-    return {
-      ...result,
-      trustdeckID,
-      entityTypeName: result.entityTypeName ?? selectedType,
-      type: result.type ?? selectedType,
-      data: {
-        ...data,
-        firstName: data.firstName ?? data.firstname ?? '',
-        lastName: data.lastName ?? data.lastname ?? '',
-        dateOfBirth: data.dateOfBirth ?? data.birthdate ?? '',
-        id: data.id ?? result.trustdeckID ?? result.trustdeckId ?? '',
-        street: data.street ?? firstAddress?.street ?? '',
-        houseNumber:
-          data.houseNumber ??
-          data.housenumber ??
-          firstAddress?.housenumber ??
-          '',
-        postalCode:
-          data.postalCode ??
-          data.postalcode ??
-          data.zip ??
-          data.plz ??
-          firstAddress?.postalcode ??
-          '',
-        city: data.city ?? firstAddress?.city ?? '',
-        country: data.country ?? firstAddress?.country ?? ''
-      }
-    }
-  }
+  const { setResults, clearResults, loadPage } = useSearchResultsStore()
 
   useEffect(() => {
     let active = true
@@ -149,7 +81,7 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     if (initialQuery) setQuick(initialQuery)
   }, [initialQuery, setQuick])
 
-  const runEntitySearch = async (query: string, resultLimit?: number) => {
+  const runEntitySearch = async (query: string) => {
     const normalizedQuery = query.trim()
     if (!normalizedQuery) {
       setQueryError(t('queryRequired'))
@@ -164,47 +96,23 @@ const EntityMask: React.FC<EntityMaskProps> = ({
     setQueryError('')
     setLoading(true)
     try {
-      const result = await PersonService.searchEntities(
-        selectedType,
-        normalizedQuery,
-        selectedProject.abbreviation
-      )
-      const normalizedResults = Array.isArray(result)
-        ? await Promise.all(
-            result.map(async (entry) => {
-              const entity = normalizeEntityResult(entry)
-              if (!entity.trustdeckID) return entity
-
-              try {
-                const pseudonyms =
-                  await TrustDeck.instance().getEntityPseudonyms(
-                    selectedType,
-                    entity.trustdeckID,
-                    selectedProject.abbreviation
-                  )
-                return { ...entity, links: pseudonymsToLinks(pseudonyms) }
-              } catch (error) {
-                console.error('Failed to load entity pseudonyms:', error)
-                return entity
-              }
-            })
-          )
-        : []
-
-      const sortedResults = normalizedResults.sort((left, right) =>
-        String(left.trustdeckID ?? '').localeCompare(String(right.trustdeckID ?? ''))
-      )
-      setResults(
-        resultLimit === undefined ? sortedResults : sortedResults.slice(0, resultLimit),
-        selectedType
-      )
-      if (psn && normalizedResults.length > 0) {
+      // A new search starts on the first page in the backend's default order
+      await loadPage({
+        entityTypeName: selectedType,
+        projectAbbreviation: selectedProject.abbreviation,
+        query: normalizedQuery,
+        page: 0,
+        sort: null
+      })
+      if (psn && useSearchResultsStore.getState().results.length > 0) {
         nextStep()
         stepperRef.current?.nextCallback()
       }
     } catch (error) {
       console.error('Error during entity search:', error)
+      clearResults()
       setResults([], selectedType)
+      setQueryError(t('entitySearchFailed'))
     } finally {
       setLoading(false)
     }

@@ -31,9 +31,23 @@ import InlinePseudonymDetail from '../search/components/InlinePseudonymDetail'
 import PseudonymService from '../search/services/PseudonymService'
 import RecordLinkageCandidateReview from './components/RecordLinkageCandidateReview'
 import { pickSchemaData } from '../search/utils/schemaData'
+import { readDisplayValue } from '../search/utils/entityDisplay'
 import type { Attribute } from '../../core/stores/ProjectStore'
 import type { Link } from '../../core/types/Link'
 import type { Pseudonym } from '../../core/types/Pseudonym'
+import Pagination from '../../core/components/common/Pagination'
+import LoadingOverlay from '../../core/components/common/LoadingOverlay'
+import SortableHeader from '../../core/components/common/SortableHeader'
+import { nextSort, type SortState } from '../../core/utils/sorting'
+import EntityColumnSelector from '../search/components/EntityColumnSelector'
+import { DEFAULT_ENTITY_PAGE_SIZE } from '../search/stores/SearchResultsStore'
+import {
+  collectEntityColumns,
+  columnSortKey,
+  RELEVANCE_SORT_KEY,
+  TRUSTDECK_ID_SORT_KEY,
+  useVisibleEntityColumns
+} from '../search/utils/entityColumns'
 import {
   CachedUserAccess,
   canUseEntityTypeAction,
@@ -41,6 +55,17 @@ import {
 } from '../../core/services/PermissionCache'
 
 type ModalMode = 'view' | 'create' | 'edit'
+
+/** The search behind the shown page of entity instances. */
+type InstancePaging = {
+  query: string
+  page: number
+  pageSize: number
+  total: number
+  numberOfMatchesExceedsSearchLimit: boolean
+  /** The chosen order; null for the backend's default (relevance, or latest update for "*"). */
+  sort: SortState | null
+}
 
 type Entity = Record<string, any>
 
@@ -105,14 +130,6 @@ function resolveLabel(attr: Attribute, language: string) {
     : a.label_en || a.labelEn || a.label_de || a.labelDe || attr.name || ''
 }
 
-function flattenLeafAttributes(attributes: Attribute[] = []): Attribute[] {
-  return attributes.flatMap((attr) => {
-    if (Array.isArray(attr.attributes))
-      return flattenLeafAttributes(attr.attributes)
-    return attr.name ? [attr] : []
-  })
-}
-
 function isNamedDataGroup(attr: Attribute): boolean {
   return (attr as any).layout === 'group' && Boolean(attr.name)
 }
@@ -124,11 +141,6 @@ function formatValue(value: unknown): string {
   const raw = String(value)
   if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.split('T')[0]
   return raw
-}
-
-function valueAtPath(source: any, path: string): unknown {
-  if (!path) return undefined
-  return path.split('.').reduce((cursor, key) => cursor?.[key], source)
 }
 
 function setValueAtPath(
@@ -595,7 +607,12 @@ export default function PreReg() {
   const [instances, setInstances] = useState<Entity[]>([])
   const [hasSearchedInstances, setHasSearchedInstances] = useState(false)
   const [query, setQuery] = useState('')
-  const [resultLimit, setResultLimit] = useState(5)
+  // The search behind the shown page of instances; the backend pages and sorts them
+  const [instancePaging, setInstancePaging] = useState<InstancePaging | null>(
+    null
+  )
+  const [instancePageLoading, setInstancePageLoading] = useState(false)
+  const [instanceSortNotice, setInstanceSortNotice] = useState('')
   const [permissionAccess, setPermissionAccess] =
     useState<CachedUserAccess | null>(null)
   const [permissionsReady, setPermissionsReady] = useState(false)
@@ -651,12 +668,14 @@ export default function PreReg() {
     return Array.isArray(definition?.attributes) ? definition.attributes : []
   }, [selectedType])
 
-  const displayAttributes = useMemo(
-    () =>
-      flattenLeafAttributes(selectedSchemaAttributes)
-        .filter((attr) => Boolean(attr.required))
-        .slice(0, 3),
-    [selectedSchemaAttributes]
+  const allColumns = useMemo(
+    () => collectEntityColumns(selectedSchemaAttributes, i18n.language),
+    [i18n.language, selectedSchemaAttributes]
+  )
+  const [visibleColumns, setVisibleColumnPaths] = useVisibleEntityColumns(
+    selectedProject?.abbreviation ?? '',
+    selectedTypeName,
+    allColumns
   )
 
   useEffect(() => {
@@ -757,15 +776,17 @@ export default function PreReg() {
     canDeleteByPermission
   const permissionLoadingOrDenied = !permissionsReady || !canSearchInstances
 
-  const visibleInstances = useMemo(
-    () =>
-      [...instances]
-        .sort((left, right) => entityId(left).localeCompare(entityId(right)))
-        .slice(0, resultLimit),
-    [instances, resultLimit]
-  )
-
-  const resultLimitOptions = [5, 10, 20, 50, 100]
+  // The backend delivers the instances paged and sorted
+  const visibleInstances = instances
+  const listsAllInstances = !instancePaging || instancePaging.query === '*'
+  const relevanceActive =
+    Boolean(instancePaging) &&
+    !listsAllInstances &&
+    (!instancePaging?.sort || instancePaging.sort.key === RELEVANCE_SORT_KEY)
+  const headerSort: SortState | null =
+    instancePaging?.sort && instancePaging.sort.key !== RELEVANCE_SORT_KEY
+      ? instancePaging.sort
+      : null
 
   const fetchTypes = useCallback(async () => {
     if (!selectedProject?.abbreviation) {
@@ -865,7 +886,17 @@ export default function PreReg() {
   )
 
   const searchInstances = useCallback(
-    async (typeName = selectedTypeName, searchQuery = '') => {
+    async (
+      typeName = selectedTypeName,
+      searchQuery = '',
+      options: {
+        page?: number
+        pageSize?: number
+        sort?: SortState | null
+        /** The column label for the notice when the backend refuses the order. */
+        column?: string
+      } = {}
+    ) => {
       if (!typeName) return
       if (!canSearchInstances) {
         if (permissionsReady) {
@@ -879,16 +910,50 @@ export default function PreReg() {
         return
       }
 
-      setLoadingInstances(true)
+      // A new search replaces the table; other pages or orders keep it while loading
+      const newSearch = options.page === undefined
+      const page = options.page ?? 0
+      const pageSize =
+        options.pageSize ?? instancePaging?.pageSize ?? DEFAULT_ENTITY_PAGE_SIZE
+      const sort =
+        options.sort === undefined
+          ? newSearch
+            ? null
+            : (instancePaging?.sort ?? null)
+          : options.sort
+      setInstanceSortNotice('')
+      if (newSearch) setLoadingInstances(true)
+      else setInstancePageLoading(true)
       setHasSearchedInstances(true)
       try {
         const normalizedQuery = searchQuery?.trim() || '*'
-        const result = await TrustDeck.instance().searchEntities(
+        const result = await TrustDeck.instance().searchEntitiesPage(
           typeName,
-          normalizedQuery
+          normalizedQuery,
+          page,
+          pageSize,
+          sort
         )
-        setInstances(Array.isArray(result) ? result.map(normalizeInstance) : [])
+        setInstances(result.items.map(normalizeInstance))
+        setInstancePaging({
+          query: normalizedQuery,
+          page,
+          pageSize,
+          total: result.total,
+          numberOfMatchesExceedsSearchLimit: result.numberOfMatchesExceedsSearchLimit,
+          sort
+        })
       } catch (error) {
+        if (error instanceof TrustDeckHttpError && error.status === 422) {
+          // Too many matches to sort by an attribute without a sort index; keep the shown page
+          setInstanceSortNotice(
+            t('search:sorting.narrowSearch', {
+              count: instancePaging?.total ?? 0,
+              column: options.column ?? ''
+            })
+          )
+          return
+        }
         if (error instanceof TrustDeckHttpError && error.status === 403) {
           markBackendDenied('entity:search')
           setInstances([])
@@ -918,10 +983,14 @@ export default function PreReg() {
         }
       } finally {
         setLoadingInstances(false)
+        setInstancePageLoading(false)
       }
     },
     [
       canSearchInstances,
+      instancePaging?.pageSize,
+      instancePaging?.sort,
+      instancePaging?.total,
       markBackendDenied,
       normalizeInstance,
       permissionsReady,
@@ -937,6 +1006,8 @@ export default function PreReg() {
 
   useEffect(() => {
     setInstances([])
+    setInstancePaging(null)
+    setInstanceSortNotice('')
     setHasSearchedInstances(false)
     setSelectedInstance(null)
     setLinkedPseudonym(null)
@@ -1452,6 +1523,28 @@ export default function PreReg() {
         ? t('identity:crud.editEntity', { type: selectedTypeName })
         : t('identity:crud.viewEntity', { type: selectedTypeName })
 
+  /** Loads another page or order of the current instance search. */
+  const loadInstancePage = (options: {
+    page: number
+    pageSize?: number
+    sort?: SortState | null
+    column?: string
+  }) => {
+    if (!instancePaging) return
+    void searchInstances(selectedTypeName, instancePaging.query, options)
+  }
+
+  const sortInstances = (key: string) => {
+    const column = visibleColumns.find(
+      (candidate) => columnSortKey(candidate.path) === key
+    )
+    loadInstancePage({
+      page: 0,
+      sort: nextSort(headerSort, key),
+      column: column?.label || column?.path || t('identity:crud.identifier')
+    })
+  }
+
   const handleSearchClick = () => {
     const normalizedQuery = query.trim()
     if (!normalizedQuery) {
@@ -1650,20 +1743,72 @@ export default function PreReg() {
                   </p>
                 </div>
               ) : (
+                <>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {!listsAllInstances && (
+                    <button
+                      type="button"
+                      aria-pressed={relevanceActive}
+                      disabled={relevanceActive || instancePageLoading}
+                      onClick={() =>
+                        loadInstancePage({
+                          page: 0,
+                          sort: { key: RELEVANCE_SORT_KEY, direction: 'desc' }
+                        })
+                      }
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                        relevanceActive
+                          ? 'border-color-blue bg-color-blue text-white'
+                          : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {t('search:sorting.relevance')}
+                    </button>
+                  )}
+                  <EntityColumnSelector
+                    columns={allColumns}
+                    visibleColumns={visibleColumns}
+                    onChange={setVisibleColumnPaths}
+                  />
+                </div>
+                {relevanceActive && instancePaging?.numberOfMatchesExceedsSearchLimit && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t('search:sorting.partialRelevance', {
+                      count: instancePaging.total
+                    })}
+                  </p>
+                )}
+                {instanceSortNotice && (
+                  <p
+                    role="status"
+                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+                  >
+                    {instanceSortNotice}
+                  </p>
+                )}
+                <LoadingOverlay loading={instancePageLoading}>
                 <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-slate-700">
                   <table className="min-w-full divide-y divide-gray-200 text-left text-base dark:divide-slate-700">
                     <thead className="bg-gray-50 dark:bg-slate-900">
                       <tr className="text-gray-600 dark:text-gray-300">
-                        <th className="min-w-[18rem] px-4 py-3 font-semibold">
-                          {t('identity:crud.identifier')}
-                        </th>
-                        {displayAttributes.map((attr) => (
-                          <th
-                            key={attr.name}
-                            className="px-4 py-3 font-semibold"
-                          >
-                            {resolveLabel(attr, i18n.language)}
-                          </th>
+                        <SortableHeader
+                          label={t('identity:crud.identifier')}
+                          sortKey={TRUSTDECK_ID_SORT_KEY}
+                          sort={headerSort}
+                          onSort={sortInstances}
+                          disabled={instancePageLoading}
+                          cellClassName="min-w-[18rem] px-4 py-3 font-semibold"
+                        />
+                        {visibleColumns.map((column) => (
+                          <SortableHeader
+                            key={column.path}
+                            label={column.label || column.path}
+                            sortKey={columnSortKey(column.path)}
+                            sort={headerSort}
+                            onSort={sortInstances}
+                            disabled={instancePageLoading}
+                            cellClassName="px-4 py-3 font-semibold"
+                          />
                         ))}
                         <th className="w-56 px-4 py-3 text-right font-semibold">
                           {t('identity:crud.actions')}
@@ -1678,7 +1823,7 @@ export default function PreReg() {
                           modalOpen &&
                           modalMode !== 'create' &&
                           entityId(selectedInstance) === id
-                        const detailColumnCount = displayAttributes.length + 2
+                        const detailColumnCount = visibleColumns.length + 2
 
                         return (
                           <Fragment key={id}>
@@ -1694,15 +1839,16 @@ export default function PreReg() {
                                   {id || '-'}
                                 </span>
                               </td>
-                              {displayAttributes.map((attr) => (
+                              {visibleColumns.map((column) => (
                                 <td
-                                  key={`${id}-${attr.name}`}
+                                  key={`${id}-${column.path}`}
                                   className="px-4 py-3 text-gray-700 dark:text-gray-300"
                                 >
                                   {formatValue(
-                                    attr.name
-                                      ? valueAtPath(instance.data, attr.name)
-                                      : undefined
+                                    readDisplayValue(
+                                      instance.data,
+                                      column.path.split('.')
+                                    )
                                   )}
                                 </td>
                               ))}
@@ -1950,28 +2096,30 @@ export default function PreReg() {
                     </tbody>
                   </table>
                 </div>
+                </LoadingOverlay>
+                </>
               )}
 
-              {instances.length > 0 && (
-                <div className="flex justify-end pt-2">
-                  <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                    <span>{t('identity:crud.resultsLimit')}</span>
-                    <select
-                      value={resultLimit}
-                      onChange={(event) =>
-                        setResultLimit(Number(event.target.value))
-                      }
-                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-gray-100"
-                    >
-                      {resultLimitOptions.map((limit) => (
-                        <option key={limit} value={limit}>
-                          {limit}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              )}
+              {instancePaging &&
+                (instancePaging.total > 0 || instancePaging.page > 0) && (
+                  <Pagination
+                    className="!px-0"
+                    page={instancePaging.page}
+                    pageCount={Math.max(
+                      1,
+                      Math.ceil(instancePaging.total / instancePaging.pageSize)
+                    )}
+                    morePagesExist={instancePaging.numberOfMatchesExceedsSearchLimit}
+                    onPageChange={(page) => loadInstancePage({ page })}
+                    pageSize={instancePaging.pageSize}
+                    pageSizeOptions={[5, 10, 20, 50, 100]}
+                    onPageSizeChange={(pageSize) =>
+                      loadInstancePage({ page: 0, pageSize })
+                    }
+                    alwaysShowPageSize
+                    disabled={instancePageLoading}
+                  />
+                )}
             </div>}
 
         {managementTab === 'add' && modalOpen && modalMode === 'create' && (

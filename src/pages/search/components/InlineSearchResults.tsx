@@ -12,7 +12,18 @@ import { useNavigate } from 'react-router-dom'
 import Panel from '../../../core/components/common/Panel'
 import IconActionButton from '../../../core/components/common/IconActionButton'
 import SharedPagination from '../../../core/components/common/Pagination'
+import LoadingOverlay from '../../../core/components/common/LoadingOverlay'
 import SortableHeader from '../../../core/components/common/SortableHeader'
+import EntityColumnSelector from './EntityColumnSelector'
+import {
+  collectEntityColumns,
+  columnSortKey,
+  RELEVANCE_SORT_KEY,
+  TRUSTDECK_ID_SORT_KEY,
+  useVisibleEntityColumns,
+  type EntityColumn
+} from '../utils/entityColumns'
+import { SortNeedsNarrowerSearchError } from '../services/EntityPageService'
 import {
   compareCellValues,
   nextSort,
@@ -33,8 +44,7 @@ import usePseudonymStore, {
 } from '../stores/PseudonymSearchResults'
 import {
   formatDisplayValue,
-  readDisplayValue,
-  selectSummaryAttributes
+  readDisplayValue
 } from '../utils/entityDisplay'
 import InlineEntityDetail from './InlineEntityDetail'
 import InlinePseudonymDetail from './InlinePseudonymDetail'
@@ -92,16 +102,13 @@ function Pagination({
   )
 }
 
-/** Sort key of the TrustDeck ID column of entity results. */
-const TRUSTDECK_ID_SORT_KEY = 'trustDeckId'
-
 const DEFAULT_ENTITY_SORT: SortState = {
   key: TRUSTDECK_ID_SORT_KEY,
   direction: 'asc'
 }
 
-/** Sort key of an attribute column of entity results; prefixed so it cannot clash with the ID column. */
-const attributeSortKey = (attributeKey: string) => `attribute:${attributeKey}`
+/** A shown attribute column with its path split for reading values. */
+type ShownColumn = EntityColumn & { segments: string[] }
 
 export function InlineEntityResults({
   entityTypeName
@@ -113,8 +120,15 @@ export function InlineEntityResults({
   const navigate = useNavigate()
   const selectedProject = useProjectStore((state) => state.selectedProject)
   const entityAttributes = useProjectStore((state) => state.entityAttributes)
-  const { results, hasSearched, setResults, removeResult } =
-    useSearchResultsStore()
+  const {
+    results,
+    hasSearched,
+    setResults,
+    removeResult,
+    paging,
+    loadPage,
+    loadingPage
+  } = useSearchResultsStore()
   const [pendingDelete, setPendingDelete] = useState<any | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [page, setPage] = useState(0)
@@ -131,10 +145,19 @@ export function InlineEntityResults({
     [entityAttributes, entityTypeName]
   )
 
-  const summaryAttributes = useMemo(
-    () => selectSummaryAttributes(schemaAttributes, i18n.language, 3),
+  const allColumns = useMemo(
+    () => collectEntityColumns(schemaAttributes, i18n.language),
     [i18n.language, schemaAttributes]
   )
+  const [visibleColumns, setVisibleColumnPaths] = useVisibleEntityColumns(
+    selectedProject?.abbreviation ?? '',
+    entityTypeName,
+    allColumns
+  )
+  const shownColumns: ShownColumn[] = visibleColumns.map((column) => ({
+    ...column,
+    segments: column.path.split('.')
+  }))
 
   const selectedEntity = useMemo(
     () =>
@@ -144,36 +167,93 @@ export function InlineEntityResults({
     [results, selectedIdentifier]
   )
 
-  // Entity searches return few results, which are therefore sorted here. Attribute values are
-  // compared raw, so that ISO dates and numbers sort correctly regardless of their display format.
-  const [chosenEntitySort, setEntitySort] = useState<SortState>(
+  // Backend searches arrive sorted and paged. Results of older backends are sorted here,
+  // comparing raw values, so that ISO dates and numbers sort correctly.
+  const [chosenLocalSort, setLocalSort] = useState<SortState>(
     DEFAULT_ENTITY_SORT
   )
-  // A sorted attribute column can disappear with another entity type; the ID order applies then
-  const sortedAttribute = summaryAttributes.find(
-    (candidate) => attributeSortKey(candidate.key) === chosenEntitySort.key
+  // A notice when the backend refused an order, e.g. for too many matches
+  const [sortNotice, setSortNotice] = useState('')
+  const listsAll = paging ? paging.query.trim() === '*' : true
+  const relevanceActive =
+    Boolean(paging) &&
+    !listsAll &&
+    (!paging?.sort || paging.sort.key === RELEVANCE_SORT_KEY)
+  const localSortColumn = shownColumns.find(
+    (column) => columnSortKey(column.path) === chosenLocalSort.key
   )
-  const entitySort =
-    sortedAttribute || chosenEntitySort.key === TRUSTDECK_ID_SORT_KEY
-      ? chosenEntitySort
+  const localSort =
+    localSortColumn || chosenLocalSort.key === TRUSTDECK_ID_SORT_KEY
+      ? chosenLocalSort
       : DEFAULT_ENTITY_SORT
+  // The headers show the order; relevance and the default listing order have no column
+  const headerSort: SortState | null = paging
+    ? paging.sort && paging.sort.key !== RELEVANCE_SORT_KEY
+      ? paging.sort
+      : null
+    : localSort
+
   const sortedResults = useMemo(() => {
-    const attribute = sortedAttribute
+    if (paging) return results
     const value = (result: any) => {
-      if (!attribute) return resolveTrustDeckId(result)
-      const raw = readDisplayValue(result?.data ?? {}, attribute.path)
+      if (!localSortColumn) return resolveTrustDeckId(result)
+      const raw = readDisplayValue(result?.data ?? {}, localSortColumn.segments)
       return raw !== null && typeof raw === 'object'
         ? formatDisplayValue(raw)
         : raw
     }
     return [...results].sort((left, right) =>
-      compareCellValues(value(left), value(right), entitySort.direction)
+      compareCellValues(value(left), value(right), localSort.direction)
     )
-  }, [entitySort.direction, results, sortedAttribute])
+  }, [localSort.direction, localSortColumn, paging, results])
+
+  const loadEntityPage = (
+    nextPage: number,
+    options: { pageSize?: number; sort?: SortState | null; column?: string } = {}
+  ) => {
+    if (!paging) return
+    setSortNotice('')
+    setSelectedIdentifier('')
+    loadPage({
+      entityTypeName: paging.entityTypeName,
+      projectAbbreviation: paging.projectAbbreviation,
+      query: paging.query,
+      page: nextPage,
+      pageSize: options.pageSize,
+      sort: options.sort
+    }).catch((error) => {
+      if (error instanceof SortNeedsNarrowerSearchError) {
+        setSortNotice(
+          t('sorting.narrowSearch', {
+            count: paging.total,
+            column: options.column ?? ''
+          })
+        )
+        return
+      }
+      console.error('Failed to load a page of entities', error)
+      showToast({
+        severity: 'error',
+        summary: t('results'),
+        detail: t('entitySearchFailed'),
+        life: 4500
+      })
+    })
+  }
 
   const sortEntities = (key: string) => {
-    setEntitySort(nextSort(entitySort, key))
-    setPage(0)
+    if (!paging) {
+      setLocalSort(nextSort(localSort, key))
+      setPage(0)
+      return
+    }
+    const column = shownColumns.find(
+      (candidate) => columnSortKey(candidate.path) === key
+    )
+    loadEntityPage(0, {
+      sort: nextSort(headerSort, key),
+      column: column?.label || column?.path || t('trustDeckId')
+    })
   }
 
   useEffect(() => {
@@ -277,21 +357,71 @@ export function InlineEntityResults({
     }
   }
 
-  const pageStart = page * pageSize
-  const pageResults = sortedResults.slice(pageStart, pageStart + pageSize)
-  const entityPageCount = Math.ceil(results.length / pageSize)
+  const shownPageSize = paging ? paging.pageSize : pageSize
+  const pageStart = (paging ? paging.page : page) * shownPageSize
+  const pageResults = paging
+    ? sortedResults
+    : sortedResults.slice(pageStart, pageStart + pageSize)
+  const entityPageCount = paging
+    ? Math.ceil(paging.total / paging.pageSize)
+    : Math.ceil(results.length / pageSize)
   const entityFillerRows =
-    entityPageCount > 1 ? Math.max(0, pageSize - pageResults.length) : 0
-  const entityColumnCount = (summaryAttributes.length || 1) + 3
+    entityPageCount > 1 ? Math.max(0, shownPageSize - pageResults.length) : 0
+  const entityColumnCount = (shownColumns.length || 1) + 3
 
   return (
     <>
       <Panel className="mt-6 !w-full !p-0 !shadow-none overflow-hidden">
         <div className="border-b border-gray-200 px-5 py-4 dark:border-slate-700">
-          <h3 className="td-panel-title">{t('results')}</h3>
-          <p className="td-section-subtitle mt-1">
-            {t('entityResultsDescription', { count: results.length })}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="td-panel-title">{t('results')}</h3>
+              <p className="td-section-subtitle mt-1">
+                {t('entityResultsDescription', {
+                  count: paging ? paging.total : results.length
+                })}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {paging && !listsAll && (
+                <button
+                  type="button"
+                  aria-pressed={relevanceActive}
+                  disabled={relevanceActive || loadingPage}
+                  onClick={() =>
+                    loadEntityPage(0, {
+                      sort: { key: RELEVANCE_SORT_KEY, direction: 'desc' }
+                    })
+                  }
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-semibold transition ${
+                    relevanceActive
+                      ? 'border-color-blue bg-color-blue text-white'
+                      : 'border-color-blue text-color-blue hover:bg-blue-50 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t('sorting.relevance')}
+                </button>
+              )}
+              <EntityColumnSelector
+                columns={allColumns}
+                visibleColumns={visibleColumns}
+                onChange={setVisibleColumnPaths}
+              />
+            </div>
+          </div>
+          {relevanceActive && paging?.numberOfMatchesExceedsSearchLimit && (
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              {t('sorting.partialRelevance', { count: paging.total })}
+            </p>
+          )}
+          {sortNotice && (
+            <p
+              role="status"
+              className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+            >
+              {sortNotice}
+            </p>
+          )}
         </div>
 
         {results.length === 0 ? (
@@ -299,6 +429,7 @@ export function InlineEntityResults({
             {t('noResults')}
           </p>
         ) : (
+          <LoadingOverlay loading={loadingPage}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] table-fixed border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
@@ -309,21 +440,23 @@ export function InlineEntityResults({
                 <SortableHeader
                   label={t('trustDeckId')}
                   sortKey={TRUSTDECK_ID_SORT_KEY}
-                  sort={entitySort}
+                  sort={headerSort}
                   onSort={sortEntities}
+                  disabled={loadingPage}
                   cellClassName="w-[25%] px-5 py-3 text-base font-semibold"
                 />
-                {summaryAttributes.map((attribute) => (
+                {shownColumns.map((column) => (
                   <SortableHeader
-                    key={attribute.key}
-                    label={attribute.label}
-                    sortKey={attributeSortKey(attribute.key)}
-                    sort={entitySort}
+                    key={column.path}
+                    label={column.label || column.path}
+                    sortKey={columnSortKey(column.path)}
+                    sort={headerSort}
                     onSort={sortEntities}
+                    disabled={loadingPage}
                     cellClassName="px-4 py-3 text-base font-semibold"
                   />
                 ))}
-                {summaryAttributes.length === 0 && (
+                {shownColumns.length === 0 && (
                   <th className="px-4 py-3 text-base font-semibold">
                     {t('entitySummary')}
                   </th>
@@ -352,17 +485,17 @@ export function InlineEntityResults({
                     <td className="break-all px-5 py-4 font-mono text-base">
                       {identifier || '—'}
                     </td>
-                    {summaryAttributes.map((attribute) => (
+                    {shownColumns.map((column) => (
                       <td
-                        key={`${identifier}-${attribute.key}`}
+                        key={`${identifier}-${column.path}`}
                         className="break-words px-4 py-4 text-base"
                       >
                         {formatDisplayValue(
-                          readDisplayValue(data, attribute.path)
+                          readDisplayValue(data, column.segments)
                         )}
                       </td>
                     ))}
-                    {summaryAttributes.length === 0 && (
+                    {shownColumns.length === 0 && (
                       <td className="px-4 py-4 text-base text-gray-500">—</td>
                     )}
                     <td className="px-5 py-4">
@@ -413,10 +546,29 @@ export function InlineEntityResults({
             </tbody>
           </table>
           </div>
+          </LoadingOverlay>
         )}
       </Panel>
 
-      {results.length > 0 && (
+      {paging && (paging.total > 0 || paging.page > 0) && (
+        <div className="w-full">
+          <SharedPagination
+            page={paging.page}
+            pageCount={Math.max(1, entityPageCount)}
+            morePagesExist={paging.numberOfMatchesExceedsSearchLimit}
+            onPageChange={(nextPage) => loadEntityPage(nextPage)}
+            pageSize={paging.pageSize}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+            onPageSizeChange={(nextPageSize) =>
+              loadEntityPage(0, { pageSize: nextPageSize })
+            }
+            alwaysShowPageSize
+            disabled={loadingPage}
+          />
+        </div>
+      )}
+
+      {!paging && results.length > 0 && (
         <div className="w-full">
           <Pagination
             total={results.length}
@@ -624,6 +776,7 @@ export function InlinePseudonymResults({
             {t('noResults')}
           </p>
         ) : (
+          <LoadingOverlay loading={loadingPage}>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse text-left">
             <thead className="bg-gray-50 dark:bg-slate-800/70">
@@ -786,6 +939,7 @@ export function InlinePseudonymResults({
             </tbody>
           </table>
           </div>
+          </LoadingOverlay>
         )}
       </Panel>
 

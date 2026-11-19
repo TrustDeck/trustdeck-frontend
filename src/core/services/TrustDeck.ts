@@ -23,6 +23,7 @@ import { PersonType } from '../types/PersonEntity'
 import { BioSampleEntity } from 'core/types/BioSampleEntity'
 import { Pseudonym } from '../../core/types/Pseudonym'
 import { compareCellValues, type SortState } from '../utils/sorting'
+import { searchMatchFor } from '../utils/searchMatch'
 
 /** Identifies an HTTP method supported by the API client. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -699,7 +700,9 @@ class TrustDeck {
   }
 
   /**
-   * Searches one page of entities. `sort` names `relevance`, `trustDeckId`, `createdAt`,
+   * Searches one page of entities. The query parts match anywhere in the entity data (only the
+   * beginning of words when a part is shorter than three characters, see `searchMatchFor`).
+   * `sort` names `relevance`, `trustDeckId`, `createdAt`,
    * `updatedAt`, or `attribute:<path>`; without it, the backend orders searches by relevance and
    * the complete list by the latest update. Backends without paged search answer with a
    * (truncated) list, which is then paged here.
@@ -727,6 +730,7 @@ class TrustDeck {
         query,
         page: String(page),
         size: String(size),
+        match: searchMatchFor(query),
         ...(sort ? { sort: sort.key, direction: sort.direction } : {})
       }
     )
@@ -936,8 +940,9 @@ class TrustDeck {
   }
 
   /**
-   * Searches one page of pseudonyms. Every query part must match the beginning of the
-   * identifier, ID type, or pseudonym; "*" matches all. Backends without paged search answer
+   * Searches one page of pseudonyms. Every query part must match the identifier, ID type, or
+   * pseudonym, anywhere in the value (only at its beginning when a part is shorter than three
+   * characters, see `searchMatchFor`); "*" matches all. Backends without paged search answer
    * with a (truncated) list, which is then paged here.
    */
   public async searchPseudonymsPage(
@@ -955,6 +960,7 @@ class TrustDeck {
         query,
         page: String(page),
         size: String(size),
+        match: searchMatchFor(query),
         ...(sort ? { sort: sort.key, direction: sort.direction } : {})
       }
     )

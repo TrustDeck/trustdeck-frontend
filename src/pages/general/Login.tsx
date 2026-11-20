@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   ArrowRightEndOnRectangleIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline'
 import PrimaryButton from '@component/form/buttons/PrimaryButton'
 import PrimaryOutlinedButton from '@component/form/buttons/PrimaryOutlinedButton'
@@ -13,6 +14,7 @@ import TrustDeck from '@service/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
 import { useTranslation } from 'react-i18next'
+import { HELP_PATH } from '../../core/configs/publicPages'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
   return Boolean(value && value.startsWith('/') && !value.startsWith('//'))
@@ -123,6 +125,16 @@ const Login: React.FC = () => {
               className="w-full justify-center"
             />
           )}
+        </div>
+
+        <div className="mt-8 border-t border-slate-200 pt-6 text-center">
+          <Link
+            to={HELP_PATH}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-color-blue hover:underline"
+          >
+            <QuestionMarkCircleIcon className="h-5 w-5" aria-hidden="true" />
+            {t('common:helpPage.loginLink')}
+          </Link>
         </div>
       </section>
     </main>

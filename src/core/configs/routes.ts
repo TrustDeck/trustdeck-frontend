@@ -2,6 +2,8 @@ import { FC, SVGProps } from 'react'
 import LoggedOut from '../../pages/general/LoggedOut'
 import Login from '../../pages/general/Login'
 import AuthCallback from '../../pages/general/AuthCallback'
+import Help from '../../pages/help/Help'
+import { HELP_PATH } from './publicPages'
 import SearchMask from '../../pages/search/SearchMask'
 import SearchPsn from '../../pages/pseudonym/SearchPsn'
 import PreReg from '../../pages/identity/PreReg'
@@ -18,7 +20,8 @@ import {
   FolderIcon,
   CubeTransparentIcon,
   WrenchScrewdriverIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline'
 import PseudonymDetails from '../../pages/search/PseudonymDetails'
 import Registration from '../../pages/identity/Registration'
@@ -69,6 +72,14 @@ export const routes: RouteConfig[] = [
     titleKey: 'layout:menu.logout',
     component: LoggedOut,
     Icon: Bars3Icon,
+    isProtected: false,
+    isSidebar: false
+  },
+  {
+    path: HELP_PATH,
+    titleKey: 'common:help',
+    component: Help,
+    Icon: QuestionMarkCircleIcon,
     isProtected: false,
     isSidebar: false
   },

@@ -6,6 +6,7 @@ import useProjectStore from '../../../core/stores/ProjectStore'
 import useToastStore from '../../../core/stores/ToastStore'
 import { Toast } from 'primereact/toast'
 import RouteErrorBoundary from './RouteErrorBoundary'
+import { isStandalonePage } from '../../configs/publicPages'
 
 const Layout: React.FC = () => {
   const setToast = useToastStore((state) => state.setToast)
@@ -14,9 +15,7 @@ const Layout: React.FC = () => {
   const { selectedProject } = useProjectStore()
   const location = useLocation()
 
-  const isLoggedOutPage = location.pathname === '/logged-out'
-  const isLoginPage = location.pathname === '/login'
-  const hideSidebar = isLoggedOutPage || isLoginPage
+  const hideSidebar = isStandalonePage(location.pathname)
 
   const contentOffsetClass = hideSidebar
     ? 'ml-0'

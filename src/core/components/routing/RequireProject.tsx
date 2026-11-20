@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import useProjectStore from '../../stores/ProjectStore'
 import useToastStore from '../../stores/ToastStore'
 import { useTranslation } from 'react-i18next'
+import { HELP_PATH } from '../../configs/publicPages'
 
 type Props = { children: ReactNode }
 
@@ -13,7 +14,7 @@ export default function RequireProject({ children }: Props) {
   const { t } = useTranslation()
 
   // Allow reaching /projects (and other public-ish paths) without a selected project
-  const allowList = ['/projects', '/projects/new', '/global-settings', '/user-management', '/login', '/callback', '/logged-out']
+  const allowList = ['/projects', '/projects/new', '/global-settings', '/user-management', '/login', '/callback', '/logged-out', HELP_PATH]
   const isAllowed = allowList.some((p) => location.pathname.startsWith(p))
 
   useEffect(() => {

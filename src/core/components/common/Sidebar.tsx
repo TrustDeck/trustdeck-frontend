@@ -240,12 +240,15 @@ export default function Sidebar({
   }
 
   const renderNavLinks = (items: RouteConfig[], collapsed = false) =>
-    items.map(({ titleKey, path, Icon }) => {
+    items.map(({ titleKey, descriptionKey, path, Icon }) => {
       const isUserManagement = path === '/user-management'
       const label = isUserManagement ? displayName : routeTitle(titleKey)
+      const description = descriptionKey ? t(descriptionKey) : undefined
       const tooltip = isUserManagement
         ? t('layout:userMenu.logoutIn', { time: remaining })
-        : label
+        : description
+          ? `${label}\n${description}`
+          : label
 
       return (
         <li key={path}>
@@ -254,7 +257,13 @@ export default function Sidebar({
             className={getNavLinkClasses}
             onClick={closeSidebarOnNavigate}
             title={tooltip}
-            aria-label={isUserManagement ? `${label}. ${tooltip}` : label}
+            aria-label={
+              isUserManagement
+                ? `${label}. ${tooltip}`
+                : description
+                  ? `${label}. ${description}`
+                  : label
+            }
           >
             <Icon
               className={

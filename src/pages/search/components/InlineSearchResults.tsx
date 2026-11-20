@@ -304,7 +304,7 @@ export function InlineEntityResults({
   const generatePseudonymForEntity = (result: any) => {
     const identifier = resolveTrustDeckId(result)
     if (!identifier) return
-    navigate('/pseudonym-management', {
+    navigate('/pseudonyms', {
       state: {
         entity: {
           identifier,
@@ -697,7 +697,7 @@ export function InlinePseudonymResults({
   }
 
   const generateSecondaryPseudonym = (result: Pseudonym) => {
-    navigate('/pseudonym-management', {
+    navigate('/pseudonyms', {
       state: {
         secondaryPseudonym: {
           domainName: result.domainName || fallbackDomain,

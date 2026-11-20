@@ -1110,7 +1110,7 @@ export default function PreReg() {
   const generatePseudonymForEntity = (instance: Entity) => {
     const identifier = entityId(instance)
     if (!identifier) return
-    navigate('/pseudonym-management', {
+    navigate('/pseudonyms', {
       state: {
         entity: {
           identifier,
@@ -1590,7 +1590,7 @@ export default function PreReg() {
               <div className="mt-6 flex justify-center">
                 <PrimaryButton
                   label={t('entityBuilder:openEntityBuilder')}
-                  onClick={() => navigate('/entity/manager/new')}
+                  onClick={() => navigate('/entity-types/new')}
                 />
               </div>
             </div>

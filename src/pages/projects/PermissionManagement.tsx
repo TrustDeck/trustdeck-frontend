@@ -270,7 +270,7 @@ function PermissionRows({
   }
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    <div className="td-permission-grid grid gap-2">
       {rows.map((permission) => {
         const key = permissionKey(permission)
         const locked = editable && Boolean(isLocked?.(permission))

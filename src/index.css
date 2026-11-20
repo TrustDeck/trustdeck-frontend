@@ -75,6 +75,13 @@
 @layer base {
   html {
     @apply font-font-text;
+    /*
+     * Always reserve the space of the vertical scrollbar. Otherwise the content width
+     * depends on whether the page overflows, while the page height depends on the content
+     * width (wrapping, column count). Near that threshold the browser keeps adding and
+     * removing the scrollbar and the layout shakes (#121).
+     */
+    scrollbar-gutter: stable;
   }
 }
 
@@ -419,6 +426,21 @@
 .td-page-content {
   width: 100%;
   min-width: 0;
+}
+
+/*
+ * Permission cards: one to four columns of at least 15rem, chosen from the width of the
+ * grid itself (so an expanded side menu is taken into account), not from the viewport.
+ * - max(15rem, a quarter of the row) caps the grid at four columns; the quarter is reduced
+ *   by 1px so that rounding never drops a full row to three columns.
+ * - min(100%, ...) keeps a single column from overflowing very narrow screens.
+ * The 1.5rem are the three gaps of a four-column row and must match the gap utility (gap-2).
+ */
+.td-permission-grid {
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, max(15rem, calc((100% - 1.5rem) / 4 - 1px))), 1fr)
+  );
 }
 
 .td-panel-title {

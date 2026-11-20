@@ -24,6 +24,7 @@ import { BioSampleEntity } from 'core/types/BioSampleEntity'
 import { Pseudonym } from '../../core/types/Pseudonym'
 import { compareCellValues, type SortState } from '../utils/sorting'
 import { searchMatchFor } from '../utils/searchMatch'
+import { readBackendVersion } from '../utils/backendVersion'
 
 /** Identifies an HTTP method supported by the API client. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -364,6 +365,11 @@ class TrustDeck {
   // API health and maintenance
   public async ping() {
     return this.request<string>('GET', '/ping')
+  }
+
+  /** Returns the version of the connected backend, or null if it cannot be read (e.g. older backends without `/version`). */
+  public async getBackendVersion(): Promise<string | null> {
+    return readBackendVersion(() => this.request<unknown>('GET', '/version'))
   }
 
   public async getTableStorage(tableName: string) {

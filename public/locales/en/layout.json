@@ -53,7 +53,9 @@
     "account": "Open account settings",
     "logout": "Log out",
     "enabled": "On",
-    "disabled": "Off"
+    "disabled": "Off",
+    "backendVersion": "Backend version: {{version}}",
+    "unknownVersion": "unknown"
   },
   "sidebar": {
     "open": "Open sidebar",

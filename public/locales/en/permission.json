@@ -129,5 +129,37 @@
   },
   "viewModeHint": "Permissions are shown read-only. Select Edit permissions to make changes.",
   "editModeHint": "Select a permission card to switch it between granted and not granted. Changes are applied only after saving.",
-  "lockedPermissionHint": "You can only grant permissions you hold yourself."
+  "lockedPermissionHint": "You can only grant permissions you hold yourself.",
+  "globalPermissionDescription": {
+    "domain": {
+      "create": "Create new pseudonym domains with their basic settings. Settings that are left out are taken from the parent domain or from the default values.",
+      "create-complete": "Create new pseudonym domains and choose all of their settings yourself, including the pseudonymization algorithm.",
+      "list-all": "See all pseudonym domains in TrustDeck, including those you have no other permissions for.",
+      "search": "Search for pseudonym domains. The results only include domains you are allowed to see."
+    },
+    "project": {
+      "create": "Create new projects.",
+      "list-all": "See a list of all projects in TrustDeck, not only the projects you have access to."
+    },
+    "type": {
+      "create": "Create project-specific entity types that build on an existing base entity type."
+    },
+    "base-type": {
+      "create": "Create base entity types: reusable templates that project-specific entity types build on.",
+      "read": "View the details of base entity types.",
+      "search": "Search for base entity types by name, version, or definition."
+    },
+    "roles": {
+      "delete": "Remove all of your own permissions for a pseudonym domain in one step. This is a maintenance function."
+    },
+    "table": {
+      "delete": "Delete all records in one of TrustDeck's database tables, for example all pseudonyms or all projects. This cannot be undone; the audit trail is kept. Intended for administrators only."
+    },
+    "system": {
+      "statistics": "View system statistics, such as the size of the database and the number of records in each table."
+    },
+    "global": {
+      "manage-permissions": "View, grant, and revoke the global permissions of other users. You can only give others permissions that you have yourself."
+    }
+  }
 }

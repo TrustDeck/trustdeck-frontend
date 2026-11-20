@@ -129,5 +129,37 @@
   },
   "viewModeHint": "Die Berechtigungen werden schreibgeschützt angezeigt. Wählen Sie „Berechtigungen bearbeiten“, um Änderungen vorzunehmen.",
   "editModeHint": "Wählen Sie eine Berechtigungskarte aus, um zwischen „Vergeben“ und „Nicht vergeben“ zu wechseln. Änderungen werden erst beim Speichern übernommen.",
-  "lockedPermissionHint": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen."
+  "lockedPermissionHint": "Sie können nur Berechtigungen vergeben, die Sie selbst besitzen.",
+  "globalPermissionDescription": {
+    "domain": {
+      "create": "Neue Pseudonym-Domänen mit ihren grundlegenden Einstellungen anlegen. Nicht angegebene Einstellungen werden von der übergeordneten Domäne oder aus den Standardwerten übernommen.",
+      "create-complete": "Neue Pseudonym-Domänen anlegen und alle Einstellungen selbst festlegen, einschließlich des Pseudonymisierungsalgorithmus.",
+      "list-all": "Alle Pseudonym-Domänen in TrustDeck sehen, auch solche, für die Sie sonst keine Berechtigungen haben.",
+      "search": "Nach Pseudonym-Domänen suchen. Die Ergebnisse enthalten nur Domänen, die Sie sehen dürfen."
+    },
+    "project": {
+      "create": "Neue Projekte anlegen.",
+      "list-all": "Eine Liste aller Projekte in TrustDeck sehen, nicht nur der Projekte, auf die Sie Zugriff haben."
+    },
+    "type": {
+      "create": "Projektspezifische Entitäten anlegen, die auf einer vorhandenen Basisentität aufbauen."
+    },
+    "base-type": {
+      "create": "Basisentitäten anlegen: wiederverwendbare Vorlagen, auf denen projektspezifische Entitäten aufbauen.",
+      "read": "Die Details von Basisentitäten ansehen.",
+      "search": "Nach Basisentitäten anhand von Name, Version oder Definition suchen."
+    },
+    "roles": {
+      "delete": "Alle eigenen Berechtigungen für eine Pseudonym-Domäne in einem Schritt entfernen. Dies ist eine Wartungsfunktion."
+    },
+    "table": {
+      "delete": "Alle Einträge einer Datenbanktabelle von TrustDeck löschen, zum Beispiel alle Pseudonyme oder alle Projekte. Dies kann nicht rückgängig gemacht werden; das Audit-Protokoll bleibt erhalten. Nur für Administratoren gedacht."
+    },
+    "system": {
+      "statistics": "Systemstatistiken ansehen, etwa die Größe der Datenbank und die Anzahl der Einträge in jeder Tabelle."
+    },
+    "global": {
+      "manage-permissions": "Die globalen Berechtigungen anderer Benutzer ansehen, vergeben und entziehen. Sie können anderen nur Berechtigungen geben, die Sie selbst haben."
+    }
+  }
 }

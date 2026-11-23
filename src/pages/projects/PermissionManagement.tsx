@@ -18,6 +18,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useReducer,
   useRef,
@@ -75,6 +76,7 @@ import {
   trimPersonSearchQuery
 } from './permissionUserSearch'
 import { permissionKey } from './utils/permissionRows'
+import { globalPermissionDescriptionKey } from './utils/globalPermissionDescriptions'
 import {
   DOMAIN_SUBGROUP_LABELS,
   DOMAIN_SUBGROUP_ORDER,
@@ -259,7 +261,18 @@ function PermissionRows({
   onChange?: (key: string, checked: boolean) => void
   emptyText: string
 }) {
-  const { t } = useTranslation('permission')
+  const { t, i18n } = useTranslation('permission')
+  const descriptionIdPrefix = useId()
+
+  /** Returns the plain-language description of a global permission, or undefined if there is none. */
+  const describePermission = (permission: EffectivePermission) => {
+    if (permission.resourceType !== 'GLOBAL') return undefined
+    const descriptionKey = globalPermissionDescriptionKey(permission.action)
+    if (!descriptionKey || !i18n.exists(descriptionKey, { ns: 'permission' })) {
+      return undefined
+    }
+    return t(descriptionKey)
+  }
 
   if (!rows.length) {
     return (
@@ -271,8 +284,12 @@ function PermissionRows({
 
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-      {rows.map((permission) => {
+      {rows.map((permission, index) => {
         const key = permissionKey(permission)
+        const description = describePermission(permission)
+        const descriptionId = description
+          ? `${descriptionIdPrefix}-description-${index}`
+          : undefined
         const locked = editable && Boolean(isLocked?.(permission))
         const toggleable = editable && !locked
         const checked = editable
@@ -292,6 +309,7 @@ function PermissionRows({
                   }`
                 : undefined
             }
+            aria-describedby={toggleable ? descriptionId : undefined}
             title={locked ? t('lockedPermissionHint') : undefined}
             onClick={
               toggleable ? () => onChange?.(key, !checked) : undefined
@@ -325,6 +343,7 @@ function PermissionRows({
                   aria-label={`${formatPermissionAction(permission.action)}: ${
                     checked ? t('status.granted') : t('status.notGranted')
                   }`}
+                  aria-describedby={descriptionId}
                   onClick={(event) => {
                     event.stopPropagation()
                     onChange?.(key, !checked)
@@ -360,6 +379,14 @@ function PermissionRows({
                 </span>
               )}
             </span>
+            {description && (
+              <span
+                id={descriptionId}
+                className="mt-1 text-sm text-gray-600 dark:text-gray-300"
+              >
+                {description}
+              </span>
+            )}
           </div>
         )
       })}

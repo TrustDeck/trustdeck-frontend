@@ -35,7 +35,7 @@ export default function DuplicateResults() {
       <div className="flex justify-center mb-4">
         <PrimaryOutlinedButton
           label={<span className="hidden sm:inline">{t('search:back')}</span>}
-          onClick={() => navigate('/identity/register')}
+          onClick={() => navigate('/entities/new')}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           // TODO: fix alignment of 'back' button on screensize small and larger
           className="absolute left-4 sm:left-20"

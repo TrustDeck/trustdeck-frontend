@@ -99,7 +99,7 @@ export default function PersonForm() {
         createdPerson.trustdeckID
       )
       setResults([personData])
-      navigate(`/search/${createdPerson.trustdeckID}`)
+      navigate(`/entities/${createdPerson.trustdeckID}`)
     } catch (error) {
       if (error instanceof TrustDeckHttpError && error.status === 409) {
         try {
@@ -129,7 +129,7 @@ export default function PersonForm() {
                 }
               })
             )
-            navigate('/identity/duplicates')
+            navigate('/entities/duplicates')
             return
           }
         } catch {

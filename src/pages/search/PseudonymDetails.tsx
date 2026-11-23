@@ -223,11 +223,11 @@ const PseudonymDetails: React.FC = () => {
     }
 
     if (entityId) {
-      navigate(`/search/${encodeURIComponent(entityId)}`)
+      navigate(`/entities/${encodeURIComponent(entityId)}`)
       return
     }
 
-    navigate('/pseudonym-management')
+    navigate('/pseudonyms')
   }
 
   const handleSave = async () => {
@@ -299,7 +299,7 @@ const PseudonymDetails: React.FC = () => {
       const updatedDomain = updated.domainName || requestDomain
       if (updatedDomain && updated.psn) {
         navigate(
-          `/search/pseudonym/${encodeURIComponent(updatedDomain)}/${encodeURIComponent(updated.psn)}`,
+          `/pseudonyms/${encodeURIComponent(updatedDomain)}/${encodeURIComponent(updated.psn)}`,
           {
             replace: true,
             state: returnTo ? { returnTo } : undefined
@@ -337,7 +337,7 @@ const PseudonymDetails: React.FC = () => {
         detail: t('search:pseudonym.deleteSuccess'),
         life: 3000
       })
-      navigate(returnTo || '/pseudonym-management')
+      navigate(returnTo || '/pseudonyms')
     } catch (error) {
       console.error('Error during pseudonym deletion:', error)
       showToast({

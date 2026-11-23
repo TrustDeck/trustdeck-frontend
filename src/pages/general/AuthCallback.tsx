@@ -7,6 +7,7 @@ import TrustDeck from '@service/TrustDeck'
 import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearReturnTo, getReturnTo } from '../../core/services/authSession'
 import { useTranslation } from 'react-i18next'
+import { getLoginErrorMessageKey, getOidcErrorCode } from '../../core/services/loginError'
 
 const isSafeLocalPath = (value: unknown): value is string => {
   return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')
@@ -47,12 +48,20 @@ const AuthCallback: React.FC = () => {
     navigate(returnTo, { replace: true })
   }, [auth.user?.access_token, clearSelectedProject, navigate, returnTo, setFromAccessToken])
 
+  useEffect(() => {
+    if (!auth.error) return
+    console.error(`Sign-in callback failed (${getOidcErrorCode(auth.error) ?? 'no OIDC error code'})`, auth.error)
+  }, [auth.error])
+
   if (auth.error) {
+    // Here even an expected error such as login_required means that the sign-in did not succeed.
+    const errorKey = getLoginErrorMessageKey(auth.error) ?? 'common:login.errors.signInAgain'
+
     return (
       <main className="flex min-h-screen w-full items-center justify-center bg-surface px-6">
         <section className="w-full max-w-md rounded-3xl bg-white p-8 text-center shadow-xl ring-1 ring-slate-200">
           <h1 className="text-2xl font-bold text-slate-950">{t('common:login.callbackFailed')}</h1>
-          <p className="mt-4 text-sm leading-6 text-red-700">{auth.error.message}</p>
+          <p className="mt-4 text-sm leading-6 text-red-700">{t(errorKey)}</p>
           <button
             type="button"
             onClick={() => navigate('/login', { replace: true })}

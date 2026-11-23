@@ -63,7 +63,7 @@ export default function Duplicate() {
       return
     }
     const createdPerson = await PersonService.create(newEntry)
-    navigate(`/person/${createdPerson.identifiers?.[0].identifier}`)
+    navigate(`/entities/${encodeURIComponent(createdPerson.trustdeckID)}`)
   }
 
   const transformedNewData = formatPersonData(newEntry)

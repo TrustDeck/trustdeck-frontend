@@ -27,11 +27,11 @@ export default function Registration() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <PrimaryButton
               label={t('entityBuilder:chooseEntityType')}
-              onClick={() => navigate('/identity')}
+              onClick={() => navigate('/entities')}
             />
             <PrimaryOutlinedButton
               label={t('entityBuilder:openEntityBuilder')}
-              onClick={() => navigate('/entity/manager/new')}
+              onClick={() => navigate('/entity-types/new')}
             />
           </div>
         </div>
@@ -48,7 +48,7 @@ export default function Registration() {
               {t('identity:buttons.back')}
             </span>
           }
-          onClick={() => navigate('/identity')}
+          onClick={() => navigate('/entities')}
           icon={<ArrowLeftIcon className="h-5 w-5 mr-1" />}
           className="shrink-0 absolute left-0 top-0"
         />

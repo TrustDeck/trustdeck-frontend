@@ -224,7 +224,7 @@
   },
   "entityFlow": {
     "modalTitle": "Pseudonym für eine Entität generieren",
-    "modalDescription": "Suchen Sie die Entität, wählen Sie den richtigen Treffer aus und bestimmen Sie die ZielPseudonym-Domäne.",
+    "modalDescription": "Suchen Sie die Entität, wählen Sie den richtigen Treffer aus und bestimmen Sie die Ziel-Pseudonym-Domäne.",
     "searchStep": "Entität suchen",
     "selectStep": "Entität auswählen",
     "groupStep": "Pseudonym-Domäne auswählen",

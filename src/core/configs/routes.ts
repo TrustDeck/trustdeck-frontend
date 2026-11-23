@@ -16,7 +16,7 @@ import {
   ShieldCheckIcon,
   FolderPlusIcon,
   FolderIcon,
-  CubeTransparentIcon,
+  ClipboardDocumentListIcon,
   WrenchScrewdriverIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
@@ -35,6 +35,8 @@ import UserManagement from '../../pages/user/UserManagement'
 export type RouteConfig = {
   path: string
   titleKey: string
+  /** Plain-language explanation shown as the sidebar entry's tooltip. */
+  descriptionKey?: string
   component: FC
   Icon: FC<SVGProps<SVGSVGElement>>
   isProtected: boolean
@@ -122,17 +124,18 @@ export const routes: RouteConfig[] = [
     isNonProject: true
   },
   {
-    path: '/entity/manager',
+    path: '/entity-types',
     titleKey: 'layout:menu.entityTypes',
+    descriptionKey: 'layout:menuDescriptions.entityTypes',
     component: EntityManager,
-    Icon: CubeTransparentIcon,
+    Icon: ClipboardDocumentListIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 4,
     sidebarGroup: 'configuration'
   },
   {
-    path: '/entity/manager/new',
+    path: '/entity-types/new',
     titleKey: 'entityBuilder:addEntity',
     component: Builder,
     Icon: IdentificationIcon,
@@ -140,8 +143,9 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/identity',
+    path: '/entities',
     titleKey: 'layout:menu.entities',
+    descriptionKey: 'layout:menuDescriptions.entities',
     component: PreReg,
     Icon: IdentificationIcon,
     isProtected: true,
@@ -150,7 +154,7 @@ export const routes: RouteConfig[] = [
     sidebarGroup: 'management'
   },
   {
-    path: '/identity/register',
+    path: '/entities/new',
     titleKey: 'layout:menu.registration',
     component: Registration,
     Icon: IdentificationIcon,
@@ -158,7 +162,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/identity/duplicates',
+    path: '/entities/duplicates',
     titleKey: 'layout:menu.duplicates',
     component: DuplicateResults,
     Icon: IdentificationIcon,
@@ -166,7 +170,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/identity/duplicates/:duplicateId',
+    path: '/entities/duplicates/:duplicateId',
     titleKey: 'layout:menu.resolveDuplicates',
     component: Duplicate,
     Icon: IdentificationIcon,
@@ -174,7 +178,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/pseudonym-management',
+    path: '/pseudonyms',
     titleKey: 'layout:menu.pseudonyms',
     component: SearchPsn,
     Icon: EyeSlashIcon,
@@ -184,7 +188,7 @@ export const routes: RouteConfig[] = [
     sidebarGroup: 'management'
   },
   {
-    path: '/domain-management',
+    path: '/pseudonym-domains',
     titleKey: 'layout:menu.pseudonymDomains',
     component: DomainManager,
     Icon: ArchiveBoxIcon,
@@ -194,7 +198,7 @@ export const routes: RouteConfig[] = [
     sidebarGroup: 'configuration'
   },
   {
-    path: '/search/pseudonym/:domainName/:pseudonymId',
+    path: '/pseudonyms/:domainName/:pseudonymId',
     titleKey: 'layout:menu.pseudonymDetails',
     component: PseudonymDetails,
     Icon: MagnifyingGlassIcon,
@@ -202,7 +206,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/search/pseudonym/:pseudonymId',
+    path: '/pseudonyms/:pseudonymId',
     titleKey: 'layout:menu.pseudonymDetails',
     component: PseudonymDetails,
     Icon: MagnifyingGlassIcon,
@@ -210,7 +214,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/search/:entityId/:pseudonymId',
+    path: '/entities/:entityId/pseudonyms/:pseudonymId',
     titleKey: 'layout:menu.entityDetails',
     component: PseudonymDetails,
     Icon: MagnifyingGlassIcon,
@@ -218,7 +222,7 @@ export const routes: RouteConfig[] = [
     isSidebar: false
   },
   {
-    path: '/search/:entityId',
+    path: '/entities/:entityId',
     titleKey: 'layout:menu.entityDetails',
     component: EntityDetails,
     Icon: MagnifyingGlassIcon,

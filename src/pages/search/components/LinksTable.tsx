@@ -82,8 +82,8 @@ export default function LinksTable({
         <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
           {links.map((link) => {
             const target = link.domain
-              ? `/search/pseudonym/${encodeURIComponent(link.domain)}/${encodeURIComponent(link.pseudonym)}`
-              : `/search/pseudonym/${encodeURIComponent(link.pseudonym)}`
+              ? `/pseudonyms/${encodeURIComponent(link.domain)}/${encodeURIComponent(link.pseudonym)}`
+              : `/pseudonyms/${encodeURIComponent(link.pseudonym)}`
 
             return (
               <tr key={link.key} className="align-middle">

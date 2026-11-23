@@ -129,7 +129,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   label={t('search:edit')}
                   icon={<PencilIcon className="h-5 w-5 mr-1" />}
                   onClick={() => {
-                    navigate(`/search/${result.trustdeckID}`)
+                    navigate(`/entities/${result.trustdeckID}`)
                     setEditMode(true)
                   }}
                 />
@@ -150,7 +150,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                       usePersonStore.getState().loadEntity(result)
                     }
                     if (duplicate) {
-                      navigate(`/identity/duplicates/${result.trustdeckID}`)
+                      navigate(`/entities/duplicates/${result.trustdeckID}`)
                     } else if (pseudonymization) {
                       const trustDeckId = resolveTrustDeckId(result)
                       setSelectedEntityId({
@@ -161,7 +161,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                       })
                       handleNext()
                     } else {
-                      navigate(`/search/${result.trustdeckID}`)
+                      navigate(`/entities/${result.trustdeckID}`)
                     }
                   }}
                 />
@@ -225,7 +225,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                   label={t('search:edit')}
                   icon={<PencilIcon className="h-5 w-5 mr-1" />}
                   onClick={() => {
-                    navigate(`/search/${result.id}`)
+                    navigate(`/entities/${result.id}`)
                     setEditMode(true)
                   }}
                 />
@@ -245,7 +245,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                     useBioProbeStore.getState().loadEntity(result)
                   }
                   if (duplicate) {
-                    navigate(`/identity/duplicates/${result.id}`)
+                    navigate(`/entities/duplicates/${result.id}`)
                   } else if (pseudonymization) {
                     const trustDeckId = resolveTrustDeckId(result)
                     setSelectedEntityId({
@@ -256,7 +256,7 @@ const SearchResult: React.FC<SearchResultProps> = ({
                     })
                     handleNext()
                   } else {
-                    navigate(`/search/${result.id}`)
+                    navigate(`/entities/${result.id}`)
                   }
                 }}
               />

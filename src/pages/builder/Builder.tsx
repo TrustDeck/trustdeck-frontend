@@ -1480,7 +1480,7 @@ export default function Builder({
         life: 3500
       })
       onSaved?.(savedType as EntityTypePayload)
-      if (!embedded) navigate('/entity/manager')
+      if (!embedded) navigate('/entity-types')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       const detail = message.includes('400')
@@ -2163,7 +2163,7 @@ export default function Builder({
             label={t('common:back', 'Back')}
             icon={<ArrowLeftIcon className="h-5 w-5" />}
             iconPos="left"
-            onClick={() => navigate('/entity/manager')}
+            onClick={() => navigate('/entity-types')}
           />
         </div>
       )}

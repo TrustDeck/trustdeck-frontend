@@ -22,7 +22,14 @@
     "callbackFailed": "Login could not be completed",
     "backToLogin": "Back to login",
     "completing": "Completing login",
-    "preparingSession": "Preparing your TrustDeck session."
+    "preparingSession": "Preparing your TrustDeck session.",
+    "errors": {
+      "accessDenied": "Access was denied. Your account may not be allowed to use TrustDeck. Please contact your TrustDeck administrator.",
+      "serviceUnavailable": "The sign-in service is currently not available. Please try again in a few minutes.",
+      "unreachable": "The sign-in service could not be reached. Please check your network connection and try again.",
+      "generic": "Signing in did not work. Please try again. If the problem persists, contact your TrustDeck administrator.",
+      "signInAgain": "Please sign in again."
+    }
   },
   "projectRequired": {
     "summary": "Select a project first",

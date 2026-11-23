@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Link, useLocation } from 'react-router-dom'
 import {
@@ -15,6 +15,7 @@ import useProjectStore from '../../core/stores/ProjectStore'
 import { clearLoggedOutMarker, clearStoredOidcState, setReturnTo } from '../../core/services/authSession'
 import { useTranslation } from 'react-i18next'
 import { HELP_PATH } from '../../core/configs/publicPages'
+import { getLoginErrorMessageKey, getOidcErrorCode } from '../../core/services/loginError'
 
 const isSafeLocalPath = (value: string | null | undefined) => {
   return Boolean(value && value.startsWith('/') && !value.startsWith('//'))
@@ -32,12 +33,17 @@ const getReturnTo = (search: string) => {
 
 
 
+/** Writes the technical details of a sign-in error to the console; the page only shows a readable message. */
+const logLoginError = (context: string, error: unknown) => {
+  console.error(`${context} (${getOidcErrorCode(error) ?? 'no OIDC error code'})`, error)
+}
+
 const Login: React.FC = () => {
   const auth = useAuth()
   const { t } = useTranslation()
   const location = useLocation()
   const returnTo = useMemo(() => getReturnTo(location.search), [location.search])
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginError, setLoginError] = useState<unknown>(null)
   const [isStartingLogin, setIsStartingLogin] = useState(false)
 
   const clearLocalAuthState = async () => {
@@ -78,11 +84,21 @@ const Login: React.FC = () => {
         }
       })
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common:login.couldNotStart')
-      setLoginError(message)
+      logLoginError('Could not start the sign-in', error)
+      setLoginError(error ?? new Error('Could not start the sign-in'))
       setIsStartingLogin(false)
     }
   }
+
+  // A failed silent sign-in leaves e.g. "login_required" in auth.error. That only means
+  // that the user has to sign in, so no error is shown for it.
+  const authErrorKey = getLoginErrorMessageKey(auth.error)
+  const loginErrorKey = loginError ? getLoginErrorMessageKey(loginError) ?? 'common:login.errors.generic' : null
+  const errorKey = loginErrorKey ?? authErrorKey
+
+  useEffect(() => {
+    if (auth.error && getLoginErrorMessageKey(auth.error)) logLoginError('Sign-in failed', auth.error)
+  }, [auth.error])
 
   const handleRetry = () => {
     void handleLogin()
@@ -99,14 +115,10 @@ const Login: React.FC = () => {
           {t('common:login.subtitle')}
         </p>
 
-        {auth.error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {auth.error.message}
-          </div>
-        )}
-        {loginError && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {loginError}
+        {errorKey && (
+          <div role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {loginErrorKey && <p className="font-semibold">{t('common:login.couldNotStart')}</p>}
+            <p>{t(errorKey)}</p>
           </div>
         )}
 
@@ -118,7 +130,7 @@ const Login: React.FC = () => {
             icon={<ArrowRightEndOnRectangleIcon className="mr-2 h-5 w-5" />}
             className="w-full justify-center"
           />
-          {(auth.error || loginError) && (
+          {errorKey && (
             <PrimaryOutlinedButton
               label={t('common:login.clearAndRetry')}
               onClick={handleRetry}

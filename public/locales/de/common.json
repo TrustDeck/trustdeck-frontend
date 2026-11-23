@@ -22,7 +22,14 @@
     "callbackFailed": "Anmeldung konnte nicht abgeschlossen werden",
     "backToLogin": "Zurück zur Anmeldung",
     "completing": "Anmeldung wird abgeschlossen",
-    "preparingSession": "Ihre TrustDeck-Sitzung wird vorbereitet."
+    "preparingSession": "Ihre TrustDeck-Sitzung wird vorbereitet.",
+    "errors": {
+      "accessDenied": "Der Zugriff wurde verweigert. Ihr Konto ist möglicherweise nicht für TrustDeck freigeschaltet. Bitte wenden Sie sich an Ihre TrustDeck-Administration.",
+      "serviceUnavailable": "Der Anmeldedienst ist derzeit nicht verfügbar. Bitte versuchen Sie es in einigen Minuten erneut.",
+      "unreachable": "Der Anmeldedienst ist nicht erreichbar. Bitte prüfen Sie Ihre Netzwerkverbindung und versuchen Sie es erneut.",
+      "generic": "Die Anmeldung hat nicht funktioniert. Bitte versuchen Sie es erneut. Wenn das Problem bestehen bleibt, wenden Sie sich an Ihre TrustDeck-Administration.",
+      "signInAgain": "Bitte melden Sie sich erneut an."
+    }
   },
   "projectRequired": {
     "summary": "Bitte zuerst ein Projekt auswählen",

@@ -65,5 +65,9 @@
   "sidebarGroups": {
     "configuration": "Konfiguration",
     "management": "Verwaltung"
+  },
+  "menuDescriptions": {
+    "entityTypes": "Legen Sie fest, welche Arten von Datensätzen Ihr Projekt speichert, z. B. Personen oder Proben, und welche Angaben sie enthalten.",
+    "entities": "Erfassen, suchen und bearbeiten Sie die einzelnen Datensätze Ihres Projekts, z. B. Personen oder Proben."
   }
 }

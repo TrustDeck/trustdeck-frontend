@@ -16,7 +16,7 @@ import {
   ShieldCheckIcon,
   FolderPlusIcon,
   FolderIcon,
-  CubeTransparentIcon,
+  ClipboardDocumentListIcon,
   WrenchScrewdriverIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
@@ -35,6 +35,8 @@ import UserManagement from '../../pages/user/UserManagement'
 export type RouteConfig = {
   path: string
   titleKey: string
+  /** Plain-language explanation shown as the sidebar entry's tooltip. */
+  descriptionKey?: string
   component: FC
   Icon: FC<SVGProps<SVGSVGElement>>
   isProtected: boolean
@@ -124,8 +126,9 @@ export const routes: RouteConfig[] = [
   {
     path: '/entity-types',
     titleKey: 'layout:menu.entityTypes',
+    descriptionKey: 'layout:menuDescriptions.entityTypes',
     component: EntityManager,
-    Icon: CubeTransparentIcon,
+    Icon: ClipboardDocumentListIcon,
     isProtected: true,
     isSidebar: true,
     sideboardOrder: 4,
@@ -142,6 +145,7 @@ export const routes: RouteConfig[] = [
   {
     path: '/entities',
     titleKey: 'layout:menu.entities',
+    descriptionKey: 'layout:menuDescriptions.entities',
     component: PreReg,
     Icon: IdentificationIcon,
     isProtected: true,

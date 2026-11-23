@@ -23,7 +23,7 @@
     "title": "Entität",
     "entityType": {
       "title": "Entitätstyp",
-      "help": "Wählen Sie die Entität, die Sie suchen möchten, aus.",
+      "help": "Wählen Sie den Entitätstyp, also die Art von Datensatz, den Sie suchen möchten.",
       "selectPlaceholder": "Entitätstyp auswählen"
     },
     "person": {

@@ -65,5 +65,9 @@
   "sidebarGroups": {
     "configuration": "Configuration",
     "management": "Management"
+  },
+  "menuDescriptions": {
+    "entityTypes": "Define which kinds of records your project stores, e.g. persons or samples, and which details they have.",
+    "entities": "Register, find, and edit the individual records of your project, e.g. persons or samples."
   }
 }

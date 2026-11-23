@@ -22,7 +22,7 @@
     "title": "Entity",
     "entityType": {
       "title": "Entity type",
-      "help": "Choose what you want to search.",
+      "help": "Choose the entity type, i.e. the kind of record, that you want to search.",
       "selectPlaceholder": "Select an entity type"
     },
     "person": {

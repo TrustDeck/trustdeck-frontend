@@ -13,6 +13,7 @@ import useUserStore from '../../core/stores/UserStore'
 import { applyDarkMode, getInitialDarkMode } from '../../core/utils/theme'
 import { oidcConfig } from '../../core/configs/oidc'
 import { markLoggedOut } from '../../core/services/authSession'
+import TrustDeck from '../../core/services/TrustDeck'
 import Panel from '../../core/components/common/Panel'
 import PageHeader from '../../core/components/common/PageHeader'
 
@@ -43,6 +44,8 @@ export default function UserManagement() {
     formatRemaining(tokenExpiresAt)
   )
   const [darkMode, setDarkMode] = useState(getInitialDarkMode)
+  // undefined while loading, null if the backend does not report a version
+  const [backendVersion, setBackendVersion] = useState<string | null>()
   const displayName =
     fullname || email || username || t('userMenu.signedInUser')
 
@@ -56,6 +59,18 @@ export default function UserManagement() {
   useEffect(() => {
     applyDarkMode(darkMode)
   }, [darkMode])
+
+  useEffect(() => {
+    let active = true
+    void TrustDeck.instance()
+      .getBackendVersion()
+      .then((version) => {
+        if (active) setBackendVersion(version)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const openAccountConsole = () => {
     const configuredAccountUrl = (
@@ -182,6 +197,14 @@ export default function UserManagement() {
             </section>
           </div>
         </Panel>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {t('userManagement.backendVersion', {
+            version:
+              backendVersion === undefined
+                ? '…'
+                : (backendVersion ?? t('userManagement.unknownVersion'))
+          })}
+        </p>
       </div>
     </div>
   )

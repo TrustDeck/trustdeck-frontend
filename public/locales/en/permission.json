@@ -113,7 +113,7 @@
   },
   "allProjectAndGroupPermissions": "All project and pseudonym-domain permissions",
   "selectedUserRoles": "Roles for selected user",
-  "assignmentNote": "Permissions are assigned for one project or pseudonym domain at a time. You can only grant rights that you already hold yourself; privilege escalation is not permitted.",
+  "assignmentNote": "Permissions are assigned for one project or pseudonym domain at a time. You can only give others permissions that you have yourself.",
   "projectDomainTitle": "Permissions",
   "projectDomainIntro": "Inspect your project and pseudonym-domain rights and assign rights you already hold to other users.",
   "globalBoxTitle": "Global permissions",

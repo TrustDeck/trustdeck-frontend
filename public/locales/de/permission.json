@@ -113,7 +113,7 @@
   },
   "allProjectAndGroupPermissions": "Alle Projekt- und Pseudonym-Domänen-Berechtigungen",
   "selectedUserRoles": "Rollen des ausgewählten Benutzers",
-  "assignmentNote": "Berechtigungen werden jeweils für ein Projekt oder eine Pseudonym-Domäne vergeben. Sie können nur Rechte weitergeben, die Sie selbst besitzen; eine Rechteausweitung ist nicht möglich.",
+  "assignmentNote": "Berechtigungen werden jeweils für ein Projekt oder eine Pseudonym-Domäne vergeben. Sie können anderen nur Berechtigungen geben, die Sie selbst haben.",
   "projectDomainTitle": "Berechtigungen",
   "projectDomainIntro": "Prüfen Sie Ihre Projekt- und Pseudonym-Domänen-Rechte und vergeben Sie nur Rechte, die Sie selbst besitzen.",
   "globalBoxTitle": "Globale Berechtigungen",

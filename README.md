@@ -26,21 +26,6 @@ The TrustDeck frontend is the web interface of [TrustDeck](https://github.com/Tr
 
 General instructions for setting up TrustDeck are in the official [documentation](https://github.com/TrustDeck/trustdeck-docs). The user documentation of the frontend is in [`docs/`](docs).
 
-### Development
-
-```bash
-npm ci
-npm run dev
-```
-
-The development server runs at `https://localhost:5173` when `local-key.pem` and `local-cert.pem` exist, otherwise over HTTP. Build and check the code with:
-
-```bash
-npm run build   # type check and production build
-npm test        # unit tests
-npm run lint    # linting
-```
-
 ### Docker Deployment
 
 All container files are in `docker/`.

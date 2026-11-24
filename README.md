@@ -18,7 +18,6 @@ The TrustDeck frontend is the web interface of [TrustDeck](https://github.com/Tr
 
 ## Prerequisites
 
-- Node.js 22 or later and npm
 - Docker Engine with the Compose plugin, for container deployment
 - A running [TrustDeck backend](https://github.com/TrustDeck/trustdeck-backend) and its Keycloak instance
 

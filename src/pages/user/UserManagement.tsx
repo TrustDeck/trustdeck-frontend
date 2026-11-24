@@ -95,12 +95,14 @@ export default function UserManagement() {
   }
 
   return (
-    <div className="td-page-shell">
+    // At least as tall as the window (minus the layout's padding), so that the version line below
+    // the content sits at the bottom of the page even when the content is short
+    <div className="td-page-shell flex min-h-[calc(100vh-2rem)] flex-col !pb-0 sm:min-h-[calc(100vh-3rem)]">
       <PageHeader
         title={t('userManagement.title')}
         description={t('userManagement.subtitle')}
       />
-      <div className="td-page-content space-y-6">
+      <div className="td-page-content flex-1 space-y-6">
         <Panel className="!w-full">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
             <section className="space-y-5">
@@ -197,15 +199,16 @@ export default function UserManagement() {
             </section>
           </div>
         </Panel>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {t('userManagement.backendVersion', {
-            version:
-              backendVersion === undefined
-                ? '…'
-                : (backendVersion ?? t('userManagement.unknownVersion'))
-          })}
-        </p>
       </div>
+      {/* Stays visible at the bottom edge of the window while the page scrolls */}
+      <footer className="sticky bottom-0 mt-6 bg-surface py-3 text-center text-sm text-gray-500 dark:text-gray-400">
+        {t('userManagement.backendVersion', {
+          version:
+            backendVersion === undefined
+              ? '…'
+              : (backendVersion ?? t('userManagement.unknownVersion'))
+        })}
+      </footer>
     </div>
   )
 }

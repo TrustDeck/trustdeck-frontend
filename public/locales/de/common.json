@@ -56,5 +56,28 @@
     "sortBy": "Nach {{column}} sortieren",
     "sortedAscending": "Aufsteigend nach {{column}} sortiert. Klicken, um absteigend zu sortieren.",
     "sortedDescending": "Absteigend nach {{column}} sortiert. Klicken, um aufsteigend zu sortieren."
+  },
+  "helpPage": {
+    "loginLink": "Was ist TrustDeck und wie bekomme ich Zugang?",
+    "title": "Über TrustDeck",
+    "intro": "Hier erfahren Sie, was TrustDeck ist und an wen Sie sich wenden können, wenn Sie Zugang benötigen. Für diese Seite müssen Sie sich nicht anmelden.",
+    "what": {
+      "title": "Was ist TrustDeck?",
+      "text": "TrustDeck ist ein Treuhandstellen-Dienst für Forschungsprojekte. Er verwaltet die Identitäten der Personen, die an einer Studie teilnehmen, und ersetzt identifizierende Daten wie Namen und Geburtsdaten durch Pseudonyme. Die Forschenden arbeiten dann mit den Pseudonymen, während die identifizierenden Daten geschützt in TrustDeck bleiben."
+    },
+    "who": {
+      "title": "Wer nutzt TrustDeck?",
+      "text": "TrustDeck wird von Mitarbeitenden von Forschungsprojekten und Treuhandstellen genutzt, zum Beispiel um Teilnehmende zu registrieren, Pseudonyme zu erzeugen oder nachzuschlagen. Alle sehen nur die Projekte und Funktionen, für die sie freigeschaltet wurden."
+    },
+    "access": {
+      "title": "Wie bekomme ich Zugang?",
+      "text": "Ein Konto für TrustDeck können Sie nicht selbst anlegen. Der Zugang wird für jedes Projekt einzeln vergeben. Bitte wenden Sie sich an die TrustDeck-Administration Ihres Projekts oder an die zuständige Ansprechperson Ihrer Einrichtung. Dort kann Ihr Konto eingerichtet werden und Sie erhalten die nötigen Berechtigungen. Wenden Sie sich bitte auch dorthin, wenn Sie bereits ein Konto haben, sich aber nicht anmelden können."
+    },
+    "documentation": {
+      "title": "Dokumentation",
+      "text": "Weitere Informationen zu TrustDeck und seiner Nutzung finden Sie in der Dokumentation.",
+      "link": "TrustDeck-Dokumentation öffnen"
+    },
+    "backToLogin": "Zurück zur Anmeldung"
   }
 }

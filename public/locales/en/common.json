@@ -56,5 +56,28 @@
     "sortBy": "Sort by {{column}}",
     "sortedAscending": "Sorted by {{column}}, ascending. Click to sort descending.",
     "sortedDescending": "Sorted by {{column}}, descending. Click to sort ascending."
+  },
+  "helpPage": {
+    "loginLink": "What is TrustDeck and how do I get access?",
+    "title": "About TrustDeck",
+    "intro": "Here you can find out what TrustDeck is and whom to contact if you need access. You do not need to sign in to read this page.",
+    "what": {
+      "title": "What is TrustDeck?",
+      "text": "TrustDeck is a trusted third party service for research projects. It manages the identities of the people who take part in a study and replaces identifying data, such as names and dates of birth, with pseudonyms. Researchers then work with the pseudonyms, while the identifying data stays protected in TrustDeck."
+    },
+    "who": {
+      "title": "Who uses TrustDeck?",
+      "text": "TrustDeck is used by the staff of research projects and trusted third party offices, for example to register participants, create pseudonyms, or look them up. Everyone only sees the projects and functions they have been given access to."
+    },
+    "access": {
+      "title": "How do I get access?",
+      "text": "You cannot create an account for TrustDeck yourself. Access is granted for each project. Please contact the TrustDeck administrator of your project or the responsible contact person at your institution. They can set up your account and give you the permissions you need. Please also contact them if you already have an account but cannot sign in."
+    },
+    "documentation": {
+      "title": "Documentation",
+      "text": "More information about TrustDeck and how to use it can be found in the documentation.",
+      "link": "Open the TrustDeck documentation"
+    },
+    "backToLogin": "Back to sign-in"
   }
 }

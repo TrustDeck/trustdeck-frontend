@@ -202,6 +202,8 @@ export default function UserManagement() {
       </div>
       {/* Stays visible at the bottom edge of the window while the page scrolls */}
       <footer className="sticky bottom-0 mt-6 bg-surface py-3 text-center text-sm text-gray-500 dark:text-gray-400">
+        {t('userManagement.frontendVersion', { version: __APP_VERSION__ })}
+        {' · '}
         {t('userManagement.backendVersion', {
           version:
             backendVersion === undefined

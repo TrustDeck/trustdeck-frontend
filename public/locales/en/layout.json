@@ -54,6 +54,7 @@
     "logout": "Log out",
     "enabled": "On",
     "disabled": "Off",
+    "frontendVersion": "Frontend version: {{version}}",
     "backendVersion": "Backend version: {{version}}",
     "unknownVersion": "unknown"
   },

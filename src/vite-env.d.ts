@@ -3,6 +3,9 @@
 export {}
 
 declare global {
+  /** The frontend version from package.json, set at build time in config/vite.config.ts. */
+  const __APP_VERSION__: string
+
   interface Window {
     __ENV__?: {
       API_BASE_URL?: string

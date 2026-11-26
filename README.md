@@ -1,6 +1,6 @@
 # TrustDeck Frontend - Web Interface for Identity Management in Translational Medicine
 
-[![Version](https://img.shields.io/badge/version-1.0.0-green)](https://github.com/TrustDeck/trustdeck-frontend/releases/tag/1.0.0)
+[![Version](https://img.shields.io/badge/version-1.0.1-green)](https://github.com/TrustDeck/trustdeck-frontend/releases/tag/1.0.1)
 [![License](https://img.shields.io/badge/License-Apache_2.0-green)](https://github.com/TrustDeck/trustdeck-frontend/blob/main/LICENSE)
 
 The TrustDeck frontend is the web interface of [TrustDeck](https://github.com/TrustDeck/trustdeck-backend), an open-source service for pseudonymization and identity management in research projects. It lets trusted third party personnel and project staff manage projects, pseudonym domains, pseudonyms, and entities such as study participants, cases, and biosamples, without using the REST interface directly. It is a single-page application built with React, TypeScript, and Vite; users sign in through Keycloak, and the production image serves the static bundle with Nginx.
